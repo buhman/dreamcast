@@ -1,3 +1,12 @@
 *.pyc
 __pycache__
 .~*
+*.BIN
+*.bin
+*.elf
+*.d
+*.iso
+*.cdi
+*.o
+scramble
+cdi4dc
