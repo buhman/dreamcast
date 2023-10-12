@@ -1,26 +1,25 @@
 #include <stdint.h>
 
-volatile uint8_t * SCFTDR2 = (volatile uint8_t *)0xFFE8000C;
+#include "cache.h"
 
-volatile uint32_t * SOFT_RESET  = (volatile uint32_t *)0xa05f8008;
-volatile uint32_t * STARTRENDER = (volatile uint32_t *)0xa05f8014;
-volatile uint32_t * VO_CONTROL = (volatile uint32_t *)0xa05f80e8;
-volatile uint32_t * VO_BORDER_COL = (volatile uint32_t *)0xa05f8040;
-
-volatile uint32_t * FB_R_SOF1 = (volatile uint32_t *)0xa05f8050;
+#include "sh7091.h"
 
 volatile uint32_t * RAM = (volatile uint32_t *)0xa5000000;
 
 volatile uint32_t * SPG_STATUS = (volatile uint32_t *)0xa05f810;
 
-void start()
+void main()
 {
-  *SCFTDR2 = 'H';
-  *SCFTDR2 = 'e';
-  *SCFTDR2 = 'l';
-  *SCFTDR2 = 'l';
-  *SCFTDR2 = '3';
+  cache_init();
 
+  // clear BSS
+
+  SH7091.SCIF.SCFTDR2 = 'H';
+  SH7091.SCIF.SCFTDR2 = 'e';
+  SH7091.SCIF.SCFTDR2 = 'l';
+  SH7091.SCIF.SCFTDR2 = 'o';
+
+  /*
   *SOFT_RESET = 0b111;
   *SOFT_RESET = 0b000;
 
@@ -30,6 +29,7 @@ void start()
   for (int i = 0; i < (2*1024*1024 + 1024 * 2 + 512 + 4) / 4; i++) {
     RAM[i] = 0x1;
   }
+  */
 
   while (1) {
   }

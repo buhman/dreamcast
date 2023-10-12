@@ -26,11 +26,11 @@ def size_p(size):
 
 def size_to_type(size):
     if size == 1:
-        return "uint8_t "
+        return "reg8 "
     elif size == 2:
-        return "uint16_t"
+        return "reg16"
     elif size == 4:
-        return "uint32_t"
+        return "reg32"
     else:
         raise NotImplemented(size)
 
@@ -133,7 +133,7 @@ def blocks(rows):
             raw_pad = (offset - last_offset) << 16
             yield f"{type} _pad{reserved_num}[{hex(raw_pad)} - (sizeof (struct {last_block.lower()}_reg))];"
             reserved_num += 1
-        yield f"{block.lower()}_reg {block};"
+        yield f"struct {block.lower()}_reg {block};"
         last_offset = offset
         last_block = block
     yield "};"
@@ -142,11 +142,13 @@ def blocks(rows):
         yield f"static_assert((offsetof (struct sh7091_reg, {block})) == {hex(offset << 16)});"
 
     yield ""
-    yield "extern sh7091_reg SH7091;"
+    yield 'extern struct sh7091_reg SH7091 __asm("SH7091");'
 
 def headers():
     yield "#include <stdint.h>"
     yield "#include <stddef.h>"
+    yield ""
+    yield '#include "type.h"'
     yield ""
 
 if __name__ == "__main__":

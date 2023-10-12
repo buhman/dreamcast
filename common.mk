@@ -1,5 +1,5 @@
 LIB ?= .
-OPT ?= -Og
+OPT ?= -Os
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 
@@ -53,7 +53,13 @@ all: main.elf
 %.o: %.c %.c.d
 	$(CC) $(CARCH) $(CFLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
-main.elf: main.o
+%.cpp.d: | $(GENERATED)
+	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -c $(basename $@) -MF $@ -o /dev/null
+
+%.o: %.cpp %.cpp.d
+	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) -c $< -o $@
+
+main.elf: start.o main.o cache.o
 	$(LD) $(LDFLAGS) -T $(LIB)/main.lds $^ -o $@
 
 %.bin: %.elf
