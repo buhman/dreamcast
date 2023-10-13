@@ -7,3 +7,9 @@
 #define CCR__CB  (1 << 2)
 #define CCR__WT  (1 << 1)
 #define CCR__OCE (1 << 0)
+
+#define PDTRA__MASK     (0b11 << 8)
+#define PDTRA__VGA      (0b00 << 8)
+#define PDTRA__RESERVED (0b01 << 8)
+#define PDTRA__RGB      (0b10 << 8)
+#define PDTRA__AV       (0b11 << 8)
