@@ -37,7 +37,7 @@ IP_OBJ = \
 	sg/sg_ini.o \
 	sg/aip.o
 
-all: main.elf
+all: main.cdi
 
 %.o: %.obj
 	$(OBJCOPY) -g \
@@ -59,8 +59,11 @@ all: main.elf
 %.o: %.cpp %.cpp.d
 	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
-main.elf: start.o main.o cache.o
+main.elf: start.o main.o cache.o vga.o load.o rgb.o
 	$(LD) $(LDFLAGS) -T $(LIB)/main.lds $^ -o $@
+
+test.elf: test.o rgb.o vga.o
+	$(LD) $(LDFLAGS) -T $(LIB)/alt.lds $^ -o $@
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@

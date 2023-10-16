@@ -8,5 +8,6 @@ __pycache__
 *.iso
 *.cdi
 *.o
+*.out
 scramble
 cdi4dc
