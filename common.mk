@@ -69,7 +69,7 @@ test.elf: test.o rgb.o vga.o
 	$(OBJCOPY) -O binary $< $@
 
 ip.elf: $(IP_OBJ)
-	$(LD) --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
+	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
 
 audio.pcm:
 	sox \

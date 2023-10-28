@@ -24,33 +24,36 @@ SECTIONS
 
   .text.sg_sec :
   {
-    KEEP(*(.text.sg_sec))
+    KEEP(*(.text.*sg_sec))
   } > sg_sec
 
   .text.sg_are :
   {
-    KEEP(*(.text.sg_arejp))
-    KEEP(*(.text.sg_areus))
-    KEEP(*(.text.sg_areec))
-    KEEP(*(.text.sg_are00))
-    KEEP(*(.text.sg_are01))
-    KEEP(*(.text.sg_are02))
-    KEEP(*(.text.sg_are03))
-    KEEP(*(.text.sg_are04))
+    KEEP(*(.text.*sg_arejp))
+    KEEP(*(.text.*sg_areus))
+    KEEP(*(.text.*sg_areec))
+    KEEP(*(.text.*sg_are00))
+    KEEP(*(.text.*sg_are01))
+    KEEP(*(.text.*sg_are02))
+    KEEP(*(.text.*sg_are03))
+    KEEP(*(.text.*sg_are04))
   } > sg_are
 
   .text.sg_ini :
   {
-    KEEP(*(.text.sg_ini))
+    KEEP(*(.text.*sg_ini))
   } > sg_ini
 
   .text.aip :
   {
-    KEEP(*(.text.aip))
+    KEEP(*(.text.*aip))
   } > aip
 
   /DISCARD/ :
   {
-    *(*)
+    *(.text)
+    *(.data)
+    *(.bss)
+    *(.comment)
   }
 }
