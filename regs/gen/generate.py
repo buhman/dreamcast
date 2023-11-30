@@ -1,5 +1,12 @@
 import io
 
+def should_autonewline(line):
+    return (
+        "static_assert" not in line
+        and "extern" not in line
+        and line.split()[1] != '=' # hacky; meh
+    )
+
 def _render(out, lines):
     indent = " "
     level = 0
@@ -14,7 +21,7 @@ def _render(out, lines):
             level += 2
 
         if level == 0 and l and l[-1] == ";":
-            if "static_assert" not in l:
+            if should_autonewline(l):
                 out.write("\n")
     return out
 

@@ -301,13 +301,12 @@ static_assert((offsetof (struct pvr_if_reg, PDSTAPD)) == 0xf0);
 static_assert((offsetof (struct pvr_if_reg, PDSTARD)) == 0xf4);
 static_assert((offsetof (struct pvr_if_reg, PDLEND)) == 0xf8);
 
-extern struct system_reg SYSTEM __asm("SYSTEM");
+extern struct system_reg system __asm("system");
 
-extern struct maple_if_reg MAPLE_IF __asm("MAPLE_IF");
+extern struct maple_if_reg maple_if __asm("maple_if");
 
-extern struct g1_if_reg G1_IF __asm("G1_IF");
+extern struct g1_if_reg g1_if __asm("g1_if");
 
-extern struct g2_if_reg G2_IF __asm("G2_IF");
+extern struct g2_if_reg g2_if __asm("g2_if");
 
-extern struct pvr_if_reg PVR_IF __asm("PVR_IF");
-
+extern struct pvr_if_reg pvr_if __asm("pvr_if");

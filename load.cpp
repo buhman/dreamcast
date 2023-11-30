@@ -24,10 +24,10 @@ struct load_state {
 
 static struct load_state state;
 
-void move(void *dest, const void *src, size_t n)
+void move(void *dst, const void *src, size_t n)
 {
-  uint8_t *d = dest;
-  const uint8_t *s = src;
+  uint8_t * d = reinterpret_cast<uint8_t *>(dst);
+  const uint8_t * s = reinterpret_cast<const uint8_t *>(src);
 
   if (d==s) return;
   if (d<s) {
@@ -47,7 +47,7 @@ void debug(const char * s)
 {
   char c;
   while ((c = *s++)) {
-    SH7091.SCIF.SCFTDR2 = (uint8_t)c;
+    sh7091.SCIF.SCFTDR2 = (uint8_t)c;
   }
 }
 
@@ -92,9 +92,9 @@ void load_recv(uint8_t c)
     case CMD_DATA:
       {
 	uint32_t * size = &state.addr1;
-	uint8_t * dest = (uint8_t *)state.addr2;
-	if (size > 0) {
-	  SH7091.SCIF.SCFTDR2 = c;
+	uint8_t * dest = reinterpret_cast<uint8_t *>(state.addr2);
+	if (*size > 0) {
+	  sh7091.SCIF.SCFTDR2 = c;
 
 	  // write c to dest
 	  *dest = c;
@@ -109,19 +109,19 @@ void load_recv(uint8_t c)
 	}
 	return;
 	break;
-	case CMD_JUMP:
-	  // jump
-	  state.len = 0;
-	  state.command = CMD_NONE;
-	  debug("prejump\n");
-	  HOLLY.VO_BORDER_COL = (31 << 11);
-	  void (*fptr)(void) = (void (*)(void))state.addr1;
-	  HOLLY.VO_BORDER_COL = (63 << 5) | (31 << 0);
-	  fptr();
-	  debug("postjump\n");
-	  return;
-	  break;
       }
+    case CMD_JUMP:
+      // jump
+      state.len = 0;
+      state.command = CMD_NONE;
+      debug("prejump\n");
+      holly.VO_BORDER_COL = (31 << 11);
+      void (*fptr)(void) = (void (*)(void))state.addr1;
+      holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
+      fptr();
+      debug("postjump\n");
+      return;
+      break;
     }
   }
 }

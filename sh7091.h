@@ -374,5 +374,4 @@ static_assert((offsetof (struct sh7091_reg, SCI)) == 0xe00000);
 static_assert((offsetof (struct sh7091_reg, SCIF)) == 0xe80000);
 static_assert((offsetof (struct sh7091_reg, UDI)) == 0xf00000);
 
-extern struct sh7091_reg SH7091 __asm("SH7091");
-
+extern struct sh7091_reg sh7091 __asm("sh7091");

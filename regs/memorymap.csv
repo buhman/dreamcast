@@ -1,0 +1,43 @@
+"area","start","end","function","size","access","name"
+"0","0x00000000","0x001FFFFF","System/Boot ROM","2MB",,"system_boot_rom"
+"0","0x00200000","0x0021FFFF","Flash Memory","128KB",,
+"0","0x00400000","0x005F67FF","Unassigned","-",,
+"0","0x005F6800","0x005F69FF","System Control Registers","512B",,
+"0","0x005F6C00","0x005F6CFF","Maple interface Control Registers","256B",,
+"0","0x005F7000","0x005F70FF","GD-ROM","256B",,
+"0","0x005F7400","0x005F74FF","G1 interface Control Registers","256B",,
+"0","0x005F7800","0x005F78FF","G2 interface Control Registers","256B",,
+"0","0x005F7C00","0x005F7CFF","PVR interface Control Registers","256B",,
+"0","0x005F8000","0x005F9FFF","TA / PVR Core Registers","8KB",,
+"0","0x00600000","0x006007FF","MODEM","2KB",,
+"0","0x00600800","0x006FFFFF","G2","-",,
+"0","0x00700000","0x00707FFF","AICA- Sound Control Registers","32KB",,
+"0","0x00710000","0x0071000B","AICA- RTC Control Registers","12B",,
+"0","0x00800000","0x00FFFFFF","AICA- Wave Memory","2MB",,"aica_wave_memory"
+"0","0x01000000","0x01FFFFFF","External Device","16MB",,
+"0","0x02000000","0x03FFFFFF","Mirror of 0x00000000 - 0x1FFFFFFF","32MB",,
+,,,,,,
+"1","0x04000000","0x04FFFFFF","Texture memory 64bit access","8MB",,
+"1","0x05000000","0x05FFFFFF","Texture memory 32bit access","8MB",,"texture_memory"
+"1","0x06000000","0x06FFFFFF","Mirror of 0x04000000 - 0x06FFFFFF","32MB",,
+,,,,,,
+"2","0x08000000","0x0bffffff","Unassigned","-",,
+,,,,,,
+"3","0x0c000000","0x0cffffff","System memory","16MB",,"system_memory"
+"3","0x0d000000","0x0dffffff","Mirror of 0x0c000000 - 0x0cffffff","16MB",,
+"3","0x0e000000","0x0fffffff","Mirror of 0x0c000000 - 0x0dffffff","32MB",,
+,,,,,,
+"4","0x10000000","0x107FFFFF","TA FIFO Polygon Converter","8MB",,"ta_fifo_polygon_converter"
+"4","0x10800000","0x10FFFFFF","TA FIFO YUV Converter","8MB",,"ta_fifo_yuv_converter"
+"4","0x11000000","0x11FFFFFF","TA FIFO Texture memory","8MB",,"ta_fifo_texture_memory"
+"4","0x12000000","0x127FFFFF","Mirror of TA FIFO Polygon Converter","8MB",,"ta_fifo_polygon_converter_mirror"
+"4","0x12800000","0x137FFFFF","Mirror of TA FIFO YUV Converter","8MB",,"ta_fifo_yuv_converter_mirror"
+"4","0x13000000","0x13FFFFFF","Mirror of TA FIFO Texture memory","8MB",,"ta_fifo_texture_memory_mirror"
+,,,,,,
+"5","0x14000000","0x17FFFFFF","External device","64MB",,
+,,,,,,
+"6","0x18000000","0x1BFFFFFF","Unassigned","-",,
+,,,,,,
+"7","0x1C000000","0x1FFFFFFF","SH4 Internal area","-",,
+,,,,,,
+,"0xE0000000","0xE3FFFFFF","Store Queue","64MB",,"store_queue"

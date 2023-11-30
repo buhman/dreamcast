@@ -6,7 +6,7 @@ from sh7091 import headers
 from generate import renderer
 
 def block():
-    yield 'extern struct holly_reg HOLLY __asm("HOLLY");'
+    yield 'extern struct holly_reg holly __asm("holly");'
 
 input_file = sys.argv[1]
 rows = read_input(input_file)

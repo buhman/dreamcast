@@ -32,6 +32,7 @@ def sync(ser, b):
     return bytes(l)
 
 def do(ser, b):
+    ser.read(ser.in_waiting)
     ser.flush()
     ser.flushInput()
     ser.flushOutput()
@@ -55,14 +56,19 @@ def do(ser, b):
     args = struct.pack("<I", dest)
     ser.write(args)
     print()
+    console(ser)
+
+def console(ser):
     while True:
         b = ser.read(1)
         if b:
             sys.stderr.buffer.write(b)
             sys.stderr.flush()
 
+
 with open(sys.argv[1], 'rb') as f:
     b = f.read()
 
 with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
+    #console(ser)
     do(ser, b)

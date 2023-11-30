@@ -64,11 +64,7 @@ SECTIONS
   __ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
 }
 
-SH7091_IC_A = 0xf0000000;
-SH7091_IC_D = 0xf1000000;
-SH7091_OC_A = 0xf4000000;
-SH7091_OC_D = 0xf5000000;
-SH7091 = 0xff000000;
-HOLLY = 0xa05f8000;
 __p1ram_start = ORIGIN(p1ram);
 __p1ram_end = ORIGIN(p1ram) + LENGTH(p1ram);
+
+INCLUDE "addresses.lds"

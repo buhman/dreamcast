@@ -7,7 +7,7 @@ AARCH = --isa=sh4 --little
 AFLAGS = --fatal-warnings
 
 CARCH = -m4-single-only -ml
-CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib
+CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib -Wno-error=narrowing
 CFLAGS += -Wall -Werror -Wfatal-errors -Wno-error=unused-variable
 DEPFLAGS = -MMD -E
 # --print-gc-sections
@@ -21,6 +21,13 @@ AS = $(TARGET)as
 LD = $(TARGET)ld
 OBJCOPY = $(TARGET)objcopy
 OBJDUMP = $(TARGET)objdump
+
+define BUILD_BINARY_O
+	$(OBJCOPY) \
+		-I binary -O elf32-shl -B sh4 \
+		--rename-section .data=.data.$(basename $@) \
+		$< $@
+endef
 
 IP_OBJ = \
 	systemid.o \
@@ -36,6 +43,19 @@ IP_OBJ = \
 	sg/sg_are04.o \
 	sg/sg_ini.o \
 	sg/aip.o
+
+MAIN_OBJ = \
+	start.o \
+	main.o \
+	load.o \
+	cache.o \
+	vga.o \
+	rgb.o \
+	holly/background.o \
+	holly/region_array.o \
+	holly/ta_parameter.o \
+	storequeue.o \
+	scene.o
 
 all: main.cdi
 
@@ -59,10 +79,10 @@ all: main.cdi
 %.o: %.cpp %.cpp.d
 	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) -c $< -o $@
 
-main.elf: start.o main.o cache.o vga.o load.o rgb.o
+main.elf: $(MAIN_OBJ)
 	$(LD) $(LDFLAGS) -T $(LIB)/main.lds $^ -o $@
 
-test.elf: test.o rgb.o vga.o
+test.elf: test.o rgb.o vga.o DSC08384.data.o
 	$(LD) $(LDFLAGS) -T $(LIB)/alt.lds $^ -o $@
 
 %.bin: %.elf
@@ -108,6 +128,9 @@ audio.pcm:
 
 %.cdi: %.iso
 	./cdi4dc $< $@ >/dev/null
+
+%.data.o: %.data
+	$(BUILD_BINARY_O)
 
 .SUFFIXES:
 .INTERMEDIATE:

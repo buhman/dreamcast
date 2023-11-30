@@ -142,7 +142,7 @@ def blocks(rows):
         yield f"static_assert((offsetof (struct sh7091_reg, {block})) == {hex(offset << 16)});"
 
     yield ""
-    yield 'extern struct sh7091_reg SH7091 __asm("SH7091");'
+    yield 'extern struct sh7091_reg sh7091 __asm("sh7091");'
 
 def headers():
     yield "#include <stdint.h>"
