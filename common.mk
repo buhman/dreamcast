@@ -59,6 +59,9 @@ MAIN_OBJ = \
 
 all: main.cdi
 
+%.bin.o: %.bin
+	$(BUILD_BINARY_O)
+
 %.o: %.obj
 	$(OBJCOPY) -g \
 		--rename-section IP=.text.$* \

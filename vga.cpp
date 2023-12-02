@@ -166,7 +166,22 @@ void vga()
   v_sync_in();
 
   holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
-  holly.VO_CONTROL = 0x0016;
+  //holly.VO_CONTROL = 0x0016;
+  uint32_t hsync_pol    = 0;
+  uint32_t vsync_pol    = 0;
+  uint32_t blank_pol    = 0;
+  uint32_t blank_video  = 0;
+  uint32_t field_mode   = 0;
+  uint32_t pixel_double = 0;
+  uint32_t pclk_delay   = 0x16;
+  HOLLY.VO_CONTROL = 0
+    | (( pclk_delay   & 0x3f) << 16 )
+    | (( pixel_double & 0x01) <<  8 )
+    | (( field_mode   & 0x0f) <<  4 )
+    | (( blank_video  & 0x01) <<  3 )
+    | (( blank_pol    & 0x01) <<  2 )
+    | (( vsync_pol    & 0x01) <<  1 )
+    | (( hsync_pol    & 0x01) <<  0 );
 
   holly.SOFTRESET = 0b000;
 }

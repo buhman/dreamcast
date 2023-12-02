@@ -36,6 +36,7 @@ def do(ser, b):
     ser.flush()
     ser.flushInput()
     ser.flushOutput()
+    _ = ser.read(ser.in_waiting)
 
     ret = sync(ser, b'DATA')
     print(ret)
