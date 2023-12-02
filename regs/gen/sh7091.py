@@ -5,7 +5,8 @@ from pprint import pprint
 
 from generate import renderer
 
-def as_dict(header, row):
+def as_dict(header, row0):
+    row = [s.strip() for s in row0]
     return dict(zip(header, row))
 
 def read_input(filename):

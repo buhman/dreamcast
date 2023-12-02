@@ -9,5 +9,6 @@ __pycache__
 *.cdi
 *.o
 *.out
+*.gch
 scramble
 cdi4dc

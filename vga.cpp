@@ -3,6 +3,9 @@
 #include "sh7091.h"
 #include "sh7091_bits.h"
 #include "holly.h"
+#include "holly/core_bits.h"
+#include "aica.h"
+#include "memorymap.h"
 
 #include "vga.h"
 #include "rgb.h"
@@ -18,112 +21,78 @@ uint32_t get_cable_type()
 
 void vga1()
 {
-  uint32_t fb_r_ctrl = holly.FB_R_CTRL;
-  holly.FB_R_CTRL = fb_r_ctrl & ~(1 << 0); // fb_enable = 0
-  uint32_t blank_video = 1;
-  holly.VO_CONTROL |= (blank_video << 3); // blank_video
+  holly.FB_R_CTRL = holly.FB_R_CTRL & ~fb_r_ctrl::fb_enable;
+  holly.VO_CONTROL |= vo_control::blank_video;
 
   holly.FB_R_SIZE = 0;
 
-  uint32_t vblank_in = 0x0208;
-  uint32_t vblank_out = 0x0015;
-  holly.SPG_VBLANK_INT = (vblank_out << 16) | (vblank_in << 0);
+  holly.SPG_VBLANK_INT = spg_vblank_int::vblank_out_interrupt_line_number(0x0015)
+                       | spg_vblank_int::vblank_in_interrupt_line_number(0x0208);
 
-  uint32_t sync_direction = 1;
-  holly.SPG_CONTROL = (sync_direction << 8);
+  holly.SPG_CONTROL = spg_control::sync_direction::output;
 
-  uint32_t hbstart = 0x0345; // default
-  uint32_t hbend   = 0x007e; // default
-  holly.SPG_HBLANK = (hbend << 16) | (hbstart << 0);
+  constexpr uint32_t hbstart = 0x0345;
+  holly.SPG_HBLANK = spg_hblank::hbend(0x007e) // default
+                   | spg_hblank::hbstart(hbstart); // default
 
-  uint32_t hcount = 0x0359; // default
-  uint32_t vcount = 0x020c; // non-default
-  holly.SPG_LOAD = (vcount << 16) | (hcount << 0);
+  holly.SPG_LOAD = spg_load::vcount(0x020c)  // default
+                 | spg_load::hcount(0x0359); // non-default
 
-  uint32_t vbstart = 0x0208; // non-default
-  uint32_t vbend = 0x0028; // non-default
-  holly.SPG_VBLANK = (vbend << 16) | (vbstart << 0);
+  holly.SPG_VBLANK = spg_vblank::vbend(0x0028) // non-default
+                   | spg_vblank::vbstart(0x0208); // non-default
 
-  uint32_t hswidth = 0x003f;
-  uint32_t vswidth = 0x0003;
-  uint32_t bpwidth = 0x0319;
-  uint32_t eqwidth = 0x000f;
-  holly.SPG_WIDTH =
-    (hswidth << 0)
-    | (vswidth << 8)
-    | (bpwidth << 12)
-    | (eqwidth << 22);
+  holly.SPG_WIDTH = spg_width::eqwidth(0x000f)
+		  | spg_width::bpwidth(0x0319)
+		  | spg_width::vswidth(0x0003)
+                  | spg_width::hswidth(0x003f);
 
-  uint32_t startx = 0x0a8;
-  uint32_t starty = 0x028;
-  holly.VO_STARTX = startx;
-  holly.VO_STARTY = (starty << 16) | (starty << 0);
+  constexpr uint32_t starty = 0x028;
+  holly.VO_STARTX = vo_startx::horizontal_start_position(0x0a8);
+  holly.VO_STARTY = vo_starty::vertical_start_position_on_field_2(starty)
+                  | vo_starty::vertical_start_position_on_field_1(starty);
 
-  holly.SPG_HBLANK_INT = hbstart << 16;
+  holly.SPG_HBLANK_INT = spg_hblank_int::line_comp_val(hbstart);
 }
 
 void vga2()
 {
-  holly.FB_BURSTCTRL = 0x00093f39;
+  holly.FB_BURSTCTRL = fb_burstctrl::wr_burst(0x09)
+                     | fb_burstctrl::vid_lat(0x3f)
+                     | fb_burstctrl::vid_burst(0x39);
 
-  uint32_t xsize = 640;
-  uint32_t ysize = 480;
+  constexpr uint32_t x_size = 640;
+  constexpr uint32_t y_size = 480;
 
-  uint32_t fb_xclip_min = 0;
-  uint32_t fb_xclip_max = xsize-1;
-  holly.FB_X_CLIP = (fb_xclip_max << 16) | (fb_xclip_min << 0);
-  uint32_t fb_yclip_min = 0;
-  uint32_t fb_yclip_max = ysize-1;
-  holly.FB_Y_CLIP = (fb_yclip_max << 16) | (fb_yclip_min << 0);
+  holly.FB_X_CLIP = fb_x_clip::fb_x_clip_max(x_size - 1)
+                  | fb_x_clip::fb_x_clip_min(0);
 
-  uint32_t fb_xsize = (xsize * 16)/(32) - 1;
-  uint32_t fb_ysize = ysize - 3;
-  uint32_t fb_mod = 1;
-  holly.FB_R_SIZE = 0
-    | (fb_xsize << 0)
-    | (fb_ysize << 10)
-    | (fb_mod << 20);
+  holly.FB_Y_CLIP = fb_y_clip::fb_y_clip_max(y_size - 1)
+                  | fb_y_clip::fb_y_clip_min(0);
 
-  uint32_t coeff0 = 0x40;
-  uint32_t coeff1 = 0x80;
-  holly.Y_COEFF = (coeff1 << 8) | (coeff0 << 0);
+  holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
+                  | fb_r_size::fb_y_size(y_size - 3)
+                  | fb_r_size::fb_x_size((x_size * 16) / 32 - 1);
 
-  uint32_t vscale_factor = 0x0400;
-  holly.SCALER_CTL = (vscale_factor << 0);
+  holly.Y_COEFF = y_coeff::coefficient_1(0x80)
+                | y_coeff::coefficient_0_2(0x40);
 
-  holly.FB_W_SOF1 = 0;
-  holly.FB_W_SOF2 = 0;
-  holly.FB_R_SOF1 = 0;
-  holly.FB_R_SOF2 = 0;
+  // in 6.10 fixed point; 0x0400 is 1x vertical scale
+  holly.SCALER_CTL = scaler_ctl::vertical_scale_factor(0x0400);
 
-  holly.FB_R_CTRL = 0
-    | 1 << 23 // vclk_div
-    | 0 << 22 // fb_strip_buf_en
-    | 0 << 16 // fb_strip_size
-    | 0 << 8 // fb_chroma_threshold
-    | 0 << 4 // fb_concat
-    | 1 << 2 // fb_depth
-    | 0 << 1 // fb_line_double
-    | 1 << 0 // fb_enable
-    ;
+  holly.FB_W_SOF1 = fb_w_sof1::frame_buffer_write_address_frame_1(0);
+  holly.FB_W_SOF2 = fb_w_sof2::frame_buffer_write_address_frame_2(0);
+  holly.FB_R_SOF1 = fb_r_sof1::frame_buffer_read_address_frame_1(0);
+  holly.FB_R_SOF2 = fb_r_sof2::frame_buffer_read_address_frame_2(0);
 
-  uint32_t hsync_pol    = 0;
-  uint32_t vsync_pol    = 0;
-  uint32_t blank_pol    = 0;
-  uint32_t blank_video  = 0;
-  uint32_t field_mode   = 0;
-  uint32_t pixel_double = 0;
-  uint32_t pclk_delay   = 0x16;
-  holly.VO_CONTROL = 0
-    | (( pclk_delay   & 0x3f) << 16 )
-    | (( pixel_double & 0x01) <<  8 )
-    | (( field_mode   & 0x0f) <<  4 )
-    | (( blank_video  & 0x01) <<  3 )
-    | (( blank_pol    & 0x01) <<  2 )
-    | (( vsync_pol    & 0x01) <<  1 )
-    | (( hsync_pol    & 0x01) <<  0 );
+  holly.FB_R_CTRL = fb_r_ctrl::vclk_div::pclk_vclk_1
+                  | fb_r_ctrl::fb_depth::_0565_rgb_16bit
+                  | fb_r_ctrl::fb_enable;
 
-  *((reg32 *)0xa0702c00) = 0;
+#define DVE_OUTPUT_MODE (&aica[0x2c00])
+#define DVE_OUTPUT_MODE__VGA (0b00 << 0)
+  *DVE_OUTPUT_MODE = DVE_OUTPUT_MODE__VGA;
+#undef DVE_OUTPUT_MODE
+#undef DVE_OUTPUT_MODE__VGA
 }
 
 void v_sync_in()
@@ -154,41 +123,27 @@ void vga()
 {
   get_cable_type();
 
-  holly.SOFTRESET = 0b111;
-  holly.TEXT_CONTROL = 3;
-  holly.FB_W_CTRL = 9;
+  holly.SOFTRESET = softreset::sdram_if_soft_reset
+		  | softreset::pipeline_soft_reset
+		  | softreset::ta_soft_reset;
+  holly.TEXT_CONTROL = text_control::stride(3);
 
-  /*
-   */
   vga1();
   vga2();
 
+  holly.VO_BORDER_COL = vo_border_col::red(0x00)
+                      | vo_border_col::green(0xff)
+                      | vo_border_col::blue(0x00);
+  holly.VO_CONTROL = vo_control::pclk_delay(0x16);
+
   v_sync_in();
 
-  holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
-  //holly.VO_CONTROL = 0x0016;
-  uint32_t hsync_pol    = 0;
-  uint32_t vsync_pol    = 0;
-  uint32_t blank_pol    = 0;
-  uint32_t blank_video  = 0;
-  uint32_t field_mode   = 0;
-  uint32_t pixel_double = 0;
-  uint32_t pclk_delay   = 0x16;
-  HOLLY.VO_CONTROL = 0
-    | (( pclk_delay   & 0x3f) << 16 )
-    | (( pixel_double & 0x01) <<  8 )
-    | (( field_mode   & 0x0f) <<  4 )
-    | (( blank_video  & 0x01) <<  3 )
-    | (( blank_pol    & 0x01) <<  2 )
-    | (( vsync_pol    & 0x01) <<  1 )
-    | (( hsync_pol    & 0x01) <<  0 );
-
-  holly.SOFTRESET = 0b000;
+  holly.SOFTRESET = 0;
 }
 
 void fill_framebuffer()
 {
-  reg16 * vram = (reg16 *)0xa5000000;
+  volatile uint16_t * vram = reinterpret_cast<volatile uint16_t *>(texture_memory);
   for (int y = 0; y < 480; y++) {
     for (int x = 0; x < 640; x++) {
       struct hsv hsv = {(y * 255) / 480, 255, 255};

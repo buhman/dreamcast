@@ -1,0 +1,52 @@
+KAEDE/Mpglobal.h
+KAEDE/MPDRV_.C
+KAEDE/MPAPI_.C
+
+MAPLE82E.pdf Chapter 6 "COMMAND REFERENCE"
+
+jargon:
+
+AP - Absolute Position ; MAPLE82E.pdf page 13
+
+(Address)    (Data)
+0x0C700000 → 0x00000000 Port 0, 4-byte data transmission (instruction to Maple-Host)
+0x0C700004 → 0x0C800000 Port 0, reception data storage address (instruction to Maple-Host)
+0x0C700008 → 0x01200000 [Device Request], transfer destination AP: 0x20, transfer source AP: 0x00
+0x0C70000C → 0x00010000 Port 1, 4-byte data transmission
+0x0C700010 → 0x0C800100 Port 1, reception data storage address
+0x0C700014 → 0x01604000 [Device Request], transfer destination AP: 0x60, transfer source AP: 0x40
+0x0C700018 → 0x00020000 Port 2, 4-byte data transmission
+0x0C70001C → 0x0C800200 Port 2, reception data storage address
+0x0C700020 → 0x01A08000 [Device Request], transfer destination AP: 0xA0, transfer source AP: 0x80
+0x0C700024 → 0x80030000 Port 3, 4-byte data transmission
+0x0C700028 → 0x0C800300 Port 3, reception data storage address 
+0x0C70002C → 0x01E0C000 [Device Request], transfer destination AP: 0xE0, transfer source AP: 0xC0
+
+---
+
+(Specified reception data storage address: 0x0C800000)
+0x0C800000 → 0x0500201C [Device Status], transfer destination AP:00, transfer source AP:20
+0x0C800004 → 0x00000001 112 bytes of fixed data follows � �
+0x0C800070 → 0x00000000
+0x0C800000 → 0xFFFFFFFF No connection
+0x0C800000 → 0xFFFFFF00 Reception data error
+
+----
+
+(Address)    (Data)
+0x0C700000 → 0x00000001 Port 0, 8-byte data transmission (instruction to Maple-Host)
+0x0C700004 → 0x0C800000 Port 0, reception data storage address (instruction to Maple-Host)
+0x0C700008 → 0x09200001 [Get Condition], transfer destination AP: 0x20, transfer source AP: 0x00
+0x0C70000C → 0x00000001 Function type
+0x0C700010 → 0x00010001 Port 2, 8-byte data transmission
+0x0C700014 → 0x0C800100 Port1, reception data storage address
+0x0C700018 → 0x09604001 [Get Condition], transfer destination AP:0x60, transfer source AP:0x40
+0x0C70001C → 0x00000001 Function Type
+0x0C700020 → 0x00020001 Port 2, 8-byte data transmission
+0x0C700024 → 0x0C800200 Port 2, reception data storage address
+0x0C700028 → 0x09A08001 [Get Condition], transfer destination AP: 0x80, transfer source AP: 0xA0
+0x0C70002C → 0x00000001 Function type
+0x0C700030 → 0x80030001 command list end Port 3, 8-byte data transmission,
+0x0C700034 → 0x0C800300 Port 3, reception data storage address
+0x0C700038 → 0x09E0C001 [Get Condition], transfer destination AP: 0xC0, transfer source AP: 0xE0
+0x0C70003C → 0x00000001 Function Type

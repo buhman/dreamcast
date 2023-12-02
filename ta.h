@@ -3,10 +3,6 @@
 #define FPU_SHAD_SCALE__INTENSITY_SHADOW_ENABLE (1 << 8)
 #define FPU_SHAD_SCALE__SCALE_FACTOR(n) (((n) & 0xff) << 0)
 
-#define FPU_CULL_VAL__COMPARISON_VALUE(n) (_u32(__builtin_fabsf(n)))
-
-#define FPU_PERP_VAL__COMPARISON_VALUE(n) (_u32(__builtin_fabsf(n)))
-
 #define SPAN_SORT_CFG__CACHE_BYPASS (1 << 16)
 #define SPAN_SORT_CFG__OFFSET_SORT_ENABLE (1 << 8)
 #define SPAN_SORT_CFG__SPAN_SORT_ENABLE (1 << 0)
