@@ -16,6 +16,8 @@ struct isp_tsp_parameter {
   vertex_parameter vertex[3];
 };
 
+static_assert((sizeof (isp_tsp_parameter)) == (4 * 3 + 3) * 4);
+
 void background_parameter(volatile uint32_t * buf)
 {
   volatile isp_tsp_parameter * parameter = reinterpret_cast<volatile isp_tsp_parameter *>(buf);
@@ -35,15 +37,15 @@ void background_parameter(volatile uint32_t * buf)
   parameter->vertex[0].x = 0.f;
   parameter->vertex[0].y = 0.f;
   parameter->vertex[0].z = 1.f/100000;
-  parameter->vertex[0].base_color = 0xff300000;
+  parameter->vertex[0].base_color = 0x00000000;
 
-  parameter->vertex[1].x = 0.f;
-  parameter->vertex[1].y = 480.f;
+  parameter->vertex[1].x = 639.f;
+  parameter->vertex[1].y = 0.f;
   parameter->vertex[1].z = 1.f/100000;
-  parameter->vertex[1].base_color = 0xff300000;
+  parameter->vertex[1].base_color = 0x00000000;
 
-  parameter->vertex[2].x = 640.f;
-  parameter->vertex[2].y = 0.f;
+  parameter->vertex[2].x = 639.f;
+  parameter->vertex[2].y = 479.f;
   parameter->vertex[2].z = 1.f/100000;
-  parameter->vertex[2].base_color = 0xff300000;
+  parameter->vertex[2].base_color = 0x00000000;
 }

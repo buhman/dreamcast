@@ -39,6 +39,12 @@ SECTIONS
     *(.bss.*)
   } > p1ram
 
+  .text.p2ram ALIGN(4) : SUBALIGN(4)
+  {
+    *(.p2ram)
+    *(.p2ram.*)
+  } > p1ram
+
   __p1ram_end = .;
 
   /DISCARD/ :

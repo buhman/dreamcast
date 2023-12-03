@@ -22,7 +22,7 @@
 
 #define SCFSR2__ER   (1 << 7) /* read error */
 #define SCFSR2__TEND (1 << 6) /* transmit end */
-#define SCFSR2__TFDE (1 << 5) /* transmit fifo data empty */
+#define SCFSR2__TDFE (1 << 5) /* transmit fifo data empty */
 #define SCFSR2__BRK  (1 << 4) /* break detect */
 #define SCFSR2__FER  (1 << 3) /* framing error */
 #define SCFSR2__PER  (1 << 2) /* parity error */

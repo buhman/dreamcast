@@ -3,8 +3,10 @@
 #include "holly/region_array.h"
 #include "holly/background.h"
 #include "holly/ta_parameter.h"
+#include "holly/core_bits.h"
 #include "holly.h"
 #include "ta.h"
+#include "sh7091.h"
 
 #include "memorymap.h"
 #include "storequeue.h"
@@ -17,13 +19,20 @@ struct texture_memory_alloc {
   uint32_t              _res0[      0x20 / 4]; // (the TA may clobber 4 bytes starting at TA_OL_LIMIT)
   uint32_t       region_array[0x00002000 / 4]; // REGION_BASE
   uint32_t         background[0x00000020 / 4]; // ISP_BACKGND_T
-  uint32_t        framebuffer[0x00096000 / 4]; // FB_R_SOF1 / FB_W_SOF1
+  uint32_t     framebuffer[2][0x00096000 / 4]; // FB_R_SOF1 / FB_W_SOF1
 };
 
+/*
+    0,-.5
+      |
+            ---
+  -0.5,0.5    |  0.5,0.5
+ */
+
 float scene_triangle[3][3] = {
-  { 320.f,  120.f,  1/10.f},
-  { 440.f,  360.f,  1/10.f},
-  { 200.f,  360.f,  1/10.f},
+  { 0.f,  -0.5f,  1/10.f},
+  { 0.5f,  0.5f,  1/10.f},
+  { -0.5f,  0.5f,  1/10.f},
 };
 
 void scene_holly_init()
@@ -83,9 +92,10 @@ void scene_ta_init()
   holly.TA_ISP_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
   holly.TA_ISP_LIMIT = (offsetof (struct texture_memory_alloc, object_list)); // the end of isp_tsp_parameters
   holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list));
-  holly.TA_OL_LIMIT = (offsetof (struct texture_memory_alloc, region_array)); // the end of the object_list
-  holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
-                         + (640 / 32) * (320 / 32) * 16 * 4;
+  holly.TA_OL_LIMIT = (offsetof (struct texture_memory_alloc, _res0)); // the end of the object_list
+  holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list));
+  //holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
+  //                       + (640 / 32) * (320 / 32) * 16 * 4;
 
   holly.TA_LIST_INIT = TA_LIST_INIT__LIST_INIT;
 
@@ -100,8 +110,12 @@ void scene_wait_opaque_list()
   system.ISTNRM = SB_ISTNRM__TAEOINT;
 }
 
+static float theta = 0;
+constexpr float degree = 0.01745329f;
+
 void scene_geometry_transfer()
 {
+  /*
   triangle(store_queue);
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
@@ -120,6 +134,50 @@ void scene_geometry_transfer()
 
   end_of_list(store_queue);
   sq_transfer_32byte(ta_fifo_polygon_converter);
+  */
+  uint32_t __attribute__((aligned(32))) scene[(32 * 5) / 4];
+  triangle(&scene[(32 * 0) / 4]);
+  for (int i = 0; i < 3; i++) {
+    bool end_of_strip = i == 2;
+
+    float x = scene_triangle[i][0];
+    float y = scene_triangle[i][1];
+
+    x = x * __builtin_cosf(theta) - y * __builtin_sinf(theta);
+    y = x * __builtin_sinf(theta) + y * __builtin_cosf(theta);
+    x *= 240.f;
+    y *= 240.f;
+    x += 320.f;
+    y += 240.f;
+
+    vertex(&scene[(32 * (i + 1)) / 4],
+           x, // x
+           y, // y
+           scene_triangle[i][2], // z
+           0xffff00ff,           // base_color
+           end_of_strip);
+  }
+  end_of_list(&scene[(32 * 4) / 4]);
+  theta += degree;
+
+  volatile uint32_t _dummy = sh7091.DMAC.CHCR2;
+  (void)_dummy;
+  sh7091.DMAC.CHCR2 = 0;
+  sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(&scene[0]);
+  sh7091.DMAC.DMATCR2 = (32 * 5) / 32;
+  //   SM(1) {source address increment}
+  // | RS(2) {external request, single address mode}
+  // | TM    {burst mode}
+  // | TS(2) {32-byte block}
+  // | DE    {enable channel}
+  sh7091.DMAC.CHCR2 = 0x12c1;
+  sh7091.DMAC.DMAOR = 0x8201;
+  system.C2DSTAT = 0x10000000;
+  system.C2DLEN = 32 * 5;
+  system.C2DST = 1;
+
+  while ((system.ISTNRM & (1 << 19)) == 0);
+  system.ISTNRM = (1 << 19);
 }
 
 void scene_init_texture_memory()
@@ -134,7 +192,7 @@ void scene_init_texture_memory()
                );
 }
 
-void scene_start_render()
+void scene_start_render(int fb)
 {
   holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));
   holly.PARAM_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
@@ -144,10 +202,17 @@ void scene_start_render()
                       | ISP_BACKGND_T__SKIP(1);
   holly.ISP_BACKGND_D = _i(1.f/100000);
 
-  holly.FB_W_CTRL = FB_W_CTRL__FB_PACKMODE__565_RGB;
-  holly.FB_W_LINESTRIDE = 640 / 8;
-  holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer));
-  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer));
+  //holly.SOFTRESET = softreset::pipeline_soft_reset;
+
+  holly.FB_W_CTRL = 1 << 3 | FB_W_CTRL__FB_PACKMODE__565_RGB;
+  holly.FB_W_LINESTRIDE = (640 * 2) / 8;
+
+  int w_fb = (!(!fb)) * 0x00096000;
+  int r_fb = (!fb) * 0x00096000;
+  holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
+  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
+
+  //holly.SOFTRESET = 0;
 
   holly.STARTRENDER = 1;
 }

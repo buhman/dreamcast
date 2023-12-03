@@ -1,6 +1,7 @@
 #include <stdint.h>
 
 #include "sh7091.h"
+#include "sh7091_bits.h"
 #include "holly.h"
 
 enum load_command {
@@ -47,6 +48,7 @@ void debug(const char * s)
 {
   char c;
   while ((c = *s++)) {
+    while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0);
     sh7091.SCIF.SCFTDR2 = (uint8_t)c;
   }
 }

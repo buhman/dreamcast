@@ -45,7 +45,10 @@ void region_array(volatile uint32_t * buf,
   for (uint32_t y = 0; y < height; y++) {
     for (uint32_t x = 0; x < width; x++) {
       region_array[ix].tile = REGION_ARRAY__TILE_Y_POSITION(y)
-	                    | REGION_ARRAY__TILE_X_POSITION(x);
+                            | REGION_ARRAY__TILE_X_POSITION(x);
+
+      if (y == (height - 1) && x == (width - 1))
+	region_array[ix].tile |= REGION_ARRAY__LAST_REGION;
 
       uint32_t tile_index = y * width + x;
       constexpr uint32_t opaque_list_opb_size = 16 * 4; // in bytes; this must match O_OPB in TA_ALLOC_CTRL

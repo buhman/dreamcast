@@ -7,6 +7,9 @@
 #include "sh7091.h"
 #include "sh7091_bits.h"
 #include "memorymap.h"
+#include "systembus.h"
+#include "holly.h"
+#include "holly/core_bits.h"
 
 #include "rgb.h"
 #include "scene.h"
@@ -30,6 +33,22 @@ void serial()
   sh7091.SCIF.SCSCR2 = SCSCR2__TE | SCSCR2__RE;
 }
 
+inline void serial_char(const char c)
+{
+  // wait for transmit fifo to become empty
+  while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0);
+
+  sh7091.SCIF.SCFTDR2 = static_cast<uint8_t>(c);
+}
+
+void serial_string(const char * s)
+{
+  return;
+  while (*s != '\0') {
+    serial_char(*s++);
+  }
+}
+
 extern "C"
 void main()
 {
@@ -42,7 +61,7 @@ void main()
     *start++ = 0;
   }
 
-  serial();
+  //serial();
 
   vga();
 
@@ -58,39 +77,31 @@ void main()
   }
 
 
+  holly.SOFTRESET = softreset::pipeline_soft_reset
+		  | softreset::ta_soft_reset;
+  holly.SOFTRESET = 0;
+
+  system.LMMODE0 = 1;
+  system.LMMODE1 = 1;
+
+  v_sync_out();
+  v_sync_in();
+  scene_holly_init();
+  scene_init_texture_memory();
+
+  int frame = 0;
+
   while (1) {
-    v_sync_in();
-    scene_holly_init();
-    scene_init_texture_memory();
     scene_ta_init();
     scene_geometry_transfer();
     scene_wait_opaque_list();
-    scene_start_render();
+    scene_start_render(frame);
+    frame = !frame;
 
     // I do not understand why, but flycast does not show the first-rendered
     // framebuffer.
+
+    v_sync_out();
     v_sync_in();
-    scene_ta_init();
-    scene_geometry_transfer();
-    scene_wait_opaque_list();
-    scene_start_render();
-
-    // do nothing forever
-    while(1);
-
-  /*
-  load_init();
-
-  while (1) {
-    while ((sh7091.SCIF.SCFSR2 & SCFSR2__RDF) == 0) {
-      // wait
-    }
-    while ((sh7091.SCIF.SCFDR2 & 0b11111) > 0) {
-      uint8_t c = sh7091.SCIF.SCFRDR2;
-      load_recv(c);
-    }
-    sh7091.SCIF.SCFSR2 = sh7091.SCIF.SCFSR2 & (~SCFSR2__RDF);
-  }
-*/
   }
 }

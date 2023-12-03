@@ -136,6 +136,9 @@ void vga()
                       | vo_border_col::blue(0x00);
   holly.VO_CONTROL = vo_control::pclk_delay(0x16);
 
+  holly.SDRAM_CFG = 0x15D1C951;
+  holly.SDRAM_REFRESH = 0x00000020;
+
   v_sync_in();
 
   holly.SOFTRESET = 0;
