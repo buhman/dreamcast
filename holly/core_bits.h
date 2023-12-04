@@ -148,18 +148,18 @@ namespace fpu_param_cfg {
 
 namespace half_offset {
   namespace tsp_texel_sampling_position {
-    constexpr uint32_t top_left(uint32_t reg) { return (reg >> 2) & 0x1; }
-    constexpr uint32_t center(uint32_t reg) { return (reg >> 2) & 0x1; }
+    constexpr uint32_t top_left = 1 << 2;
+    constexpr uint32_t center = 1 << 2;
   }
   
   namespace tsp_pixel_sampling_position {
-    constexpr uint32_t top_left(uint32_t reg) { return (reg >> 1) & 0x1; }
-    constexpr uint32_t center(uint32_t reg) { return (reg >> 1) & 0x1; }
+    constexpr uint32_t top_left = 1 << 1;
+    constexpr uint32_t center = 1 << 1;
   }
   
   namespace fpu_pixel_sampling_position {
-    constexpr uint32_t top_left(uint32_t reg) { return (reg >> 0) & 0x1; }
-    constexpr uint32_t center(uint32_t reg) { return (reg >> 0) & 0x1; }
+    constexpr uint32_t top_left = 1 << 0;
+    constexpr uint32_t center = 1 << 0;
   }
 }
 

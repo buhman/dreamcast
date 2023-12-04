@@ -1,16 +1,18 @@
 #include <stdint.h>
 
-#include "cache.h"
-#include "load.h"
-#include "vga.h"
+#include "memorymap.h"
 
 #include "sh7091.h"
 #include "sh7091_bits.h"
-#include "memorymap.h"
-#include "systembus.h"
 #include "holly.h"
+#include "holly/core.h"
 #include "holly/core_bits.h"
+#include "holly/ta_fifo_polygon_converter.h"
+#include "systembus.h"
 
+#include "cache.h"
+#include "load.h"
+#include "vga.h"
 #include "rgb.h"
 #include "scene.h"
 
@@ -43,11 +45,14 @@ inline void serial_char(const char c)
 
 void serial_string(const char * s)
 {
-  return;
   while (*s != '\0') {
     serial_char(*s++);
   }
 }
+
+/* must be aligned to 32-bytes for DMA transfer */
+// the aligned(32) attribute does not actually align to 32 bytes.
+volatile uint32_t __attribute__((aligned(32))) scene[(32 * 5) / 4];
 
 extern "C"
 void main()
@@ -76,7 +81,6 @@ void main()
     }
   }
 
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -86,22 +90,29 @@ void main()
 
   v_sync_out();
   v_sync_in();
-  scene_holly_init();
-  scene_init_texture_memory();
+
+  core_init();
+  core_init_texture_memory();
 
   int frame = 0;
+  // the address of `scene` must be a multiple of 32 bytes
+  // this is mandatory for ch2-dma to the ta fifo polygon converter
+  if ((reinterpret_cast<uint32_t>(scene) & 31) != 0) {
+    serial_string("unaligned\n");
+    while(1);
+  }
 
-  while (1) {
-    scene_ta_init();
-    scene_geometry_transfer();
-    scene_wait_opaque_list();
-    scene_start_render(frame);
-    frame = !frame;
-
-    // I do not understand why, but flycast does not show the first-rendered
-    // framebuffer.
-
+  while (true) {
     v_sync_out();
     v_sync_in();
+
+    ta_polygon_converter_init();
+    uint32_t ta_parameter_count = scene_transform(&scene[0]);
+    uint32_t ta_parameter_size = ta_parameter_count * 32; /* 32 bytes per parameter */
+    ta_polygon_converter_transfer(&scene[0], ta_parameter_size);
+    ta_wait_opaque_list();
+    core_start_render(frame);
+
+    frame = !frame;
   }
 }

@@ -33,8 +33,8 @@ namespace ta_glob_tile_clip {
 
 namespace ta_alloc_ctrl {
   namespace opb_mode {
-    constexpr uint32_t decreasing_addresses = 0 << 20;
-    constexpr uint32_t increasing_addresses = 1 << 20;
+    constexpr uint32_t increasing_addresses = 0 << 20;
+    constexpr uint32_t decreasing_addresses = 1 << 20;
   }
   
   namespace pt_opb {

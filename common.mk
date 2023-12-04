@@ -55,7 +55,8 @@ MAIN_OBJ = \
 	holly/background.o \
 	holly/region_array.o \
 	holly/ta_parameter.o \
-	storequeue.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/core.o \
 	scene.o
 
 all: main.cdi
@@ -138,6 +139,12 @@ audio.pcm:
 
 %.data.o: %.data
 	$(BUILD_BINARY_O)
+
+clean:
+	find -P \
+		-regextype posix-egrep \
+		-regex '.*\.(iso|o|bin|elf|cue|gch)$$' \
+		-exec rm {} \;
 
 .SUFFIXES:
 .INTERMEDIATE:
