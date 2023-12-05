@@ -51,8 +51,14 @@ void serial_string(const char * s)
 }
 
 /* must be aligned to 32-bytes for DMA transfer */
-// the aligned(32) attribute does not actually align to 32 bytes.
-volatile uint32_t __attribute__((aligned(32))) scene[(32 * 5) / 4];
+// the aligned(32) attribute does not actually align to 32 bytes; gcc is the best compiler.
+// `+ 32` to allow for repositioning _scene to an actual 32-byte alignment.
+uint32_t __attribute__((aligned(32))) _scene[((32 * 5) + 32) / 4];
+
+uint32_t * align_32byte(uint32_t * mem)
+{
+  return reinterpret_cast<uint32_t *>(((reinterpret_cast<uint32_t>(_scene) + 31) & ~31));
+}
 
 extern "C"
 void main()
@@ -95,8 +101,10 @@ void main()
   core_init_texture_memory();
 
   int frame = 0;
+
   // the address of `scene` must be a multiple of 32 bytes
   // this is mandatory for ch2-dma to the ta fifo polygon converter
+  uint32_t * scene = align_32byte(_scene);
   if ((reinterpret_cast<uint32_t>(scene) & 31) != 0) {
     serial_string("unaligned\n");
     while(1);
