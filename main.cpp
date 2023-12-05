@@ -53,7 +53,7 @@ void serial_string(const char * s)
 /* must be aligned to 32-bytes for DMA transfer */
 // the aligned(32) attribute does not actually align to 32 bytes; gcc is the best compiler.
 // `+ 32` to allow for repositioning _scene to an actual 32-byte alignment.
-uint32_t __attribute__((aligned(32))) _scene[((32 * 5) + 32) / 4];
+uint32_t __attribute__((aligned(32))) _scene[((32 * 6) + 32) / 4];
 
 uint32_t * align_32byte(uint32_t * mem)
 {
