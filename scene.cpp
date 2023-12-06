@@ -12,7 +12,7 @@
   -0.5,0.5    |  0.5,0.5
  */
 
-struct triangle {
+struct vertex0 {
   float x;
   float y;
   float z;
@@ -21,26 +21,75 @@ struct triangle {
   uint32_t color;
 };
 
-const struct triangle scene_triangle[4] = {
+const struct vertex0 scene_triangle[4] = {
   { -0.5f,   0.5f,  0.f, 0.f        , 128.f/128.f, 0x00000000}, // the first two base colors in a
   { -0.5f,  -0.5f,  0.f, 0.f        , 0.f        , 0x00000000}, // triangle strip are ignored
   {  0.5f,   0.5f,  0.f, 128.f/128.f, 128.f/128.f, 0xffff00ff},
   {  0.5f,  -0.5f,  0.f, 128.f/128.f, 0.f        , 0xffffff00},
 };
 
-static float theta = 0;
-constexpr float one_degree = 0.01745329f / 2.f;
+struct vertex1 {
+  float x;
+  float y;
+  float z;
+};
 
-uint32_t scene_transform(volatile uint32_t * scene)
+const struct vertex1 scene_quad[4] = {
+  { -0.5f,   0.5f, 0.f },
+  { -0.5f,  -0.5f, 0.f },
+  {  0.5f,  -0.5f, 0.f },
+  {  0.5f,   0.5f, 0.f },
+};
+
+struct scene_quad_ta_parameters {
+  global_sprite sprite;
+  vertex_sprite_type_0 vertex;
+  global_end_of_list end_of_list;
+};
+
+static_assert((sizeof (scene_quad_ta_parameters)) == 32 * 4);
+
+uint32_t scene_transform_quad(uint32_t * _scene)
 {
-  uint32_t ix = 0;
+  auto scene = reinterpret_cast<scene_quad_ta_parameters *>(&_scene[0]);
 
-  uint32_t address = (offsetof (struct texture_memory_alloc, texture));
-  textured_triangle(&scene[(32 * ix) / 4],
-		    address);
-  ix++;
+  uint32_t base_color = 0xffffff00;
+  scene->sprite = global_sprite(base_color);
+  scene->vertex = vertex_sprite_type_0(scene_quad[0].x * 240 + 320,
+				       scene_quad[0].y * 240 + 240,
+				       1 / (scene_quad[0].z + 10),
+				       scene_quad[1].x * 240 + 320,
+				       scene_quad[1].y * 240 + 240,
+				       1 / (scene_quad[1].z + 10),
+				       scene_quad[2].x * 240 + 320,
+				       scene_quad[2].y * 240 + 240,
+				       1 / (scene_quad[2].z + 10),
+				       scene_quad[3].x * 240 + 320,
+				       scene_quad[3].y * 240 + 240);
+  scene->end_of_list = global_end_of_list();
 
-  for (int i = 0; i < 4; i++) {
+  return (sizeof (scene_quad_ta_parameters));
+}
+
+static float theta = 0;
+constexpr float half_degree = 0.01745329f / 2.f;
+
+union ta_parameter {
+  struct global_polygon_type_0 global_polygon_type_0;
+  struct vertex_polygon_type_3 vertex_polygon_type_3;
+  struct global_end_of_list global_end_of_list;
+};
+
+extern void serial_string(const char * s);
+
+uint32_t scene_transform(uint32_t * _scene)
+{
+  ta_parameter * scene = reinterpret_cast<ta_parameter *>(&_scene[0]);
+  int ix = 0;
+  uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+  scene[ix++].global_polygon_type_0 = global_polygon_type_0(texture_address);
+
+  for (uint32_t i = 0; i < 4; i++) {
     bool end_of_strip = i == 3;
 
     float x = scene_triangle[i].x;
@@ -56,22 +105,18 @@ uint32_t scene_transform(volatile uint32_t * scene)
     x += 320.f;
     y += 240.f;
 
-    textured_vertex(&scene[(32 * ix) / 4],
-		    x, // x
-		    y, // y
-		    1.f / (z + 10.f), // z
-		    scene_triangle[i].u,     // u
-		    scene_triangle[i].v,     // v
-		    scene_triangle[i].color, // base_color
-		    0, // offset_color
-		    end_of_strip);
-    ix++;
+    scene[ix++].vertex_polygon_type_3 = vertex_polygon_type_3(x, // x
+							      y, // y
+							      1.f / (z + 10.f), // z
+							      scene_triangle[i].u,     // u
+							      scene_triangle[i].v,     // v
+							      scene_triangle[i].color, // base_color
+							      end_of_strip);
   }
 
-  end_of_list(&scene[(32 * ix) / 4]);
-  ix++;
+  scene[ix++].global_end_of_list = global_end_of_list();
 
-  theta += one_degree;
+  theta += half_degree;
 
-  return ix;
+  return ix * 32;
 }

@@ -126,16 +126,14 @@ void main()
   }
 
   int frame = 0;
-  int ix = 0;
 
   while (true) {
     v_sync_out();
     v_sync_in();
 
     ta_polygon_converter_init();
-    uint32_t ta_parameter_count = scene_transform(&scene[0]);
-    uint32_t ta_parameter_size = ta_parameter_count * 32; /* 32 bytes per parameter */
-    ta_polygon_converter_transfer(&scene[0], ta_parameter_size);
+    uint32_t ta_parameter_size = scene_transform(scene);
+    ta_polygon_converter_transfer(scene, ta_parameter_size);
     ta_wait_opaque_list();
     core_start_render(frame);
 

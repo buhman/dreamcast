@@ -23,6 +23,8 @@ LD = $(TARGET)ld
 OBJCOPY = $(TARGET)objcopy
 OBJDUMP = $(TARGET)objdump
 
+LIBGCC = $(shell $(CC) -print-file-name=libgcc.a)
+
 define BUILD_BINARY_O
 	$(OBJCOPY) \
 		-I binary -O elf32-shl -B sh4 \
@@ -54,11 +56,11 @@ MAIN_OBJ = \
 	rgb.o \
 	holly/background.o \
 	holly/region_array.o \
-	holly/ta_parameter.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/core.o \
 	scene.o \
-	macaw.data.o
+	macaw.data.o \
+	$(LIBGCC)
 
 all: main.cdi
 
@@ -144,7 +146,7 @@ audio.pcm:
 clean:
 	find -P \
 		-regextype posix-egrep \
-		-regex '.*\.(iso|o|bin|elf|cue|gch)$$' \
+		-regex '.*\.(iso|o|d|bin|elf|cue|gch)$$' \
 		-exec rm {} \;
 
 .SUFFIXES:
