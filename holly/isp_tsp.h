@@ -65,8 +65,19 @@ namespace tsp_instruction_word {
   constexpr uint32_t use_alpha = 1 << 20;
   constexpr uint32_t ignore_tex_alpha = 1 << 19;
 
-  // flip_uv
-  // clamp_uv
+  namespace flip_uv {
+    constexpr uint32_t none = 0 << 17;
+    constexpr uint32_t v = 1 << 17;
+    constexpr uint32_t u = 2 << 17;
+    constexpr uint32_t uv = 3 << 17;
+  }
+
+  namespace clamp_uv {
+    constexpr uint32_t none = 0 << 15;
+    constexpr uint32_t v = 1 << 15;
+    constexpr uint32_t u = 2 << 15;
+    constexpr uint32_t uv = 3 << 15;
+  }
 
   namespace filter_mode {
     constexpr uint32_t point_sampled = 0b00 << 13;
@@ -109,5 +120,28 @@ namespace tsp_instruction_word {
     constexpr uint32_t _256 = 5 << 0;
     constexpr uint32_t _512 = 6 << 0;
     constexpr uint32_t _1024 = 7 << 0;
+  }
+}
+
+namespace texture_control_word {
+  constexpr uint32_t mip_mapped = 1 << 31;
+  constexpr uint32_t vq_compressed = 1 << 30;
+
+  namespace pixel_format {
+    constexpr uint32_t _1555 = 0 << 27;
+    constexpr uint32_t _565 = 1 << 27;
+    constexpr uint32_t _4444 = 2 << 27;
+    constexpr uint32_t yuv422 = 3 << 27;
+    constexpr uint32_t bump_map = 4 << 27;
+    constexpr uint32_t _4bpp_palette = 5 << 27;
+    constexpr uint32_t _8bpp_palette = 6 << 27;
+  }
+
+  constexpr uint32_t scan_order = 1 << 26;
+  constexpr uint32_t stride_select = 1 << 25;
+
+  // in 8-byte units
+  constexpr uint32_t texture_address(uint32_t a) {
+    return a & 0x1fffff;
   }
 }

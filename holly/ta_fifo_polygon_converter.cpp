@@ -51,10 +51,22 @@ void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
      DCDBSysArc990907E's claim, it does not appear to be useful to check TE. */
   //while ((sh7091.DMAC.CHCR2 & CHCR2__TE) == 0); /* 1 == all transfers are completed */
 
-  /* start a new CH2-DMA transfer from "system memory" to "TA FIFO polygon converter" */
-  // this dummy read is required on real hardware.
+  /* "Write back" the entire buffer to physical memory.
+
+     This is required on real hardware if CCR__CB is enabled, and `buf` is in a
+     cacheable area (e.g: system memory access via 0x8c00_0000).*/
+  for (uint32_t i = 0; i < size / 32; i++) {
+    asm volatile ("ocbwb @%0"
+		  :                          // output
+		  : "r" (&buf[(i * 32) / 4]) // input
+		  );
+  }
+
+  // this dummy read appears to be required on real hardware.
   volatile uint32_t _dummy = sh7091.DMAC.CHCR2;
   (void)_dummy;
+
+  /* start a new CH2-DMA transfer from "system memory" to "TA FIFO polygon converter" */
   sh7091.DMAC.CHCR2 = 0; /* disable DMA channel */
   sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(&buf[0]); /* start address, must be aligned to a CHCHR__TS-sized (32-byte) boundary */
   sh7091.DMAC.DMATCR2 = DMATCR2__TRANSFER_COUNT(size / 32); /* transfer count, in CHCHR__TS-sized (32-byte) units */

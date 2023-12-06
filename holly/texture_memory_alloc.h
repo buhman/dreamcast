@@ -9,4 +9,6 @@ struct texture_memory_alloc {
   uint32_t       region_array[0x00002000 / 4]; // REGION_BASE
   uint32_t         background[0x00000040 / 4]; // ISP_BACKGND_T
   uint32_t     framebuffer[2][0x00096000 / 4]; // FB_R_SOF1 / FB_W_SOF1
+  uint32_t              _res1[      0x20 / 4]; // (re-align texture to a 64-byte boundary)
+  uint16_t         texture[128 * 128 * 2 / 2]; // texture_control_word::texture_address
 };

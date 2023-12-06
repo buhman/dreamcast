@@ -76,9 +76,8 @@ void core_start_render(int fb)
   int w_fb = (!(!fb)) * 0x00096000;
   int r_fb = (!fb) * 0x00096000;
   holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
-  holly.FB_W_SOF2 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
-  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
-  holly.FB_R_SOF2 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
+  //holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
+  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
 
   holly.STARTRENDER = 1;
 }

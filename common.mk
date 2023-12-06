@@ -57,7 +57,8 @@ MAIN_OBJ = \
 	holly/ta_parameter.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/core.o \
-	scene.o
+	scene.o \
+	macaw.data.o
 
 all: main.cdi
 

@@ -18,6 +18,17 @@ struct vertex_polygon_type_0 {
   uint32_t _res2;
 };
 
+struct vertex_polygon_type_3 {
+  uint32_t parameter_control_word;
+  float x;
+  float y;
+  float z;
+  float u;
+  float v;
+  uint32_t base_color;
+  uint32_t offset_color;
+};
+
 static_assert((sizeof (vertex_polygon_type_0)) == 32);
 static_assert((offsetof (struct vertex_polygon_type_0, parameter_control_word)) == 0x00);
 static_assert((offsetof (struct vertex_polygon_type_0, x))            == 0x04);
@@ -155,7 +166,7 @@ void triangle(volatile uint32_t * buf)
 
   parameter->parameter_control_word = para_control::para_type::polygon_or_modifier_volume
 				    | para_control::list_type::opaque
-				    | obj_control::col_type::packed_color;
+                                    | obj_control::col_type::packed_color;
 
   parameter->isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::always
 				      | isp_tsp_instruction_word::culling_mode::no_culling;
@@ -164,6 +175,68 @@ void triangle(volatile uint32_t * buf)
 				  | tsp_instruction_word::dst_alpha_instr::zero
 				  | tsp_instruction_word::fog_control::no_fog;
   parameter->texture_control_word = 0;
+  parameter->_res0 = 0;
+  parameter->_res1 = 0;
+  parameter->data_size_for_sort_dma = 0;
+  parameter->next_address_for_sort_dma = 0;
+}
+
+void textured_vertex(volatile uint32_t * buf,
+		     const float x,
+		     const float y,
+		     const float z,
+		     const float u,
+		     const float v,
+		     const uint32_t base_color,
+		     const uint32_t offset_color,
+		     bool end_of_strip
+		     )
+{
+  volatile vertex_polygon_type_3 * parameter = reinterpret_cast<volatile vertex_polygon_type_3 *>(buf);
+
+  parameter->parameter_control_word = para_control::para_type::vertex_parameter;
+
+  if (end_of_strip)
+    parameter->parameter_control_word |= para_control::end_of_strip;
+
+  parameter->x = x;
+  parameter->y = y;
+  parameter->z = z;
+  parameter->u = u;
+  parameter->v = v;
+  parameter->base_color = base_color;
+  parameter->offset_color = offset_color;
+}
+
+void textured_triangle(volatile uint32_t * buf,
+		       uint32_t texture_address)
+{
+  volatile global_polygon_type_0 * parameter = reinterpret_cast<volatile global_polygon_type_0 *>(buf);
+
+  parameter->parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+				    | para_control::list_type::opaque
+				    | obj_control::col_type::packed_color
+                                    | obj_control::texture;
+
+  parameter->isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::always
+				      | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  // <Note> Because a value of "0.0" is invalid for [MIP-Map] D [adjust], it must not be specified.
+  parameter->tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+				  | tsp_instruction_word::dst_alpha_instr::zero
+				  | tsp_instruction_word::fog_control::no_fog
+                                //| tsp_instruction_word::mip_map_d_adjust(0b0100) // 1.0 (2.2 fixed-point)
+                                //| tsp_instruction_word::filter_mode::bilinear_filter
+                                //| tsp_instruction_word::clamp_uv::uv
+                                //| tsp_instruction_word::flip_uv::uv
+                                  | tsp_instruction_word::texture_u_size::_128     // 128px
+                                  | tsp_instruction_word::texture_v_size::_128;    // 128px
+
+  if ((texture_address & 63) != 0) while (1);
+  parameter->texture_control_word = texture_control_word::pixel_format::_565
+				  | texture_control_word::scan_order // non-twiddled
+				  | texture_control_word::texture_address(texture_address / 8);
+
   parameter->_res0 = 0;
   parameter->_res1 = 0;
   parameter->data_size_for_sort_dma = 0;

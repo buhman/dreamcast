@@ -10,11 +10,15 @@
 #include "holly/ta_fifo_polygon_converter.h"
 #include "systembus.h"
 
+#include "holly/texture_memory_alloc.h"
+
 #include "cache.h"
 #include "load.h"
 #include "vga.h"
 #include "rgb.h"
 #include "scene.h"
+
+#include "macaw.h"
 
 extern uint32_t __bss_link_start __asm("__bss_link_start");
 extern uint32_t __bss_link_end __asm("__bss_link_end");
@@ -87,20 +91,31 @@ void main()
     }
   }
 
+  volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(0xa400'0000);
+
+  volatile uint8_t * macaw = reinterpret_cast<volatile uint8_t *>(&_binary_macaw_data_start);
+  uint32_t macaw_size = reinterpret_cast<uint32_t>(&_binary_macaw_data_size);
+  for (uint32_t px = 0; px < macaw_size / 3; px++) {
+    uint8_t r = macaw[px * 3 + 0];
+    uint8_t g = macaw[px * 3 + 1];
+    uint8_t b = macaw[px * 3 + 2];
+
+    uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
+    mem->texture[px] = rgb565;
+  }
+
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
-  system.LMMODE0 = 1;
-  system.LMMODE1 = 1;
+  //system.LMMODE0 = 1; // texture memory through TA FIFO
+  //system.LMMODE1 = 1; // texture memory through TA FIFO (mirror)
 
   v_sync_out();
   v_sync_in();
 
   core_init();
   core_init_texture_memory();
-
-  int frame = 0;
 
   // the address of `scene` must be a multiple of 32 bytes
   // this is mandatory for ch2-dma to the ta fifo polygon converter
@@ -109,6 +124,9 @@ void main()
     serial_string("unaligned\n");
     while(1);
   }
+
+  int frame = 0;
+  int ix = 0;
 
   while (true) {
     v_sync_out();
