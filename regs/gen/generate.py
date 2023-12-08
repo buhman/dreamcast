@@ -4,7 +4,7 @@ def should_autonewline(line):
     return (
         "static_assert" not in line
         and "extern" not in line
-        and line.split()[1] != '=' # hacky; meh
+        and (len(line.split()) < 2 or line.split()[1] != '=') # hacky; meh
     )
 
 def _render(out, lines):

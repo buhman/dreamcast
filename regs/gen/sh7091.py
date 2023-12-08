@@ -51,8 +51,7 @@ def new_writer():
         if last_block is not None:
             yield "};"
             for address, name in stack:
-                relative_address = address - first_address
-                yield f"static_assert((offsetof (struct {last_block.lower()}_reg, {name})) == {hex(relative_address)});"
+                yield f"static_assert((offsetof (struct {last_block.lower()}_reg, {name})) == {hex(address)});"
             yield ""
         stack = []
 
@@ -76,8 +75,8 @@ def new_writer():
 
         if block != last_block:
             yield from terminate()
-            first_address = address
-            last_address = address
+            first_address = 0 # hmm...
+            last_address = 0
             size_total = 0
             reserved_num = 0
             yield f"struct {block.lower()}_reg {{"

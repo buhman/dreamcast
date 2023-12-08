@@ -14,7 +14,7 @@ def blocks(rows):
             blocks.append(block)
 
     for block in blocks:
-        yield f'extern struct {block.lower()}_reg {block} __asm("{block}");'
+        yield f'extern struct {block.lower()}_reg {block.lower()} __asm("{block.lower()}");'
 
 input_file = sys.argv[1]
 rows = read_input(input_file)

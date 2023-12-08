@@ -88,81 +88,83 @@ static_assert((offsetof (struct system_reg, G2DTNRM)) == 0x150);
 static_assert((offsetof (struct system_reg, G2DTEXT)) == 0x154);
 
 struct maple_if_reg {
+  reg8  _pad0[4];
   reg32 MDSTAR;            /* Maple-DMA command table address */
-  reg8  _pad0[8];
+  reg8  _pad1[8];
   reg32 MDTSEL;            /* Maple-DMA trigger select */
   reg32 MDEN;              /* Maple-DMA enable */
   reg32 MDST;              /* Maple-DMA start */
-  reg8  _pad1[100];
+  reg8  _pad2[100];
   reg32 MSYS;              /* Maple system control */
   reg32 MST;               /* Maple status */
   reg32 MSHTCL;            /* Maple-DMA hard trigger clear */
   reg32 MDAPRO;            /* Maple-DMA address range */
-  reg8  _pad2[88];
+  reg8  _pad3[88];
   reg32 MMSEL;             /* Maple MSP selection */
-  reg8  _pad3[8];
+  reg8  _pad4[8];
   reg32 MTXDAD;            /* Maple TXD address counter */
   reg32 MRXDAD;            /* Maple RXD address counter */
   reg32 MRXDBD;            /* Maple RXD address base */
 };
 
-static_assert((offsetof (struct maple_if_reg, MDSTAR)) == 0x0);
-static_assert((offsetof (struct maple_if_reg, MDTSEL)) == 0xc);
-static_assert((offsetof (struct maple_if_reg, MDEN)) == 0x10);
-static_assert((offsetof (struct maple_if_reg, MDST)) == 0x14);
-static_assert((offsetof (struct maple_if_reg, MSYS)) == 0x7c);
-static_assert((offsetof (struct maple_if_reg, MST)) == 0x80);
-static_assert((offsetof (struct maple_if_reg, MSHTCL)) == 0x84);
-static_assert((offsetof (struct maple_if_reg, MDAPRO)) == 0x88);
-static_assert((offsetof (struct maple_if_reg, MMSEL)) == 0xe4);
-static_assert((offsetof (struct maple_if_reg, MTXDAD)) == 0xf0);
-static_assert((offsetof (struct maple_if_reg, MRXDAD)) == 0xf4);
-static_assert((offsetof (struct maple_if_reg, MRXDBD)) == 0xf8);
+static_assert((offsetof (struct maple_if_reg, MDSTAR)) == 0x4);
+static_assert((offsetof (struct maple_if_reg, MDTSEL)) == 0x10);
+static_assert((offsetof (struct maple_if_reg, MDEN)) == 0x14);
+static_assert((offsetof (struct maple_if_reg, MDST)) == 0x18);
+static_assert((offsetof (struct maple_if_reg, MSYS)) == 0x80);
+static_assert((offsetof (struct maple_if_reg, MST)) == 0x84);
+static_assert((offsetof (struct maple_if_reg, MSHTCL)) == 0x88);
+static_assert((offsetof (struct maple_if_reg, MDAPRO)) == 0x8c);
+static_assert((offsetof (struct maple_if_reg, MMSEL)) == 0xe8);
+static_assert((offsetof (struct maple_if_reg, MTXDAD)) == 0xf4);
+static_assert((offsetof (struct maple_if_reg, MRXDAD)) == 0xf8);
+static_assert((offsetof (struct maple_if_reg, MRXDBD)) == 0xfc);
 
 struct g1_if_reg {
+  reg8  _pad0[4];
   reg32 GDSTAR;            /* GD-DMA start address */
   reg32 GDLEN;             /* GD-DMA length */
   reg32 GDDIR;             /* GD-DMA direction */
-  reg8  _pad0[4];
+  reg8  _pad1[4];
   reg32 GDEN;              /* GD-DMA enable */
   reg32 GDST;              /* GD-DMA start */
-  reg8  _pad1[100];
+  reg8  _pad2[100];
   reg32 G1RRC;             /* System ROM read access timing */
   reg32 G1RWC;             /* System ROM write access timing */
   reg32 G1FRC;             /* Flash ROM read access timing */
   reg32 G1FWC;             /* Flash ROM write access timing */
   reg32 G1CRC;             /* GD PIO read access timing */
   reg32 G1CWC;             /* GD PIO write access timing */
-  reg8  _pad2[8];
+  reg8  _pad3[8];
   reg32 G1GDRC;            /* GD-DMA read access timing */
   reg32 G1GDWC;            /* GD-DMA write access timing */
-  reg8  _pad3[8];
+  reg8  _pad4[8];
   reg32 G1SYSM;            /* System mode */
   reg32 G1CRDYC;           /* G1IORDY signal control */
   reg32 GDAPRO;            /* GD-DMA address range */
-  reg8  _pad4[56];
+  reg8  _pad5[56];
   reg32 GDSTARD;           /* GD-DMA address count (on Root Bus) */
   reg32 GDLEND;            /* GD-DMA transfer counter */
 };
 
-static_assert((offsetof (struct g1_if_reg, GDSTAR)) == 0x0);
-static_assert((offsetof (struct g1_if_reg, GDLEN)) == 0x4);
-static_assert((offsetof (struct g1_if_reg, GDDIR)) == 0x8);
-static_assert((offsetof (struct g1_if_reg, GDEN)) == 0x10);
-static_assert((offsetof (struct g1_if_reg, GDST)) == 0x14);
-static_assert((offsetof (struct g1_if_reg, G1RRC)) == 0x7c);
-static_assert((offsetof (struct g1_if_reg, G1RWC)) == 0x80);
-static_assert((offsetof (struct g1_if_reg, G1FRC)) == 0x84);
-static_assert((offsetof (struct g1_if_reg, G1FWC)) == 0x88);
-static_assert((offsetof (struct g1_if_reg, G1CRC)) == 0x8c);
-static_assert((offsetof (struct g1_if_reg, G1CWC)) == 0x90);
-static_assert((offsetof (struct g1_if_reg, G1GDRC)) == 0x9c);
-static_assert((offsetof (struct g1_if_reg, G1GDWC)) == 0xa0);
-static_assert((offsetof (struct g1_if_reg, G1SYSM)) == 0xac);
-static_assert((offsetof (struct g1_if_reg, G1CRDYC)) == 0xb0);
-static_assert((offsetof (struct g1_if_reg, GDAPRO)) == 0xb4);
-static_assert((offsetof (struct g1_if_reg, GDSTARD)) == 0xf0);
-static_assert((offsetof (struct g1_if_reg, GDLEND)) == 0xf4);
+static_assert((offsetof (struct g1_if_reg, GDSTAR)) == 0x4);
+static_assert((offsetof (struct g1_if_reg, GDLEN)) == 0x8);
+static_assert((offsetof (struct g1_if_reg, GDDIR)) == 0xc);
+static_assert((offsetof (struct g1_if_reg, GDEN)) == 0x14);
+static_assert((offsetof (struct g1_if_reg, GDST)) == 0x18);
+static_assert((offsetof (struct g1_if_reg, G1RRC)) == 0x80);
+static_assert((offsetof (struct g1_if_reg, G1RWC)) == 0x84);
+static_assert((offsetof (struct g1_if_reg, G1FRC)) == 0x88);
+static_assert((offsetof (struct g1_if_reg, G1FWC)) == 0x8c);
+static_assert((offsetof (struct g1_if_reg, G1CRC)) == 0x90);
+static_assert((offsetof (struct g1_if_reg, G1CWC)) == 0x94);
+static_assert((offsetof (struct g1_if_reg, G1GDRC)) == 0xa0);
+static_assert((offsetof (struct g1_if_reg, G1GDWC)) == 0xa4);
+static_assert((offsetof (struct g1_if_reg, G1SYSM)) == 0xb0);
+static_assert((offsetof (struct g1_if_reg, G1CRDYC)) == 0xb4);
+static_assert((offsetof (struct g1_if_reg, GDAPRO)) == 0xb8);
+static_assert((offsetof (struct g1_if_reg, GDSTARD)) == 0xf4);
+static_assert((offsetof (struct g1_if_reg, GDLEND)) == 0xf8);
 
 struct g2_if_reg {
   reg32 ADSTAG;            /* ACIA:G2-DMA G2 start address */
@@ -302,11 +304,7 @@ static_assert((offsetof (struct pvr_if_reg, PDSTARD)) == 0xf4);
 static_assert((offsetof (struct pvr_if_reg, PDLEND)) == 0xf8);
 
 extern struct system_reg system __asm("system");
-
 extern struct maple_if_reg maple_if __asm("maple_if");
-
 extern struct g1_if_reg g1_if __asm("g1_if");
-
 extern struct g2_if_reg g2_if __asm("g2_if");
-
 extern struct pvr_if_reg pvr_if __asm("pvr_if");

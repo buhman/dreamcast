@@ -9,6 +9,8 @@
 #include "holly/core_bits.h"
 #include "holly/ta_fifo_polygon_converter.h"
 #include "systembus.h"
+#include "maple.h"
+#include "maple_bits.h"
 
 #include "holly/texture_memory_alloc.h"
 
@@ -16,6 +18,7 @@
 #include "load.h"
 #include "vga.h"
 #include "rgb.h"
+#include "string.h"
 #include "scene.h"
 
 #include "macaw.h"
@@ -64,6 +67,32 @@ uint32_t * align_32byte(uint32_t * mem)
   return reinterpret_cast<uint32_t *>(((reinterpret_cast<uint32_t>(_scene) + 31) & ~31));
 }
 
+void serial_int(const uint32_t n)
+{
+  char num_buf[9];
+  string::hex<char>(num_buf, 8, n);
+  num_buf[8] = 0;
+  serial_string("0x");
+  serial_string(num_buf);
+  serial_string("\n");
+}
+
+void maple_test()
+{
+  uint32_t _command_buf[(32 + 32) / 4];
+  uint32_t _receive_address[(32 + 32) / 4];
+  uint32_t * command_buf = align_32byte(_command_buf);
+  uint32_t * receive_address = align_32byte(_receive_address);
+
+  serial_int(mdstar::table_address(reinterpret_cast<uint32_t>(command_buf)));
+  maple_init_host_command(command_buf, receive_address);
+  maple_dma_start(command_buf);
+
+  for (int i = 0; i < 32; i++) {
+    serial_int(receive_address[i]);
+  }
+}
+
 extern "C"
 void main()
 {
@@ -81,6 +110,8 @@ void main()
   vga();
 
   v_sync_in();
+
+  maple_test();
 
   volatile uint16_t * framebuffer = reinterpret_cast<volatile uint16_t *>(&texture_memory[0]);
   for (int y = 0; y < 480; y++) {
