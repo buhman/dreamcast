@@ -6,18 +6,21 @@ MAPLE82E.pdf Chapter 6 "COMMAND REFERENCE"
 
 jargon:
 
-AP - Absolute Position ; MAPLE82E.pdf page 13
+AP - Absolute Position ; MAPLE82E.pdf page 13 / page 21
 
 (Address)    (Data)
 0x0C700000 → 0x00000000 Port 0, 4-byte data transmission (instruction to Maple-Host)
 0x0C700004 → 0x0C800000 Port 0, reception data storage address (instruction to Maple-Host)
 0x0C700008 → 0x01200000 [Device Request], transfer destination AP: 0x20, transfer source AP: 0x00
+
 0x0C70000C → 0x00010000 Port 1, 4-byte data transmission
 0x0C700010 → 0x0C800100 Port 1, reception data storage address
 0x0C700014 → 0x01604000 [Device Request], transfer destination AP: 0x60, transfer source AP: 0x40
+
 0x0C700018 → 0x00020000 Port 2, 4-byte data transmission
 0x0C70001C → 0x0C800200 Port 2, reception data storage address
 0x0C700020 → 0x01A08000 [Device Request], transfer destination AP: 0xA0, transfer source AP: 0x80
+
 0x0C700024 → 0x80030000 Port 3, 4-byte data transmission
 0x0C700028 → 0x0C800300 Port 3, reception data storage address 
 0x0C70002C → 0x01E0C000 [Device Request], transfer destination AP: 0xE0, transfer source AP: 0xC0
@@ -50,3 +53,38 @@ AP - Absolute Position ; MAPLE82E.pdf page 13
 0x0C700034 → 0x0C800300 Port 3, reception data storage address
 0x0C700038 → 0x09E0C001 [Get Condition], transfer destination AP: 0xC0, transfer source AP: 0xE0
 0x0C70003C → 0x00000001 Function Type
+
+---
+
+SB_MDSTAR 0x005F6C04: Starting address setting for the command table in system memory
+  Settable area: 0x0C000000 - 0x0FFFFFE0
+
+SB_MDTSEL 0x005F6C10: Maple-DMA trigger setting
+  0x00000000 : Software trigger
+  0x00000001 : Hardware trigger
+
+SB_MDEN 0x005F6C14: Enables Maple-DMA
+  (Read)
+    0x00000000 : Disable
+    0x00000001 : Enable
+  (Write)
+    0x00000000 : Disable
+    0x00000001 : Enable
+
+SB_MDST 0x005F6C18: Maple-DMA software start
+  (Read)
+    0x00000000 : Maple-DMA end
+    0x00000001 : Maple-DMA transfer in progress
+  (Write)
+    0x00000000 : Invalid
+    0x00000001 : Maple-DMA start
+
+SB_MSYS 0x005F6C80: Maple system control setting
+  For details, refer to section 8.4.1.1, "System Registers."
+
+SB_MDAPRO 0x005F6C8C: Maple-DMA area protection setting
+  Settable area: 0x0C000000 to 0x0FFFFFE0
+
+SB_ISTNRM 0x005F6900: Normal interrupt status
+  bit12: Maple-DMA end
+  For details on interrupt registers, refer to section 8.4.1.1, "System Registers."
