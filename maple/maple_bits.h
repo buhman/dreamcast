@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "holly/float_uint32.h"
+#include "../float_uint32.h"
 
 namespace mdstar {
   constexpr uint32_t table_address(uint32_t num) { return (num & 0xfffffe0) << 0; }
@@ -31,12 +31,12 @@ namespace mdst {
 namespace msys {
   constexpr uint32_t time_out_counter(uint32_t num) { return (num & 0xffff) << 16; }
   constexpr uint32_t single_hard_trigger = 1 << 12;
-  
+
   namespace sending_rate {
     constexpr uint32_t _2M = 0 << 8;
     constexpr uint32_t _1M = 1 << 8;
   }
-  
+
   constexpr uint32_t delay_time(uint32_t num) { return (num & 0xf) << 0; }
 }
 
@@ -75,4 +75,3 @@ namespace mrxdad {
 namespace mrxdbd {
   constexpr uint32_t rxd_base_address(uint32_t reg) { return (reg >> 0) & 0x1fffffff; }
 }
-

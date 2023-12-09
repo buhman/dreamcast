@@ -9,8 +9,8 @@
 #include "holly/core_bits.h"
 #include "holly/ta_fifo_polygon_converter.h"
 #include "systembus.h"
-#include "maple.h"
-#include "maple_bits.h"
+#include "maple/maple.h"
+#include "maple/maple_bits.h"
 
 #include "holly/texture_memory_alloc.h"
 

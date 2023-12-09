@@ -13,7 +13,7 @@ MAIN_OBJ = \
 	holly/region_array.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/core.o \
-	maple.o \
+	maple/maple.o \
 	scene.o \
 	macaw.data.o \
 	$(LIBGCC)

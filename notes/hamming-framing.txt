@@ -1,0 +1,11 @@
+frames:
+ 0b00 invalid
+ 0b01 command begin
+ 0b10 data begin
+ 0b11 frame end
+
+commands:
+ - jump addr
+ - read addr
+ - write addr
+ - speed value

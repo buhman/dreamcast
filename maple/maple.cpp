@@ -1,12 +1,13 @@
 #include <cstdint>
 #include <bit>
 
-#include "sh7091.h"
-#include "sh7091_bits.h"
-#include "systembus.h"
-#include "systembus_bits.h"
-#include "maple_bits.h"
+#include "../sh7091.h"
+#include "../sh7091_bits.h"
+#include "../systembus.h"
+#include "../systembus_bits.h"
 
+#include "maple_bits.h"
+#include "maple_bus_commands.h"
 #include "maple.h"
 
 #define AP__PO__A (0b00 << 6)
@@ -30,32 +31,31 @@
 #define HOST_INSTRUCTION__PORT_SELECT__D (0b11 << 16)
 #define HOST_INSTRUCTION__TRANSFER_LENGTH(n) (((n) & 0xff) << 0)
 
-template <int N>
+template <typename T>
 struct maple_host_command {
   uint32_t host_instruction;
   uint32_t receive_data_storage_address;
-  uint32_t protocol_data[N];
+  uint8_t command_code;
+  uint8_t destination_ap;
+  uint8_t source_ap;
+  uint8_t data_size;
+  T data_fields;
 };
 
 void maple_init_host_command(uint32_t * buf, uint32_t * receive_address)
 {
-  auto command = reinterpret_cast<maple_host_command<1> *>(buf);
+  auto host_command = reinterpret_cast<maple_host_command<device_request::data_fields> *>(buf);
 
-  command->host_instruction = HOST_INSTRUCTION__END_FLAG
-			    | HOST_INSTRUCTION__PORT_SELECT__A
-			    | HOST_INSTRUCTION__TRANSFER_LENGTH(0); // 4 bytes
+  host_command->host_instruction = HOST_INSTRUCTION__END_FLAG
+                                 | HOST_INSTRUCTION__PORT_SELECT__A
+                                 | HOST_INSTRUCTION__TRANSFER_LENGTH(0); // 4 bytes
 
-  command->receive_data_storage_address = reinterpret_cast<uint32_t>(receive_address);
+  host_command->receive_data_storage_address = reinterpret_cast<uint32_t>(receive_address);
 
-  uint32_t command_code = 0x01; // 'Device Request'
-  uint32_t destination_ap = AP__DE__DEVICE | AP__PO__A;
-  uint32_t source_ap = AP__PO__A;
-  uint32_t data_size = 0;
-  // maple bus is big endian
-  command->protocol_data[0] = std::byteswap( (command_code << 24)
-					   | (destination_ap << 16)
-					   | (source_ap << 8)
-					   | (data_size << 0));
+  host_command->command_code = device_request::command_code;
+  host_command->destination_ap = AP__DE__DEVICE | AP__PO__A;
+  host_command->source_ap = AP__PO__A;
+  host_command->data_size = 0;
 }
 
 void maple_dma_start(uint32_t * command_buf)

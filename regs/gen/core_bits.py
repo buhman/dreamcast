@@ -206,7 +206,7 @@ def render_registers(registers):
 def header():
     yield "#include <cstdint>"
     yield ""
-    yield '#include "float_uint32.h"'
+    yield '#include "../float_uint32.h"'
     yield ""
 
 if __name__ == "__main__":

@@ -3,7 +3,6 @@ from typing import Union
 import sys
 
 from sh7091 import read_input
-from sh7091 import headers
 from generate import renderer
 
 @dataclass
@@ -17,14 +16,14 @@ def command_namespace(namespace: CommandNamespace,
                       data_fields: list[tuple[str, tuple[int, str]]]):
     yield f"namespace {namespace.name} {{"
     yield f"constexpr uint32_t command_code = {hex(namespace.command_code)};"
+    yield ""
 
     if namespace.data_size == (0, None):
         assert data_fields == []
-        # do nothing
+        yield "struct data_fields {"
+        yield "};"
     else:
         length, variable = namespace.data_size
-
-        yield ""
 
         if variable is not None:
             assert variable.lower() == "n"
@@ -148,6 +147,10 @@ def new_aggregator():
         yield from terminate()
 
     return process
+
+def headers():
+    yield "#include <cstdint>"
+    yield ""
 
 input_file = sys.argv[1]
 rows = read_input(input_file)
