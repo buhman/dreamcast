@@ -1,0 +1,102 @@
+netbsd:
+
+  ccr = ici | ice | oci | oce
+
+video.s:
+
+  ba98 7654 3210
+  1001_0000_1101
+
+  ccr = ici | ice | oci | cb | oce
+
+strt1.src:
+
+  ccr = (ccr & 0x89af) | 0x800
+  0b1000 0000 0000
+
+startup.s:
+
+  ccr = 0x90d
+
+todo:
+
+- stack
+- ccr
+- mmucr
+- interrupt mask
+
+---
+
+   kmySetBorderColor( 0x00000000 );
+
+   if (syCblCheckCable() == SYE_CBL_CABLE_VGA) {
+
+   syTmrInit()
+
+    1. kmInitDevice
+    2. kmSetDisplayMode
+
+   - waitvsync
+
+   syChainInit()
+   syG2SysInit(NULL)
+
+    3. kmSetSystemConfiguration
+
+---
+
+/*
+// KM_DSPMODE_XXXX
+// ---------------
+//  Bit order : Little Endian:?
+//  xxxx xxxx xxxx xxxx
+//             ||| ||||
+//             ||| |||+---- VGA = 1     ; 0x01  = KM_VGA
+//             ||| ||+----- NTSC= 0     ; 0x00  = KM_NTSC
+//             ||| ||       PAL = 1     ; 0x02  = KM_PAL
+//             ||| |+------ NI  = 0     ; 0x00  = Enable Interlace Flicker Fliter on NTSC/PAL
+//             ||| |        I   = 1     ; 0x04  = Interlace
+//             ||| +--------PNI = 1     : 0x08  = pseudo-non-interlace
+//             ||+--------- 320 = 0     ; 0x00
+//             ||           640 = 1     ; 0x10
+//             |+---------- 240 = 0     ; 0x00
+//             |            480 = 1     ; 0x20
+//             +----------- EXT = 1     ; 0x40  = PAL DisplayArea Extension
+//
+*/
+typedef enum
+{
+    KM_NTSC = 0,                /*  xxxx xx00b  */
+    KM_VGA  = 1,                /*  xxxx xxx1b  */
+    KM_PAL  = 2                 /*      xxxx xx10b      */
+
+}KMVIDEOMODE;
+
+/*
+ * KMVIDEOMODE
+ *
+ *      (@1) ... Same line display              : Even / Odd Frame:
+ *      (@2) ... Pseudo-Non-Interlace           : Disable Flicker Filter
+ *      (@3) ... Non-Interlace Flicker Free     : Enable Interlace Flicker Fliter (Pseudo-None-Interlace...)
+ *           If you select this mode then you have to update each frame data  in 16.66ms.
+ *           Your scene data should be able to finish renderring in 16.66ms by PowerVR2 Renderring Engine.
+ */
+
+#define KM_DSPMODE_NONINTERLACE                 (0x00)      /*  xxxx 00xxb      */
+#define KM_DSPMODE_INTERLACE                    (0x04)      /*  xxxx 01xxb      */
+#define KM_DSPMODE_PSEUDONONINTERLACE   (0x08)      /*  xxxx 10xxb      */
+
+#define KM_DSPMODE_WIDTH_320                    (0x000)     /*  xxx0 xxxxb      */
+#define KM_DSPMODE_WIDTH_640                    (0x010)     /*  xxx1 xxxxb      */
+
+#define KM_DSPMODE_HEIGHT_240                   (0x000)     /*  xx0x xxxxb      */
+#define KM_DSPMODE_HEIGHT_480                   (0x020)     /*  xx1x xxxxb      */
+#define KM_DSPMODE_HEIGHT_EXT                   (0x040)         /*  x1xx xxxxb  */
+
+#define KM_DSPMODE_320x240      (KM_DSPMODE_WIDTH_320 | KM_DSPMODE_HEIGHT_240)           /*  xx00 xxxxb */
+#define KM_DSPMODE_640x240      (KM_DSPMODE_WIDTH_640 | KM_DSPMODE_HEIGHT_240)           /*  xx01 xxxxb */
+#define KM_DSPMODE_320x480      (KM_DSPMODE_WIDTH_320 | KM_DSPMODE_HEIGHT_480)           /*  xx10 xxxxb */
+#define KM_DSPMODE_640x480      (KM_DSPMODE_WIDTH_640 | KM_DSPMODE_HEIGHT_480)           /*  xx11 xxxxb */
+
+#define KM_DSPMODE_640x240_EXT  (KM_DSPMODE_WIDTH_640 | KM_DSPMODE_HEIGHT_240 | KM_DSPMODE_HEIGHT_EXT)
+#define KM_DSPMODE_640x480_EXT  (KM_DSPMODE_WIDTH_640 | KM_DSPMODE_HEIGHT_480 | KM_DSPMODE_HEIGHT_EXT)
