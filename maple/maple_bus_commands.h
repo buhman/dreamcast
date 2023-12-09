@@ -47,7 +47,7 @@ namespace device_status {
 namespace device_all_status {
   constexpr uint32_t command_code = 0x6;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
     uint8_t device_id[16];
     uint8_t destination_code[1];
@@ -56,10 +56,10 @@ namespace device_all_status {
     uint8_t license[60];
     uint8_t low_consumption_standby_current[2];
     uint8_t maximum_current_consumption[2];
-    uint8_t free_device_status[N];
+    T free_device_status;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 112);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 112);
 }
 
 namespace device_reply {
@@ -72,12 +72,13 @@ namespace device_reply {
 namespace data_transfer {
   constexpr uint32_t command_code = 0x8;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
-    uint8_t data[N];
+    uint8_t function_type[4];
+    T data;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 0);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 4);
 }
 
 namespace get_condition {
@@ -117,16 +118,16 @@ namespace block_read {
 namespace block_write {
   constexpr uint32_t command_code = 0xc;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
     uint8_t function_type[4];
     uint8_t pt[1];
     uint8_t phase[1];
     uint8_t block_no[2];
-    uint8_t written_data[N];
+    T written_data;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 8);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 8);
 }
 
 namespace get_last_error {
@@ -145,37 +146,37 @@ namespace get_last_error {
 namespace set_condition {
   constexpr uint32_t command_code = 0xe;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
     uint8_t function_type[4];
-    uint8_t write_in_data[N];
+    T write_in_data;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 4);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 4);
 }
 
 namespace ft4_control {
   constexpr uint32_t command_code = 0xf;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
     uint8_t function_type[4];
-    uint8_t ft4_data[N];
+    T ft4_data;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 4);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 4);
 }
 
 namespace ar_control {
   constexpr uint32_t command_code = 0x10;
   
-  template <int N>
+  template <typename T>
   struct data_fields {
     uint8_t function_type[4];
-    uint8_t data[N];
+    T data;
   };
   
-  static_assert((sizeof (struct data_fields<0>)) == 4);
+  static_assert((sizeof (struct data_fields<char[0]>)) == 4);
 }
 
 namespace function_type_unknown {

@@ -26,7 +26,8 @@
 ,,,,,
 "device_reply","peripheral","0x07","0x00",,
 ,,,,,
-"data_transfer","peripheral","0x08","n/4","data","n"
+"data_transfer","peripheral","0x08","0x01+n/4","function_type",4
+"data_transfer",,,,"data","n"
 ,,,,,
 "get_condition","host","0x09","0x01","function_type",4
 ,,,,,

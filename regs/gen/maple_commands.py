@@ -27,7 +27,7 @@ def command_namespace(namespace: CommandNamespace,
 
         if variable is not None:
             assert variable.lower() == "n"
-            yield "template <int N>"
+            yield "template <typename T>"
 
         yield "struct data_fields {"
 
@@ -37,7 +37,7 @@ def command_namespace(namespace: CommandNamespace,
                 yield f"uint8_t {field_name}[{const}];"
             elif const == 0:
                 assert var == "n"
-                yield f"uint8_t {field_name}[{var.upper()}];"
+                yield f"T {field_name};"
             else:
                 yield f"uint8_t {field_name}[{const} + {var.upper()}];"
 
@@ -47,7 +47,7 @@ def command_namespace(namespace: CommandNamespace,
 
         if variable is not None:
             assert variable == "n"
-            yield f"static_assert((sizeof (struct data_fields<0>)) == {length});"
+            yield f"static_assert((sizeof (struct data_fields<char[0]>)) == {length});"
         else:
             yield f"static_assert((sizeof (struct data_fields)) == {length});"
 

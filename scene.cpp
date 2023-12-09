@@ -49,11 +49,11 @@ struct scene_quad_ta_parameters {
 
 static_assert((sizeof (scene_quad_ta_parameters)) == 32 * 4);
 
-uint32_t scene_transform_quad(uint32_t * _scene)
+uint32_t scene_transform_quad(uint32_t * _scene, uint32_t base_color)
 {
   auto scene = reinterpret_cast<scene_quad_ta_parameters *>(&_scene[0]);
 
-  uint32_t base_color = 0xffffff00;
+  //uint32_t base_color = 0xffffff00;
   scene->sprite = global_sprite(base_color);
   scene->vertex = vertex_sprite_type_0(scene_quad[0].x * 240 + 320,
 				       scene_quad[0].y * 240 + 240,
