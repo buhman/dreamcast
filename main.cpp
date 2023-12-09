@@ -84,7 +84,6 @@ void maple_test()
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_address = align_32byte(_receive_address);
 
-  serial_int(mdstar::table_address(reinterpret_cast<uint32_t>(command_buf)));
   maple_init_host_command(command_buf, receive_address);
   maple_dma_start(command_buf);
 
