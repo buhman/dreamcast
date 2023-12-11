@@ -1,5 +1,5 @@
 LIB ?= .
-OPT ?= -Os
+OPT ?= -Og
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 

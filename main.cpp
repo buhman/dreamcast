@@ -95,32 +95,53 @@ void serial_int8(const uint8_t n)
   serial_string("\n");
 }
 
-uint32_t _receive_address[(32 + 32) / 4] = {0};
-uint32_t _command_buf[(32 + 32) / 4] = {0};
+uint32_t _receive_address[(256 + 32) / 4] = {0};
+uint32_t _command_buf[(256 + 32) / 4] = {0};
+
+extern uint32_t _binary_wink_data_start __asm("_binary_wink_data_start");
+
+void make_wink(uint32_t * buf)
+{
+  const uint8_t * src = reinterpret_cast<const uint8_t *>(&_binary_wink_data_start);
+  uint8_t * dst = reinterpret_cast<uint8_t *>(buf);
+
+  uint32_t ix = 0;
+  dst[ix] = 0;
+  for (int i = 0; i < 48 * 32; i++) {
+    dst[ix] |= ((src[i] & 1) << (7 - (i % 8)));
+
+    if (i % 8 == 7) {
+      ix++;
+      dst[ix] = 0;
+    }
+  }
+}
 
 bool maple_test()
 {
+  v_sync_out();
+
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_address = align_32byte(_receive_address);
   if ((((uint32_t)command_buf) & 31) != 0) serial_string("misaligned\n");
   if ((((uint32_t)receive_address) & 31) != 0) serial_string("misaligned\n");
 
-  for (int i = 0; i < (32 / 4); i++) {
-    command_buf[i] = 0;
-  }
-
-  for (int i = 0; i < (32 / 4); i++) {
-    receive_address[i] = 0;
-  }
-
-  v_sync_out();
-
   //maple_init_device_request(command_buf, receive_address);
-  maple_init_get_condition(command_buf, receive_address);
+  //maple_init_get_condition(command_buf, receive_address);
+  uint32_t wink_buf[192];
+  make_wink(wink_buf);
+  maple_init_block_write(command_buf, receive_address, wink_buf);
+
+  serial_int32(command_buf[0]);
+  serial_char('\n');
 
   maple_dma_start(command_buf);
 
   v_sync_in();
+
+  for (int i = 0; i < 32; i++) {
+    serial_int32(receive_address[i]);
+  }
 
   /*
   for (int i = 0; i < (4 + 4 + 8); i++) {
@@ -149,7 +170,8 @@ void main()
 
   vga();
 
-  v_sync_in();
+  maple_test();
+  //((void(*)(void))0xac010000)();
 
   /*
   volatile uint16_t * framebuffer = reinterpret_cast<volatile uint16_t *>(&texture_memory[0]);
@@ -213,7 +235,7 @@ void main()
     ta_wait_opaque_list();
     core_start_render(frame);
 
-    a_pressed = maple_test();
+    //a_pressed = maple_test();
 
     frame = !frame;
   }

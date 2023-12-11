@@ -16,6 +16,7 @@ MAIN_OBJ = \
 	maple/maple.o \
 	scene.o \
 	macaw.data.o \
+	wink.data.o \
 	$(LIBGCC)
 
 serial.elf: start.o serial_main.o load.o cache.o
