@@ -12,22 +12,6 @@
   -0.5,0.5    |  0.5,0.5
  */
 
-struct vertex0 {
-  float x;
-  float y;
-  float z;
-  float u;
-  float v;
-  uint32_t color;
-};
-
-const struct vertex0 scene_triangle[4] = {
-  { -0.5f,   0.5f,  0.f, 0.f        , 128.f/128.f, 0x00000000}, // the first two base colors in a
-  { -0.5f,  -0.5f,  0.f, 0.f        , 0.f        , 0x00000000}, // triangle strip are ignored
-  {  0.5f,   0.5f,  0.f, 128.f/128.f, 128.f/128.f, 0xffff00ff},
-  {  0.5f,  -0.5f,  0.f, 128.f/128.f, 0.f        , 0xffffff00},
-};
-
 struct vertex1 {
   float x;
   float y;
@@ -73,12 +57,6 @@ uint32_t scene_transform_quad(uint32_t * _scene, uint32_t base_color)
 
 static float theta = 0;
 constexpr float half_degree = 0.01745329f / 2.f;
-
-union ta_parameter {
-  struct global_polygon_type_0 global_polygon_type_0;
-  struct vertex_polygon_type_3 vertex_polygon_type_3;
-  struct global_end_of_list global_end_of_list;
-};
 
 uint32_t scene_transform(uint32_t * _scene)
 {

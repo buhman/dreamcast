@@ -78,17 +78,6 @@ void main()
   //((void(*)(void))0xac010000)();
 
   /*
-  volatile uint16_t * framebuffer = reinterpret_cast<volatile uint16_t *>(&texture_memory[0]);
-  for (int y = 0; y < 480; y++) {
-    for (int x = 0; x < 640; x++) {
-      struct hsv hsv = {(y * 255) / 480, 255, 255};
-      struct rgb rgb = hsv_to_rgb(hsv);
-      framebuffer[y * 640 + x] = ((rgb.r >> 3) << 11) | ((rgb.g >> 2) << 5) | ((rgb.b >> 3) << 0);
-    }
-  }
-  */
-
-  /*
   volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(0xa400'0000);
 
   volatile uint8_t * macaw = reinterpret_cast<volatile uint8_t *>(&_binary_macaw_data_start);

@@ -312,3 +312,13 @@ static_assert((offsetof (struct global_end_of_list, _res3)) == 0x10);
 static_assert((offsetof (struct global_end_of_list, _res4)) == 0x14);
 static_assert((offsetof (struct global_end_of_list, _res5)) == 0x18);
 static_assert((offsetof (struct global_end_of_list, _res6)) == 0x1c);
+
+union ta_parameter {
+  struct global_polygon_type_0 global_polygon_type_0;
+  struct global_sprite global_sprite;
+
+  struct vertex_polygon_type_0 vertex_polygon_type_0;
+  struct vertex_polygon_type_3 vertex_polygon_type_3;
+
+  struct global_end_of_list global_end_of_list;
+};

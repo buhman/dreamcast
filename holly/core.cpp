@@ -60,7 +60,7 @@ void core_init_texture_memory()
                );
 }
 
-void core_start_render(int fb)
+void core_start_render(int frame_ix, int num_frames)
 {
   holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));
   holly.PARAM_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
@@ -73,11 +73,10 @@ void core_start_render(int fb)
   holly.FB_W_CTRL = 1 << 3 | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
   holly.FB_W_LINESTRIDE = (640 * 2) / 8;
 
-  int w_fb = (!(!fb)) * 0x00096000;
-  int r_fb = (!fb) * 0x00096000;
+  int w_fb = ((frame_ix + 0) & num_frames) * 0x00096000;
+  int r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
   holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
-  //holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
-  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
+  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
 
   holly.STARTRENDER = 1;
 }
