@@ -1,5 +1,8 @@
+MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
+DIR := $(dir $(MAKEFILE_PATH))
+
 LIB ?= .
-OPT ?= -Og
+OPT ?= -Os
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 
@@ -11,6 +14,7 @@ CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums 
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable
 CFLAGS += -mfsca -funsafe-math-optimizations
+CFLAGS += -I$(dir $(MAKEFILE_PATH))
 DEPFLAGS = -MMD -E
 # --print-gc-sections
 LDFLAGS = --gc-sections --no-warn-rwx-segment --print-memory-usage --entry=_start --orphan-handling=error
@@ -48,6 +52,11 @@ IP_OBJ = \
 	sg/sg_ini.o \
 	sg/aip.o
 
+START_OBJ = \
+	start.o \
+	runtime.o \
+	cache.o
+
 %.bin.o: %.bin
 	$(BUILD_BINARY_O)
 
@@ -70,6 +79,9 @@ IP_OBJ = \
 
 %.o: %.cpp %.cpp.d
 	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) -c $< -o $@
+
+%.elf:
+	$(LD) $(LDFLAGS) -T $(LDSCRIPT) $^ -o $@
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@

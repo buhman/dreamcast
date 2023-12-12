@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "../float_uint32.h"
+#include "../float_uint32.hpp"
 
 namespace ta_ol_base {
   constexpr uint32_t base_address(uint32_t num) { return (num & 0xffffe0) << 0; }

@@ -34,7 +34,11 @@ def command_namespace(namespace: CommandNamespace,
         for field_name, field_size in data_fields:
             const, var = field_size
             if var is None:
-                yield f"uint8_t {field_name}[{const}];"
+                if const in {1, 2, 4}:
+                    bits = const * 8
+                    yield f"uint{bits}_t {field_name};"
+                else:
+                    yield f"uint8_t {field_name}[{const}];"
             elif const == 0:
                 assert var == "n"
                 yield f"T {field_name};"

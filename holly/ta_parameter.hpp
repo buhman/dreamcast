@@ -1,8 +1,8 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "../float_uint32.h"
-#include "isp_tsp.h"
+#include "../float_uint32.hpp"
+#include "isp_tsp.hpp"
 
 namespace para_control {
   namespace para_type {

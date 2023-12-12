@@ -1,4 +1,4 @@
-#include <stdint.h>
+#include <cstdint>
 
 extern volatile uint32_t system_boot_rom[0x200000] __asm("system_boot_rom");
 extern volatile uint32_t aica_wave_memory[0x200000] __asm("aica_wave_memory");

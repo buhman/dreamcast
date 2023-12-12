@@ -1,27 +1,29 @@
 #include <cstdint>
 #include <bit>
 
-#include "../sh7091.h"
-#include "../sh7091_bits.h"
-#include "../systembus.h"
-#include "../systembus_bits.h"
+#include "../sh7091.hpp"
+#include "../sh7091_bits.hpp"
+#include "../systembus.hpp"
+#include "../systembus_bits.hpp"
 
-#include "maple_bits.h"
-#include "maple_host_bits.h"
-#include "maple_bus_commands.h"
-#include "maple.h"
+#include "maple_bits.hpp"
+#include "maple_bus_bits.hpp"
+#include "maple_bus_commands.hpp"
+#include "maple.hpp"
 
-void maple_init_host_command(uint32_t * buf, uint32_t * receive_address, uint8_t command_code, uint8_t data_size)
+namespace maple {
+
+void init_host_command(uint32_t * buf, uint32_t * receive_buf, uint8_t command_code, uint8_t data_size)
 {
   // this function does not care about the template instantiation of
-  // maple_host_command--data_fields is not manipulated here.
-  auto host_command = reinterpret_cast<maple_host_command<uint32_t> *>(buf);
+  // host_command--data_fields is not manipulated here.
+  auto host_command = reinterpret_cast<struct host_command<uint32_t> *>(buf);
 
   host_command->host_instruction = host_instruction::end_flag
-    | host_instruction::port_select::a
-    | host_instruction::transfer_length((data_size / 4));
+				 | host_instruction::port_select::a
+				 | host_instruction::transfer_length((data_size / 4));
 
-  host_command->receive_data_storage_address = reinterpret_cast<uint32_t>(receive_address) & 0x1fff'ffff;
+  host_command->receive_data_storage_address = reinterpret_cast<uint32_t>(receive_buf) & 0x1fff'ffff;
 
   host_command->bus_data.command_code = command_code;
   host_command->bus_data.destination_ap = ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0;
@@ -29,54 +31,47 @@ void maple_init_host_command(uint32_t * buf, uint32_t * receive_address, uint8_t
   host_command->bus_data.data_size = data_size / 4;
 }
 
-void maple_init_device_request(uint32_t * buf, uint32_t * receive_address)
+void init_device_request(uint32_t * buf, uint32_t * receive_buf)
 {
-  maple_init_host_command(buf, receive_address, device_request::command_code, (sizeof (struct device_request::data_fields)));
+  init_host_command(buf, receive_buf, device_request::command_code, (sizeof (struct device_request::data_fields)));
 }
 
-void maple_init_get_condition(uint32_t * buf, uint32_t * receive_address)
+void init_get_condition(uint32_t * buf, uint32_t * receive_buf)
 {
-  maple_init_host_command(buf, receive_address, get_condition::command_code, (sizeof (struct get_condition::data_fields)));
+  init_host_command(buf, receive_buf, get_condition::command_code, (sizeof (struct get_condition::data_fields)));
 
-  auto host_command = reinterpret_cast<maple_host_command<get_condition::data_fields> *>(buf);
+  auto host_command = reinterpret_cast<struct host_command<get_condition::data_fields> *>(buf);
 
-  auto& function_type = host_command->bus_data.data_fields.function_type;
+  auto& fields = host_command->bus_data.data_fields;
   // controller function type
-  function_type[0] = 0x00;
-  function_type[1] = 0x00;
-  function_type[2] = 0x00;
-  function_type[3] = 0x01;
+  fields.function_type = std::byteswap(function_type::controller);
 }
 
-void maple_init_block_write(uint32_t * buf, uint32_t * receive_address, uint32_t * data)
+void init_block_write(uint32_t * buf, uint32_t * receive_buf, uint32_t * data)
 {
-  maple_init_host_command(buf, receive_address, block_write::command_code, (sizeof (struct block_write::data_fields<uint32_t[192 / 4]>)));
+  init_host_command(buf, receive_buf, block_write::command_code, (sizeof (struct block_write::data_fields<uint32_t[192 / 4]>)));
 
-  auto host_command = reinterpret_cast<maple_host_command<block_write::data_fields<uint32_t[192 / 4]>> *>(buf);
+  auto host_command = reinterpret_cast<struct host_command<block_write::data_fields<uint32_t[192 / 4]>> *>(buf);
 
   auto& fields = host_command->bus_data.data_fields;
   // BW LCD function type
-  fields.function_type[0] = 0x00;
-  fields.function_type[1] = 0x00;
-  fields.function_type[2] = 0x00;
-  fields.function_type[3] = 0x04;
+  fields.function_type = std::byteswap(function_type::bw_lcd);
 
   // lcd number 0 (1 total lcd)
-  fields.pt[0] = 0;
+  fields.pt = 0;
 
   // phase 0 (from 0 to 3)
-  fields.phase[0] = 0;
+  fields.phase = 0;
 
   // plane 0 (2 total levels of gradation)
-  fields.block_no[0] = 0x00;
-  fields.block_no[1] = 0x00;
+  fields.block_no = std::byteswap(0x0000);
 
   for (uint32_t i = 0; i < (192 / 4); i++) {
     fields.written_data[i] = data[i];
   }
 }
 
-void maple_dma_start(uint32_t * command_buf)
+void dma_start(uint32_t * command_buf)
 {
   sh7091.DMAC.DMAOR = DMAOR__DDT                 /* on-demand data transfer mode */
     | DMAOR__PR__CH2_CH0_CH1_CH3 /* priority mode; CH2 > CH0 > CH1 > CH3 */
@@ -112,4 +107,6 @@ void maple_dma_start(uint32_t * command_buf)
   //while (mdst::start_status::status(maple_if.MDST) != 0);
   while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
   system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
+}
+
 }

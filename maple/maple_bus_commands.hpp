@@ -33,12 +33,12 @@ namespace device_status {
   
   struct data_fields {
     uint8_t device_id[16];
-    uint8_t destination_code[1];
-    uint8_t connection_direction[1];
+    uint8_t destination_code;
+    uint8_t connection_direction;
     uint8_t product_name[30];
     uint8_t license[60];
-    uint8_t low_consumption_standby_current[2];
-    uint8_t maximum_current_consumption[2];
+    uint16_t low_consumption_standby_current;
+    uint16_t maximum_current_consumption;
   };
   
   static_assert((sizeof (struct data_fields)) == 112);
@@ -50,12 +50,12 @@ namespace device_all_status {
   template <typename T>
   struct data_fields {
     uint8_t device_id[16];
-    uint8_t destination_code[1];
-    uint8_t connection_direction[1];
+    uint8_t destination_code;
+    uint8_t connection_direction;
     uint8_t product_name[30];
     uint8_t license[60];
-    uint8_t low_consumption_standby_current[2];
-    uint8_t maximum_current_consumption[2];
+    uint16_t low_consumption_standby_current;
+    uint16_t maximum_current_consumption;
     T free_device_status;
   };
   
@@ -74,7 +74,7 @@ namespace data_transfer {
   
   template <typename T>
   struct data_fields {
-    uint8_t function_type[4];
+    uint32_t function_type;
     T data;
   };
   
@@ -85,7 +85,7 @@ namespace get_condition {
   constexpr uint32_t command_code = 0x9;
   
   struct data_fields {
-    uint8_t function_type[4];
+    uint32_t function_type;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
@@ -95,8 +95,8 @@ namespace get_media_info {
   constexpr uint32_t command_code = 0xa;
   
   struct data_fields {
-    uint8_t function_type[4];
-    uint8_t pt[4];
+    uint32_t function_type;
+    uint32_t pt;
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
@@ -106,10 +106,10 @@ namespace block_read {
   constexpr uint32_t command_code = 0xb;
   
   struct data_fields {
-    uint8_t function_type[4];
-    uint8_t pt[1];
-    uint8_t phase[1];
-    uint8_t block_no[2];
+    uint32_t function_type;
+    uint8_t pt;
+    uint8_t phase;
+    uint16_t block_no;
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
@@ -120,10 +120,10 @@ namespace block_write {
   
   template <typename T>
   struct data_fields {
-    uint8_t function_type[4];
-    uint8_t pt[1];
-    uint8_t phase[1];
-    uint8_t block_no[2];
+    uint32_t function_type;
+    uint8_t pt;
+    uint8_t phase;
+    uint16_t block_no;
     T written_data;
   };
   
@@ -134,10 +134,10 @@ namespace get_last_error {
   constexpr uint32_t command_code = 0xd;
   
   struct data_fields {
-    uint8_t function_type[4];
-    uint8_t pt[1];
-    uint8_t phase[1];
-    uint8_t block_no[2];
+    uint32_t function_type;
+    uint8_t pt;
+    uint8_t phase;
+    uint16_t block_no;
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
@@ -148,7 +148,7 @@ namespace set_condition {
   
   template <typename T>
   struct data_fields {
-    uint8_t function_type[4];
+    uint32_t function_type;
     T write_in_data;
   };
   
@@ -160,7 +160,7 @@ namespace ft4_control {
   
   template <typename T>
   struct data_fields {
-    uint8_t function_type[4];
+    uint32_t function_type;
     T ft4_data;
   };
   
@@ -172,7 +172,7 @@ namespace ar_control {
   
   template <typename T>
   struct data_fields {
-    uint8_t function_type[4];
+    uint32_t function_type;
     T data;
   };
   
@@ -204,7 +204,7 @@ namespace file_error {
   constexpr uint32_t command_code = 0xfb;
   
   struct data_fields {
-    uint8_t function_error_code[4];
+    uint32_t function_error_code;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
@@ -214,7 +214,7 @@ namespace lcd_error {
   constexpr uint32_t command_code = 0xfa;
   
   struct data_fields {
-    uint8_t function_error_code[4];
+    uint32_t function_error_code;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
@@ -224,7 +224,7 @@ namespace ar_error {
   constexpr uint32_t command_code = 0xf9;
   
   struct data_fields {
-    uint8_t function_error_code[4];
+    uint32_t function_error_code;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);

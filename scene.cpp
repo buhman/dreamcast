@@ -1,9 +1,9 @@
 #include <cstdint>
 #include <cstddef>
 
-#include "holly/ta_parameter.h"
+#include "holly/ta_parameter.hpp"
 
-#include "holly/texture_memory_alloc.h"
+#include "holly/texture_memory_alloc.hpp"
 
 /*
   -0.5,-0.5      0.5,-0.5
@@ -79,8 +79,6 @@ union ta_parameter {
   struct vertex_polygon_type_3 vertex_polygon_type_3;
   struct global_end_of_list global_end_of_list;
 };
-
-extern void serial_string(const char * s);
 
 uint32_t scene_transform(uint32_t * _scene)
 {

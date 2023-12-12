@@ -145,10 +145,10 @@ def blocks(rows):
     yield 'extern struct sh7091_reg sh7091 __asm("sh7091");'
 
 def headers():
-    yield "#include <stdint.h>"
-    yield "#include <stddef.h>"
+    yield "#include <cstdint>"
+    yield "#include <cstddef>"
     yield ""
-    yield '#include "type.h"'
+    yield '#include "type.hpp"'
     yield ""
 
 if __name__ == "__main__":

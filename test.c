@@ -1,9 +1,9 @@
-#include "type.h"
+#include "type.hpp"
 
-#include "rgb.h"
-#include "vga.h"
-#include "systembus.h"
-#include "holly.h"
+#include "rgb.hpp"
+#include "vga.hpp"
+#include "systembus.hpp"
+#include "holly.hpp"
 
 void *memcpy(void *restrict dest, const void *restrict src, size_t n)
 {

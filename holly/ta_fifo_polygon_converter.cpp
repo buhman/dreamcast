@@ -1,16 +1,16 @@
 #include <cstdint>
 
-#include "core_bits.h"
-#include "ta_bits.h"
-#include "../holly.h"
-#include "../systembus.h"
-#include "../systembus_bits.h"
-#include "../sh7091.h"
-#include "../sh7091_bits.h"
+#include "core_bits.hpp"
+#include "ta_bits.hpp"
+#include "../holly.hpp"
+#include "../systembus.hpp"
+#include "../systembus_bits.hpp"
+#include "../sh7091.hpp"
+#include "../sh7091_bits.hpp"
 
-#include "texture_memory_alloc.h"
+#include "texture_memory_alloc.hpp"
 
-#include "ta_fifo_polygon_converter.h"
+#include "ta_fifo_polygon_converter.hpp"
 
 void ta_polygon_converter_init()
 {

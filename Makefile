@@ -1,12 +1,10 @@
 all: main.elf
 
 include common.mk
+include example/example.mk
 
 MAIN_OBJ = \
-	start.o \
 	main.o \
-	load.o \
-	cache.o \
 	vga.o \
 	rgb.o \
 	holly/background.o \
@@ -16,14 +14,13 @@ MAIN_OBJ = \
 	maple/maple.o \
 	scene.o \
 	macaw.data.o \
-	wink.data.o \
-	$(LIBGCC)
+	wink.data.o
 
-serial.elf: start.o serial_main.o load.o cache.o
-	$(LD) $(LDFLAGS) -T $(LIB)/alt.lds $^ -o $@
+serial.elf: LDSCRIPT = $(LIB)/alt.lds
+serial.elf: $(START_OBJ) serial_main.o load.o
 
-main.elf: $(MAIN_OBJ)
-	$(LD) $(LDFLAGS) -T $(LIB)/main.lds $^ -o $@
+main.elf: LDSCRIPT = $(LIB)/main.lds
+main.elf: $(START_OBJ) $(MAIN_OBJ)
 
-test.elf: $(MAIN_OBJ)
-	$(LD) $(LDFLAGS) -T $(LIB)/alt.lds $^ -o $@
+test.elf: LDSCRIPT = $(LIB)/alt.lds
+test.elf: $(START_OBJ) $(MAIN_OBJ)

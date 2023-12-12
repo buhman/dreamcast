@@ -1,5 +1,5 @@
-#include "sh7091.h"
-#include "memorymap.h"
+#include "sh7091.hpp"
+#include "memorymap.hpp"
 
 void sq_transfer_32byte(volatile void * dst)
 {

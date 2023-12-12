@@ -1,13 +1,13 @@
-#include "../float_uint32.h"
-#include "core_bits.h"
-#include "../holly.h"
-#include "../memorymap.h"
+#include "../float_uint32.hpp"
+#include "core_bits.hpp"
+#include "../holly.hpp"
+#include "../memorymap.hpp"
 
-#include "texture_memory_alloc.h"
+#include "texture_memory_alloc.hpp"
 
-#include "core.h"
-#include "background.h"
-#include "region_array.h"
+#include "core.hpp"
+#include "background.hpp"
+#include "region_array.hpp"
 
 void core_init()
 {

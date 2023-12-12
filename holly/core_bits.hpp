@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "../float_uint32.h"
+#include "../float_uint32.hpp"
 
 namespace id {
   constexpr uint32_t device_id(uint32_t reg) { return (reg >> 16) & 0xffff; }

@@ -1,67 +1,29 @@
-#include <stdint.h>
+#include <cstdint>
 
-#include "memorymap.h"
+#include "memorymap.hpp"
 
-#include "sh7091.h"
-#include "sh7091_bits.h"
-#include "holly.h"
-#include "holly/core.h"
-#include "holly/core_bits.h"
-#include "holly/ta_fifo_polygon_converter.h"
-#include "systembus.h"
-#include "maple/maple.h"
-#include "maple/maple_bits.h"
-#include "maple/maple_bus_commands.h"
-#include "maple/maple_bus_ft0.h"
+#include "sh7091.hpp"
+#include "sh7091_bits.hpp"
+#include "holly.hpp"
+#include "holly/core.hpp"
+#include "holly/core_bits.hpp"
+#include "holly/ta_fifo_polygon_converter.hpp"
+#include "systembus.hpp"
+#include "maple/maple.hpp"
+#include "maple/maple_bits.hpp"
+#include "maple/maple_bus_commands.hpp"
+#include "maple/maple_bus_ft0.hpp"
 
-#include "holly/texture_memory_alloc.h"
+#include "holly/texture_memory_alloc.hpp"
 
-#include "cache.h"
-#include "load.h"
-#include "vga.h"
-#include "rgb.h"
-#include "string.h"
-#include "scene.h"
+#include "cache.hpp"
+#include "load.hpp"
+#include "vga.hpp"
+#include "rgb.hpp"
+#include "string.hpp"
+#include "scene.hpp"
 
-#include "macaw.h"
-
-extern uint32_t __bss_link_start __asm("__bss_link_start");
-extern uint32_t __bss_link_end __asm("__bss_link_end");
-
-void serial()
-{
-  sh7091.SCIF.SCSCR2 = 0;
-  sh7091.SCIF.SCSMR2 = 0;
-  sh7091.SCIF.SCBRR2 = 1; // 520833.3
-
-  sh7091.SCIF.SCFCR2 = SCFCR2__TFRST | SCFCR2__RFRST;
-  // tx/rx trigger on 1 byte
-  sh7091.SCIF.SCFCR2 = 0;
-
-  sh7091.SCIF.SCSPTR2 = 0;
-  sh7091.SCIF.SCLSR2 = 0;
-
-  sh7091.SCIF.SCSCR2 = SCSCR2__TE | SCSCR2__RE;
-}
-
-inline void serial_char(const char c)
-{
-  // wait for transmit fifo to become empty
-  while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0);
-
-  for (int i = 0; i < 100000; i++) {
-    asm volatile ("nop;");
-  }
-
-  sh7091.SCIF.SCFTDR2 = static_cast<uint8_t>(c);
-}
-
-void serial_string(const char * s)
-{
-  while (*s != '\0') {
-    serial_char(*s++);
-  }
-}
+#include "macaw.hpp"
 
 /* must be aligned to 32-bytes for DMA transfer */
 // the aligned(32) attribute does not actually align to 32 bytes; gcc is the best compiler.
@@ -69,53 +31,8 @@ void serial_string(const char * s)
 // __attribute__((aligned(32)))
 uint32_t _scene[((32 * 6) + 32) / 4];
 
-template <typename T>
-T * align_32byte(T * mem)
-{
-  return reinterpret_cast<T *>((((reinterpret_cast<uint32_t>(mem) + 31) & ~31)));
-}
-
-void serial_int32(const uint32_t n)
-{
-  char num_buf[9];
-  string::hex<char>(num_buf, 8, n);
-  num_buf[8] = 0;
-  serial_string("0x");
-  serial_string(num_buf);
-  serial_string("\n");
-}
-
-void serial_int8(const uint8_t n)
-{
-  char num_buf[3];
-  string::hex<char>(num_buf, 2, n);
-  num_buf[2] = 0;
-  serial_string("0x");
-  serial_string(num_buf);
-  serial_string("\n");
-}
-
 uint32_t _receive_address[(256 + 32) / 4] = {0};
 uint32_t _command_buf[(256 + 32) / 4] = {0};
-
-extern uint32_t _binary_wink_data_start __asm("_binary_wink_data_start");
-
-void make_wink(uint32_t * buf)
-{
-  const uint8_t * src = reinterpret_cast<const uint8_t *>(&_binary_wink_data_start);
-  uint8_t * dst = reinterpret_cast<uint8_t *>(buf);
-
-  uint32_t ix = 0;
-  dst[ix] = 0;
-  for (int i = 0; i < 48 * 32; i++) {
-    dst[ix] |= ((src[i] & 1) << (7 - (i % 8)));
-
-    if (i % 8 == 7) {
-      ix++;
-      dst[ix] = 0;
-    }
-  }
-}
 
 bool maple_test()
 {
@@ -128,9 +45,6 @@ bool maple_test()
 
   //maple_init_device_request(command_buf, receive_address);
   //maple_init_get_condition(command_buf, receive_address);
-  uint32_t wink_buf[192];
-  make_wink(wink_buf);
-  maple_init_block_write(command_buf, receive_address, wink_buf);
 
   serial_int32(command_buf[0]);
   serial_char('\n');
@@ -154,18 +68,8 @@ bool maple_test()
   return !(data_format->data.digital_button & ft0::data_transfer::digital_button::a);
 }
 
-extern "C"
 void main()
 {
-  cache_init();
-
-  // clear BSS
-  uint32_t * start = &__bss_link_start;
-  uint32_t * end = &__bss_link_end;
-  while (start < end) {
-    *start++ = 0;
-  }
-
   //serial();
 
   vga();

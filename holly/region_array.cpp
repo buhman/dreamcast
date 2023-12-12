@@ -1,4 +1,6 @@
-#include "region_array.h"
+#include <cstdint>
+
+#include "region_array.hpp"
 
 #define REGION_ARRAY__LAST_REGION (1 << 31)
 #define REGION_ARRAY__Z_CLEAR (1 << 30)

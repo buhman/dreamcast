@@ -1,14 +1,14 @@
-#include <stdint.h>
+#include <cstdint>
 
-#include "sh7091.h"
-#include "sh7091_bits.h"
-#include "holly.h"
-#include "holly/core_bits.h"
-#include "aica.h"
-#include "memorymap.h"
+#include "sh7091.hpp"
+#include "sh7091_bits.hpp"
+#include "holly.hpp"
+#include "holly/core_bits.hpp"
+#include "aica.hpp"
+#include "memorymap.hpp"
 
-#include "vga.h"
-#include "rgb.h"
+#include "vga.hpp"
+#include "rgb.hpp"
 
 uint32_t get_cable_type()
 {
@@ -144,7 +144,7 @@ void vga()
   holly.SOFTRESET = 0;
 }
 
-void fill_framebuffer()
+void vga_fill_framebuffer()
 {
   volatile uint16_t * vram = reinterpret_cast<volatile uint16_t *>(texture_memory);
   for (int y = 0; y < 480; y++) {
@@ -154,6 +154,4 @@ void fill_framebuffer()
       vram[y * 640 + x] = ((rgb.r >> 3) << 11) | ((rgb.g >> 2) << 5) | ((rgb.b >> 3) << 0);
     }
   }
-  vram[0] = 0xf0ff;
-  vram[10] = 0xf0ff;
 }

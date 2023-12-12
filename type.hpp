@@ -1,5 +1,7 @@
-#include <stddef.h>
-#include <stdint.h>
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
 
 #ifndef __cplusplus
 #ifndef static_assert

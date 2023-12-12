@@ -1,4 +1,4 @@
-#include "rgb.h"
+#include "rgb.hpp"
 
 struct rgb hsv_to_rgb(struct hsv hsv)
 {

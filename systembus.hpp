@@ -1,7 +1,7 @@
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
 
-#include "type.h"
+#include "type.hpp"
 
 struct system_reg {
   reg32 C2DSTAT;           /* CH2-DMA destination address */

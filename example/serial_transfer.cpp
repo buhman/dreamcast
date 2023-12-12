@@ -1,8 +1,10 @@
-#include "sh7091.h"
-#include "sh7091_bits.h"
+#include <cstdint>
 
-#include "cache.h"
-#include "load.h"
+#include "sh7091.hpp"
+#include "sh7091_bits.hpp"
+
+#include "cache.hpp"
+#include "load.hpp"
 
 extern uint32_t __bss_link_start __asm("__bss_link_start");
 extern uint32_t __bss_link_end __asm("__bss_link_end");

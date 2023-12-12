@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "../float_uint32.h"
+#include "../float_uint32.hpp"
 
 namespace host_instruction {
   constexpr uint32_t end_flag = 1 << 31;
@@ -44,5 +44,20 @@ namespace ap {
     constexpr uint32_t _1 = 0b00010 << 0;
     constexpr uint32_t _0 = 0b00001 << 0;
   }
+}
+
+namespace function_type {
+  constexpr uint32_t camera = 1 << 11;
+  constexpr uint32_t exchange_media = 1 << 10;
+  constexpr uint32_t pointing = 1 << 9;
+  constexpr uint32_t vibration = 1 << 8;
+  constexpr uint32_t light_gun = 1 << 7;
+  constexpr uint32_t keyboard = 1 << 6;
+  constexpr uint32_t ar_gun = 1 << 5;
+  constexpr uint32_t audio_input = 1 << 4;
+  constexpr uint32_t timer = 1 << 3;
+  constexpr uint32_t bw_lcd = 1 << 2;
+  constexpr uint32_t storage = 1 << 1;
+  constexpr uint32_t controller = 1 << 0;
 }
 

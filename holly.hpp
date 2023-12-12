@@ -1,7 +1,7 @@
-#include <stdint.h>
-#include <stddef.h>
+#include <cstdint>
+#include <cstddef>
 
-#include "type.h"
+#include "type.hpp"
 
 struct holly_reg {
   reg32 ID;                /* Device ID */

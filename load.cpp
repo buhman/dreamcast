@@ -1,8 +1,8 @@
-#include <stdint.h>
+#include <cstdint>
 
-#include "sh7091.h"
-#include "sh7091_bits.h"
-#include "holly.h"
+#include "sh7091.hpp"
+#include "sh7091_bits.hpp"
+#include "holly.hpp"
 
 enum load_command {
   CMD_NONE,

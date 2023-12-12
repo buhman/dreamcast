@@ -5,7 +5,7 @@ from sh7091 import read_input
 from generate import renderer
 
 def includes():
-    yield "#include <stdint.h>"
+    yield "#include <cstdint>"
     yield ""
 
 def process_rows(rows):

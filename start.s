@@ -10,8 +10,8 @@ _start:
         or      r1,r0
         ldc     r0,sr
 
-        /* jump to main */
-        mov.l main_ptr,r0
+        /* jump to runtime_init */
+        mov.l runtime_init_ptr,r0
         jmp @r0
         nop
 
@@ -20,5 +20,5 @@ p1ram_end_ptr:
         .long __p1ram_end
 imask_all:
         .long 0xf0
-main_ptr:
-        .long _main
+runtime_init_ptr:
+        .long _runtime_init

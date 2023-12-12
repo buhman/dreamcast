@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "../float_uint32.h"
+#include "../float_uint32.hpp"
 
 namespace mdstar {
   constexpr uint32_t table_address(uint32_t num) { return (num & 0xfffffe0) << 0; }

@@ -36,7 +36,7 @@ def aggregate_enums(aggregated_rows):
     def assert_unique_ordered(bits):
         nonlocal all_bits
         assert all(bit not in all_bits for bit in bits), bits
-        assert max(all_bits, default=32) > max(bits)
+        assert max(all_bits, default=32) > max(bits), (all_bits, bits)
         all_bits |= bits
 
     for row in aggregated_rows:
@@ -206,7 +206,7 @@ def render_registers(registers):
 def header():
     yield "#include <cstdint>"
     yield ""
-    yield '#include "../float_uint32.h"'
+    yield '#include "../float_uint32.hpp"'
     yield ""
 
 if __name__ == "__main__":
