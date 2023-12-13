@@ -30,8 +30,6 @@ const struct vertex strip_vertices[4] = {
 };
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 
-uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
-
 static float theta = 0;
 constexpr float half_degree = 0.01745329f / 2.f;
 
@@ -39,10 +37,9 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 		   const vertex * strip_vertices,
 		   const uint32_t strip_length)
 {
-  auto ta_parameter = reinterpret_cast<union ta_parameter *>(ta_parameter_buf);
-  int ix = 0;
+  auto parameter = ta_parameter_writer(ta_parameter_buf);
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-  ta_parameter[ix++].global_polygon_type_0 = global_polygon_type_0(texture_address);
+  parameter.append<global_polygon_type_0>() = global_polygon_type_0(texture_address);
 
   for (uint32_t i = 0; i < strip_length; i++) {
     bool end_of_strip = i == strip_length - 1;
@@ -61,7 +58,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
     y += 240.f;
     z = 1.f / (z + 10.f);
 
-    ta_parameter[ix++].vertex_polygon_type_3 =
+    parameter.append<vertex_polygon_type_3>() =
       vertex_polygon_type_3(x, y, z,
 			    strip_vertices[i].u,
 			    strip_vertices[i].v,
@@ -69,12 +66,14 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 			    end_of_strip);
   }
 
-  ta_parameter[ix++].global_end_of_list = global_end_of_list();
+  parameter.append<global_end_of_list>() = global_end_of_list();
 
   theta += half_degree;
 
-  return ix * 32;
+  return parameter.offset;
 }
+
+uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
 
 void main()
 {
@@ -99,8 +98,8 @@ void main()
   core_init();
   core_init_texture_memory();
 
-  // the address of `scene` must be a multiple of 32 bytes
-  // this is mandatory for ch2-dma to the ta fifo polygon converter
+  // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
+  // This is mandatory for ch2-dma to the ta fifo polygon converter.
   uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
 
   while (true) {

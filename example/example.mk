@@ -1,3 +1,14 @@
+SPRITE_OBJ = \
+	example/sprite.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o
+
+example/sprite.elf: LDSCRIPT = $(LIB)/alt.lds
+example/sprite.elf: $(START_OBJ) $(SPRITE_OBJ)
+
 MACAW_OBJ = \
 	example/macaw.o \
 	vga.o \

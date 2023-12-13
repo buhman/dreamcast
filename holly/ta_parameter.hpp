@@ -313,6 +313,24 @@ static_assert((offsetof (struct global_end_of_list, _res4)) == 0x14);
 static_assert((offsetof (struct global_end_of_list, _res5)) == 0x18);
 static_assert((offsetof (struct global_end_of_list, _res6)) == 0x1c);
 
+
+struct ta_parameter_writer {
+  uint32_t * buf;
+  uint32_t offset; // in bytes
+
+  ta_parameter_writer(uint32_t * buf)
+    : buf(buf), offset(0)
+  { }
+
+  template <typename T>
+  inline T& append()
+  {
+    T& t = *reinterpret_cast<T *>(&buf[offset / 4]);
+    offset += (sizeof (T));
+    return t;
+  }
+};
+/*
 union ta_parameter {
   struct global_polygon_type_0 global_polygon_type_0;
   struct global_sprite global_sprite;
@@ -320,5 +338,9 @@ union ta_parameter {
   struct vertex_polygon_type_0 vertex_polygon_type_0;
   struct vertex_polygon_type_3 vertex_polygon_type_3;
 
+  struct vertex_sprite_type_0 vertex_sprite_type_0;
+
   struct global_end_of_list global_end_of_list;
 };
+static_assert((sizeof (ta_parameter)) == 32);
+*/
