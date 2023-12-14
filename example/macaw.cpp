@@ -9,6 +9,7 @@
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_bits.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "memorymap.hpp"
@@ -71,22 +72,21 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
   parameter.append<global_end_of_list>() = global_end_of_list();
 
-  theta += half_degree;
-
   return parameter.offset;
 }
 
-void init_texture_memory()
+void init_texture_memory(const struct opb_size& opb_size)
 {
   volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory);
 
   background_parameter(mem->background);
 
-  region_array(mem->region_array,
-	       (offsetof (struct texture_memory_alloc, object_list)),
-	       640 / 32, // width
-	       480 / 32 // height
-	       );
+  region_array2(mem->region_array,
+	        (offsetof (struct texture_memory_alloc, object_list)),
+		640 / 32, // width
+		480 / 32, // height
+		opb_size
+		);
 }
 
 uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
@@ -107,31 +107,48 @@ void main()
     mem->texture[px] = rgb565;
   }
 
+  // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
+  // This is mandatory for ch2-dma to the ta fifo polygon converter.
+  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
+
+  constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
+			      | ta_alloc_ctrl::tm_opb::no_list
+			      | ta_alloc_ctrl::t_opb::_16x4byte
+			      | ta_alloc_ctrl::om_opb::no_list
+                              | ta_alloc_ctrl::o_opb::_16x4byte;
+
+  constexpr struct opb_size opb_size = { .opaque = 16 * 4
+				       , .opaque_modifier = 0
+				       , .translucent = 0
+				       , .translucent_modifier = 0
+				       , .punch_through = 0
+				       };
+
+  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
+
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
   core_init();
-  init_texture_memory();
+  init_texture_memory(opb_size);
 
-  // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
-  // This is mandatory for ch2-dma to the ta fifo polygon converter.
-  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
-
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
-  constexpr uint32_t opb_total_size = tiles * 16 * 4;
+  uint32_t frame_ix = 0;
+  constexpr uint32_t num_frames = 1;
 
   while (true) {
-    v_sync_out();
-    v_sync_in();
-
-    ta_polygon_converter_init(opb_total_size);
+    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc);
     uint32_t ta_parameter_size = transform(ta_parameter_buf, strip_vertices, strip_length);
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
 
-    constexpr int frame_ix = 0;
-    constexpr int num_frames = 0;
     core_start_render(frame_ix, num_frames);
+
+    v_sync_out();
+    v_sync_in();
+    core_wait_end_of_render_video(frame_ix, num_frames);
+
+    theta += half_degree;
+    frame_ix += 1;
   }
 }

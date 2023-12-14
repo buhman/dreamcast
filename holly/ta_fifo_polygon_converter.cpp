@@ -12,7 +12,8 @@
 
 #include "ta_fifo_polygon_converter.hpp"
 
-void ta_polygon_converter_init(uint32_t opb_total_size) // for all render passes
+void ta_polygon_converter_init(uint32_t opb_total_size, // for all render passes
+			       uint32_t ta_alloc)
 {
   holly.SOFTRESET = softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -21,11 +22,7 @@ void ta_polygon_converter_init(uint32_t opb_total_size) // for all render passes
                           | ta_glob_tile_clip::tile_x_num((640 / 32) - 1);
 
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
-		      | ta_alloc_ctrl::pt_opb::no_list
-		      | ta_alloc_ctrl::tm_opb::no_list
-		      | ta_alloc_ctrl::t_opb::no_list
-		      | ta_alloc_ctrl::om_opb::no_list
-		      | ta_alloc_ctrl::o_opb::_16x4byte;
+                      | ta_alloc;
 
   holly.TA_ISP_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
   holly.TA_ISP_LIMIT = (offsetof (struct texture_memory_alloc, object_list)); // the end of isp_tsp_parameters
@@ -40,15 +37,11 @@ void ta_polygon_converter_init(uint32_t opb_total_size) // for all render passes
   (void)_dummy_read;
 }
 
-void ta_polygon_converter_cont(uint32_t ol_base_offset)
+void ta_polygon_converter_cont(uint32_t ol_base_offset,
+			       uint32_t ta_alloc)
 {
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
-		      | ta_alloc_ctrl::pt_opb::no_list
-		      | ta_alloc_ctrl::tm_opb::no_list
-		      | ta_alloc_ctrl::t_opb::_16x4byte
-		      | ta_alloc_ctrl::om_opb::no_list
-		      | ta_alloc_ctrl::o_opb::no_list;
-
+                      | ta_alloc;
   holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list))
                    + ol_base_offset;
 
@@ -57,7 +50,6 @@ void ta_polygon_converter_cont(uint32_t ol_base_offset)
   uint32_t _dummy_read = holly.TA_LIST_CONT;
   (void)_dummy_read;
 }
-
 
 void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
 {

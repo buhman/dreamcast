@@ -2,6 +2,8 @@
 #include "core_bits.hpp"
 #include "../holly.hpp"
 #include "../memorymap.hpp"
+#include "../systembus.hpp"
+#include "../systembus_bits.hpp"
 
 #include "texture_memory_alloc.hpp"
 
@@ -11,7 +13,8 @@
 
 void core_init()
 {
-  holly.ISP_FEED_CFG   = isp_feed_cfg::cache_size_for_translucency(0x200);
+  holly.ISP_FEED_CFG   = isp_feed_cfg::cache_size_for_translucency(0x200)
+                       | isp_feed_cfg::pre_sort_mode;
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::scale_factor_for_shadows(1);
   holly.FPU_CULL_VAL   = _i(1.f);
@@ -44,11 +47,11 @@ void core_init()
   holly.FPU_PARAM_CFG  = fpu_param_cfg::region_header_type::type_2
 		       | fpu_param_cfg::tsp_parameter_burst_threshold(31)
 		       | fpu_param_cfg::isp_parameter_burst_threshold(31)
-		       | fpu_param_cfg::pointer_burst_size(7) // must be less than opb size
+		       | fpu_param_cfg::pointer_burst_size(0x15) // must be less than opb size
 		       | fpu_param_cfg::pointer_first_burst_size(7); // half of pointer burst size(?)
 }
 
-void core_start_render(int frame_ix, int num_frames)
+void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 {
   holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));
   holly.PARAM_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
@@ -56,15 +59,28 @@ void core_start_render(int frame_ix, int num_frames)
   holly.ISP_BACKGND_T = isp_backgnd_t::tag_address((offsetof (struct texture_memory_alloc, background)) / 4)
                       | isp_backgnd_t::tag_offset(0)
                       | isp_backgnd_t::skip(1);
-  holly.ISP_BACKGND_D = _i(1.f/100000);
+  holly.ISP_BACKGND_D = _i(1.f/100000.f);
 
   holly.FB_W_CTRL = 1 << 3 | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
   holly.FB_W_LINESTRIDE = (640 * 2) / 8;
 
-  int w_fb = ((frame_ix + 0) & num_frames) * 0x00096000;
-  int r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
+  uint32_t w_fb = ((frame_ix + 0) & num_frames) * 0x00096000;
   holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
-  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
 
   holly.STARTRENDER = 1;
+}
+
+static bool flycast_is_dumb = 0;
+
+void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
+{
+  uint32_t r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
+  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
+
+  if (!flycast_is_dumb) {
+    flycast_is_dumb = 1;
+  } else {
+    while ((system.ISTNRM & ISTNRM__END_OF_RENDER_VIDEO) == 0);
+    system.ISTNRM = ISTNRM__END_OF_RENDER_VIDEO;
+  }
 }

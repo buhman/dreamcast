@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -Os
+OPT ?= -O0
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 
@@ -101,7 +101,7 @@ audio.pcm:
 		synth 1 sin 440 vol -10dB
 	mv $@.raw $@
 
-1ST_READ.BIN: main.bin
+1ST_READ.BIN: example/macaw_multipass.bin
 	./scramble $< $@
 
 %.iso: 1ST_READ.BIN ip.bin

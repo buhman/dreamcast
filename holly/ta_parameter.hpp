@@ -151,8 +151,8 @@ struct global_polygon_type_0 {
     , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
 			      | isp_tsp_instruction_word::culling_mode::no_culling )
 
-    , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::one
-			  | tsp_instruction_word::dst_alpha_instr::src_alpha
+    , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::src_alpha
+			  | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
 			  | tsp_instruction_word::fog_control::no_fog
 			  | tsp_instruction_word::use_alpha )
 
