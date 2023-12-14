@@ -141,27 +141,30 @@ struct global_polygon_type_0 {
   uint32_t data_size_for_sort_dma;
   uint32_t next_address_for_sort_dma;
 
-  /*
+  // untextured
   global_polygon_type_0()
     : parameter_control_word( para_control::para_type::polygon_or_modifier_volume
-                            | para_control::list_type::opaque
-                            | obj_control::col_type::packed_color )
+                            | para_control::list_type::translucent
+                            | obj_control::col_type::packed_color
+			    | obj_control::gouraud )
 
     , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
-                              | isp_tsp_instruction_word::culling_mode::no_culling )
+			      | isp_tsp_instruction_word::culling_mode::no_culling )
 
     , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::one
-                          | tsp_instruction_word::dst_alpha_instr::zero
-                          | tsp_instruction_word::fog_control::no_fog )
+			  | tsp_instruction_word::dst_alpha_instr::src_alpha
+			  | tsp_instruction_word::fog_control::no_fog
+			  | tsp_instruction_word::use_alpha )
 
-    , texture_control_word(0)
+    , texture_control_word( 0 )
+
     , _res0(0)
     , _res1(0)
     , data_size_for_sort_dma(0)
     , next_address_for_sort_dma(0)
   { }
-  */
 
+  // textured
   global_polygon_type_0(const uint32_t texture_address)
     : parameter_control_word( para_control::para_type::polygon_or_modifier_volume
                             | para_control::list_type::opaque

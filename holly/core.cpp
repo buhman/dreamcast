@@ -48,18 +48,6 @@ void core_init()
 		       | fpu_param_cfg::pointer_first_burst_size(7); // half of pointer burst size(?)
 }
 
-void core_init_texture_memory()
-{
-  volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory);
-
-  background_parameter(mem->background);
-  region_array(mem->region_array,
-               (offsetof (struct texture_memory_alloc, object_list)),
-               640 / 32, // width
-               480 / 32  // height
-               );
-}
-
 void core_start_render(int frame_ix, int num_frames)
 {
   holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));

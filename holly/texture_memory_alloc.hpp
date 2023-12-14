@@ -2,6 +2,14 @@
 
 #include <cstdint>
 
+/*
+  object_list[0x00100000 / 4] is enough space for 81 sets of
+  0x3200-byte lists (16 * 4 * (640 / 32) * (320 / 32))
+
+  (that is, it is significantly more space than required for trivial
+  TA/CORE drawings)
+*/
+
 struct texture_memory_alloc {
   uint32_t isp_tsp_parameters[0x00100000 / 4]; // TA_ISP_BASE / PARAM_BASE (the actual objects)
   uint32_t        object_list[0x00100000 / 4]; // TA_OL_BASE (contains object pointer blocks)

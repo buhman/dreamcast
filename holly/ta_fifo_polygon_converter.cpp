@@ -12,7 +12,7 @@
 
 #include "ta_fifo_polygon_converter.hpp"
 
-void ta_polygon_converter_init()
+void ta_polygon_converter_init(uint32_t opb_total_size) // for all render passes
 {
   holly.SOFTRESET = softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -31,17 +31,33 @@ void ta_polygon_converter_init()
   holly.TA_ISP_LIMIT = (offsetof (struct texture_memory_alloc, object_list)); // the end of isp_tsp_parameters
   holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list));
   holly.TA_OL_LIMIT = (offsetof (struct texture_memory_alloc, _res0)); // the end of the object_list
-  holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list));
-  //holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
-  //                       + (640 / 32) * (320 / 32) * 16 * 4;
+  holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
+                         + opb_total_size; // opb_size is the total size of all OPBs for all passes
 
   holly.TA_LIST_INIT = ta_list_init::list_init;
 
-  volatile uint32_t _dummy_read = holly.TA_LIST_INIT;
+  uint32_t _dummy_read = holly.TA_LIST_INIT;
   (void)_dummy_read;
 }
 
-extern void serial_string(const char * s);
+void ta_polygon_converter_cont(uint32_t ol_base_offset)
+{
+  holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
+		      | ta_alloc_ctrl::pt_opb::no_list
+		      | ta_alloc_ctrl::tm_opb::no_list
+		      | ta_alloc_ctrl::t_opb::_16x4byte
+		      | ta_alloc_ctrl::om_opb::no_list
+		      | ta_alloc_ctrl::o_opb::no_list;
+
+  holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list))
+                   + ol_base_offset;
+
+  holly.TA_LIST_CONT = ta_list_cont::list_cont;
+
+  uint32_t _dummy_read = holly.TA_LIST_CONT;
+  (void)_dummy_read;
+}
+
 
 void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
 {
@@ -96,4 +112,11 @@ void ta_wait_opaque_list()
   while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_OPAQUE_LIST) == 0);
 
   system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_OPAQUE_LIST;
+}
+
+void ta_wait_translucent_list()
+{
+  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST) == 0);
+
+  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST;
 }

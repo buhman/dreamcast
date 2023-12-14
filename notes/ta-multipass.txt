@@ -1,0 +1,12 @@
+page 179
+
+"If list continuation processing is performed through the TA_LIST_CONT
+register, the TA initializes its internal status in the same manner as
+before, but leaves the TA_NEXT_OPB register unchanged."
+
+TA_NEXT_OPB is only used in the case where the TA needs to allocate a
+object pointer in a tile that has a full OPB (e.g: for TA_ALLOC_CTRL
+0x2, to write the 16th opaque object to a tile, the next OPB for that
+tile is at the address TA_NEXT_OPB).
+
+
