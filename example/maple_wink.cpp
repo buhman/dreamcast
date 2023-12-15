@@ -1,6 +1,7 @@
 #include <cstdint>
 
 #include "maple/maple.hpp"
+#include "maple/maple_bus_bits.hpp"
 #include "vga.hpp"
 #include "align.hpp"
 #include "serial.hpp"
@@ -30,18 +31,25 @@ void main()
   constexpr int height = 32;
   constexpr int pixels_per_byte = 8;
 
-  uint32_t wink_buf[width * height / pixels_per_byte];
+  uint32_t __attribute__((aligned(4))) wink_buf[(width * height / pixels_per_byte + 32) / 4];
   make_wink(wink_buf);
+  if ((((uint32_t)wink_buf) & 3) != 0) serial::string("misaligned\n");
 
-  uint32_t _command_buf[128 / 4];
-  uint32_t _receive_buf[128 / 4];
+  uint32_t _command_buf[(1024 + 32) / 4];
+  uint32_t _receive_buf[(1024 + 32) / 4];
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_buf = align_32byte(_receive_buf);
+  if ((((uint32_t)command_buf) & 31) != 0) serial::string("misaligned\n");
+  if ((((uint32_t)receive_buf) & 31) != 0) serial::string("misaligned\n");
 
-  maple::init_block_write(command_buf, receive_buf, wink_buf);
+  maple::init_block_write(command_buf, receive_buf,
+                          host_instruction::port_select::a,
+                          ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0,
+                          wink_buf,
+                          192);
   maple::dma_start(command_buf);
 
-  for (int i = 0; i < 32; i++) {
+  for (int i = 0; i < 1; i++) {
     serial::integer<uint32_t>(receive_buf[i]);
   }
 

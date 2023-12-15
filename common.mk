@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O0
+OPT ?= -Os
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 

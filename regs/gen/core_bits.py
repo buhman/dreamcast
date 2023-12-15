@@ -175,10 +175,22 @@ def render_defs(bit_def):
     else:
         yield from render_read_only(bit_def)
 
+def render_enum_mask(enum_def):
+    all_bits = set(bit_def["bits"] for bit_def in enum_def.defs)
+    assert len(all_bits) == 1
+    assert all(bit_def["bit_name"] != "bit_mask" for bit_def in enum_def.defs), bit_def
+    _bits = next(iter(all_bits))
+    bits = parse_bit_range(_bits)
+    mask_value = mask_from_bits(bits)
+    bit_ix = min(bits)
+    yield ""
+    yield f"constexpr uint32_t bit_mask = {hex(mask_value)} << {bit_ix};"
+
 def render_enum(enum_def):
     yield f"namespace {enum_def.name.lower()} {{"
     for bit_def in enum_def.defs:
         yield from render_defs(bit_def)
+    yield from render_enum_mask(enum_def)
     yield "}"
 
 def render_register(register):

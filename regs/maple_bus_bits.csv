@@ -14,6 +14,8 @@
 ,,,,,,
 "host_instruction",,"7-0","transfer_length",,"0xff",
 ,,,,,,
+"receive_data_storage_address",,"31-0","address",,"0x1fff_ffff",
+,,,,,,
 "ap","port_select","7-6","a","0b00",,
 "ap","port_select","7-6","b","0b01",,
 "ap","port_select","7-6","c","0b10",,

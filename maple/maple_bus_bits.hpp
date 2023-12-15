@@ -10,6 +10,8 @@ namespace host_instruction {
     constexpr uint32_t b = 1 << 16;
     constexpr uint32_t c = 2 << 16;
     constexpr uint32_t d = 3 << 16;
+    
+    constexpr uint32_t bit_mask = 0x3 << 16;
   }
   
   namespace pattern {
@@ -18,9 +20,15 @@ namespace host_instruction {
     constexpr uint32_t reset = 0b011 << 8;
     constexpr uint32_t return_from_light_gun_mode = 0b100 << 8;
     constexpr uint32_t nop = 0b111 << 8;
+    
+    constexpr uint32_t bit_mask = 0x7 << 8;
   }
   
   constexpr uint32_t transfer_length(uint32_t num) { return (num & 0xff) << 0; }
+}
+
+namespace receive_data_storage_address {
+  constexpr uint32_t address(uint32_t num) { return (num & 0x1fffffff) << 0; }
 }
 
 namespace ap {
@@ -29,12 +37,16 @@ namespace ap {
     constexpr uint32_t b = 0b01 << 6;
     constexpr uint32_t c = 0b10 << 6;
     constexpr uint32_t d = 0b11 << 6;
+    
+    constexpr uint32_t bit_mask = 0x3 << 6;
   }
   
   namespace de {
     constexpr uint32_t device = 1 << 5;
     constexpr uint32_t expansion_device = 0 << 5;
     constexpr uint32_t port = 0 << 5;
+    
+    constexpr uint32_t bit_mask = 0x1 << 5;
   }
   
   namespace lm_bus {
@@ -43,6 +55,8 @@ namespace ap {
     constexpr uint32_t _2 = 0b00100 << 0;
     constexpr uint32_t _1 = 0b00010 << 0;
     constexpr uint32_t _0 = 0b00001 << 0;
+    
+    constexpr uint32_t bit_mask = 0x1f << 0;
   }
 }
 

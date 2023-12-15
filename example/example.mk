@@ -54,6 +54,15 @@ CUBE_OBJ = \
 example/cube.elf: LDSCRIPT = $(LIB)/alt.lds
 example/cube.elf: $(START_OBJ) $(CUBE_OBJ)
 
+MAPLE_CONTROLLER_OBJ = \
+	example/maple_controller.o \
+	vga.o \
+	serial.o \
+	maple/maple.o
+
+example/maple_controller.elf: LDSCRIPT = $(LIB)/alt.lds
+example/maple_controller.elf: $(START_OBJ) $(MAPLE_CONTROLLER_OBJ)
+
 MAPLE_WINK_OBJ = \
 	example/maple_wink.o \
 	vga.o \
