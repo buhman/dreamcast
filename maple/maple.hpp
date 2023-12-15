@@ -42,7 +42,8 @@ void init_device_request(uint32_t * buf, uint32_t * receive_buf,
 
 void init_get_condition(uint32_t * buf, uint32_t * receive_buf,
                         uint32_t destination_port,
-                        uint8_t destination_ap);
+                        uint8_t destination_ap,
+			uint32_t function_type);
 
 void init_block_write(uint32_t * buf, uint32_t * receive_buf,
                       uint32_t destination_port,

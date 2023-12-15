@@ -37,6 +37,8 @@ def command_namespace(namespace: CommandNamespace,
                 if const in {1, 2, 4}:
                     bits = const * 8
                     yield f"uint{bits}_t {field_name};"
+                elif field_name == "device_id":
+                    yield f"struct device_id {field_name};"
                 else:
                     yield f"uint8_t {field_name}[{const}];"
             elif const == 0:
@@ -155,6 +157,11 @@ def new_aggregator():
 def headers():
     yield "#include <cstdint>"
     yield ""
+    yield "struct device_id {"
+    yield "uint32_t ft;"
+    yield "uint32_t fd[3];"
+    yield "};"
+    yield "static_assert((sizeof (struct device_id)) == 16);"
 
 input_file = sys.argv[1]
 rows = read_input(input_file)
