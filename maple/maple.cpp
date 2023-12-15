@@ -99,7 +99,7 @@ void init_block_write(uint32_t * command_buf, uint32_t * receive_buf,
                     destination_ap, block_write::command_code, (sizeof (struct block_write::data_fields<uint8_t[0]>)) + data_size,
                     true);
 
-  auto host_command = reinterpret_cast<struct host_command<block_write::data_fields<uint8_t[0]>> *>(command_buf);
+  auto host_command = reinterpret_cast<struct host_command<block_write::data_fields<uint32_t[0]>> *>(command_buf);
 
   auto& fields = host_command->bus_data.data_fields;
   // BW LCD function type
