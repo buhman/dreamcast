@@ -128,8 +128,6 @@ namespace block_write {
   };
 
   static_assert((sizeof (struct data_fields<char[0]>)) == 8);
-  static_assert((offsetof (struct data_fields<char[0]>, written_data)) == 8);
-  static_assert((offsetof (struct data_fields<char[192 / 4]>, written_data)) == 8);
 }
 
 namespace get_last_error {

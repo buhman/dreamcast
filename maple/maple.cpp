@@ -1,10 +1,12 @@
 #include <cstdint>
 #include <bit>
 
-#include "../sh7091.hpp"
-#include "../sh7091_bits.hpp"
-#include "../systembus.hpp"
-#include "../systembus_bits.hpp"
+#include "align.hpp"
+
+#include "sh7091.hpp"
+#include "sh7091_bits.hpp"
+#include "systembus.hpp"
+#include "systembus_bits.hpp"
 
 #include "maple_bits.hpp"
 #include "maple_bus_bits.hpp"
@@ -38,8 +40,8 @@ void init_host_command(uint32_t * command_buf, uint32_t * receive_buf,
 void init_host_command_all_ports(uint32_t * buf, uint32_t * receive_buf,
                                  uint8_t command_code, uint32_t command_data_size, uint32_t response_data_size)
 {
-  const uint32_t command_size = (((sizeof (struct host_command<uint8_t[0]>)) + command_data_size));
-  const uint32_t response_size = (((sizeof (struct command_response<uint8_t[0]>)) + response_data_size) + 31) & ~31;
+  const uint32_t command_size = ((sizeof (struct host_command<uint8_t[0]>)) + command_data_size);
+  const uint32_t response_size = align_32byte(((sizeof (struct command_response<uint8_t[0]>)) + response_data_size));
 
   init_host_command(&buf[(command_size / 4) * 0], &receive_buf[(response_size / 4) * 0],
                     host_instruction::port_select::a, // destination_port

@@ -7,8 +7,8 @@
 constexpr uint32_t command_data_size = (sizeof (device_request::data_fields));
 constexpr uint32_t response_data_size = (sizeof (device_status::data_fields));
 
-constexpr uint32_t host_command_size = ((sizeof (struct maple::host_command<device_request::data_fields>)));
-constexpr uint32_t command_response_size = ((sizeof (struct maple::command_response<device_status::data_fields>)) + 31) & ~31;
+constexpr uint32_t host_command_size = (sizeof (struct maple::host_command<device_request::data_fields>));
+constexpr uint32_t command_response_size = align_32byte((sizeof (struct maple::command_response<device_status::data_fields>)));
 
 uint32_t _command_buf[host_command_size * 4 + 32] = {0};
 uint32_t _receive_buf[command_response_size * 4 + 32] = {0};

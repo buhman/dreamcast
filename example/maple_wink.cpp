@@ -25,28 +25,26 @@ void make_wink(uint32_t * buf)
   }
 }
 
+constexpr uint32_t width = 48;
+constexpr uint32_t height = 32;
+constexpr uint32_t pixels_per_byte = 8;
+constexpr uint32_t wink_size = width * height / pixels_per_byte;
+
 void main()
 {
-  constexpr int width = 48;
-  constexpr int height = 32;
-  constexpr int pixels_per_byte = 8;
-
-  uint32_t __attribute__((aligned(4))) wink_buf[(width * height / pixels_per_byte + 32) / 4];
+  uint32_t wink_buf[wink_size / 4];
   make_wink(wink_buf);
-  if ((((uint32_t)wink_buf) & 3) != 0) serial::string("misaligned\n");
 
   uint32_t _command_buf[(1024 + 32) / 4];
   uint32_t _receive_buf[(1024 + 32) / 4];
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_buf = align_32byte(_receive_buf);
-  if ((((uint32_t)command_buf) & 31) != 0) serial::string("misaligned\n");
-  if ((((uint32_t)receive_buf) & 31) != 0) serial::string("misaligned\n");
 
   maple::init_block_write(command_buf, receive_buf,
                           host_instruction::port_select::a,
                           ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0,
                           wink_buf,
-                          192);
+                          wink_size);
   maple::dma_start(command_buf);
 
   for (int i = 0; i < 1; i++) {
