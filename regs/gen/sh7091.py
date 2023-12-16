@@ -95,10 +95,10 @@ def new_writer():
                 type = size_to_type(size)
                 return f"{type} {name};"
             else:
-                type = size_to_type(1)
-                return f"{type} {name}[{size}];"
+                type = size_to_type(4)
+                return f"{type} {name}[{size // 4}];"
 
-        yield field().ljust(25) + f"/* {description} */"
+        yield field().ljust(27) + f"/* {description} */"
 
         stack.append((address, name))
         last_address = address + size

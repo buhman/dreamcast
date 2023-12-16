@@ -4,92 +4,92 @@
 #include "type.hpp"
 
 struct holly_reg {
-  reg32 ID;                /* Device ID */
-  reg32 REVISION;          /* Revision Number */
-  reg32 SOFTRESET;         /* CORE & TA software reset */
+  reg32 ID;                  /* Device ID */
+  reg32 REVISION;            /* Revision Number */
+  reg32 SOFTRESET;           /* CORE & TA software reset */
   reg8  _pad0[8];
-  reg32 STARTRENDER;       /* Drawing start */
-  reg32 TEST_SELECT;       /* Test (writing this register is prohibited) */
+  reg32 STARTRENDER;         /* Drawing start */
+  reg32 TEST_SELECT;         /* Test (writing this register is prohibited) */
   reg8  _pad1[4];
-  reg32 PARAM_BASE;        /* Base address for ISP parameters */
+  reg32 PARAM_BASE;          /* Base address for ISP parameters */
   reg8  _pad2[8];
-  reg32 REGION_BASE;       /* Base address for Region Array */
-  reg32 SPAN_SORT_CFG;     /* Span Sorter control */
+  reg32 REGION_BASE;         /* Base address for Region Array */
+  reg32 SPAN_SORT_CFG;       /* Span Sorter control */
   reg8  _pad3[12];
-  reg32 VO_BORDER_COL;     /* Border area color */
-  reg32 FB_R_CTRL;         /* Frame buffer read control */
-  reg32 FB_W_CTRL;         /* Frame buffer write control */
-  reg32 FB_W_LINESTRIDE;   /* Frame buffer line stride */
-  reg32 FB_R_SOF1;         /* Read start address for field - 1/strip - 1 */
-  reg32 FB_R_SOF2;         /* Read start address for field - 2/strip - 2 */
+  reg32 VO_BORDER_COL;       /* Border area color */
+  reg32 FB_R_CTRL;           /* Frame buffer read control */
+  reg32 FB_W_CTRL;           /* Frame buffer write control */
+  reg32 FB_W_LINESTRIDE;     /* Frame buffer line stride */
+  reg32 FB_R_SOF1;           /* Read start address for field - 1/strip - 1 */
+  reg32 FB_R_SOF2;           /* Read start address for field - 2/strip - 2 */
   reg8  _pad4[4];
-  reg32 FB_R_SIZE;         /* Frame buffer XY size */
-  reg32 FB_W_SOF1;         /* Write start address for field - 1/strip - 1 */
-  reg32 FB_W_SOF2;         /* Write start address for field - 2/strip - 2 */
-  reg32 FB_X_CLIP;         /* Pixel clip X coordinate */
-  reg32 FB_Y_CLIP;         /* Pixel clip Y coordinate */
+  reg32 FB_R_SIZE;           /* Frame buffer XY size */
+  reg32 FB_W_SOF1;           /* Write start address for field - 1/strip - 1 */
+  reg32 FB_W_SOF2;           /* Write start address for field - 2/strip - 2 */
+  reg32 FB_X_CLIP;           /* Pixel clip X coordinate */
+  reg32 FB_Y_CLIP;           /* Pixel clip Y coordinate */
   reg8  _pad5[4];
-  reg32 FPU_SHAD_SCALE;    /* Intensity Volume mode */
-  reg32 FPU_CULL_VAL;      /* Comparison value for culling */
-  reg32 FPU_PARAM_CFG;     /* Parameter read control */
-  reg32 HALF_OFFSET;       /* Pixel sampling control */
-  reg32 FPU_PERP_VAL;      /* Comparison value for perpendicular polygons */
-  reg32 ISP_BACKGND_D;     /* Background surface depth */
-  reg32 ISP_BACKGND_T;     /* Background surface tag */
+  reg32 FPU_SHAD_SCALE;      /* Intensity Volume mode */
+  reg32 FPU_CULL_VAL;        /* Comparison value for culling */
+  reg32 FPU_PARAM_CFG;       /* Parameter read control */
+  reg32 HALF_OFFSET;         /* Pixel sampling control */
+  reg32 FPU_PERP_VAL;        /* Comparison value for perpendicular polygons */
+  reg32 ISP_BACKGND_D;       /* Background surface depth */
+  reg32 ISP_BACKGND_T;       /* Background surface tag */
   reg8  _pad6[8];
-  reg32 ISP_FEED_CFG;      /* Translucent polygon sort mode */
+  reg32 ISP_FEED_CFG;        /* Translucent polygon sort mode */
   reg8  _pad7[4];
-  reg32 SDRAM_REFRESH;     /* Texture memory refresh counter */
-  reg32 SDRAM_ARB_CFG;     /* Texture memory arbiter control */
-  reg32 SDRAM_CFG;         /* Texture memory control */
+  reg32 SDRAM_REFRESH;       /* Texture memory refresh counter */
+  reg32 SDRAM_ARB_CFG;       /* Texture memory arbiter control */
+  reg32 SDRAM_CFG;           /* Texture memory control */
   reg8  _pad8[4];
-  reg32 FOG_COL_RAM;       /* Color for Look Up table Fog */
-  reg32 FOG_COL_VERT;      /* Color for vertex Fog */
-  reg32 FOG_DENSITY;       /* Fog scale value */
-  reg32 FOG_CLAMP_MAX;     /* Color clamping maximum value */
-  reg32 FOG_CLAMP_MIN;     /* Color clamping minimum value */
-  reg32 SPG_TRIGGER_POS;   /* External trigger signal HV counter value */
-  reg32 SPG_HBLANK_INT;    /* H-blank interrupt control */
-  reg32 SPG_VBLANK_INT;    /* V-blank interrupt control */
-  reg32 SPG_CONTROL;       /* Sync pulse generator control */
-  reg32 SPG_HBLANK;        /* H-blank control */
-  reg32 SPG_LOAD;          /* HV counter load value */
-  reg32 SPG_VBLANK;        /* V-blank control */
-  reg32 SPG_WIDTH;         /* Sync width control */
-  reg32 TEXT_CONTROL;      /* Texturing control */
-  reg32 VO_CONTROL;        /* Video output control */
-  reg32 VO_STARTX;         /* Video output start X position */
-  reg32 VO_STARTY;         /* Video output start Y position */
-  reg32 SCALER_CTL;        /* X & Y scaler control */
+  reg32 FOG_COL_RAM;         /* Color for Look Up table Fog */
+  reg32 FOG_COL_VERT;        /* Color for vertex Fog */
+  reg32 FOG_DENSITY;         /* Fog scale value */
+  reg32 FOG_CLAMP_MAX;       /* Color clamping maximum value */
+  reg32 FOG_CLAMP_MIN;       /* Color clamping minimum value */
+  reg32 SPG_TRIGGER_POS;     /* External trigger signal HV counter value */
+  reg32 SPG_HBLANK_INT;      /* H-blank interrupt control */
+  reg32 SPG_VBLANK_INT;      /* V-blank interrupt control */
+  reg32 SPG_CONTROL;         /* Sync pulse generator control */
+  reg32 SPG_HBLANK;          /* H-blank control */
+  reg32 SPG_LOAD;            /* HV counter load value */
+  reg32 SPG_VBLANK;          /* V-blank control */
+  reg32 SPG_WIDTH;           /* Sync width control */
+  reg32 TEXT_CONTROL;        /* Texturing control */
+  reg32 VO_CONTROL;          /* Video output control */
+  reg32 VO_STARTX;           /* Video output start X position */
+  reg32 VO_STARTY;           /* Video output start Y position */
+  reg32 SCALER_CTL;          /* X & Y scaler control */
   reg8  _pad9[16];
-  reg32 PAL_RAM_CTRL;      /* Palette RAM control */
-  reg32 SPG_STATUS;        /* Sync pulse generator status */
-  reg32 FB_BURSTCTRL;      /* Frame buffer burst control */
-  reg32 FB_C_SOF;          /* Current frame buffer start address */
-  reg32 Y_COEFF;           /* Y scaling coefficent */
-  reg32 PT_ALPHA_REF;      /* Alpha value for Punch Through polygon comparison */
+  reg32 PAL_RAM_CTRL;        /* Palette RAM control */
+  reg32 SPG_STATUS;          /* Sync pulse generator status */
+  reg32 FB_BURSTCTRL;        /* Frame buffer burst control */
+  reg32 FB_C_SOF;            /* Current frame buffer start address */
+  reg32 Y_COEFF;             /* Y scaling coefficent */
+  reg32 PT_ALPHA_REF;        /* Alpha value for Punch Through polygon comparison */
   reg8  _pad10[4];
-  reg32 TA_OL_BASE;        /* Object List write start address */
-  reg32 TA_ISP_BASE;       /* ISP/TSP Parameter write start address */
-  reg32 TA_OL_LIMIT;       /* Object List write limit address */
-  reg32 TA_ISP_LIMIT;      /* ISP/TSP Parameter limit address */
-  reg32 TA_NEXT_OPB;       /* Start address for the Object Pointer Block */
-  reg32 TA_ITP_CURRENT;    /* Starting address where the next ISP/TSP Parameters are stored */
-  reg32 TA_GLOB_TILE_CLIP; /* Global Tile Clip control */
-  reg32 TA_ALLOC_CTRL;     /* Object list control */
-  reg32 TA_LIST_INIT;      /* TA initialization */
-  reg32 TA_YUV_TEX_BASE;   /* YUV422 texture write start address */
-  reg32 TA_YUV_TEX_CTRL;   /* YUV converter control */
-  reg32 TA_YUV_TEX_CNT;    /* YUV converter macro block counter value */
+  reg32 TA_OL_BASE;          /* Object List write start address */
+  reg32 TA_ISP_BASE;         /* ISP/TSP Parameter write start address */
+  reg32 TA_OL_LIMIT;         /* Object List write limit address */
+  reg32 TA_ISP_LIMIT;        /* ISP/TSP Parameter limit address */
+  reg32 TA_NEXT_OPB;         /* Start address for the Object Pointer Block */
+  reg32 TA_ITP_CURRENT;      /* Starting address where the next ISP/TSP Parameters are stored */
+  reg32 TA_GLOB_TILE_CLIP;   /* Global Tile Clip control */
+  reg32 TA_ALLOC_CTRL;       /* Object list control */
+  reg32 TA_LIST_INIT;        /* TA initialization */
+  reg32 TA_YUV_TEX_BASE;     /* YUV422 texture write start address */
+  reg32 TA_YUV_TEX_CTRL;     /* YUV converter control */
+  reg32 TA_YUV_TEX_CNT;      /* YUV converter macro block counter value */
   reg8  _pad11[12];
-  reg32 TA_LIST_CONT;      /* TA continuation processing */
-  reg32 TA_NEXT_OPB_INIT;  /* Additional OPB starting address */
+  reg32 TA_LIST_CONT;        /* TA continuation processing */
+  reg32 TA_NEXT_OPB_INIT;    /* Additional OPB starting address */
   reg8  _pad12[152];
-  reg8  FOG_TABLE[512];    /* Look-up table fog data */
+  reg32 FOG_TABLE[128];      /* Look-up table fog data */
   reg8  _pad13[512];
-  reg8  TA_OL_POINTERS[2400];/* TA Object List Pointer data */
+  reg32 TA_OL_POINTERS[600]; /* TA Object List Pointer data */
   reg8  _pad14[160];
-  reg8  PALETTE_RAM[4096]; /* Palette RAM */
+  reg32 PALETTE_RAM[1024];   /* Palette RAM */
 };
 
 static_assert((offsetof (struct holly_reg, ID)) == 0x0);

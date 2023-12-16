@@ -186,7 +186,7 @@ struct global_polygon_type_0 {
 			  | tsp_instruction_word::texture_v_size::_128 ) // 128px
 
     , texture_control_word( texture_control_word::pixel_format::_565
-			  | texture_control_word::scan_order // non-twiddled
+			  | texture_control_word::scan_order::non_twiddled
 			  | texture_control_word::texture_address(texture_address / 8) )
 
     , _res0(0)

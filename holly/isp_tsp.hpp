@@ -137,7 +137,10 @@ namespace texture_control_word {
     constexpr uint32_t _8bpp_palette = 6 << 27;
   }
 
-  constexpr uint32_t scan_order = 1 << 26;
+  namespace scan_order {
+    constexpr uint32_t twiddled = 0 << 26;
+    constexpr uint32_t non_twiddled = 1 << 26;
+  }
   constexpr uint32_t stride_select = 1 << 25;
 
   // in 8-byte units

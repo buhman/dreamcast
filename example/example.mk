@@ -21,6 +21,18 @@ MACAW_OBJ = \
 example/macaw.elf: LDSCRIPT = $(LIB)/alt.lds
 example/macaw.elf: $(START_OBJ) $(MACAW_OBJ)
 
+MACAW_TWIDDLE_OBJ = \
+	example/macaw_twiddle.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	macaw.data.o
+
+example/macaw_twiddle.elf: LDSCRIPT = $(LIB)/alt.lds
+example/macaw_twiddle.elf: $(START_OBJ) $(MACAW_TWIDDLE_OBJ)
+
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \
 	vga.o \

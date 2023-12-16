@@ -13,6 +13,7 @@
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "memorymap.hpp"
+#include "twiddle.hpp"
 
 #include "macaw.hpp"
 
@@ -43,7 +44,11 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 {
   auto parameter = ta_parameter_writer(ta_parameter_buf);
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(texture_address);
+  auto polygon = global_polygon_type_0(texture_address);
+  polygon.texture_control_word = texture_control_word::pixel_format::_565
+			       | texture_control_word::scan_order::twiddled
+			       | texture_control_word::texture_address(texture_address / 8);
+  parameter.append<global_polygon_type_0>() = polygon;
 
   for (uint32_t i = 0; i < strip_length; i++) {
     bool end_of_strip = i == strip_length - 1;
@@ -98,14 +103,17 @@ void main()
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
   auto mem = reinterpret_cast<texture_memory_alloc *>(0xa400'0000);
+
+  uint16_t temp[size / 3];
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];
     uint8_t g = src[px * 3 + 1];
     uint8_t b = src[px * 3 + 2];
 
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
-    mem->texture[px] = rgb565;
+    temp[px] = rgb565;
   }
+  twiddle::texture(mem->texture, temp, 128, 128);
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
