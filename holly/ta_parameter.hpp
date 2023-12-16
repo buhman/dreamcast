@@ -131,6 +131,36 @@ static_assert((offsetof (struct vertex_polygon_type_0, _res1))        == 0x14);
 static_assert((offsetof (struct vertex_polygon_type_0, base_color))   == 0x18);
 static_assert((offsetof (struct vertex_polygon_type_0, _res2))        == 0x1c);
 
+struct vertex_polygon_type_4 {
+  uint32_t parameter_control_word;
+  float x;
+  float y;
+  float z;
+  uint32_t uv;
+  uint32_t _res0;
+  uint32_t base_color;
+  uint32_t offset_color;
+
+  vertex_polygon_type_4(const float x,
+                        const float y,
+                        const float z,
+                        const uint32_t uv,
+                        const uint32_t base_color,
+                        const bool end_of_strip
+                        )
+    : parameter_control_word( para_control::para_type::vertex_parameter
+			    | (end_of_strip ? para_control::end_of_strip : 0)
+			    )
+    , x(x)
+    , y(y)
+    , z(z)
+    , uv(uv)
+    , _res0(0)
+    , base_color(base_color)
+    , offset_color(0)
+    { }
+};
+
 struct global_polygon_type_0 {
   uint32_t parameter_control_word;
   uint32_t isp_tsp_instruction_word;
@@ -218,7 +248,8 @@ struct global_sprite {
 
   global_sprite(const uint32_t base_color)
     : parameter_control_word( para_control::para_type::sprite
-                            | para_control::list_type::opaque )
+                            | para_control::list_type::opaque
+			    | obj_control::col_type::packed_color )
     , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
                               | isp_tsp_instruction_word::culling_mode::no_culling )
     , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::one
@@ -284,6 +315,59 @@ struct vertex_sprite_type_0 {
 
 static_assert((sizeof (vertex_sprite_type_0)) == 64);
 
+struct vertex_sprite_type_1 {
+  uint32_t parameter_control_word;
+  float ax;
+  float ay;
+  float az;
+  float bx;
+  float by;
+  float bz;
+  float cx;
+
+  float cy;
+  float cz;
+  float dx;
+  float dy;
+  float _res0;
+  uint32_t au_av;
+  uint32_t bu_bv;
+  uint32_t cu_cv;
+
+  vertex_sprite_type_1(const float ax,
+                       const float ay,
+                       const float az,
+                       const float bx,
+                       const float by,
+                       const float bz,
+                       const float cx,
+                       const float cy,
+                       const float cz,
+                       const float dx,
+                       const float dy,
+		       const uint32_t au_av,
+		       const uint32_t bu_bv,
+		       const uint32_t cu_cv)
+    : parameter_control_word(para_control::para_type::vertex_parameter)
+    , ax(ax)
+    , ay(ay)
+    , az(az)
+    , bx(bx)
+    , by(by)
+    , bz(bz)
+    , cx(cx)
+    , cy(cy)
+    , dx(dx)
+    , dy(dy)
+    , _res0(0)
+    , au_av(au_av)
+    , bu_bv(bu_bv)
+    , cu_cv(cu_cv)
+  {}
+};
+
+static_assert((sizeof (vertex_sprite_type_1)) == 64);
+
 struct global_end_of_list {
   uint32_t parameter_control_word;
   uint32_t _res0;
@@ -347,3 +431,12 @@ union ta_parameter {
 };
 static_assert((sizeof (ta_parameter)) == 32);
 */
+
+uint32_t uv_16bit(float u, float v)
+{
+  uint32_t * ui = (reinterpret_cast<uint32_t *>(&u));
+  uint32_t * vi = (reinterpret_cast<uint32_t *>(&v));
+  uint32_t u_half = ((*ui) >> 16) & 0xffff;
+  uint32_t v_half = ((*vi) >> 16) & 0xffff;
+  return (u_half << 16) | (v_half << 0);
+}

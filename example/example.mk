@@ -33,6 +33,19 @@ MACAW_TWIDDLE_OBJ = \
 example/macaw_twiddle.elf: LDSCRIPT = $(LIB)/alt.lds
 example/macaw_twiddle.elf: $(START_OBJ) $(MACAW_TWIDDLE_OBJ)
 
+FONT_OBJ = \
+	example/font.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	serial.o \
+	sperrypc.data.o
+
+example/font.elf: LDSCRIPT = $(LIB)/alt.lds
+example/font.elf: $(START_OBJ) $(FONT_OBJ)
+
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \
 	vga.o \
