@@ -46,7 +46,18 @@ uint32_t transform(uint32_t * ta_parameter_buf,
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
   if (translucent) {
     // translucent untextured
-    parameter.append<global_polygon_type_0>() = global_polygon_type_0();
+    auto polygon = global_polygon_type_0();
+    polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+				   | para_control::list_type::translucent
+				   | obj_control::col_type::packed_color
+				   | obj_control::gouraud;
+
+    polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+				 | tsp_instruction_word::dst_alpha_instr::src_alpha
+				 | tsp_instruction_word::fog_control::no_fog
+				 | tsp_instruction_word::use_alpha;
+
+    parameter.append<global_polygon_type_0>() = polygon;
   } else {
     // opaque textured
     parameter.append<global_polygon_type_0>() = global_polygon_type_0(texture_address);
@@ -100,7 +111,6 @@ uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) * 2 + 32) / 4];
 
 void main()
 {
-
   vga();
 
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
@@ -154,7 +164,6 @@ void main()
 
     core_start_render(frame_ix, num_frames);
 
-    v_sync_out();
     v_sync_in();
     core_wait_end_of_render_video(frame_ix, num_frames);
 

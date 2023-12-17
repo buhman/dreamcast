@@ -120,3 +120,10 @@ MAPLE_VIBRATOR_OBJ = \
 
 example/maple_vibrator.elf: LDSCRIPT = $(LIB)/alt.lds
 example/maple_vibrator.elf: $(START_OBJ) $(MAPLE_VIBRATOR_OBJ)
+
+SERIAL_TRANSFER_OBJ = \
+	example/serial_transfer.o \
+	serial_load.o
+
+example/serial_transfer.elf: LDSCRIPT = $(LIB)/alt.lds
+example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)

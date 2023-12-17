@@ -105,7 +105,6 @@ void main()
   vga();
 
   while (1) {
-    v_sync_out();
     v_sync_in();
     do_device_request();
   };

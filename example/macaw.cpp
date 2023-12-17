@@ -148,7 +148,6 @@ void main()
 
     core_start_render(frame_ix, num_frames);
 
-    v_sync_out();
     v_sync_in();
     core_wait_end_of_render_video(frame_ix, num_frames);
 

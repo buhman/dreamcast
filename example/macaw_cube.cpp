@@ -1,9 +1,8 @@
 #include <cstdint>
 
 #include "align.hpp"
-#include "vga.hpp"
 
-#include "holly/texture_memory_alloc.hpp"
+#include "vga.hpp"
 #include "holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
@@ -12,6 +11,7 @@
 #include "holly/ta_bits.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
+#include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
 
 #include "serial.hpp"

@@ -174,6 +174,7 @@ struct global_polygon_type_0 {
   // untextured
   global_polygon_type_0()
     : parameter_control_word( para_control::para_type::polygon_or_modifier_volume
+			    | para_control::list_type::opaque
                             | obj_control::col_type::packed_color )
 
     , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
