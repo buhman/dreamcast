@@ -13,13 +13,15 @@
 #include "ta_fifo_polygon_converter.hpp"
 
 void ta_polygon_converter_init(uint32_t opb_total_size, // for all render passes
-			       uint32_t ta_alloc)
+			       uint32_t ta_alloc,
+			       uint32_t width,  // in pixels
+			       uint32_t height) // in pixels
 {
   holly.SOFTRESET = softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
-  holly.TA_GLOB_TILE_CLIP = ta_glob_tile_clip::tile_y_num((480 / 32) - 1)
-                          | ta_glob_tile_clip::tile_x_num((640 / 32) - 1);
+  holly.TA_GLOB_TILE_CLIP = ta_glob_tile_clip::tile_y_num((height / 32) - 1)
+                          | ta_glob_tile_clip::tile_x_num((width / 32) - 1);
 
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
                       | ta_alloc;

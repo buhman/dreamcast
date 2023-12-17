@@ -50,7 +50,10 @@ void core_init()
 		       | fpu_param_cfg::pointer_first_burst_size(7); // half of pointer burst size(?)
 }
 
-void core_start_render(uint32_t frame_ix, uint32_t num_frames)
+void core_start_render(uint32_t frame_address,
+		       uint32_t frame_linestride, // in pixels
+		       uint32_t frame_size,       // in bytes
+		       uint32_t frame_ix, uint32_t num_frames)
 {
   holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));
   holly.PARAM_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
@@ -60,20 +63,26 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
                       | isp_backgnd_t::skip(1);
   holly.ISP_BACKGND_D = _i(1.f/100000.f);
 
-  holly.FB_W_CTRL = 1 << 3 | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
-  holly.FB_W_LINESTRIDE = (640 * 2) / 8;
+  holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+  holly.FB_W_LINESTRIDE = (frame_linestride * 2) / 8;
 
-  uint32_t w_fb = ((frame_ix + 0) & num_frames) * 0x00096000;
-  holly.FB_W_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + w_fb;
+  uint32_t w_fb = ((frame_ix + 0) & num_frames) * frame_size;
+  holly.FB_W_SOF1 = frame_address + w_fb;
 
   holly.STARTRENDER = 1;
 }
 
+void core_start_render(uint32_t frame_ix, uint32_t num_frames)
+{
+  core_start_render((offsetof (struct texture_memory_alloc, framebuffer)),
+		    640,        // frame_linestride
+		    0x00096000, // frame_size
+		    frame_ix, num_frames);
+}
+
 static bool flycast_is_dumb = false;
 
-#include "serial.hpp"
-
-void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
+void core_wait_end_of_render_video()
 {
   if (!flycast_is_dumb) {
     flycast_is_dumb = true;
@@ -81,6 +90,13 @@ void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
     while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
     system.ISTNRM = ISTNRM__END_OF_RENDER_TSP;
   }
+}
+
+void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
+{
+  core_wait_end_of_render_video();
+
+  // hmm hacky...
   uint32_t r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
   holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
 }

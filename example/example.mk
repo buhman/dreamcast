@@ -82,6 +82,19 @@ MACAW_CUBE_OBJ = \
 example/macaw_cube.elf: LDSCRIPT = $(LIB)/alt.lds
 example/macaw_cube.elf: $(START_OBJ) $(MACAW_CUBE_OBJ)
 
+MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
+	example/macaw_cube_render_to_texture.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	serial.o \
+	macaw.data.o
+
+example/macaw_cube_render_to_texture.elf: LDSCRIPT = $(LIB)/alt.lds
+example/macaw_cube_render_to_texture.elf: $(START_OBJ) $(MACAW_CUBE_RENDER_TO_TEXTURE_OBJ)
+
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
 	vga.o \
