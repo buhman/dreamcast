@@ -74,7 +74,10 @@ CUBE_OBJ = \
 	example/cube.o \
 	vga.o \
 	holly/core.o \
-	holly/ta_fifo_polygon_converter.o
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	macaw.data.o
 
 example/cube.elf: LDSCRIPT = $(LIB)/alt.lds
 example/cube.elf: $(START_OBJ) $(CUBE_OBJ)

@@ -89,12 +89,8 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
-uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
-
-void main()
+void copy_macaw_texture()
 {
-  vga();
-
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
   auto mem = reinterpret_cast<texture_memory_alloc *>(0xa400'0000);
@@ -106,6 +102,14 @@ void main()
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
     mem->texture[px] = rgb565;
   }
+}
+
+uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
+
+void main()
+{
+  vga();
+  copy_macaw_texture();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.

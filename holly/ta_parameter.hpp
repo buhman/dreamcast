@@ -174,17 +174,14 @@ struct global_polygon_type_0 {
   // untextured
   global_polygon_type_0()
     : parameter_control_word( para_control::para_type::polygon_or_modifier_volume
-                            | para_control::list_type::translucent
-                            | obj_control::col_type::packed_color
-			    | obj_control::gouraud )
+                            | obj_control::col_type::packed_color )
 
     , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
 			      | isp_tsp_instruction_word::culling_mode::no_culling )
 
     , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::src_alpha
 			  | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
-			  | tsp_instruction_word::fog_control::no_fog
-			  | tsp_instruction_word::use_alpha )
+			  | tsp_instruction_word::fog_control::no_fog )
 
     , texture_control_word( 0 )
 
@@ -201,7 +198,7 @@ struct global_polygon_type_0 {
                             | obj_control::col_type::packed_color
                             | obj_control::texture )
 
-    , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
+    , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::greater
 			      | isp_tsp_instruction_word::culling_mode::no_culling )
 
     // <Note> Because a value of "0.0" is invalid for [MIP-Map] D [adjust], it must not be specified.

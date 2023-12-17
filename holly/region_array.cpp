@@ -95,8 +95,6 @@ void region_array2(volatile uint32_t * buf,
         region_array[ix].tile |= REGION_ARRAY__LAST_REGION;
 
       uint32_t tile_index = y * width + x;
-      constexpr uint32_t opaque_list_opb_size = 16 * 4; // in bytes; this must match O_OPB in TA_ALLOC_CTRL
-      constexpr uint32_t translucent_list_opb_size = 16 * 4; // in bytes; this must match O_OPB in TA_ALLOC_CTRL
       region_array[ix].opaque_list_pointer                      = (opb_size.opaque               == 0) ? REGION_ARRAY__LIST_POINTER__EMPTY :
                                                                   (ol_base + (opb_size.opaque * tile_index)
                                                                    );
