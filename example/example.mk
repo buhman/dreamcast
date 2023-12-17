@@ -70,8 +70,8 @@ TRANSLUCENCY_OBJ = \
 example/translucency.elf: LDSCRIPT = $(LIB)/alt.lds
 example/translucency.elf: $(START_OBJ) $(TRANSLUCENCY_OBJ)
 
-CUBE_OBJ = \
-	example/cube.o \
+MACAW_CUBE_OBJ = \
+	example/macaw_cube.o \
 	vga.o \
 	holly/core.o \
 	holly/region_array.o \
@@ -79,8 +79,8 @@ CUBE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	macaw.data.o
 
-example/cube.elf: LDSCRIPT = $(LIB)/alt.lds
-example/cube.elf: $(START_OBJ) $(CUBE_OBJ)
+example/macaw_cube.elf: LDSCRIPT = $(LIB)/alt.lds
+example/macaw_cube.elf: $(START_OBJ) $(MACAW_CUBE_OBJ)
 
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
