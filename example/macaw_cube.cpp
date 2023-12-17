@@ -109,7 +109,7 @@ void transform(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory);
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
   background_parameter(mem->background);
 
@@ -125,7 +125,7 @@ void copy_macaw_texture()
 {
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
-  auto mem = reinterpret_cast<texture_memory_alloc *>(0xa400'0000);
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];
     uint8_t g = src[px * 3 + 1];

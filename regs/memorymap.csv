@@ -17,8 +17,8 @@
 "0","0x01000000","0x01FFFFFF","External Device","16MB",,
 "0","0x02000000","0x03FFFFFF","Mirror of 0x00000000 - 0x1FFFFFFF","32MB",,
 ,,,,,,
-"1","0x04000000","0x04FFFFFF","Texture memory 64bit access","8MB",,
-"1","0x05000000","0x05FFFFFF","Texture memory 32bit access","8MB",,"texture_memory"
+"1","0x04000000","0x04FFFFFF","Texture memory 64bit access","8MB",,"texture_memory64"
+"1","0x05000000","0x05FFFFFF","Texture memory 32bit access","8MB",,"texture_memory32"
 "1","0x06000000","0x06FFFFFF","Mirror of 0x04000000 - 0x06FFFFFF","32MB",,
 ,,,,,,
 "2","0x08000000","0x0bffffff","Unassigned","-",,

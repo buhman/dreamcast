@@ -142,7 +142,7 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory);
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
   background_parameter(mem->background);
 
@@ -172,8 +172,8 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
     //serial::character('\n');
   }
 
-  auto mem = reinterpret_cast<texture_memory_alloc *>(0xa400'0000);
-  auto texture = reinterpret_cast<uint32_t *>(mem->texture);
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
   uint32_t offset = 8 * 8 * character_index;
   union {

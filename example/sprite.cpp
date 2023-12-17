@@ -55,7 +55,7 @@ uint32_t transform(uint32_t * ta_parameter_buf)
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  volatile texture_memory_alloc * mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory);
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
   background_parameter(mem->background);
 

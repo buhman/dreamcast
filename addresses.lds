@@ -11,8 +11,10 @@ modem = 0xa0600000;
 aica = 0xa0700000;
 aica_rtc = 0xa0710000;
 
+system_boot_rom = 0xa0000000;
 aica_wave_memory = 0xa0800000;
-texture_memory = 0xa5000000;
+texture_memory64 = 0xa4000000;
+texture_memory32 = 0xa5000000;
 system_memory = 0xac000000;
 ta_fifo_polygon_converter = 0x10000000;
 ta_fifo_yuv_converter = 0x10800000;

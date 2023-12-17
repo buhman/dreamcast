@@ -58,7 +58,7 @@ static_assert(from_xy(0b000, 0b110) == 20);
 static_assert(from_xy(0b000, 0b111) == 21);
 
 template <typename T>
-void texture(T * dst, const T * src, const uint32_t width, const uint32_t height)
+void texture(volatile T * dst, const T * src, const uint32_t width, const uint32_t height)
 {
   for (uint32_t y = 0; y < height; y++) {
     for (uint32_t x = 0; x < width; x++) {

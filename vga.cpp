@@ -146,7 +146,7 @@ void vga()
 
 void vga_fill_framebuffer()
 {
-  volatile uint16_t * vram = reinterpret_cast<volatile uint16_t *>(texture_memory);
+  volatile uint16_t * vram = reinterpret_cast<volatile uint16_t *>(texture_memory32);
   for (int y = 0; y < 480; y++) {
     for (int x = 0; x < 640; x++) {
       struct hsv hsv = {(y * 255) / 480, 255, 255};
