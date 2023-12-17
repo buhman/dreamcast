@@ -6,6 +6,12 @@ from collections import defaultdict
 from generate import renderer
 
 @dataclass
+class Bit:
+    name: str
+    length: int
+    position: int
+
+@dataclass
 class Field:
     name: str
     bits: list[str]
@@ -25,6 +31,17 @@ def read_input(filename):
             for row in reader
         ]
     return rows
+
+def parse_bits(bits: list[str]):
+    bit_order = [7, 6, 5, 4, 3, 2, 1, 0]
+    by_name = defaultdict(list)
+    for bit_ix, bit in zip(bit_order, bits):
+        by_name[bit].append(bit_ix)
+    for name, indicies in by_name.items():
+        yield Bit(name=name,
+                  length=len(indicies),
+                  position=min(indicies),
+                  )
 
 def parse_data_format(ix, rows):
     if ix >= len(rows):
@@ -50,7 +67,8 @@ def parse_data_format(ix, rows):
         assert excess_bits == []
         bits = [b for b in _bits[:8] if b != ""]
         assert len(bits) in {0, 8}, bits
-        fields[field_name].append(Field(field_name, list(bits)))
+        fields[field_name].append(Field(field_name,
+                                        list(parse_bits(bits))))
         size += 1
         if field_name not in field_order:
             field_order.append(field_name)
@@ -71,8 +89,6 @@ def parse(rows):
     assert len(formats) > 0
     return formats
 
-bit_order = [7, 6, 5, 4, 3, 2, 1, 0]
-
 def render_format(format):
     yield f"namespace {format.name} {{"
     for field_name in format.field_order:
@@ -83,11 +99,13 @@ def render_format(format):
         yield f"namespace {field_name} {{"
         for ix, field in enumerate(subfields):
             bit_offset = 8 * ix
-            if field.bits != []:
-                assert len(field.bits) == 8
-                for byte_ix, bit in zip(bit_order, field.bits):
-                    bit_ix = byte_ix + bit_offset
-                    yield f"constexpr uint32_t {bit.lower()} = 1 << {bit_ix};"
+            for bit in field.bits:
+                name = bit.name.lower()
+                pos = bit_offset + bit.position
+                mask = bin(2 ** bit.length - 1)
+                yield f"constexpr uint32_t {name}() {{ return {mask} << {pos}; }}"
+                yield f"constexpr uint32_t {name}(uint32_t reg) {{ return (reg >> {pos}) & {mask}; }}"
+                yield ""
         yield "}"
         yield ""
 

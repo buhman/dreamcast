@@ -65,7 +65,7 @@ void do_get_condition(uint32_t port)
   }
 
   state[port].controller_connected = 1;
-  bool a = data_fields.data.digital_button & ft0::data_transfer::digital_button::a;
+  bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
   if (a == 0) {
     serial::string("port ");
     serial::integer<uint8_t>(port);
@@ -107,6 +107,8 @@ void main()
 {
   command_buf = align_32byte(_command_buf);
   receive_buf = align_32byte(_receive_buf);
+
+  vga();
 
   while (1) {
     v_sync_out();
