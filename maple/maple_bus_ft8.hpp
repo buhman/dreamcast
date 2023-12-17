@@ -29,9 +29,21 @@ namespace ft8 {
     
     struct data_format {
       uint16_t vset;
-      uint16_t fm;
+      uint8_t fm0;
+      uint8_t fm1;
     };
     static_assert((sizeof (struct data_format)) == 4);
   }
+  
+  namespace set_condition {
+    struct data_format {
+      uint8_t ctrl;
+      uint8_t pow;
+      uint8_t freq;
+      uint8_t inc;
+    };
+    static_assert((sizeof (struct data_format)) == 4);
+  }
+  
 }
 

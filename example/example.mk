@@ -107,3 +107,13 @@ MAPLE_WINK_OBJ = \
 
 example/maple_wink.elf: LDSCRIPT = $(LIB)/alt.lds
 example/maple_wink.elf: $(START_OBJ) $(MAPLE_WINK_OBJ)
+
+MAPLE_VIBRATOR_OBJ = \
+	example/maple_vibrator.o \
+	vga.o \
+	rgb.o \
+	serial.o \
+	maple/maple.o
+
+example/maple_vibrator.elf: LDSCRIPT = $(LIB)/alt.lds
+example/maple_vibrator.elf: $(START_OBJ) $(MAPLE_VIBRATOR_OBJ)

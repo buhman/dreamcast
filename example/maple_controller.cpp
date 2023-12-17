@@ -15,12 +15,6 @@ uint32_t _receive_buf[1024 / 4 + 32] = {0};
 static uint32_t * command_buf;
 static uint32_t * receive_buf;
 
-struct port_state {
-  bool controller_connected;
-};
-
-static port_state state[4] = {0};
-
 void do_get_condition(uint32_t port)
 {
   uint32_t destination_port;
@@ -56,15 +50,14 @@ void do_get_condition(uint32_t port)
   using response_type = struct maple::command_response<data_transfer::data_fields<struct ft0::data_transfer::data_format>>;
   auto response = reinterpret_cast<response_type *>(receive_buf);
   auto& bus_data = response->bus_data;
-  auto& data_fields = response->bus_data.data_fields;
   if (bus_data.command_code != data_transfer::command_code) {
     return;
   }
+  auto& data_fields = bus_data.data_fields;
   if ((data_fields.function_type & std::byteswap(function_type::controller)) == 0) {
     return;
   }
 
-  state[port].controller_connected = 1;
   bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
   if (a == 0) {
     serial::string("port ");
@@ -92,7 +85,6 @@ void do_device_request()
     auto& data_fields = response->bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
       // the controller is disconnected
-      state[port].controller_connected = 0;
     } else {
       if ((data_fields.device_id.ft & std::byteswap(function_type::controller)) != 0) {
 	//serial::string("is controller: ");
@@ -108,6 +100,8 @@ void main()
   command_buf = align_32byte(_command_buf);
   receive_buf = align_32byte(_receive_buf);
 
+  // flycast needs this in HLE mode, or else it won't start the vcount
+  // counter.
   vga();
 
   while (1) {
