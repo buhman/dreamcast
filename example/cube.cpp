@@ -174,23 +174,17 @@ void main()
 
   while (1) {
     ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc);
-
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     for (uint32_t i = 0; i < num_faces; i++) {
       transform(parameter, cube_faces[i], 4);
     }
     parameter.append<global_end_of_list>() = global_end_of_list();
-
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
-
     ta_wait_opaque_list();
-
     core_start_render(frame_ix, num_frames);
 
-    v_sync_out();
     v_sync_in();
     core_wait_end_of_render_video(frame_ix, num_frames);
-
     theta += half_degree;
     frame_ix += 1;
   }

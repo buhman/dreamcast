@@ -69,17 +69,18 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
   holly.STARTRENDER = 1;
 }
 
-static bool flycast_is_dumb = 0;
+static bool flycast_is_dumb = false;
+
+#include "serial.hpp"
 
 void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
 {
+  if (!flycast_is_dumb) {
+    flycast_is_dumb = true;
+  } else {
+    while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
+    system.ISTNRM = ISTNRM__END_OF_RENDER_TSP;
+  }
   uint32_t r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
   holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
-
-  if (!flycast_is_dumb) {
-    flycast_is_dumb = 1;
-  } else {
-    while ((system.ISTNRM & ISTNRM__END_OF_RENDER_VIDEO) == 0);
-    system.ISTNRM = ISTNRM__END_OF_RENDER_VIDEO;
-  }
 }
