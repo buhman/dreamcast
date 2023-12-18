@@ -144,7 +144,7 @@ void init_texture_memory(const struct opb_size& opb_size)
 {
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
-  background_parameter(mem->background);
+  background_parameter(mem->background, 0xff0000ff);
 
   region_array2(mem->region_array,
 	        (offsetof (struct texture_memory_alloc, object_list)),
@@ -245,7 +245,8 @@ void main()
   const char ana[18] = "A from ana i know";
 
   while (true) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc);
+    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc,
+			      640, 480);
     uint32_t ta_parameter_size = transform(ta_parameter_buf, ana, 17);
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
