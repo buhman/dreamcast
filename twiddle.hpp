@@ -1,5 +1,5 @@
 #include <cstdint>
-#include <array>
+#include <tuple>
 
 namespace twiddle {
 
@@ -33,7 +33,7 @@ constexpr inline uint32_t from_xy(uint32_t x, uint32_t y)
   // bits                       : 19-0
 
   uint32_t twiddle_ix = 0;
-  for (int i = 0; i <= (19 / 2); i++) {
+  for (int i = 0; i <= (20 / 2); i++) {
     twiddle_ix |= ((y >> i) & 1) << (i * 2 + 0);
     twiddle_ix |= ((x >> i) & 1) << (i * 2 + 1);
   }
@@ -58,6 +58,7 @@ static_assert(from_xy(0b000, 0b101) == 17);
 static_assert(from_xy(0b000, 0b110) == 20);
 static_assert(from_xy(0b000, 0b111) == 21);
 
+/*
 constexpr inline std::array<uint32_t, 2>
 from_ix(uint32_t curve_ix)
 {
@@ -72,23 +73,42 @@ from_ix(uint32_t curve_ix)
 
   return x_y;
 }
+*/
 
-static_assert(from_ix(0) == std::array<uint32_t, 2>{{0b000, 0b000}});
-static_assert(from_ix(2) == std::array<uint32_t, 2>{{0b001, 0b000}});
-static_assert(from_ix(8) == std::array<uint32_t, 2>{{0b010, 0b000}});
-static_assert(from_ix(10) == std::array<uint32_t, 2>{{0b011, 0b000}});
-static_assert(from_ix(32) == std::array<uint32_t, 2>{{0b100, 0b000}});
-static_assert(from_ix(34) == std::array<uint32_t, 2>{{0b101, 0b000}});
-static_assert(from_ix(40) == std::array<uint32_t, 2>{{0b110, 0b000}});
-static_assert(from_ix(42) == std::array<uint32_t, 2>{{0b111, 0b000}});
+constexpr inline std::tuple<uint32_t, uint32_t>
+from_ix(uint32_t curve_ix)
+{
+  uint32_t y = (curve_ix >> 0) & 0x55555555;
+  y = (y | (y >> 1)) & 0x33333333;
+  y = (y | (y >> 2)) & 0x0f0f0f0f;
+  y = (y | (y >> 4)) & 0x00ff00ff;
+  y = (y | (y >> 8)) & 0x0000ffff;
 
-static_assert(from_ix(1) == std::array<uint32_t, 2>{{0b000, 0b001}});
-static_assert(from_ix(4) == std::array<uint32_t, 2>{{0b000, 0b010}});
-static_assert(from_ix(5) == std::array<uint32_t, 2>{{0b000, 0b011}});
-static_assert(from_ix(16) == std::array<uint32_t, 2>{{0b000, 0b100}});
-static_assert(from_ix(17) == std::array<uint32_t, 2>{{0b000, 0b101}});
-static_assert(from_ix(20) == std::array<uint32_t, 2>{{0b000, 0b110}});
-static_assert(from_ix(21) == std::array<uint32_t, 2>{{0b000, 0b111}});
+  uint32_t x = (curve_ix >> 1) & 0x55555555;
+  x = (x | (x >> 1)) & 0x33333333;
+  x = (x | (x >> 2)) & 0x0f0f0f0f;
+  x = (x | (x >> 4)) & 0x00ff00ff;
+  x = (x | (x >> 8)) & 0x0000ffff;
+
+  return {x, y};
+}
+
+static_assert(from_ix(0) == std::tuple<uint32_t, uint32_t>{0b000, 0b000});
+static_assert(from_ix(2) == std::tuple<uint32_t, uint32_t>{0b001, 0b000});
+static_assert(from_ix(8) == std::tuple<uint32_t, uint32_t>{0b010, 0b000});
+static_assert(from_ix(10) == std::tuple<uint32_t, uint32_t>{0b011, 0b000});
+static_assert(from_ix(32) == std::tuple<uint32_t, uint32_t>{0b100, 0b000});
+static_assert(from_ix(34) == std::tuple<uint32_t, uint32_t>{0b101, 0b000});
+static_assert(from_ix(40) == std::tuple<uint32_t, uint32_t>{0b110, 0b000});
+static_assert(from_ix(42) == std::tuple<uint32_t, uint32_t>{0b111, 0b000});
+
+static_assert(from_ix(1) == std::tuple<uint32_t, uint32_t>{0b000, 0b001});
+static_assert(from_ix(4) == std::tuple<uint32_t, uint32_t>{0b000, 0b010});
+static_assert(from_ix(5) == std::tuple<uint32_t, uint32_t>{0b000, 0b011});
+static_assert(from_ix(16) == std::tuple<uint32_t, uint32_t>{0b000, 0b100});
+static_assert(from_ix(17) == std::tuple<uint32_t, uint32_t>{0b000, 0b101});
+static_assert(from_ix(20) == std::tuple<uint32_t, uint32_t>{0b000, 0b110});
+static_assert(from_ix(21) == std::tuple<uint32_t, uint32_t>{0b000, 0b111});
 
 template <typename T>
 void texture(volatile T * dst, const T * src, const uint32_t width, const uint32_t height)
@@ -112,6 +132,34 @@ void texture_4bpp(volatile T * dst, const T * src, const uint32_t width, const u
       uint32_t shift = (4 * (twiddle_ix & 1));
       dst[twiddle_ix / 2] &= ~(0b1111 << shift);
       dst[twiddle_ix / 2] |= value << shift;
+    }
+  }
+}
+
+template <int B, typename T, typename U>
+void texture2(volatile T * dst, const U * src, const uint32_t width, const uint32_t height)
+{
+  constexpr uint32_t t_bits = (sizeof (T)) * 8;
+  constexpr uint32_t bits_per_pixel = B;
+  static_assert(t_bits >= bits_per_pixel);
+  static_assert((t_bits / bits_per_pixel) * bits_per_pixel == t_bits);
+  constexpr uint32_t pixels_per_t = t_bits / bits_per_pixel;
+  static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8);
+
+  T dst_val = 0;
+  for (uint32_t curve_ix = 0; curve_ix < (width * height); curve_ix++) {
+    auto [x, y] = from_ix(curve_ix);
+    const U src_val = src[y * width + x];
+    if constexpr (pixels_per_t == 1) {
+      dst[curve_ix] = src_val;
+    } else {
+      const uint32_t curve_ix_mod = curve_ix & (pixels_per_t - 1);
+      dst_val |= src_val << (bits_per_pixel * curve_ix_mod);
+
+      if (curve_ix_mod == (pixels_per_t - 1)) {
+	dst[curve_ix / pixels_per_t] = dst_val;
+	dst_val = 0;
+      }
     }
   }
 }

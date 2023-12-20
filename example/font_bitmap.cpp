@@ -176,16 +176,20 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
   uint32_t offset = 8 * 8 * character_index;
+
+  /*
   union {
     uint8_t  u8[8 * 8];
     uint32_t u32[8 * 8 / 4];
   } temp2;
 
-  //twiddle::texture(&texture[offset], temp, 8, 8);
-  twiddle::texture_4bpp(temp2.u8, temp, 8, 8);
+  twiddle::texure_4bpp(temp2.u8, temp, 8, 8);
   for (uint32_t i = 0; i < 8 * 8 / 4; i++) {
     texture[(offset / 4) + i] = temp2.u32[i];
   }
+  */
+
+  twiddle::texture2<4>(&texture[offset / 4], temp, 8, 8);
 }
 
 void inflate_font(const uint8_t * src)
