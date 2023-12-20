@@ -107,7 +107,7 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
       | tsp_instruction_word::texture_u_size::_8   // 8px
       | tsp_instruction_word::texture_v_size::_8;  // 8px
 
-    polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
+    polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
       | texture_control_word::scan_order::twiddled
       | texture_control_word::texture_address((texture_address + 8 * 8 * (s[string_ix] - ' ')) / 8);
     parameter.append<global_polygon_type_0>() = polygon;
@@ -182,7 +182,7 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
   } temp2;
 
   //twiddle::texture(&texture[offset], temp, 8, 8);
-  twiddle::texture(temp2.u8, temp, 8, 8);
+  twiddle::texture_4bpp(temp2.u8, temp, 8, 8);
   for (uint32_t i = 0; i < 8 * 8 / 4; i++) {
     texture[(offset / 4) + i] = temp2.u32[i];
   }

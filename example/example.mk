@@ -33,8 +33,8 @@ MACAW_TWIDDLE_OBJ = \
 example/macaw_twiddle.elf: LDSCRIPT = $(LIB)/alt.lds
 example/macaw_twiddle.elf: $(START_OBJ) $(MACAW_TWIDDLE_OBJ)
 
-FONT_OBJ = \
-	example/font.o \
+FONT_BITMAP_OBJ = \
+	example/font_bitmap.o \
 	vga.o \
 	holly/core.o \
 	holly/region_array.o \
@@ -43,8 +43,8 @@ FONT_OBJ = \
 	serial.o \
 	sperrypc.data.o
 
-example/font.elf: LDSCRIPT = $(LIB)/alt.lds
-example/font.elf: $(START_OBJ) $(FONT_OBJ)
+example/font_bitmap.elf: LDSCRIPT = $(LIB)/alt.lds
+example/font_bitmap.elf: $(START_OBJ) $(FONT_BITMAP_OBJ)
 
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \

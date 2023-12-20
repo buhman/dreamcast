@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <array>
 
 namespace twiddle {
 
@@ -57,6 +58,38 @@ static_assert(from_xy(0b000, 0b101) == 17);
 static_assert(from_xy(0b000, 0b110) == 20);
 static_assert(from_xy(0b000, 0b111) == 21);
 
+constexpr inline std::array<uint32_t, 2>
+from_ix(uint32_t curve_ix)
+{
+  std::array<uint32_t, 2> x_y = {0, 0};
+  uint32_t curve_bit = 0;
+
+  while (curve_ix != 0) {
+    x_y[(curve_bit + 1) % 2] |= (curve_ix & 1) << (curve_bit / 2);
+    curve_ix >>= 1;
+    curve_bit += 1;
+  }
+
+  return x_y;
+}
+
+static_assert(from_ix(0) == std::array<uint32_t, 2>{{0b000, 0b000}});
+static_assert(from_ix(2) == std::array<uint32_t, 2>{{0b001, 0b000}});
+static_assert(from_ix(8) == std::array<uint32_t, 2>{{0b010, 0b000}});
+static_assert(from_ix(10) == std::array<uint32_t, 2>{{0b011, 0b000}});
+static_assert(from_ix(32) == std::array<uint32_t, 2>{{0b100, 0b000}});
+static_assert(from_ix(34) == std::array<uint32_t, 2>{{0b101, 0b000}});
+static_assert(from_ix(40) == std::array<uint32_t, 2>{{0b110, 0b000}});
+static_assert(from_ix(42) == std::array<uint32_t, 2>{{0b111, 0b000}});
+
+static_assert(from_ix(1) == std::array<uint32_t, 2>{{0b000, 0b001}});
+static_assert(from_ix(4) == std::array<uint32_t, 2>{{0b000, 0b010}});
+static_assert(from_ix(5) == std::array<uint32_t, 2>{{0b000, 0b011}});
+static_assert(from_ix(16) == std::array<uint32_t, 2>{{0b000, 0b100}});
+static_assert(from_ix(17) == std::array<uint32_t, 2>{{0b000, 0b101}});
+static_assert(from_ix(20) == std::array<uint32_t, 2>{{0b000, 0b110}});
+static_assert(from_ix(21) == std::array<uint32_t, 2>{{0b000, 0b111}});
+
 template <typename T>
 void texture(volatile T * dst, const T * src, const uint32_t width, const uint32_t height)
 {
@@ -65,6 +98,20 @@ void texture(volatile T * dst, const T * src, const uint32_t width, const uint32
       uint32_t twiddle_ix = from_xy(x, y);
       T value = src[y * width + x];
       dst[twiddle_ix] = value;
+    }
+  }
+}
+
+template <typename T>
+void texture_4bpp(volatile T * dst, const T * src, const uint32_t width, const uint32_t height)
+{
+  for (uint32_t y = 0; y < height; y++) {
+    for (uint32_t x = 0; x < width; x++) {
+      uint32_t twiddle_ix = from_xy(x, y);
+      T value = src[y * width + x];
+      uint32_t shift = (4 * (twiddle_ix & 1));
+      dst[twiddle_ix / 2] &= ~(0b1111 << shift);
+      dst[twiddle_ix / 2] |= value << shift;
     }
   }
 }
