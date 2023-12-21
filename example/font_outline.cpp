@@ -16,6 +16,9 @@
 #include "twiddle.hpp"
 #include "serial.hpp"
 
+#include "font/font.hpp"
+#include "dejavusansmono.hpp"
+
 #include "sperrypc.hpp"
 
 struct vertex {
@@ -82,17 +85,21 @@ uint32_t transform(uint32_t * ta_parameter_buf)
 
 const struct vertex strip_vertices[4] = {
   // [ position       ]  [ uv coordinates ]
-  { -0.5f,   0.5f,  0.f, 0.f, 1.f, },
-  { -0.5f,  -0.5f,  0.f, 0.f, 0.f, },
-  {  0.5f,   0.5f,  0.f, 1.f, 1.f, },
-  {  0.5f,  -0.5f,  0.f, 1.f, 0.f, },
+  { 0.f,  1.f,  0.f, 0.f, 1.f, },
+  { 0.f,  0.f,  0.f, 0.f, 0.f, },
+  { 1.f,  1.f,  0.f, 1.f, 1.f, },
+  { 1.f,  0.f,  0.f, 1.f, 0.f, },
 };
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 
-uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t len)
+uint32_t transform(ta_parameter_writer& parameter,
+		   const uint32_t first_char_code, const glyph * glyphs,
+		   const char * s, const uint32_t len,
+		   const uint32_t y_offset)
 {
-  auto parameter = ta_parameter_writer(ta_parameter_buf);
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+
+  uint32_t advance = 0; // in 26.6 fixed-point
 
   for (uint32_t string_ix = 0; string_ix < len; string_ix++) {
     auto polygon = global_polygon_type_0(texture_address);
@@ -104,13 +111,16 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
     polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
       | tsp_instruction_word::dst_alpha_instr::zero
       | tsp_instruction_word::fog_control::no_fog
-      | tsp_instruction_word::texture_u_size::_8   // 8px
-      | tsp_instruction_word::texture_v_size::_8;  // 8px
+      | tsp_instruction_word::texture_u_size::_128
+      | tsp_instruction_word::texture_v_size::_256;
 
-    polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
-      | texture_control_word::scan_order::twiddled
-      | texture_control_word::texture_address((texture_address + 8 * 8 * (s[string_ix] - ' ')) / 8);
+    polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
+				 | texture_control_word::scan_order::twiddled
+				 | texture_control_word::texture_address(texture_address / 8);
     parameter.append<global_polygon_type_0>() = polygon;
+
+    char c = s[string_ix];
+    auto& glyph = glyphs[c - first_char_code];
 
     for (uint32_t i = 0; i < strip_length; i++) {
       bool end_of_strip = i == strip_length - 1;
@@ -119,22 +129,31 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
       float y = strip_vertices[i].y;
       float z = strip_vertices[i].z;
 
-      x *= 32.f;
-      y *= 32.f;
-      x += 64.f + 32 * string_ix;
-      y += 240.f;
+      x *= glyph.bitmap.width;
+      y *= glyph.bitmap.height;
+      x += 100.f + ((advance + glyph.metrics.horiBearingX) >> 6);
+      y += 200.f - ((glyph.metrics.horiBearingY) >> 6);
+      y += y_offset >> 6;
       z = 1.f / (z + 10.f);
+
+      float u = strip_vertices[i].u;
+      float v = strip_vertices[i].v;
+      u *= glyph.bitmap.width;
+      v *= glyph.bitmap.height;
+      u += glyph.bitmap.x;
+      v += glyph.bitmap.y;
+      u = u / 128.f;
+      v = v / 256.f;
 
       parameter.append<vertex_polygon_type_3>() =
 	vertex_polygon_type_3(x, y, z,
-			      strip_vertices[i].u,
-			      strip_vertices[i].v,
+			      u, v,
 			      0x00000000, // base_color
 			      end_of_strip);
     }
-  }
 
-  parameter.append<global_end_of_list>() = global_end_of_list();
+    advance += glyph.metrics.horiAdvance;
+  }
 
   return parameter.offset;
 }
@@ -154,48 +173,13 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
-inline void inflate_character(const uint8_t * src, const uint8_t c)
+void inflate_font(const uint32_t * src, const uint32_t size)
 {
-  uint8_t character_index = c - ' ';
-
-  uint8_t temp[8 * 8];
-  for (uint32_t y = 0; y < 8; y++) {
-    uint8_t row = src[y + 8 * character_index];
-    for (uint32_t x = 0; x < 8; x++) {
-      uint8_t px = (row >> (7 - x)) & 1;
-      //serial::character((px == 1) ? 'X' : '_');
-      //uint16_t rgb565 = px ? 0xffff : 0;
-      uint16_t palette_index = px ? 2 : 1;
-
-      temp[y * 8 + x] = palette_index;
-    }
-    //serial::character('\n');
-  }
-
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
-  uint32_t offset = 8 * 8 * character_index;
-
-  /*
-  union {
-    uint8_t  u8[8 * 8];
-    uint32_t u32[8 * 8 / 4];
-  } temp2;
-
-  twiddle::texure_4bpp(temp2.u8, temp, 8, 8);
-  for (uint32_t i = 0; i < 8 * 8 / 4; i++) {
-    texture[(offset / 4) + i] = temp2.u32[i];
-  }
-  */
-
-  twiddle::texture2<4>(&texture[offset / 4], temp, 8, 8, 0, 0);
-}
-
-void inflate_font(const uint8_t * src)
-{
-  for (uint8_t ix = 0x20; ix < 0x7f; ix++) {
-    inflate_character(src, ix);
+  for (uint32_t i = 0; i < (size / 4); i++) {
+    texture[i] = src[i];
   }
 }
 
@@ -203,8 +187,12 @@ void palette_data()
 {
   holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::rgb565;
 
-  holly.PALETTE_RAM[1] = (15) << 11;
-  holly.PALETTE_RAM[2] = (15 << 11) | (30 << 5);
+  // palette of 256 greys
+  for (int i = 0; i < 256; i++) {
+    holly.PALETTE_RAM[i] = ((i >> 3) << 11)
+                         | ((i >> 2) << 5)
+                         | ((i >> 3) << 0);
+  }
 }
 
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
@@ -213,8 +201,21 @@ void main()
 {
   vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_sperrypc_data_start);
-  inflate_font(src);
+  auto font = reinterpret_cast<const struct font *>(&_binary_dejavusansmono_data_start);
+  auto glyphs = reinterpret_cast<const struct glyph *>(&font[1]);
+  auto texture = reinterpret_cast<const uint32_t *>(&glyphs[font->glyph_count]);
+
+  serial::integer<uint32_t>(font->first_char_code);
+  serial::integer<uint32_t>(font->glyph_count);
+  serial::integer<uint32_t>(font->glyph_height);
+  serial::integer<uint32_t>(font->texture_width);
+  serial::integer<uint32_t>(font->texture_height);
+  serial::character('\n');
+  serial::integer<uint32_t>(((uint32_t)glyphs) - ((uint32_t)font));
+  serial::integer<uint32_t>(((uint32_t)texture) - ((uint32_t)font));
+
+  uint32_t texture_size = font->texture_width * font->texture_height;
+  inflate_font(texture, texture_size);
   palette_data();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
@@ -247,12 +248,25 @@ void main()
   constexpr uint32_t num_frames = 1;
 
   const char ana[18] = "A from ana i know";
+  const char cabal[27] = "where is this secret cabal";
 
   while (true) {
     ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc,
 			      640, 480);
-    uint32_t ta_parameter_size = transform(ta_parameter_buf, ana, 17);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
+
+    auto parameter = ta_parameter_writer(ta_parameter_buf);
+
+    transform(parameter, font->first_char_code, glyphs,
+	      ana, 17,
+	      0);
+
+    transform(parameter, font->first_char_code, glyphs,
+	      cabal, 26,
+	      font->glyph_height);
+
+    parameter.append<global_end_of_list>() = global_end_of_list();
+
+    ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
 
     core_start_render(frame_ix, num_frames);

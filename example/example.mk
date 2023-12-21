@@ -46,6 +46,19 @@ FONT_BITMAP_OBJ = \
 example/font_bitmap.elf: LDSCRIPT = $(LIB)/alt.lds
 example/font_bitmap.elf: $(START_OBJ) $(FONT_BITMAP_OBJ)
 
+FONT_OUTLINE_OBJ = \
+	example/font_outline.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	serial.o \
+	dejavusansmono.data.o
+
+example/font_outline.elf: LDSCRIPT = $(LIB)/alt.lds
+example/font_outline.elf: $(START_OBJ) $(FONT_OUTLINE_OBJ)
+
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \
 	vga.o \

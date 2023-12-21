@@ -12,7 +12,7 @@ AFLAGS = --fatal-warnings
 CARCH = -m4-single-only -ml
 CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib
 CFLAGS += -Wall -Werror -Wfatal-errors
-CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable
+CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds= -Wno-array-bounds
 CFLAGS += -mfsca -funsafe-math-optimizations
 CFLAGS += -I$(dir $(MAKEFILE_PATH))
 DEPFLAGS = -MMD -E

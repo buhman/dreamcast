@@ -93,22 +93,23 @@ from_ix(uint32_t curve_ix)
   return {x, y};
 }
 
-static_assert(from_ix(0) == std::tuple<uint32_t, uint32_t>{0b000, 0b000});
-static_assert(from_ix(2) == std::tuple<uint32_t, uint32_t>{0b001, 0b000});
-static_assert(from_ix(8) == std::tuple<uint32_t, uint32_t>{0b010, 0b000});
-static_assert(from_ix(10) == std::tuple<uint32_t, uint32_t>{0b011, 0b000});
-static_assert(from_ix(32) == std::tuple<uint32_t, uint32_t>{0b100, 0b000});
-static_assert(from_ix(34) == std::tuple<uint32_t, uint32_t>{0b101, 0b000});
-static_assert(from_ix(40) == std::tuple<uint32_t, uint32_t>{0b110, 0b000});
-static_assert(from_ix(42) == std::tuple<uint32_t, uint32_t>{0b111, 0b000});
+using xy_type = std::tuple<uint32_t, uint32_t>;
+static_assert(from_ix(0) == xy_type{0b000, 0b000});
+static_assert(from_ix(2) == xy_type{0b001, 0b000});
+static_assert(from_ix(8) == xy_type{0b010, 0b000});
+static_assert(from_ix(10) == xy_type{0b011, 0b000});
+static_assert(from_ix(32) == xy_type{0b100, 0b000});
+static_assert(from_ix(34) == xy_type{0b101, 0b000});
+static_assert(from_ix(40) == xy_type{0b110, 0b000});
+static_assert(from_ix(42) == xy_type{0b111, 0b000});
 
-static_assert(from_ix(1) == std::tuple<uint32_t, uint32_t>{0b000, 0b001});
-static_assert(from_ix(4) == std::tuple<uint32_t, uint32_t>{0b000, 0b010});
-static_assert(from_ix(5) == std::tuple<uint32_t, uint32_t>{0b000, 0b011});
-static_assert(from_ix(16) == std::tuple<uint32_t, uint32_t>{0b000, 0b100});
-static_assert(from_ix(17) == std::tuple<uint32_t, uint32_t>{0b000, 0b101});
-static_assert(from_ix(20) == std::tuple<uint32_t, uint32_t>{0b000, 0b110});
-static_assert(from_ix(21) == std::tuple<uint32_t, uint32_t>{0b000, 0b111});
+static_assert(from_ix(1) == xy_type{0b000, 0b001});
+static_assert(from_ix(4) == xy_type{0b000, 0b010});
+static_assert(from_ix(5) == xy_type{0b000, 0b011});
+static_assert(from_ix(16) == xy_type{0b000, 0b100});
+static_assert(from_ix(17) == xy_type{0b000, 0b101});
+static_assert(from_ix(20) == xy_type{0b000, 0b110});
+static_assert(from_ix(21) == xy_type{0b000, 0b111});
 
 template <typename T>
 void texture(volatile T * dst, const T * src, const uint32_t width, const uint32_t height)
@@ -137,7 +138,9 @@ void texture_4bpp(volatile T * dst, const T * src, const uint32_t width, const u
 }
 
 template <int B, typename T, typename U>
-void texture2(volatile T * dst, const U * src, const uint32_t width, const uint32_t height)
+void texture2(volatile T * dst, const U * src,
+	      const uint32_t width, const uint32_t height,
+	      const uint32_t stride)
 {
   constexpr uint32_t t_bits = (sizeof (T)) * 8;
   constexpr uint32_t bits_per_pixel = B;
@@ -147,9 +150,10 @@ void texture2(volatile T * dst, const U * src, const uint32_t width, const uint3
   static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8);
 
   T dst_val = 0;
-  for (uint32_t curve_ix = 0; curve_ix < (width * height); curve_ix++) {
+  const uint32_t end_ix = from_xy(width - 1, height - 1);
+  for (uint32_t curve_ix = 0; curve_ix <= end_ix; curve_ix++) {
     auto [x, y] = from_ix(curve_ix);
-    const U src_val = src[y * width + x];
+    const U src_val = src[y * stride + x];
     if constexpr (pixels_per_t == 1) {
       dst[curve_ix] = src_val;
     } else {
