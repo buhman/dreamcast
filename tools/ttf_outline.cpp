@@ -10,10 +10,13 @@
 
 #include "../font/font.hpp"
 #include "rect.hpp"
-#include "2d-pack.hpp"
+#include "2d_pack.hpp"
 #include "../twiddle.hpp"
 
 std::endian _target_endian;
+
+constexpr uint32_t max_texture_dim = 1024;
+constexpr uint32_t max_texture_size = max_texture_dim * max_texture_dim;
 
 uint32_t byteswap(const uint32_t n)
 {
@@ -63,7 +66,7 @@ load_outline_char(const FT_Face face,
     return -1;
   }
 
-  std::cerr << "size " << face->glyph->bitmap.rows << ' ' << face->glyph->bitmap.width << '\n';
+  //std::cerr << "size " << face->glyph->bitmap.rows << ' ' << face->glyph->bitmap.width << '\n';
 
   //assert(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE);
 
@@ -81,19 +84,19 @@ load_outline_char(const FT_Face face,
   assert(face->glyph->bitmap.width == rect.width);
   assert(face->glyph->bitmap.rows == rect.height);
 
-  std::cerr << "num_grays " << face->glyph->bitmap.num_grays << '\n';
+  //std::cerr << "num_grays " << face->glyph->bitmap.num_grays << '\n';
   switch (face->glyph->bitmap.num_grays) {
   case 2:
     assert(false);
     break;
   case 256:
-    std::cerr << "rxy " << rect.x << ' ' << rect.y << '\n';
-    std::cerr << "rwh " << rect.width << ' ' << rect.height << '\n';
+    //std::cerr << "rxy " << rect.x << ' ' << rect.y << '\n';
+    //std::cerr << "rwh " << rect.width << ' ' << rect.height << '\n';
 
     for (uint32_t y = 0; y < rect.height; y++) {
       for (uint32_t x = 0; x < rect.width; x++) {
-	uint32_t texture_ix = (rect.y + y) * 1024 + (rect.x + x);
-	assert(texture_ix < 1024 * 1024);
+	uint32_t texture_ix = (rect.y + y) * max_texture_dim + (rect.x + x);
+	assert(texture_ix < max_texture_size);
 	texture[texture_ix] = face->glyph->bitmap.buffer[y * face->glyph->bitmap.pitch + x];
       }
     }
@@ -127,17 +130,18 @@ enum {
   argv_length = 7
 };
 
-void load_all_positions(const FT_Face face,
-			const uint32_t start,
-			const uint32_t end,
-			glyph * glyphs,
-			uint32_t * texture
-			)
+struct window_curve_ix
+load_all_positions(const FT_Face face,
+		   const uint32_t start,
+		   const uint32_t end,
+		   glyph * glyphs,
+		   uint32_t * texture
+		   )
 {
   const uint32_t num_glyphs = (end - start) + 1;
   struct rect rects[num_glyphs];
 
-  uint8_t temp[1024 * 1024];
+  uint8_t temp[max_texture_size];
 
   // first, load all rectangles
   for (uint32_t char_code = start; char_code <= end; char_code++) {
@@ -145,7 +149,7 @@ void load_all_positions(const FT_Face face,
   }
 
   // calculate a 2-dimensional packing for the rectangles
-  pack_all(rects, num_glyphs);
+  auto window_curve_ix = pack_all(rects, num_glyphs);
 
   // asdf
   for (uint32_t i = 0; i < num_glyphs; i++) {
@@ -159,8 +163,11 @@ void load_all_positions(const FT_Face face,
   }
 
   twiddle::texture2<8>(texture, temp,
-		       128, 256,
-		       1024);
+		       window_curve_ix.window.width,
+		       window_curve_ix.window.height,
+		       max_texture_dim);
+
+  return window_curve_ix;
 }
 
 int main(int argc, char *argv[])
@@ -210,8 +217,6 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  std::cerr << "here\n";
-
   uint32_t start;
   uint32_t end;
 
@@ -224,20 +229,24 @@ int main(int argc, char *argv[])
 
   uint32_t num_glyphs = (end - start) + 1;
   glyph glyphs[num_glyphs];
-  uint32_t texture[(1024 * 1024) / 4];
-  memset(texture, 0x00, 1024 * 1024);
+  uint32_t texture[max_texture_size / 4];
+  memset(texture, 0x00, max_texture_size);
+
+  auto window_curve_ix = load_all_positions(face, start, end, glyphs, texture);
 
   font font;
   font.first_char_code = byteswap(start);
   font.glyph_count = byteswap(num_glyphs);
   font.glyph_height = byteswap(face->size->metrics.height);
-  font.texture_width = 128;
-  font.texture_height = 256;
-
-  load_all_positions(face, start, end, glyphs, texture);
+  font.texture_width = byteswap(window_curve_ix.window.width);
+  font.texture_height = byteswap(window_curve_ix.window.height);
+  font.max_z_curve_ix = byteswap(window_curve_ix.max_z_curve_ix);
 
   std::cerr << "start: 0x" << std::hex << start << '\n';
-  std::cerr << "end: 0x" << std::hex << end << '\n';
+  std::cerr << "end: 0x"   << std::hex << end   << '\n';
+  std::cerr << "texture_width: "  << std::dec << window_curve_ix.window.width   << '\n';
+  std::cerr << "texture_height: " << std::dec << window_curve_ix.window.height  << '\n';
+  std::cerr << "max_z_curve_ix: " << std::dec << window_curve_ix.max_z_curve_ix << '\n';
 
   FILE * out = fopen(argv[output_file_path], "w");
   if (out == NULL) {
@@ -245,10 +254,9 @@ int main(int argc, char *argv[])
     return -1;
   }
 
-  uint32_t texture_size = 128 * 256;
   fwrite(reinterpret_cast<void*>(&font), (sizeof (font)), 1, out);
   fwrite(reinterpret_cast<void*>(&glyphs[0]), (sizeof (glyph)), num_glyphs, out);
-  fwrite(reinterpret_cast<void*>(&texture[0]), (sizeof (uint8_t)), texture_size, out);
+  fwrite(reinterpret_cast<void*>(&texture[0]), (sizeof (uint8_t)), window_curve_ix.max_z_curve_ix + 1, out);
 
   fclose(out);
 }

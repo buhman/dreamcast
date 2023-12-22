@@ -12,3 +12,4 @@ __pycache__
 *.gch
 scramble
 cdi4dc
+tools/ttf_outline

@@ -29,60 +29,6 @@ struct vertex {
   float v;
 };
 
-/*
-// screen space coordinates
-const struct vertex quad_verticies[4] = {
-  { 0.f,  64.f,  0.01f, 0.f, 1.f  },
-  { 0.f,  0.f,   0.01f, 0.f, 0.f  },
-  { 64.f, 0.f,   0.01f, 1.f, 0.f  },
-  { 64.f, 64.f,  0.01f, 1.f, 1.f, },
-};
-
-uint32_t transform(uint32_t * ta_parameter_buf)
-{
-  auto parameter = ta_parameter_writer(ta_parameter_buf);
-  uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-  constexpr uint32_t base_color = 0xffffffff;
-  auto sprite = global_sprite(base_color);
-  sprite.parameter_control_word = para_control::para_type::sprite
-                                | para_control::list_type::opaque
-                                | obj_control::col_type::packed_color
-                                | obj_control::texture
-                                | obj_control::_16bit_uv;
-  sprite.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
-			      | tsp_instruction_word::dst_alpha_instr::zero
-			      | tsp_instruction_word::fog_control::no_fog
-			      | tsp_instruction_word::texture_u_size::_8   // 8px
-			      | tsp_instruction_word::texture_v_size::_8;  // 8px
-  sprite.texture_control_word = texture_control_word::pixel_format::_565
-			      | texture_control_word::scan_order::twiddled
-			      | texture_control_word::texture_address(texture_address / 8);
-  parameter.append<global_sprite>() = sprite;
-
-  parameter.append<vertex_sprite_type_1>() =
-    vertex_sprite_type_1(quad_verticies[0].x,
-			 quad_verticies[0].y,
-			 quad_verticies[0].z,
-			 quad_verticies[1].x,
-			 quad_verticies[1].y,
-			 quad_verticies[1].z,
-			 quad_verticies[2].x,
-			 quad_verticies[2].y,
-			 quad_verticies[2].z,
-			 quad_verticies[3].x,
-			 quad_verticies[3].y,
-			 uv_16bit(quad_verticies[0].u, quad_verticies[0].v),
-			 uv_16bit(quad_verticies[1].u, quad_verticies[1].v),
-			 uv_16bit(quad_verticies[2].u, quad_verticies[2].v));
-  // curiously, there is no `dz` in vertex_sprite_type_1
-  // curiously, there is no `du_dv` in vertex_sprite_type_1
-
-  parameter.append<global_end_of_list>() = global_end_of_list();
-
-  return parameter.offset;
-}
-*/
-
 const struct vertex strip_vertices[4] = {
   // [ position       ]  [ uv coordinates ]
   { 0.f,  1.f,  0.f, 0.f, 1.f, },
@@ -93,7 +39,9 @@ const struct vertex strip_vertices[4] = {
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 
 uint32_t transform(ta_parameter_writer& parameter,
-		   const uint32_t first_char_code, const glyph * glyphs,
+		   const uint32_t first_char_code,
+		   const uint32_t texture_width, uint32_t texture_height,
+		   const glyph * glyphs,
 		   const char * s, const uint32_t len,
 		   const uint32_t y_offset)
 {
@@ -102,6 +50,13 @@ uint32_t transform(ta_parameter_writer& parameter,
   uint32_t advance = 0; // in 26.6 fixed-point
 
   for (uint32_t string_ix = 0; string_ix < len; string_ix++) {
+    char c = s[string_ix];
+    auto& glyph = glyphs[c - first_char_code];
+    if (glyph.bitmap.width == 0 || glyph.bitmap.height == 0) {
+      advance += glyph.metrics.horiAdvance;
+      continue;
+    }
+
     auto polygon = global_polygon_type_0(texture_address);
     polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
       | para_control::list_type::opaque
@@ -111,16 +66,13 @@ uint32_t transform(ta_parameter_writer& parameter,
     polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
       | tsp_instruction_word::dst_alpha_instr::zero
       | tsp_instruction_word::fog_control::no_fog
-      | tsp_instruction_word::texture_u_size::_128
-      | tsp_instruction_word::texture_v_size::_256;
+      | tsp_instruction_word::texture_u_size::from_int(texture_width)
+      | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
     polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
 				 | texture_control_word::scan_order::twiddled
 				 | texture_control_word::texture_address(texture_address / 8);
     parameter.append<global_polygon_type_0>() = polygon;
-
-    char c = s[string_ix];
-    auto& glyph = glyphs[c - first_char_code];
 
     for (uint32_t i = 0; i < strip_length; i++) {
       bool end_of_strip = i == strip_length - 1;
@@ -142,8 +94,8 @@ uint32_t transform(ta_parameter_writer& parameter,
       v *= glyph.bitmap.height;
       u += glyph.bitmap.x;
       v += glyph.bitmap.y;
-      u = u / 128.f;
-      v = v / 256.f;
+      u = u / static_cast<float>(texture_width);
+      v = v / static_cast<float>(texture_height);
 
       parameter.append<vertex_polygon_type_3>() =
 	vertex_polygon_type_3(x, y, z,
@@ -183,16 +135,22 @@ void inflate_font(const uint32_t * src, const uint32_t size)
   }
 }
 
+template <int C>
 void palette_data()
 {
+  static_assert(C >= 2);
+  constexpr int increment = 256 / C;
+
   holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::rgb565;
 
-  // palette of 256 greys
-  for (int i = 0; i < 256; i++) {
-    holly.PALETTE_RAM[i] = ((i >> 3) << 11)
-                         | ((i >> 2) << 5)
-                         | ((i >> 3) << 0);
+  // generate a palette with `C` shades of grey,
+  // ranging in intensity from rgb565(0, 0, 0) to rgb565(31, 63, 31)
+  for (int i = 0; i < 256; i += increment) {
+    holly.PALETTE_RAM[i / increment] = ((i >> 3) << 11)
+                                     | ((i >> 2) << 5)
+                                     | ((i >> 3) << 0);
   }
+  holly.PALETTE_RAM[255] = 0xffff;
 }
 
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
@@ -205,6 +163,7 @@ void main()
   auto glyphs = reinterpret_cast<const struct glyph *>(&font[1]);
   auto texture = reinterpret_cast<const uint32_t *>(&glyphs[font->glyph_count]);
 
+  /*
   serial::integer<uint32_t>(font->first_char_code);
   serial::integer<uint32_t>(font->glyph_count);
   serial::integer<uint32_t>(font->glyph_height);
@@ -213,10 +172,11 @@ void main()
   serial::character('\n');
   serial::integer<uint32_t>(((uint32_t)glyphs) - ((uint32_t)font));
   serial::integer<uint32_t>(((uint32_t)texture) - ((uint32_t)font));
+  */
 
-  uint32_t texture_size = font->texture_width * font->texture_height;
+  uint32_t texture_size = font->max_z_curve_ix + 1;
   inflate_font(texture, texture_size);
-  palette_data();
+  palette_data<256>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
@@ -256,13 +216,19 @@ void main()
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
-    transform(parameter, font->first_char_code, glyphs,
+    transform(parameter,
+	      font->first_char_code,
+	      font->texture_width, font->texture_height,
+	      glyphs,
 	      ana, 17,
-	      0);
+	      font->glyph_height * 0);
 
-    transform(parameter, font->first_char_code, glyphs,
+    transform(parameter,
+	      font->first_char_code,
+	      font->texture_width, font->texture_height,
+	      glyphs,
 	      cabal, 26,
-	      font->glyph_height);
+	      font->glyph_height * 1);
 
     parameter.append<global_end_of_list>() = global_end_of_list();
 

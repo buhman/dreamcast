@@ -1,15 +1,16 @@
 #include <cassert>
 #include <cstdint>
 #include <compare>
+#include <iostream>
 
 #include "insertion_sort.hpp"
 #include "rect.hpp"
 #include "../twiddle.hpp"
-#include <iostream>
+#include "2d_pack.hpp"
 
 struct size {
-  uint32_t width;
-  uint32_t height;
+  uint16_t width;
+  uint16_t height;
 };
 
 constexpr struct size max_texture = {1024, 1024};
@@ -36,9 +37,9 @@ inline bool area_valid(const uint8_t texture[max_texture.height][max_texture.wid
   return true;
 }
 
-bool pack_into(uint8_t texture[max_texture.height][max_texture.width],
-	       struct size& window,
-	       struct rect& rect)
+uint32_t pack_into(uint8_t texture[max_texture.height][max_texture.width],
+		   struct size& window,
+		   struct rect& rect)
 {
   uint32_t z_curve_ix = 0;
 
@@ -52,7 +53,7 @@ bool pack_into(uint8_t texture[max_texture.height][max_texture.width],
     auto [x_offset, y_offset] = twiddle::from_ix(z_curve_ix);
 
     if (x_offset >= window.width and y_offset >= window.height) {
-      std::cerr << z_curve_ix << ' ' << window.width << ' ' << window.height << '\n';
+      //std::cerr << z_curve_ix << ' ' << window.width << ' ' << window.height << '\n';
       assert(window.width < max_texture.width || window.height < max_texture.height);
       if (window.width == window.height) { window.height *= 2; }
       else                               { window.width *= 2; }
@@ -76,15 +77,19 @@ bool pack_into(uint8_t texture[max_texture.height][max_texture.width],
       rect.x = x_offset;
       rect.y = y_offset;
 
-      return true;
+      return twiddle::from_xy(rect.x + rect.width - 1,
+			      rect.y + rect.height - 1);
     } else {
       z_curve_ix += 1;
       continue;
     }
   }
+
+  assert(false);
 }
 
-uint32_t pack_all(struct rect * rects, const uint32_t num_rects)
+struct window_curve_ix
+pack_all(struct rect * rects, const uint32_t num_rects)
 {
   uint8_t texture[max_texture.height][max_texture.width] = { 0 };
   size window = {1, 1};
@@ -92,22 +97,16 @@ uint32_t pack_all(struct rect * rects, const uint32_t num_rects)
   // sort all rectangles by size
   insertion_sort(rects, num_rects);
 
-  uint32_t max_x = 0;
-  uint32_t max_y = 0;
+  uint32_t max_z_curve_ix = 0;
 
   for (uint32_t i = 0; i < num_rects; i++) {
-    std::cerr << "pack " << i << '\n';
-    bool packed = pack_into(texture, window, rects[i]);
-    if (packed) {
-      const uint32_t x = rects[i].x + rects[i].width - 1;
-      const uint32_t y = rects[i].y + rects[i].height - 1;
-      if (x > max_x) max_x = x;
-      if (y > max_y) max_y = y;
-    }
+    uint32_t z_curve_ix = pack_into(texture, window, rects[i]);
+    //std::cerr << "z_curve_ix " << z_curve_ix << '\n';
+    if (z_curve_ix > max_z_curve_ix)
+      max_z_curve_ix = z_curve_ix;
   }
 
-  const uint32_t curve_ix = twiddle::from_xy(max_x, max_y);
-  std::cerr << "max xy " << max_x << ' ' << max_y << '\n';
-  std::cerr << "curve_ix " << curve_ix << '\n';
-  return curve_ix;
+  std::cerr << "window size: " << window.width << ' ' << window.height << '\n';
+  std::cerr << "max_z_curve_ix: " << max_z_curve_ix << '\n';
+  return {window.width, window.height, max_z_curve_ix};
 }

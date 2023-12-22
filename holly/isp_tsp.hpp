@@ -109,6 +109,20 @@ namespace tsp_instruction_word {
     constexpr uint32_t _256 = 5 << 3;
     constexpr uint32_t _512 = 6 << 3;
     constexpr uint32_t _1024 = 7 << 3;
+
+    constexpr uint32_t from_int(uint32_t n) {
+      switch (n) {
+      default: [[fallthrough]];
+      case 8: return _8;
+      case 16: return _16;
+      case 32: return _32;
+      case 64: return _64;
+      case 128: return _128;
+      case 256: return _256;
+      case 512: return _512;
+      case 1024: return _1024;
+      }
+    }
   }
 
   namespace texture_v_size {
@@ -120,6 +134,20 @@ namespace tsp_instruction_word {
     constexpr uint32_t _256 = 5 << 0;
     constexpr uint32_t _512 = 6 << 0;
     constexpr uint32_t _1024 = 7 << 0;
+
+    constexpr uint32_t from_int(uint32_t n) {
+      switch (n) {
+      default: [[fallthrough]];
+      case 8: return _8;
+      case 16: return _16;
+      case 32: return _32;
+      case 64: return _64;
+      case 128: return _128;
+      case 256: return _256;
+      case 512: return _512;
+      case 1024: return _1024;
+      }
+    }
   }
 }
 

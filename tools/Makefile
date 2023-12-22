@@ -4,7 +4,7 @@ CXXFLAGS = -std=c++23
 CFLAGS += $(shell pkg-config --cflags freetype2)
 LDFLAGS = $(shell pkg-config --libs freetype2)
 
-all: ttf-outline
+all: ttf_outline
 
 %.o: %.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) -c $< -o $@
@@ -12,10 +12,10 @@ all: ttf-outline
 %: %.o
 	$(CXX) $(LDFLAGS) $^ -o $@
 
-ttf-outline: ttf-outline.o 2d-pack.o
+ttf_outline: ttf_outline.o 2d_pack.o
 
 clean:
-	rm -f *.o ttf-convert ttf-bitmap
+	rm -f *.o ttf_outline
 
 .SUFFIXES:
 .INTERMEDIATE:
