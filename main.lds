@@ -6,7 +6,7 @@ MEMORY
 }
 SECTIONS
 {
-  . = 0x8c010000;
+  . = ORIGIN(p1ram);
 
   .text ALIGN(4) : SUBALIGN(4)
   {
@@ -34,15 +34,7 @@ SECTIONS
     KEEP(*(.ctors.*))
   } > p1ram
 
-  .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
-  {
-    *(.bss)
-    *(.bss.*)
-  } > p1ram
-
-  __p1ram_end = .;
-
-  . = 0xac010000 + __p1ram_end - __p1ram_start;
+  . = ORIGIN(p2ram) + (. - ORIGIN(p1ram));
 
   .text.p2ram ALIGN(4) : SUBALIGN(4)
   {
@@ -50,21 +42,25 @@ SECTIONS
     *(.p2ram.*)
   } > p2ram AT>p1ram
 
-  /DISCARD/ :
+  . = ORIGIN(p1ram) + (. - ORIGIN(p2ram));
+
+  .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
   {
-    *(.debug*)
-    *(.comment*)
-    *(.rela*)
-  }
+    *(.bss)
+    *(.bss.*)
+    *(COMMON)
+  } > p1ram
 
-  __bss_link_start = ADDR(.bss);
-  __bss_link_end = ADDR(.bss) + SIZEOF(.bss);
-
-  __ctors_link_start = ADDR(.ctors);
-  __ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
+  INCLUDE "debug.ld"
 }
 
 __p1ram_start = ORIGIN(p1ram);
 __p1ram_end = ORIGIN(p1ram) + LENGTH(p1ram);
+
+__bss_link_start = ADDR(.bss);
+__bss_link_end = ADDR(.bss) + SIZEOF(.bss);
+
+__ctors_link_start = ADDR(.ctors);
+__ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
 
 INCLUDE "addresses.lds"

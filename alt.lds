@@ -33,35 +33,29 @@ SECTIONS
     KEEP(*(.ctors.*))
   } > p1ram
 
-  .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
-  {
-    *(.bss)
-    *(.bss.*)
-  } > p1ram
-
   .text.p2ram ALIGN(4) : SUBALIGN(4)
   {
     *(.p2ram)
     *(.p2ram.*)
   } > p1ram
 
-  __p1ram_end = .;
-
-  /DISCARD/ :
+  .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
   {
-    *(.debug*)
-    *(.comment*)
-    *(.rela*)
-  }
+    *(.bss)
+    *(.bss.*)
+    *(COMMON)
+  } > p1ram
 
-  __bss_link_start = ADDR(.bss);
-  __bss_link_end = ADDR(.bss) + SIZEOF(.bss);
-
-  __ctors_link_start = ADDR(.ctors);
-  __ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
+  INCLUDE "debug.lds"
 }
 
 __p1ram_start = ORIGIN(p1ram);
 __p1ram_end = ORIGIN(p1ram) + LENGTH(p1ram);
+
+__bss_link_start = ADDR(.bss);
+__bss_link_end = ADDR(.bss) + SIZEOF(.bss);
+
+__ctors_link_start = ADDR(.ctors);
+__ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
 
 INCLUDE "addresses.lds"
