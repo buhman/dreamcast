@@ -279,10 +279,10 @@ int main(int argc, char *argv[])
   uint32_t texture_size;
   if (monochrome) {
     texture_stride = window_curve_ix.window.width / 8;
-    texture_size = byteswap((window_curve_ix.max_z_curve_ix / 8) + 1);
+    texture_size = window_curve_ix.window.width * window_curve_ix.window.height / 8;
   } else {
     texture_stride = window_curve_ix.window.width;
-    texture_size = byteswap((window_curve_ix.max_z_curve_ix / 1) + 1);
+    texture_size = window_curve_ix.window.width * window_curve_ix.window.height;
   }
 
   font font;

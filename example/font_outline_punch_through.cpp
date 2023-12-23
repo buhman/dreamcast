@@ -39,8 +39,8 @@ const struct vertex strip_vertices[4] = {
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 
 uint32_t transform(ta_parameter_writer& parameter,
-		   const uint32_t first_char_code,
 		   const uint32_t texture_width, uint32_t texture_height,
+		   const uint32_t first_char_code,
 		   const glyph * glyphs,
 		   const char * s, const uint32_t len,
 		   const uint32_t y_offset)
@@ -230,15 +230,15 @@ void main()
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
     transform(parameter,
-	      font->first_char_code,
 	      font->texture_width, font->texture_height,
+	      font->first_char_code,
 	      glyphs,
 	      ana, 17,
 	      font->glyph_height * 0);
 
     transform(parameter,
-	      font->first_char_code,
 	      font->texture_width, font->texture_height,
+	      font->first_char_code,
 	      glyphs,
 	      cabal, 26,
 	      font->glyph_height * 1);

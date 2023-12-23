@@ -39,8 +39,8 @@ const struct vertex strip_vertices[4] = {
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 
 uint32_t transform(ta_parameter_writer& parameter,
-		   const uint32_t first_char_code,
 		   const uint32_t texture_width, uint32_t texture_height,
+		   const uint32_t first_char_code,
 		   const glyph * glyphs,
 		   const char * s, const uint32_t len,
 		   const uint32_t y_offset)
@@ -110,6 +110,53 @@ uint32_t transform(ta_parameter_writer& parameter,
   return parameter.offset;
 }
 
+uint32_t transform2(ta_parameter_writer& parameter,
+		    const uint32_t texture_width, uint32_t texture_height)
+{
+  uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+
+  auto polygon = global_polygon_type_0(texture_address);
+  polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+				 | para_control::list_type::opaque
+				 | obj_control::col_type::packed_color
+				 | obj_control::texture;
+
+  polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+			       | tsp_instruction_word::dst_alpha_instr::zero
+			       | tsp_instruction_word::fog_control::no_fog
+			       | tsp_instruction_word::texture_u_size::from_int(texture_width)
+			       | tsp_instruction_word::texture_v_size::from_int(texture_height);
+
+  polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
+			       | texture_control_word::scan_order::twiddled
+			       | texture_control_word::texture_address(texture_address / 8);
+  parameter.append<global_polygon_type_0>() = polygon;
+
+  for (uint32_t i = 0; i < strip_length; i++) {
+    bool end_of_strip = i == strip_length - 1;
+
+    float x = strip_vertices[i].x;
+    float y = strip_vertices[i].y;
+    float z = strip_vertices[i].z;
+
+    x *= 128.f;
+    y *= 256.f;
+    x += 50.f;
+    y += 50.f;
+    z = 1.f / (z + 9.f);
+
+    float u = strip_vertices[i].u;
+    float v = strip_vertices[i].v;
+
+    parameter.append<vertex_polygon_type_3>() =
+      vertex_polygon_type_3(x, y, z,
+			    u, v,
+			    0x00000000, // base_color
+			    end_of_strip);
+  }
+
+  return parameter.offset;
+}
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
@@ -219,19 +266,24 @@ void main()
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
+    transform2(parameter,
+	       font->texture_width, font->texture_height);
+
+    /*
     transform(parameter,
-	      font->first_char_code,
 	      font->texture_width, font->texture_height,
+	      font->first_char_code,
 	      glyphs,
 	      ana, 17,
 	      font->glyph_height * 0);
 
     transform(parameter,
-	      font->first_char_code,
 	      font->texture_width, font->texture_height,
+	      font->first_char_code,
 	      glyphs,
 	      cabal, 26,
 	      font->glyph_height * 1);
+    */
 
     parameter.append<global_end_of_list>() = global_end_of_list();
 
