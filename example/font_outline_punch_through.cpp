@@ -130,18 +130,16 @@ constexpr inline uint32_t b(uint32_t v, uint32_t n)
   return ((v >> n) & 1) << (4 * n);
 }
 
-void inflate_font(const uint32_t * src, const uint32_t size)
+void inflate_font(const uint32_t * src,
+		  const uint32_t stride,
+		  const uint32_t curve_end_ix)
 {
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
-  for (uint32_t i = 0; i < (size / 4); i++) {
-    uint32_t v = src[i];
-    texture[(i * 4) + 0] = b(v, 7 ) | b(v, 6 ) | b(v, 5 ) | b(v, 4 ) | b(v, 3 ) | b(v, 2 ) | b(v, 1 ) | b(v, 0 );
-    texture[(i * 4) + 1] = b(v, 15) | b(v, 14) | b(v, 13) | b(v, 12) | b(v, 11) | b(v, 10) | b(v, 9 ) | b(v, 8 );
-    texture[(i * 4) + 2] = b(v, 23) | b(v, 22) | b(v, 21) | b(v, 20) | b(v, 19) | b(v, 18) | b(v, 17) | b(v, 16);
-    texture[(i * 4) + 3] = b(v, 31) | b(v, 30) | b(v, 29) | b(v, 28) | b(v, 27) | b(v, 26) | b(v, 25) | b(v, 24);
-  }
+  twiddle::texture3<4, 1>(texture, reinterpret_cast<const uint8_t *>(src),
+			  stride,
+			  curve_end_ix);
 }
 
 template <int C>
@@ -188,8 +186,9 @@ void main()
   serial::integer<uint32_t>(((uint32_t)texture) - ((uint32_t)font));
   */
 
-  uint32_t texture_size = font->max_z_curve_ix + 1;
-  inflate_font(texture, texture_size);
+  inflate_font(texture,
+	       font->texture_stride,
+	       font->max_z_curve_ix);
   palette_data_mono();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.

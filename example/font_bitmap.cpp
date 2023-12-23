@@ -189,7 +189,9 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
   }
   */
 
-  twiddle::texture2<4>(&texture[offset / 4], temp, 8, 8, 0, 0);
+  twiddle::texture2<4>(&texture[offset / 4], temp,
+		       8,
+		       8 * 8);
 }
 
 void inflate_font(const uint8_t * src)

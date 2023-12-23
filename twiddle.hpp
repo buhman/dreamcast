@@ -137,28 +137,63 @@ void texture_4bpp(volatile T * dst, const T * src, const uint32_t width, const u
   }
 }
 
-template <int B, typename T, typename U>
+template <uint32_t dst_bits_per_pixel, typename T, typename U>
 void texture2(volatile T * dst, const U * src,
-	      const uint32_t width, const uint32_t height,
-	      const uint32_t stride)
+	      const uint32_t src_stride,
+	      const uint32_t curve_end_ix)
 {
   constexpr uint32_t t_bits = (sizeof (T)) * 8;
-  constexpr uint32_t bits_per_pixel = B;
-  static_assert(t_bits >= bits_per_pixel);
-  static_assert((t_bits / bits_per_pixel) * bits_per_pixel == t_bits);
-  constexpr uint32_t pixels_per_t = t_bits / bits_per_pixel;
+  static_assert(t_bits >= dst_bits_per_pixel);
+  static_assert((t_bits / dst_bits_per_pixel) * dst_bits_per_pixel == t_bits);
+  constexpr uint32_t pixels_per_t = t_bits / dst_bits_per_pixel;
   static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8 || pixels_per_t == 16 || pixels_per_t == 32);
 
   T dst_val = 0;
-  const uint32_t end_ix = from_xy(width - 1, height - 1);
-  for (uint32_t curve_ix = 0; curve_ix <= end_ix; curve_ix++) {
+  for (uint32_t curve_ix = 0; curve_ix <= curve_end_ix; curve_ix++) {
     auto [x, y] = from_ix(curve_ix);
-    const U src_val = src[y * stride + x];
+    const U src_val = src[y * src_stride + x];
     if constexpr (pixels_per_t == 1) {
       dst[curve_ix] = src_val;
     } else {
       const uint32_t curve_ix_mod = curve_ix & (pixels_per_t - 1);
-      dst_val |= src_val << (bits_per_pixel * curve_ix_mod);
+      dst_val |= src_val << (dst_bits_per_pixel * curve_ix_mod);
+
+      if (curve_ix_mod == (pixels_per_t - 1)) {
+	dst[curve_ix / pixels_per_t] = dst_val;
+	dst_val = 0;
+      }
+    }
+  }
+}
+
+template <uint32_t dst_bits_per_pixel, uint32_t src_bits_per_pixel, typename T, typename U>
+void texture3(volatile T * dst, const U * src,
+	      const uint32_t src_stride,
+	      const uint32_t curve_end_ix)
+{
+  constexpr uint32_t t_bits = (sizeof (T)) * 8;
+  static_assert(t_bits >= dst_bits_per_pixel);
+  static_assert((t_bits / dst_bits_per_pixel) * dst_bits_per_pixel == t_bits);
+  constexpr uint32_t pixels_per_t = t_bits / dst_bits_per_pixel;
+  static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8 || pixels_per_t == 16 || pixels_per_t == 32);
+
+  constexpr uint32_t u_bits = (sizeof (U)) * 8;
+  static_assert(u_bits >= src_bits_per_pixel);
+  static_assert((u_bits / src_bits_per_pixel) * src_bits_per_pixel == u_bits);
+  constexpr uint32_t pixels_per_u = u_bits / src_bits_per_pixel;
+  static_assert(pixels_per_u == 1 || pixels_per_u == 2 || pixels_per_u == 4 || pixels_per_u == 8 || pixels_per_u == 16 || pixels_per_u == 32);
+
+  T dst_val = 0;
+  for (uint32_t curve_ix = 0; curve_ix <= curve_end_ix; curve_ix++) {
+    auto [x, y] = from_ix(curve_ix);
+    const uint32_t src_ix = y * src_stride + (x / pixels_per_u);
+    const uint32_t src_ix_mod = x & (pixels_per_u - 1);
+    const U src_val = (src[src_ix] >> (src_bits_per_pixel * src_ix_mod)) & ((1 << src_bits_per_pixel) - 1);
+    if constexpr (pixels_per_t == 1) {
+      dst[curve_ix] = src_val;
+    } else {
+      const uint32_t curve_ix_mod = curve_ix & (pixels_per_t - 1);
+      dst_val |= src_val << (dst_bits_per_pixel * curve_ix_mod);
 
       if (curve_ix_mod == (pixels_per_t - 1)) {
 	dst[curve_ix / pixels_per_t] = dst_val;

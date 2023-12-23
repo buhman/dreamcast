@@ -125,14 +125,16 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
-void inflate_font(const uint32_t * src, const uint32_t size)
+void inflate_font(const uint32_t * src,
+		  const uint32_t stride,
+		  const uint32_t curve_end_ix)
 {
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
-  for (uint32_t i = 0; i < (size / 4); i++) {
-    texture[i] = src[i];
-  }
+  twiddle::texture3<8, 8>(texture, reinterpret_cast<const uint8_t *>(src),
+			  stride,
+			  curve_end_ix);
 }
 
 template <int C>
@@ -150,7 +152,6 @@ void palette_data()
                                      | ((i >> 2) << 5)
                                      | ((i >> 3) << 0);
   }
-  holly.PALETTE_RAM[255] = 0xffff;
 }
 
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
@@ -167,6 +168,7 @@ void main()
   serial::integer<uint32_t>(font->first_char_code);
   serial::integer<uint32_t>(font->glyph_count);
   serial::integer<uint32_t>(font->glyph_height);
+  serial::integer<uint32_t>(font->texture_stride);
   serial::integer<uint32_t>(font->texture_width);
   serial::integer<uint32_t>(font->texture_height);
   serial::character('\n');
@@ -174,8 +176,9 @@ void main()
   serial::integer<uint32_t>(((uint32_t)texture) - ((uint32_t)font));
   */
 
-  uint32_t texture_size = font->max_z_curve_ix + 1;
-  inflate_font(texture, texture_size);
+  inflate_font(texture,
+	       font->texture_stride,
+	       font->max_z_curve_ix);
   palette_data<256>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.

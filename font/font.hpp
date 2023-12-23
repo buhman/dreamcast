@@ -32,9 +32,12 @@ struct font {
   uint32_t first_char_code;
   uint16_t glyph_count;
   uint16_t glyph_height;
+  uint16_t texture_stride;
   uint16_t texture_width;
   uint16_t texture_height;
+  uint16_t _pad;
+  uint32_t texture_size;
   uint32_t max_z_curve_ix;
 } __attribute__ ((packed));
 
-static_assert((sizeof (font)) == ((sizeof (uint32_t)) * 4));
+static_assert((sizeof (font)) == ((sizeof (uint32_t)) * 6));
