@@ -114,3 +114,10 @@ void ta_wait_translucent_list()
 
   system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST;
 }
+
+void ta_wait_punch_through_list()
+{
+  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_PUNCH_THROUGH_LIST) == 0);
+
+  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_PUNCH_THROUGH_LIST;
+}

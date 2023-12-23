@@ -15,6 +15,7 @@
 #include "holly/ta_bits.hpp"
 #include "twiddle.hpp"
 #include "serial.hpp"
+#include "palette.hpp"
 
 #include "font/font.hpp"
 #include "dejavusansmono.hpp"
@@ -59,17 +60,18 @@ uint32_t transform(ta_parameter_writer& parameter,
 
     auto polygon = global_polygon_type_0(texture_address);
     polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-				   | para_control::list_type::opaque
+				   | para_control::list_type::translucent
 				   | obj_control::col_type::packed_color
 				   | obj_control::texture;
 
-    polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
-				 | tsp_instruction_word::dst_alpha_instr::zero
+    polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
+				 | tsp_instruction_word::dst_alpha_instr::one
 				 | tsp_instruction_word::fog_control::no_fog
+				 | tsp_instruction_word::use_alpha
 				 | tsp_instruction_word::texture_u_size::from_int(texture_width)
 				 | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
-    polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
+    polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 				 | texture_control_word::scan_order::twiddled
 				 | texture_control_word::texture_address(texture_address / 8);
     parameter.append<global_polygon_type_0>() = polygon;
@@ -117,17 +119,17 @@ uint32_t transform2(ta_parameter_writer& parameter,
 
   auto polygon = global_polygon_type_0(texture_address);
   polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-				 | para_control::list_type::opaque
+				 | para_control::list_type::translucent
 				 | obj_control::col_type::packed_color
 				 | obj_control::texture;
 
-  polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+  polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
 			       | tsp_instruction_word::dst_alpha_instr::zero
 			       | tsp_instruction_word::fog_control::no_fog
 			       | tsp_instruction_word::texture_u_size::from_int(texture_width)
 			       | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
-  polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
+  polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 			       | texture_control_word::scan_order::twiddled
 			       | texture_control_word::texture_address(texture_address / 8);
   parameter.append<global_polygon_type_0>() = polygon;
@@ -139,8 +141,8 @@ uint32_t transform2(ta_parameter_writer& parameter,
     float y = strip_vertices[i].y;
     float z = strip_vertices[i].z;
 
-    x *= 128.f;
-    y *= 256.f;
+    x *= static_cast<float>(texture_width);
+    y *= static_cast<float>(texture_height);
     x += 50.f;
     y += 50.f;
     z = 1.f / (z + 9.f);
@@ -179,26 +181,9 @@ void inflate_font(const uint32_t * src,
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
-  twiddle::texture3<8, 8>(texture, reinterpret_cast<const uint8_t *>(src),
+  twiddle::texture3<4, 8>(texture, reinterpret_cast<const uint8_t *>(src),
 			  stride,
 			  curve_end_ix);
-}
-
-template <int C>
-void palette_data()
-{
-  static_assert(C >= 2);
-  constexpr int increment = 256 / C;
-
-  holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::rgb565;
-
-  // generate a palette with `C` shades of grey,
-  // ranging in intensity from rgb565(0, 0, 0) to rgb565(31, 63, 31)
-  for (int i = 0; i < 256; i += increment) {
-    holly.PALETTE_RAM[i / increment] = ((i >> 3) << 11)
-                                     | ((i >> 2) << 5)
-                                     | ((i >> 3) << 0);
-  }
 }
 
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
@@ -226,7 +211,7 @@ void main()
   inflate_font(texture,
 	       font->texture_stride,
 	       font->max_z_curve_ix);
-  palette_data<256>();
+  palette_data<16>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
@@ -234,13 +219,13 @@ void main()
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
-			      | ta_alloc_ctrl::t_opb::no_list
+			      | ta_alloc_ctrl::t_opb::_16x4byte
 			      | ta_alloc_ctrl::om_opb::no_list
-                              | ta_alloc_ctrl::o_opb::_16x4byte;
+                              | ta_alloc_ctrl::o_opb::no_list;
 
-  constexpr struct opb_size opb_size = { .opaque = 16 * 4
+  constexpr struct opb_size opb_size = { .opaque = 0
 				       , .opaque_modifier = 0
-				       , .translucent = 0
+				       , .translucent = 16 * 4
 				       , .translucent_modifier = 0
 				       , .punch_through = 0
 				       };
@@ -266,10 +251,8 @@ void main()
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
-    /*
     transform2(parameter,
 	       font->texture_width, font->texture_height);
-    */
 
     transform(parameter,
 	      font->texture_width, font->texture_height,
@@ -288,7 +271,7 @@ void main()
     parameter.append<global_end_of_list>() = global_end_of_list();
 
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
-    ta_wait_opaque_list();
+    ta_wait_translucent_list();
 
     core_start_render(frame_ix, num_frames);
 
