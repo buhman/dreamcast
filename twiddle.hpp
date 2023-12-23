@@ -183,17 +183,21 @@ void texture3(volatile T * dst, const U * src,
   constexpr uint32_t pixels_per_u = u_bits / src_bits_per_pixel;
   static_assert(pixels_per_u == 1 || pixels_per_u == 2 || pixels_per_u == 4 || pixels_per_u == 8 || pixels_per_u == 16 || pixels_per_u == 32);
 
+  constexpr uint32_t src_val_mask = ((1 << src_bits_per_pixel) - 1);
+  constexpr uint32_t dst_val_mask = ((1 << dst_bits_per_pixel) - 1);
+  constexpr uint32_t dst_src_shift = (dst_bits_per_pixel < src_bits_per_pixel) ? (src_bits_per_pixel - dst_bits_per_pixel) : 0;
+
   T dst_val = 0;
   for (uint32_t curve_ix = 0; curve_ix <= curve_end_ix; curve_ix++) {
     auto [x, y] = from_ix(curve_ix);
     const uint32_t src_ix = y * src_stride + (x / pixels_per_u);
     const uint32_t src_ix_mod = x & (pixels_per_u - 1);
-    const U src_val = (src[src_ix] >> (src_bits_per_pixel * src_ix_mod)) & ((1 << src_bits_per_pixel) - 1);
+    const U src_val = (src[src_ix] >> (src_bits_per_pixel * src_ix_mod)) & src_val_mask;
     if constexpr (pixels_per_t == 1) {
       dst[curve_ix] = src_val;
     } else {
       const uint32_t curve_ix_mod = curve_ix & (pixels_per_t - 1);
-      dst_val |= src_val << (dst_bits_per_pixel * curve_ix_mod);
+      dst_val |= ((src_val >> dst_src_shift) & dst_val_mask) << (dst_bits_per_pixel * curve_ix_mod);
 
       if (curve_ix_mod == (pixels_per_t - 1)) {
 	dst[curve_ix / pixels_per_t] = dst_val;

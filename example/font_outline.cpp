@@ -59,15 +59,15 @@ uint32_t transform(ta_parameter_writer& parameter,
 
     auto polygon = global_polygon_type_0(texture_address);
     polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-      | para_control::list_type::opaque
-      | obj_control::col_type::packed_color
-      | obj_control::texture;
+				   | para_control::list_type::opaque
+				   | obj_control::col_type::packed_color
+				   | obj_control::texture;
 
     polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
-      | tsp_instruction_word::dst_alpha_instr::zero
-      | tsp_instruction_word::fog_control::no_fog
-      | tsp_instruction_word::texture_u_size::from_int(texture_width)
-      | tsp_instruction_word::texture_v_size::from_int(texture_height);
+				 | tsp_instruction_word::dst_alpha_instr::zero
+				 | tsp_instruction_word::fog_control::no_fog
+				 | tsp_instruction_word::texture_u_size::from_int(texture_width)
+				 | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
     polygon.texture_control_word = texture_control_word::pixel_format::_8bpp_palette
 				 | texture_control_word::scan_order::twiddled
@@ -266,10 +266,11 @@ void main()
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
+    /*
     transform2(parameter,
 	       font->texture_width, font->texture_height);
+    */
 
-    /*
     transform(parameter,
 	      font->texture_width, font->texture_height,
 	      font->first_char_code,
@@ -283,7 +284,6 @@ void main()
 	      glyphs,
 	      cabal, 26,
 	      font->glyph_height * 1);
-    */
 
     parameter.append<global_end_of_list>() = global_end_of_list();
 
