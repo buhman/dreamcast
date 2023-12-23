@@ -147,7 +147,7 @@ void texture2(volatile T * dst, const U * src,
   static_assert(t_bits >= bits_per_pixel);
   static_assert((t_bits / bits_per_pixel) * bits_per_pixel == t_bits);
   constexpr uint32_t pixels_per_t = t_bits / bits_per_pixel;
-  static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8);
+  static_assert(pixels_per_t == 1 || pixels_per_t == 2 || pixels_per_t == 4 || pixels_per_t == 8 || pixels_per_t == 16 || pixels_per_t == 32);
 
   T dst_val = 0;
   const uint32_t end_ix = from_xy(width - 1, height - 1);

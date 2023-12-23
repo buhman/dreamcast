@@ -106,7 +106,7 @@ pack_all(struct rect * rects, const uint32_t num_rects)
       max_z_curve_ix = z_curve_ix;
   }
 
-  std::cerr << "window size: " << window.width << ' ' << window.height << '\n';
+  //std::cerr << "window size: " << window.width << ' ' << window.height << '\n';
   std::cerr << "max_z_curve_ix: " << max_z_curve_ix << '\n';
   return {window.width, window.height, max_z_curve_ix};
 }

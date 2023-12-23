@@ -29,13 +29,14 @@ uint32_t byteswap(const uint32_t n)
 
 int32_t
 load_outline_char_bitmap_rect(const FT_Face face,
+                              const FT_Int32 load_flags,
 			      const FT_ULong char_code,
 			      struct rect& rect)
 {
   FT_Error error;
   FT_UInt glyph_index = FT_Get_Char_Index(face, char_code);
 
-  error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+  error = FT_Load_Glyph(face, glyph_index, load_flags);
   if (error) {
     std::cerr << "FT_Load_Glyph " << FT_Error_String(error) << '\n';
     return -1;
@@ -52,6 +53,8 @@ load_outline_char_bitmap_rect(const FT_Face face,
 
 int32_t
 load_outline_char(const FT_Face face,
+                  const FT_Int32 load_flags,
+                  const FT_Render_Mode render_mode,
                   const FT_ULong char_code,
                   glyph * glyph,
                   uint8_t * texture,
@@ -60,7 +63,7 @@ load_outline_char(const FT_Face face,
   FT_Error error;
   FT_UInt glyph_index = FT_Get_Char_Index(face, char_code);
 
-  error = FT_Load_Glyph(face, glyph_index, FT_LOAD_DEFAULT);
+  error = FT_Load_Glyph(face, glyph_index, load_flags);
   if (error) {
     std::cerr << "FT_Load_Glyph " << FT_Error_String(error) << '\n';
     return -1;
@@ -70,7 +73,7 @@ load_outline_char(const FT_Face face,
 
   //assert(face->glyph->format == FT_GLYPH_FORMAT_OUTLINE);
 
-  error = FT_Render_Glyph(face->glyph, FT_RENDER_MODE_NORMAL);
+  error = FT_Render_Glyph(face->glyph, render_mode);
   if (error) {
     std::cerr << "FT_Render_Glyph " << FT_Error_String(error) << '\n';
     return -1;
@@ -84,26 +87,34 @@ load_outline_char(const FT_Face face,
   assert(face->glyph->bitmap.width == rect.width);
   assert(face->glyph->bitmap.rows == rect.height);
 
-  //std::cerr << "num_grays " << face->glyph->bitmap.num_grays << '\n';
-  switch (face->glyph->bitmap.num_grays) {
-  case 2:
-    assert(false);
-    break;
-  case 256:
-    //std::cerr << "rxy " << rect.x << ' ' << rect.y << '\n';
-    //std::cerr << "rwh " << rect.width << ' ' << rect.height << '\n';
+  for (uint32_t y = 0; y < rect.height; y++) {
+    for (uint32_t x = 0; x < rect.width; x++) {
+      uint32_t texture_ix = (rect.y + y) * max_texture_dim + (rect.x + x);
+      assert(texture_ix < max_texture_size);
 
-    for (uint32_t y = 0; y < rect.height; y++) {
-      for (uint32_t x = 0; x < rect.width; x++) {
-	uint32_t texture_ix = (rect.y + y) * max_texture_dim + (rect.x + x);
-	assert(texture_ix < max_texture_size);
-	texture[texture_ix] = face->glyph->bitmap.buffer[y * face->glyph->bitmap.pitch + x];
+      uint8_t level;
+
+      //std::cerr << "rxy " << rect.x << ' ' << rect.y << '\n';
+      //std::cerr << "rwh " << rect.width << ' ' << rect.height << '\n';
+
+      //std::cerr << "pixel_mode " << (int)face->glyph->bitmap.pixel_mode << '\n';
+      switch (face->glyph->bitmap.pixel_mode) {
+      case FT_PIXEL_MODE_MONO:
+        // [num_grays] is only used with FT_PIXEL_MODE_GRAY; it gives the number
+        // of gray levels used in the bitmap.
+        level = (face->glyph->bitmap.buffer[y * face->glyph->bitmap.pitch + (x / 8)] >> (7 - (x % 8))) & 1;
+        break;
+      case FT_PIXEL_MODE_GRAY:
+        assert(face->glyph->bitmap.num_grays == 256);
+        //std::cerr << "num_grays " << face->glyph->bitmap.num_grays << '\n';
+        level = face->glyph->bitmap.buffer[y * face->glyph->bitmap.pitch + x];
+        break;
+      default:
+        assert(false);
+        break;
       }
+      texture[texture_ix] = level;
     }
-
-    break;
-  default:
-    assert(face->glyph->bitmap.num_grays == -1);
   }
 
   glyph_bitmap& bitmap = glyph->bitmap;
@@ -124,14 +135,16 @@ enum {
   start_hex = 1,
   end_hex = 2,
   pixel_size = 3,
-  target_endian = 4,
-  font_file_path = 5,
-  output_file_path = 6,
-  argv_length = 7
+  monochrome_out = 4,
+  target_endian = 5,
+  font_file_path = 6,
+  output_file_path = 7,
+  argv_length = 8
 };
 
 struct window_curve_ix
 load_all_positions(const FT_Face face,
+                   bool monochrome,
 		   const uint32_t start,
 		   const uint32_t end,
 		   glyph * glyphs,
@@ -143,18 +156,33 @@ load_all_positions(const FT_Face face,
 
   uint8_t temp[max_texture_size];
 
+  FT_Int32 load_flags;
+  FT_Render_Mode render_mode;
+  if (monochrome) {
+    load_flags = FT_LOAD_MONOCHROME | FT_LOAD_TARGET_MONO;
+    render_mode = FT_RENDER_MODE_MONO;
+  } else {
+    load_flags = FT_LOAD_DEFAULT;
+    render_mode = FT_RENDER_MODE_NORMAL;
+  }
+
   // first, load all rectangles
   for (uint32_t char_code = start; char_code <= end; char_code++) {
-    load_outline_char_bitmap_rect(face, char_code, rects[char_code - start]);
+    load_outline_char_bitmap_rect(face,
+                                  load_flags,
+                                  char_code,
+                                  rects[char_code - start]);
   }
 
   // calculate a 2-dimensional packing for the rectangles
   auto window_curve_ix = pack_all(rects, num_glyphs);
 
-  // asdf
+  // render all of the glyps to a temporary buffer;
   for (uint32_t i = 0; i < num_glyphs; i++) {
     const uint32_t char_code = rects[i].char_code;
     int32_t err = load_outline_char(face,
+                                    load_flags,
+                                    render_mode,
 				    char_code,
 				    &glyphs[char_code - start],
 				    temp,
@@ -162,10 +190,22 @@ load_all_positions(const FT_Face face,
     if (err < 0) assert(false);
   }
 
-  twiddle::texture2<8>(texture, temp,
-		       window_curve_ix.window.width,
-		       window_curve_ix.window.height,
-		       max_texture_dim);
+  // twiddle the temporary buffer to become the final texture
+  if (monochrome) {
+    twiddle::texture2<1>(texture, temp,
+                         window_curve_ix.window.width,
+                         window_curve_ix.window.height,
+                         max_texture_dim);
+  } else {
+    twiddle::texture2<8>(texture, temp,
+                         window_curve_ix.window.width,
+                         window_curve_ix.window.height,
+                         max_texture_dim);
+  }
+
+  if (monochrome) {
+    window_curve_ix.max_z_curve_ix = window_curve_ix.max_z_curve_ix / 8;
+  }
 
   return window_curve_ix;
 }
@@ -177,9 +217,9 @@ int main(int argc, char *argv[])
   FT_Error error;
 
   if (argc != argv_length) {
-    std::cerr << "usage: " << argv[0] << " [start-hex] [end-hex] [pixel-size] [target-endian] [font-file-path] [output-file-path]\n\n";
-    std::cerr << "ex. 1: " << argv[0] << " 3000 30ff 30 little ipagp.ttf font.bin\n";
-    std::cerr << "ex. 2: " << argv[0] << " 20 7f 30 big DejaVuSans.ttf font.bin\n";
+    std::cerr << "usage: " << argv[0] << " [start-hex] [end-hex] [pixel-size] [monochrome-out] [target-endian] [font-file-path] [output-file-path]\n\n";
+    std::cerr << "ex. 1: " << argv[0] << " 3000 30ff 30 0 little ipagp.ttf font.bin\n";
+    std::cerr << "ex. 2: " << argv[0] << " 20 7f 30 1 big DejaVuSans.ttf font.bin\n";
     return -1;
   }
 
@@ -200,6 +240,12 @@ int main(int argc, char *argv[])
   ss3 << std::dec << argv[pixel_size];
   ss3 >> font_size;
   std::cerr << "font_size: " << font_size << '\n';
+  std::stringstream ss4;
+  int monochrome;
+  ss4 << std::dec << argv[monochrome_out];
+  ss4 >> monochrome;
+  assert(monochrome == 0 || monochrome == 1);
+  std::cerr << "monochrome: " << monochrome << '\n';
 
   error = FT_Set_Pixel_Sizes(face, 0, font_size);
   if (error) {
@@ -232,7 +278,7 @@ int main(int argc, char *argv[])
   uint32_t texture[max_texture_size / 4];
   memset(texture, 0x00, max_texture_size);
 
-  auto window_curve_ix = load_all_positions(face, start, end, glyphs, texture);
+  auto window_curve_ix = load_all_positions(face, monochrome, start, end, glyphs, texture);
 
   font font;
   font.first_char_code = byteswap(start);

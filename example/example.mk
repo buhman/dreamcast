@@ -59,6 +59,19 @@ FONT_OUTLINE_OBJ = \
 example/font_outline.elf: LDSCRIPT = $(LIB)/alt.lds
 example/font_outline.elf: $(START_OBJ) $(FONT_OUTLINE_OBJ)
 
+FONT_OUTLINE_PUNCH_THROUGH_OBJ = \
+	example/font_outline_punch_through.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	serial.o \
+	dejavusansmono_mono.data.o
+
+example/font_outline_punch_through.elf: LDSCRIPT = $(LIB)/alt.lds
+example/font_outline_punch_through.elf: $(START_OBJ) $(FONT_OUTLINE_PUNCH_THROUGH_OBJ)
+
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \
 	vga.o \
