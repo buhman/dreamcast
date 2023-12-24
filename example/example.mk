@@ -107,6 +107,17 @@ CUBE_OBJ = \
 example/cube.elf: LDSCRIPT = $(LIB)/alt.lds
 example/cube.elf: $(START_OBJ) $(CUBE_OBJ)
 
+ICOSPHERE_OBJ = \
+	example/icosphere.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o
+
+example/icosphere.elf: LDSCRIPT = $(LIB)/alt.lds
+example/icosphere.elf: $(START_OBJ) $(ICOSPHERE_OBJ)
+
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
 	vga.o \
