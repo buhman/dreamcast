@@ -47,7 +47,7 @@ void core_init()
   holly.FPU_PARAM_CFG  = fpu_param_cfg::region_header_type::type_2
 		       | fpu_param_cfg::tsp_parameter_burst_threshold(31)
 		       | fpu_param_cfg::isp_parameter_burst_threshold(31)
-		       | fpu_param_cfg::pointer_burst_size(0x15) // must be less than opb size
+		       | fpu_param_cfg::pointer_burst_size(15) // must be less than opb size
 		       | fpu_param_cfg::pointer_first_burst_size(7); // half of pointer burst size(?)
 }
 
