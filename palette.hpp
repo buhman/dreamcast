@@ -19,7 +19,7 @@ template <int C>
 void palette_data();
 
 template <>
-void palette_data<255>()
+void palette_data<256>()
 {
   holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::rgb565;
 

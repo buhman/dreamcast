@@ -51,7 +51,7 @@ SECTIONS
     *(COMMON)
   } > p1ram
 
-  INCLUDE "debug.ld"
+  INCLUDE "debug.lds"
 }
 
 __p1ram_start = ORIGIN(p1ram);
