@@ -90,6 +90,67 @@ struct vertex_polygon_type_0 {
     { }
 };
 
+struct vertex_polygon_type_1 {
+  uint32_t parameter_control_word;
+  float x;
+  float y;
+  float z;
+  float base_color_alpha;
+  float base_color_r;
+  float base_color_g;
+  float base_color_b;
+
+  vertex_polygon_type_1(const float x,
+                        const float y,
+                        const float z,
+                        const float base_color_alpha,
+                        const float base_color_r,
+                        const float base_color_g,
+                        const float base_color_b,
+                        const bool end_of_strip
+                        )
+    : parameter_control_word( para_control::para_type::vertex_parameter
+			    | (end_of_strip ? para_control::end_of_strip : 0)
+                            )
+    , x(x)
+    , y(y)
+    , z(z)
+    , base_color_alpha(base_color_alpha)
+    , base_color_r(base_color_r)
+    , base_color_g(base_color_g)
+    , base_color_b(base_color_b)
+    { }
+};
+
+struct vertex_polygon_type_2 {
+  uint32_t parameter_control_word;
+  float x;
+  float y;
+  float z;
+  uint32_t _res0;
+  uint32_t _res1;
+  float base_intensity;
+  uint32_t _res2;
+
+  vertex_polygon_type_2(const float x,
+                        const float y,
+                        const float z,
+                        const float base_intensity,
+                        const bool end_of_strip
+                        )
+    : parameter_control_word( para_control::para_type::vertex_parameter
+			    | (end_of_strip ? para_control::end_of_strip : 0)
+                            )
+    , x(x)
+    , y(y)
+    , z(z)
+    , _res0(0)
+    , _res1(0)
+    , base_intensity(base_intensity)
+    , _res2(0)
+    { }
+};
+
 struct vertex_polygon_type_3 {
   uint32_t parameter_control_word;
   float x;
@@ -171,17 +232,31 @@ struct global_polygon_type_0 {
   uint32_t data_size_for_sort_dma;
   uint32_t next_address_for_sort_dma;
 
+  global_polygon_type_0(const uint32_t parameter_control_word,
+                        const uint32_t isp_tsp_instruction_word,
+                        const uint32_t tsp_instruction_word,
+                        const uint32_t texture_control_word)
+    : parameter_control_word(parameter_control_word)
+    , isp_tsp_instruction_word(isp_tsp_instruction_word)
+    , tsp_instruction_word(tsp_instruction_word)
+    , texture_control_word(texture_control_word)
+    , _res0(0)
+    , _res1(0)
+    , data_size_for_sort_dma(0)
+    , next_address_for_sort_dma(0)
+  { }
+
   // untextured
   global_polygon_type_0()
     : parameter_control_word( para_control::para_type::polygon_or_modifier_volume
 			    | para_control::list_type::opaque
                             | obj_control::col_type::packed_color )
 
-    , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::always
+    , isp_tsp_instruction_word( isp_tsp_instruction_word::depth_compare_mode::greater
 			      | isp_tsp_instruction_word::culling_mode::no_culling )
 
-    , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::src_alpha
-			  | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+    , tsp_instruction_word( tsp_instruction_word::src_alpha_instr::one
+			  | tsp_instruction_word::dst_alpha_instr::zero
 			  | tsp_instruction_word::fog_control::no_fog )
 
     , texture_control_word( 0 )
@@ -233,6 +308,35 @@ static_assert((offsetof (struct global_polygon_type_0, _res0))                  
 static_assert((offsetof (struct global_polygon_type_0, _res1))                     == 0x14);
 static_assert((offsetof (struct global_polygon_type_0, data_size_for_sort_dma))    == 0x18);
 static_assert((offsetof (struct global_polygon_type_0, next_address_for_sort_dma)) == 0x1c);
+
+struct global_polygon_type_1 {
+  uint32_t parameter_control_word;
+  uint32_t isp_tsp_instruction_word;
+  uint32_t tsp_instruction_word;
+  uint32_t texture_control_word;
+  float face_color_alpha;
+  float face_color_r;
+  float face_color_g;
+  float face_color_b;
+
+  global_polygon_type_1(const uint32_t parameter_control_word,
+                        const uint32_t isp_tsp_instruction_word,
+                        const uint32_t tsp_instruction_word,
+                        const uint32_t texture_control_word,
+                        const float face_color_alpha,
+                        const float face_color_r,
+                        const float face_color_g,
+                        const float face_color_b)
+    : parameter_control_word(parameter_control_word)
+    , isp_tsp_instruction_word(isp_tsp_instruction_word)
+    , tsp_instruction_word(tsp_instruction_word)
+    , texture_control_word(texture_control_word)
+    , face_color_alpha(face_color_alpha)
+    , face_color_r(face_color_r)
+    , face_color_g(face_color_g)
+    , face_color_b(face_color_b)
+  { }
+};
 
 struct global_sprite {
   uint32_t parameter_control_word;

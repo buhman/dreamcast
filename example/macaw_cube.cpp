@@ -54,7 +54,7 @@ vertex cube_faces[][4] = {
 };
 constexpr uint32_t num_faces = (sizeof (cube_faces)) / (sizeof (cube_faces[0]));
 
-constexpr uint32_t color = 0xffff00ff;
+constexpr uint32_t color = 0xff0000ff;
 
 static float theta = 0;
 constexpr float half_degree = 0.01745329f / 2.f;
@@ -64,7 +64,7 @@ void transform(ta_parameter_writer& parameter,
 		   const uint32_t strip_length)
 {
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(texture_address);
+  parameter.append<global_polygon_type_0>() = global_polygon_type_0();
 
   for (uint32_t i = 0; i < strip_length; i++) {
     bool end_of_strip = i == strip_length - 1;
@@ -98,10 +98,10 @@ void transform(ta_parameter_writer& parameter,
 
     z = 1 / z;
 
-    parameter.append<vertex_polygon_type_3>() =
-      vertex_polygon_type_3(x, y, z,
-			    strip_vertices[i].u,
-			    strip_vertices[i].v,
+    parameter.append<vertex_polygon_type_0>() =
+      vertex_polygon_type_0(x, y, z,
+			    //strip_vertices[i].u,
+			    //strip_vertices[i].v,
 			    color,
 			    end_of_strip);
   }
@@ -111,7 +111,7 @@ void init_texture_memory(const struct opb_size& opb_size)
 {
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
-  background_parameter(mem->background);
+  background_parameter(mem->background, 0xffff00ff);
 
   region_array2(mem->region_array,
 	        (offsetof (struct texture_memory_alloc, object_list)),
@@ -173,7 +173,7 @@ void main()
   constexpr uint32_t num_frames = 1;
 
   while (1) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc);
+    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc, 640, 480);
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     for (uint32_t i = 0; i < num_faces; i++) {
       transform(parameter, cube_faces[i], 4);
