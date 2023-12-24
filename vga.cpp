@@ -97,26 +97,22 @@ void vga2()
 
 void v_sync_in()
 {
-#define V_SYNC (1<<13)
-  while (!(V_SYNC & holly.SPG_STATUS)) {
+  while (!spg_status::vsync(holly.SPG_STATUS)) {
     asm volatile ("nop");
   }
-  while ((V_SYNC & holly.SPG_STATUS)) {
+  while (spg_status::vsync(holly.SPG_STATUS)) {
     asm volatile ("nop");
   }
-#undef V_SYNC
 }
 
 void v_sync_out()
 {
-#define V_SYNC (1<<13)
-  while ((V_SYNC & holly.SPG_STATUS)) {
+  while (spg_status::vsync(holly.SPG_STATUS)) {
     asm volatile ("nop");
   }
-  while (!(V_SYNC & holly.SPG_STATUS)) {
+  while (!spg_status::vsync(holly.SPG_STATUS)) {
     asm volatile ("nop");
   }
-#undef V_SYNC
 }
 
 void vga()
