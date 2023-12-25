@@ -242,8 +242,6 @@ void main()
 				       , .punch_through = 0
 				       };
 
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -262,8 +260,10 @@ void main()
   };
 
   while (1) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc,
-                              640, 480);
+    ta_polygon_converter_init(opb_size.total(),
+			      ta_alloc,
+			      640 / 32,
+			      480 / 32);
 
     lights[0].x = cos(theta) * 10;
     lights[0].z = sin(theta) * 10;

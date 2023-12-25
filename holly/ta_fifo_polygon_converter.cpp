@@ -12,16 +12,19 @@
 
 #include "ta_fifo_polygon_converter.hpp"
 
-void ta_polygon_converter_init(uint32_t opb_total_size, // for all render passes
+void ta_polygon_converter_init(uint32_t opb_total_size, // for one tile, for all render passes
 			       uint32_t ta_alloc,
-			       uint32_t width,  // in pixels
-			       uint32_t height) // in pixels
+			       uint32_t tile_width,   // in tile units (e.g: (640 / 32))
+			       uint32_t tile_height)  // in tile units (e.g: (480 / 32))
 {
+  // opb_size is the total size of all OPBs for all passes
+  const uint32_t ta_next_opb_offset = opb_total_size * tile_width * tile_height;
+
   holly.SOFTRESET = softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
-  holly.TA_GLOB_TILE_CLIP = ta_glob_tile_clip::tile_y_num((height / 32) - 1)
-                          | ta_glob_tile_clip::tile_x_num((width / 32) - 1);
+  holly.TA_GLOB_TILE_CLIP = ta_glob_tile_clip::tile_y_num(tile_height - 1)
+                          | ta_glob_tile_clip::tile_x_num(tile_width  - 1);
 
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
                       | ta_alloc;
@@ -31,7 +34,7 @@ void ta_polygon_converter_init(uint32_t opb_total_size, // for all render passes
   holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list));
   holly.TA_OL_LIMIT = (offsetof (struct texture_memory_alloc, _res0)); // the end of the object_list
   holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
-                         + opb_total_size; // opb_size is the total size of all OPBs for all passes
+                         + ta_next_opb_offset;
 
   holly.TA_LIST_INIT = ta_list_init::list_init;
 
