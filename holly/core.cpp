@@ -81,16 +81,10 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 		    frame_ix, num_frames);
 }
 
-static bool flycast_is_dumb = false;
-
 void core_wait_end_of_render_video()
 {
-  if (!flycast_is_dumb) {
-    flycast_is_dumb = true;
-  } else {
-    while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
-    system.ISTNRM = ISTNRM__END_OF_RENDER_TSP;
-  }
+  while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
+  system.ISTNRM = ISTNRM__END_OF_RENDER_TSP;
 }
 
 void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
