@@ -14,13 +14,13 @@
 void core_init()
 {
   holly.ISP_FEED_CFG   = isp_feed_cfg::cache_size_for_translucency(0x200)
-                       | isp_feed_cfg::punch_through_chunk_size(0x200);
+                       | isp_feed_cfg::punch_through_chunk_size(0x040);
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::scale_factor_for_shadows(1);
   holly.FPU_CULL_VAL   = _i(1.f);
   holly.FPU_PERP_VAL   = _i(0.f);
-  holly.SPAN_SORT_CFG  = 0; /*span_sort_cfg::span_sort_enable
-                              | span_sort_cfg::offset_sort_enable;*/
+  holly.SPAN_SORT_CFG  = span_sort_cfg::span_sort_enable
+                       | span_sort_cfg::offset_sort_enable;
 
   holly.FOG_COL_RAM    = fog_col_ram::red(127)
 		       | fog_col_ram::green(127)
@@ -83,8 +83,14 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 
 void core_wait_end_of_render_video()
 {
+  /*
+    "Furthermore, it is strongly recommended that the End of ISP and End of Video interrupts
+    be cleared at the same time in order to make debugging easier when an error occurs."
+  */
   while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
-  system.ISTNRM = ISTNRM__END_OF_RENDER_TSP;
+  system.ISTNRM = ISTNRM__END_OF_RENDER_TSP
+		| ISTNRM__END_OF_RENDER_ISP
+		| ISTNRM__END_OF_RENDER_VIDEO;
 }
 
 void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
