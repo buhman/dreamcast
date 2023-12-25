@@ -21,7 +21,7 @@
 
 constexpr float half_degree = 0.01745329f / 2;
 
-#define MODEL icosphere
+#define MODEL suzanne
 
 vec3 rotate(const vec3& vertex, float theta)
 {
@@ -219,7 +219,7 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
-uint32_t _ta_parameter_buf[((32 * (5 * 6 + 1)) + 32) / 4];
+uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 
 void main()
 {
