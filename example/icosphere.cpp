@@ -80,14 +80,14 @@ void transform(ta_parameter_writer& parameter,
     auto& normal = MODEL::normals[normal_ix];
     auto n = rotate(normal, theta);
 
-    vec4 color = {0.3, 0.3, 0.3, 1.0};
+    vec4 color = {0.2, 0.2, 0.2, 1.0};
 
     // intensity calculation
     {
       auto l = lights[0] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.x += 0.5 * n_dot_l / (length(n) * length(l));
+        color.x += 0.6 * n_dot_l / (length(n) * length(l));
       }
     }
 
@@ -95,7 +95,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[1] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.y += 0.5 * n_dot_l / (length(n) * length(l));
+        color.y += 0.6 * n_dot_l / (length(n) * length(l));
       }
     }
 
@@ -103,7 +103,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[2] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.z += 0.5 * n_dot_l / (length(n) * length(l));
+        color.z += 0.6 * n_dot_l / (length(n) * length(l));
       }
     }
 
@@ -111,12 +111,12 @@ void transform(ta_parameter_writer& parameter,
     float y = point.y;
     float z = point.z;
 
-    x *= 8;
-    y *= 8;
-    z *= 8;
+    x *= 10;
+    y *= 10;
+    z *= 10;
 
     // camera transform
-    z += 15;
+    z += 20;
 
     // perspective
     x = x / z;
@@ -182,7 +182,7 @@ void transform2(ta_parameter_writer& parameter,
     z += pos.z;
 
     // camera transform
-    z += 15;
+    z += 20;
 
     // perspective
     x = x / z;
@@ -265,14 +265,16 @@ void main()
 			      640 / 32,
 			      480 / 32);
 
-    lights[0].x = cos(theta) * 10;
-    lights[0].z = sin(theta) * 10;
+    float theta2 = 3.14 * 2 * sin(theta / 7);
 
-    lights[1].x = cos(theta + half_degree * 180.f) * 10;
-    lights[1].z = sin(theta + half_degree * 180.f) * 10;
+    lights[0].x = cos(theta) * 15;
+    lights[0].z = sin(theta) * 15;
 
-    lights[2].x = cos(theta + half_degree * 360.f) * 10;
-    lights[2].z = sin(theta + half_degree * 360.f) * 10;
+    lights[1].x = cos(theta2 + half_degree * 180.f) * 15;
+    lights[1].z = sin(theta2 + half_degree * 180.f) * 15;
+
+    lights[2].x = cos(theta + half_degree * 360.f) * 15;
+    lights[2].z = sin(theta + half_degree * 360.f) * 15;
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     for (uint32_t i = 0; i < MODEL::num_faces; i++) {
