@@ -5,7 +5,7 @@ MEMORY
 }
 SECTIONS
 {
-  . = 0xac020000;
+  . = ORIGIN(p1ram);
 
   .text ALIGN(4) : SUBALIGN(4)
   {
