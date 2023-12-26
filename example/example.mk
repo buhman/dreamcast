@@ -118,6 +118,17 @@ ICOSPHERE_OBJ = \
 example/icosphere.elf: LDSCRIPT = $(LIB)/alt.lds
 example/icosphere.elf: $(START_OBJ) $(ICOSPHERE_OBJ)
 
+WIFFLE_ATTENUATION_OBJ = \
+	example/wiffle_attenuation.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o
+
+example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/alt.lds
+example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
+
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
 	vga.o \
