@@ -111,6 +111,13 @@ void ta_wait_opaque_list()
   system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_OPAQUE_LIST;
 }
 
+void ta_wait_opaque_modifier_volume_list()
+{
+  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_OPAQUE_MODIFIER_VOLUME_LIST) == 0);
+
+  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_OPAQUE_MODIFIER_VOLUME_LIST;
+}
+
 void ta_wait_translucent_list()
 {
   while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST) == 0);

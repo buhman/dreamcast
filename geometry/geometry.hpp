@@ -10,10 +10,10 @@ using vec2 = vec<2, float>;
 using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
 
-struct vertex__normal {
+struct vertex__texture__normal {
   uint16_t vertex;
   uint16_t texture;
   uint16_t normal;
 };
 
-using face = vertex__normal[3];
+using face = vertex__texture__normal[3];

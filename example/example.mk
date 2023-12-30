@@ -129,6 +129,17 @@ WIFFLE_ATTENUATION_OBJ = \
 example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/alt.lds
 example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
 
+MODIFIER_VOLUME_OBJ = \
+	example/modifier_volume.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o
+
+example/modifier_volume.elf: LDSCRIPT = $(LIB)/alt.lds
+example/modifier_volume.elf: $(START_OBJ) $(MODIFIER_VOLUME_OBJ)
+
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
 	vga.o \

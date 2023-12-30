@@ -12,6 +12,12 @@ namespace isp_tsp_instruction_word {
     constexpr uint32_t always = 7 << 29;
   }
 
+  namespace volume_instruction {
+    constexpr uint32_t normal_polygon = 0 << 29;
+    constexpr uint32_t inside_last_polygon = 1 << 29;
+    constexpr uint32_t outside_last_polygon = 1 << 29;
+  }
+
   namespace culling_mode {
     constexpr uint32_t no_culling = 0 << 27;
     constexpr uint32_t cull_if_small = 1 << 27;     // compared to FPU_CULL_VAL

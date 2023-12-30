@@ -28,12 +28,12 @@ struct vec<2, T>
 
 template <typename T>
 inline constexpr vec<2, T>::vec()
-  : x(0), y(0), z(0)
+  : x(0), y(0)
 {}
 
 template <typename T>
 inline constexpr vec<2, T>::vec(T scalar)
-  : x(scalar), y(scalar), z(scalar)
+  : x(scalar), y(scalar)
 {}
 
 template <typename T>
@@ -55,7 +55,6 @@ inline constexpr T const& vec<2, T>::operator[](int i) const
   default: [[fallthrough]];
   case 0: return x;
   case 1: return y;
-  case 2: return z;
   }
 }
 

@@ -15,8 +15,6 @@
 #include "memorymap.hpp"
 #include "serial.hpp"
 
-#include "geometry/icosphere.hpp"
-#include "geometry/suzanne.hpp"
 #include "geometry/wiffle.hpp"
 #include "math/vec4.hpp"
 

@@ -16,7 +16,8 @@ void core_init()
   holly.ISP_FEED_CFG   = isp_feed_cfg::cache_size_for_translucency(0x200)
                        | isp_feed_cfg::punch_through_chunk_size(0x040);
 
-  holly.FPU_SHAD_SCALE = fpu_shad_scale::scale_factor_for_shadows(1);
+  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
+                       | fpu_shad_scale::scale_factor_for_shadows(127);
   holly.FPU_CULL_VAL   = _i(1.f);
   holly.FPU_PERP_VAL   = _i(0.f);
   holly.SPAN_SORT_CFG  = span_sort_cfg::span_sort_enable
@@ -80,6 +81,8 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 		    0x00096000, // frame_size
 		    frame_ix, num_frames);
 }
+
+static bool flycast_bug = 0;
 
 void core_wait_end_of_render_video()
 {

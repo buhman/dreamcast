@@ -23,7 +23,8 @@ constexpr float half_degree = 0.01745329f / 2;
 
 #define MODEL suzanne
 
-vec3 rotate(const vec3& vertex, float theta)
+vec3 rotate(const vec3& vertex,
+            const float theta)
 {
   float x = vertex.x;
   float y = vertex.y;

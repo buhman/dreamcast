@@ -1,3 +1,4 @@
+import math
 from dataclasses import dataclass
 import sys
 
@@ -87,9 +88,18 @@ def generate_texture_coordinates(texture_coordinates):
     yield ""
 
 def generate_faces(faces):
+    max_ix = max(
+        i
+        for f in faces
+        for vtn in f
+        for i in [vtn.vertex, vtn.texture, vtn.normal]
+    )
+    align = 1 + math.floor(math.log(max_ix) / math.log(10))
     yield "constexpr face faces[] = {"
+    def align_vtn(vtn):
+        return ", ".join(str(ix).rjust(align) for ix in [vtn.vertex, vtn.texture, vtn.normal])
     for f in faces:
-        inner = ", ".join(f"{{{vtn.vertex:3}, {vtn.texture:3}, {vtn.normal:3}}}" for vtn in f)
+        inner = ", ".join(f"{{{align_vtn(vtn)}}}" for vtn in f)
         yield f"{{{inner}}},"
     yield "};"
     yield ""

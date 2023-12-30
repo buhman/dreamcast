@@ -44,7 +44,14 @@ namespace group_control {
 
 namespace obj_control {
   constexpr uint32_t shadow = 1 << 7;
-  constexpr uint32_t volume = 1 << 6;
+  namespace volume {
+    namespace polygon {
+      constexpr uint32_t with_two_volumes = 1 << 6;
+    }
+    namespace modifier_volume {
+      constexpr uint32_t last_in_volume = 1 << 6;
+    }
+  }
 
   namespace col_type {
     constexpr uint32_t packed_color     = 0 << 4;
@@ -61,6 +68,20 @@ namespace obj_control {
 
 static_assert((sizeof (float)) == (sizeof (uint32_t)));
 
+constexpr uint32_t polygon_vertex_parameter_control_word(const bool end_of_strip)
+{
+  return para_control::para_type::vertex_parameter
+       | (end_of_strip ? para_control::end_of_strip : 0);
+}
+
+constexpr uint32_t modifier_volume_vertex_parameter_control_word()
+{
+  // DCDBSysArc990907E page 212 indirectly suggests the end_of_strip bit should
+  // always be set.
+  return para_control::para_type::vertex_parameter
+       | para_control::end_of_strip;
+}
+
 struct vertex_polygon_type_0 {
   uint32_t parameter_control_word;
   float x;
@@ -71,15 +92,13 @@ struct vertex_polygon_type_0 {
   uint32_t base_color;
   uint32_t _res2;
 
-  vertex_polygon_type_0(const float x,
+  vertex_polygon_type_0(const uint32_t parameter_control_word,
+                        const float x,
                         const float y,
                         const float z,
-                        const uint32_t base_color,
-                        const bool end_of_strip
+                        const uint32_t base_color
                         )
-    : parameter_control_word( para_control::para_type::vertex_parameter
-			    | (end_of_strip ? para_control::end_of_strip : 0)
-                            )
+    : parameter_control_word(parameter_control_word)
     , x(x)
     , y(y)
     , z(z)
@@ -100,18 +119,16 @@ struct vertex_polygon_type_1 {
   float base_color_g;
   float base_color_b;
 
-  vertex_polygon_type_1(const float x,
+  vertex_polygon_type_1(const uint32_t parameter_control_word,
+                        const float x,
                         const float y,
                         const float z,
                         const float base_color_alpha,
                         const float base_color_r,
                         const float base_color_g,
-                        const float base_color_b,
-                        const bool end_of_strip
+                        const float base_color_b
                         )
-    : parameter_control_word( para_control::para_type::vertex_parameter
-			    | (end_of_strip ? para_control::end_of_strip : 0)
-                            )
+    : parameter_control_word(parameter_control_word)
     , x(x)
     , y(y)
     , z(z)
@@ -132,15 +149,13 @@ struct vertex_polygon_type_2 {
   float base_intensity;
   uint32_t _res2;
 
-  vertex_polygon_type_2(const float x,
+  vertex_polygon_type_2(const uint32_t parameter_control_word,
+                        const float x,
                         const float y,
                         const float z,
-                        const float base_intensity,
-                        const bool end_of_strip
+                        const float base_intensity
                         )
-    : parameter_control_word( para_control::para_type::vertex_parameter
-			    | (end_of_strip ? para_control::end_of_strip : 0)
-                            )
+    : parameter_control_word(parameter_control_word)
     , x(x)
     , y(y)
     , z(z)
@@ -161,17 +176,15 @@ struct vertex_polygon_type_3 {
   uint32_t base_color;
   uint32_t offset_color;
 
-  vertex_polygon_type_3(const float x,
+  vertex_polygon_type_3(const uint32_t parameter_control_word,
+                        const float x,
                         const float y,
                         const float z,
                         const float u,
                         const float v,
-                        const uint32_t base_color,
-                        const bool end_of_strip
+                        const uint32_t base_color
                         )
-    : parameter_control_word( para_control::para_type::vertex_parameter
-			    | (end_of_strip ? para_control::end_of_strip : 0)
-			    )
+    : parameter_control_word(parameter_control_word)
     , x(x)
     , y(y)
     , z(z)
@@ -202,16 +215,14 @@ struct vertex_polygon_type_4 {
   uint32_t base_color;
   uint32_t offset_color;
 
-  vertex_polygon_type_4(const float x,
+  vertex_polygon_type_4(const uint32_t parameter_control_word,
+                        const float x,
                         const float y,
                         const float z,
                         const uint32_t uv,
-                        const uint32_t base_color,
-                        const bool end_of_strip
+                        const uint32_t base_color
                         )
-    : parameter_control_word( para_control::para_type::vertex_parameter
-			    | (end_of_strip ? para_control::end_of_strip : 0)
-			    )
+    : parameter_control_word(parameter_control_word)
     , x(x)
     , y(y)
     , z(z)
@@ -367,6 +378,31 @@ struct global_sprite {
 
 static_assert((sizeof (global_sprite)) == 32);
 
+struct global_modifier_volume {
+  uint32_t parameter_control_word;
+  uint32_t isp_tsp_instruction_word;
+  uint32_t _res0;
+  uint32_t _res1;
+  uint32_t _res2;
+  uint32_t _res3;
+  uint32_t _res4;
+  uint32_t _res5;
+
+  global_modifier_volume(const uint32_t parameter_control_word,
+                         const uint32_t isp_tsp_instruction_word)
+    : parameter_control_word(parameter_control_word)
+    , isp_tsp_instruction_word(isp_tsp_instruction_word)
+    , _res0(0)
+    , _res1(0)
+    , _res2(0)
+    , _res3(0)
+    , _res4(0)
+    , _res5(0)
+  { }
+};
+
+static_assert((sizeof (global_modifier_volume)) == 32);
+
 struct vertex_sprite_type_0 {
   uint32_t parameter_control_word;
   float ax;
@@ -469,6 +505,56 @@ struct vertex_sprite_type_1 {
 };
 
 static_assert((sizeof (vertex_sprite_type_1)) == 64);
+
+struct vertex_modifier_volume {
+  uint32_t parameter_control_word;
+  float ax;
+  float ay;
+  float az;
+  float bx;
+  float by;
+  float bz;
+  float cx;
+  float cy;
+  float cz;
+  float _res0;
+  float _res1;
+  float _res2;
+  float _res3;
+  float _res4;
+  float _res5;
+
+  vertex_modifier_volume(const uint32_t parameter_control_word,
+                         const float ax,
+                         const float ay,
+                         const float az,
+                         const float bx,
+                         const float by,
+                         const float bz,
+                         const float cx,
+                         const float cy,
+                         const float cz
+                         )
+    : parameter_control_word(parameter_control_word)
+    , ax(ax)
+    , ay(ay)
+    , az(az)
+    , bx(bx)
+    , by(by)
+    , bz(bz)
+    , cx(cx)
+    , cy(cy)
+    , cz(cz)
+    , _res0(0)
+    , _res1(0)
+    , _res2(0)
+    , _res3(0)
+    , _res4(0)
+    , _res5(0)
+    { }
+};
+
+static_assert((sizeof (vertex_modifier_volume)) == 64);
 
 struct global_end_of_list {
   uint32_t parameter_control_word;
