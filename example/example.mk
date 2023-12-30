@@ -193,6 +193,19 @@ MAPLE_VIBRATOR_OBJ = \
 example/maple_vibrator.elf: LDSCRIPT = $(LIB)/alt.lds
 example/maple_vibrator.elf: $(START_OBJ) $(MAPLE_VIBRATOR_OBJ)
 
+MAPLE_ANALOG_OBJ = \
+	example/maple_analog.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	serial.o \
+	maple/maple.o
+
+example/maple_analog.elf: LDSCRIPT = $(LIB)/alt.lds
+example/maple_analog.elf: $(START_OBJ) $(MAPLE_ANALOG_OBJ)
+
 SERIAL_TRANSFER_OBJ = \
 	example/serial_transfer.o \
 	serial_load.o

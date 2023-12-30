@@ -14,8 +14,8 @@ class CommandNamespace:
 
 def command_namespace(namespace: CommandNamespace,
                       data_fields: list[tuple[str, tuple[int, str]]]):
-    yield f"namespace {namespace.name} {{"
-    yield f"constexpr uint32_t command_code = {hex(namespace.command_code)};"
+    yield f"struct {namespace.name} {{"
+    yield f"static constexpr uint32_t command_code = {hex(namespace.command_code)};"
     yield ""
 
     if namespace.data_size == (0, None):
@@ -57,7 +57,7 @@ def command_namespace(namespace: CommandNamespace,
         else:
             yield f"static_assert((sizeof (struct data_fields)) == {length});"
 
-    yield "}"
+    yield "};"
     yield ""
 
 def parse_data_size(data_size, base, multiple) -> tuple[int, str]:
@@ -155,6 +155,8 @@ def new_aggregator():
     return process
 
 def headers():
+    yield "#pragma once"
+    yield ""
     yield "#include <cstdint>"
     yield ""
     yield "struct device_id {"

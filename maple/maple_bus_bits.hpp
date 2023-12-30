@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 #include "../float_uint32.hpp"

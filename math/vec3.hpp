@@ -10,7 +10,10 @@
 template <typename T>
 struct vec<3, T>
 {
-  T x, y, z;
+  union {
+    struct { T x, y, z; };
+    struct { T r, g, b; };
+  };
 
   inline constexpr vec();
   inline constexpr vec(T scalar);

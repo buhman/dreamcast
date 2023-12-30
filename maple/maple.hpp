@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "align.hpp"
+
 namespace maple {
 
 template <typename T>
@@ -26,15 +28,14 @@ struct command_response {
     uint8_t data_size;
     T data_fields;
   } bus_data;
+  uint8_t _pad[align_32byte((sizeof (bus_data))) - (sizeof (bus_data))];
 };
+static_assert((sizeof (command_response<uint8_t[0]>)) == align_32byte((sizeof (command_response<uint8_t[0]>))));
 
 void init_host_command(uint32_t * buf, uint32_t * receive_buf,
                        uint32_t destination_port,
                        uint8_t destination_ap, uint8_t command_code, uint8_t data_size,
                        bool end_flag);
-
-void init_host_command_all_ports(uint32_t * buf, uint32_t * receive_buf,
-                                 uint8_t command_code, uint32_t command_data_size, uint32_t response_data_size);
 
 void init_device_request(uint32_t * buf, uint32_t * receive_buf,
                          uint32_t destination_port,

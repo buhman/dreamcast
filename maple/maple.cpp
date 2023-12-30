@@ -37,33 +37,6 @@ void init_host_command(uint32_t * command_buf, uint32_t * receive_buf,
   host_command->bus_data.data_size = data_size / 4;
 }
 
-void init_host_command_all_ports(uint32_t * buf, uint32_t * receive_buf,
-                                 uint8_t command_code, uint32_t command_data_size, uint32_t response_data_size)
-{
-  const uint32_t command_size = ((sizeof (struct host_command<uint8_t[0]>)) + command_data_size);
-  const uint32_t response_size = align_32byte(((sizeof (struct command_response<uint8_t[0]>)) + response_data_size));
-
-  init_host_command(&buf[(command_size / 4) * 0], &receive_buf[(response_size / 4) * 0],
-                    host_instruction::port_select::a, // destination_port
-                    ap::de::device | ap::port_select::a, command_code, command_data_size,
-                    false); // end_flag
-
-  init_host_command(&buf[(command_size / 4) * 1], &receive_buf[(response_size / 4) * 1],
-                    host_instruction::port_select::b, // destination_port
-                    ap::de::device | ap::port_select::b, command_code, command_data_size,
-                    false); // end_flag
-
-  init_host_command(&buf[(command_size / 4) * 2], &receive_buf[(response_size / 4) * 2],
-                    host_instruction::port_select::c, // destination_port
-                    ap::de::device | ap::port_select::c, command_code, command_data_size,
-                    false); // end_flag
-
-  init_host_command(&buf[(command_size / 4) * 3], &receive_buf[(response_size / 4) * 3],
-                    host_instruction::port_select::d, // destination_port
-                    ap::de::device | ap::port_select::d, command_code, command_data_size,
-                    true); // end_flag
-}
-
 void init_device_request(uint32_t * buf, uint32_t * receive_buf,
                          uint32_t destination_port,
                          uint8_t destination_ap)

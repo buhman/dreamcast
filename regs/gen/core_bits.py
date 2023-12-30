@@ -216,6 +216,8 @@ def render_registers(registers):
         yield from render_register(register)
 
 def header():
+    yield "#pragma once"
+    yield ""
     yield "#include <cstdint>"
     yield ""
     yield '#include "../float_uint32.hpp"'

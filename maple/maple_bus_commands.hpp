@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 struct device_id {
@@ -6,36 +8,40 @@ struct device_id {
 };
 
 static_assert((sizeof (struct device_id)) == 16);
-namespace device_request {
-  constexpr uint32_t command_code = 0x1;
+struct device_request {
+  static constexpr uint32_t command_code = 0x1;
   
   struct data_fields {
   };
-}
+};
 
-namespace all_status_request {
-  constexpr uint32_t command_code = 0x2;
+
+struct all_status_request {
+  static constexpr uint32_t command_code = 0x2;
   
   struct data_fields {
   };
-}
+};
 
-namespace device_reset {
-  constexpr uint32_t command_code = 0x3;
+
+struct device_reset {
+  static constexpr uint32_t command_code = 0x3;
   
   struct data_fields {
   };
-}
+};
 
-namespace device_kill {
-  constexpr uint32_t command_code = 0x4;
+
+struct device_kill {
+  static constexpr uint32_t command_code = 0x4;
   
   struct data_fields {
   };
-}
+};
 
-namespace device_status {
-  constexpr uint32_t command_code = 0x5;
+
+struct device_status {
+  static constexpr uint32_t command_code = 0x5;
   
   struct data_fields {
     struct device_id device_id;
@@ -48,10 +54,11 @@ namespace device_status {
   };
   
   static_assert((sizeof (struct data_fields)) == 112);
-}
+};
 
-namespace device_all_status {
-  constexpr uint32_t command_code = 0x6;
+
+struct device_all_status {
+  static constexpr uint32_t command_code = 0x6;
   
   template <typename T>
   struct data_fields {
@@ -66,39 +73,40 @@ namespace device_all_status {
   };
   
   static_assert((sizeof (struct data_fields<char[0]>)) == 112);
-}
+};
 
-namespace device_reply {
-  constexpr uint32_t command_code = 0x7;
+
+struct device_reply {
+  static constexpr uint32_t command_code = 0x7;
   
   struct data_fields {
   };
-}
+};
 
-namespace data_transfer {
-  constexpr uint32_t command_code = 0x8;
-  
-  template <typename T>
+template <typename T>
+struct data_transfer {
+  static constexpr uint32_t command_code = 0x8;
+
   struct data_fields {
     uint32_t function_type;
     T data;
   };
-  
-  static_assert((sizeof (struct data_fields<char[0]>)) == 4);
-}
+};
+static_assert((sizeof (struct data_transfer<uint8_t[0]>::data_fields)) == 4);
 
-namespace get_condition {
-  constexpr uint32_t command_code = 0x9;
+struct get_condition {
+  static constexpr uint32_t command_code = 0x9;
   
   struct data_fields {
     uint32_t function_type;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
-}
+};
 
-namespace get_media_info {
-  constexpr uint32_t command_code = 0xa;
+
+struct get_media_info {
+  static constexpr uint32_t command_code = 0xa;
   
   struct data_fields {
     uint32_t function_type;
@@ -106,10 +114,11 @@ namespace get_media_info {
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
-}
+};
 
-namespace block_read {
-  constexpr uint32_t command_code = 0xb;
+
+struct block_read {
+  static constexpr uint32_t command_code = 0xb;
   
   struct data_fields {
     uint32_t function_type;
@@ -119,10 +128,11 @@ namespace block_read {
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
-}
+};
 
-namespace block_write {
-  constexpr uint32_t command_code = 0xc;
+
+struct block_write {
+  static constexpr uint32_t command_code = 0xc;
   
   template <typename T>
   struct data_fields {
@@ -134,10 +144,11 @@ namespace block_write {
   };
   
   static_assert((sizeof (struct data_fields<char[0]>)) == 8);
-}
+};
 
-namespace get_last_error {
-  constexpr uint32_t command_code = 0xd;
+
+struct get_last_error {
+  static constexpr uint32_t command_code = 0xd;
   
   struct data_fields {
     uint32_t function_type;
@@ -147,10 +158,11 @@ namespace get_last_error {
   };
   
   static_assert((sizeof (struct data_fields)) == 8);
-}
+};
 
-namespace set_condition {
-  constexpr uint32_t command_code = 0xe;
+
+struct set_condition {
+  static constexpr uint32_t command_code = 0xe;
   
   template <typename T>
   struct data_fields {
@@ -159,10 +171,11 @@ namespace set_condition {
   };
   
   static_assert((sizeof (struct data_fields<char[0]>)) == 4);
-}
+};
 
-namespace ft4_control {
-  constexpr uint32_t command_code = 0xf;
+
+struct ft4_control {
+  static constexpr uint32_t command_code = 0xf;
   
   template <typename T>
   struct data_fields {
@@ -171,10 +184,11 @@ namespace ft4_control {
   };
   
   static_assert((sizeof (struct data_fields<char[0]>)) == 4);
-}
+};
 
-namespace ar_control {
-  constexpr uint32_t command_code = 0x10;
+
+struct ar_control {
+  static constexpr uint32_t command_code = 0x10;
   
   template <typename T>
   struct data_fields {
@@ -183,56 +197,63 @@ namespace ar_control {
   };
   
   static_assert((sizeof (struct data_fields<char[0]>)) == 4);
-}
+};
 
-namespace function_type_unknown {
-  constexpr uint32_t command_code = 0xfe;
+
+struct function_type_unknown {
+  static constexpr uint32_t command_code = 0xfe;
   
   struct data_fields {
   };
-}
+};
 
-namespace command_unknown {
-  constexpr uint32_t command_code = 0xfd;
+
+struct command_unknown {
+  static constexpr uint32_t command_code = 0xfd;
   
   struct data_fields {
   };
-}
+};
 
-namespace transmit_again {
-  constexpr uint32_t command_code = 0xfc;
+
+struct transmit_again {
+  static constexpr uint32_t command_code = 0xfc;
   
   struct data_fields {
   };
-}
+};
 
-namespace file_error {
-  constexpr uint32_t command_code = 0xfb;
-  
-  struct data_fields {
-    uint32_t function_error_code;
-  };
-  
-  static_assert((sizeof (struct data_fields)) == 4);
-}
 
-namespace lcd_error {
-  constexpr uint32_t command_code = 0xfa;
+struct file_error {
+  static constexpr uint32_t command_code = 0xfb;
   
   struct data_fields {
     uint32_t function_error_code;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
-}
+};
 
-namespace ar_error {
-  constexpr uint32_t command_code = 0xf9;
+
+struct lcd_error {
+  static constexpr uint32_t command_code = 0xfa;
   
   struct data_fields {
     uint32_t function_error_code;
   };
   
   static_assert((sizeof (struct data_fields)) == 4);
-}
+};
+
+
+struct ar_error {
+  static constexpr uint32_t command_code = 0xf9;
+  
+  struct data_fields {
+    uint32_t function_error_code;
+  };
+  
+  static_assert((sizeof (struct data_fields)) == 4);
+};
+
 
