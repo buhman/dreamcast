@@ -9,9 +9,12 @@
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
 #include "holly/ta_bits.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
+#include "holly/isp_tsp.hpp"
 #include "memorymap.hpp"
 
 #include "geometry/plane.hpp"
@@ -79,10 +82,14 @@ void transform_polygon(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word,
+					0, // texture_control_word
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
 
   constexpr uint32_t strip_length = 3;
   for (uint32_t i = 0; i < strip_length; i++) {
@@ -92,16 +99,16 @@ void transform_polygon(ta_parameter_writer& parameter,
     auto point = _transform(vertex, scale, theta);
 
     bool end_of_strip = i == strip_length - 1;
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
-                            point.x,
-                            point.y,
-                            point.z,
-			    color.a, // alpha
-			    color.r, // red
-			    color.g, // green
-			    color.b  // blue
-                            );
+    parameter.append<ta_vertex_parameter::polygon_type_1>() =
+      ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
+					  point.x,
+					  point.y,
+					  point.z,
+					  color.a, // alpha
+					  color.r, // red
+					  color.g, // green
+					  color.b  // blue
+					  );
   }
 }
 
@@ -120,9 +127,10 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::normal_polygon
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
-  parameter.append<global_modifier_volume>() =
-    global_modifier_volume(parameter_control_word,
-                           isp_tsp_instruction_word);
+  parameter.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(parameter_control_word,
+					 isp_tsp_instruction_word
+					 );
 
   for (uint32_t i = 0; i < num_faces; i++) {
     // world transform
@@ -144,17 +152,17 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
       const uint32_t last_isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::inside_last_polygon
                                                    | isp_tsp_instruction_word::culling_mode::no_culling;
 
-      parameter.append<global_modifier_volume>() =
-        global_modifier_volume(last_parameter_control_word,
-                               last_isp_tsp_instruction_word);
+      parameter.append<ta_global_parameter::modifier_volume>() =
+        ta_global_parameter::modifier_volume(last_parameter_control_word,
+					     last_isp_tsp_instruction_word);
 
     }
 
-    parameter.append<vertex_modifier_volume>() =
-      vertex_modifier_volume(modifier_volume_vertex_parameter_control_word(),
-                             a.x, a.y, a.z,
-                             b.x, b.y, b.z,
-                             c.x, c.y, c.z);
+    parameter.append<ta_vertex_parameter::modifier_volume>() =
+      ta_vertex_parameter::modifier_volume(modifier_volume_vertex_parameter_control_word(),
+					   a.x, a.y, a.z,
+					   b.x, b.y, b.z,
+					   c.x, c.y, c.z);
   }
 }
 
@@ -236,7 +244,7 @@ void main()
       */
     }
     // end of opaque list
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     { // cube
       float scale = 1.f;
@@ -247,7 +255,7 @@ void main()
                                 scale);
     }
     // end of opaque modifier list
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_modifier_volume_list();

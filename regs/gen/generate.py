@@ -15,7 +15,10 @@ def _render(out, lines):
             level -= 2
             assert level >= 0, out.getvalue()
 
-        out.write(indent * level + l + "\n")
+        if len(l) == 0:
+            out.write("\n")
+        else:
+            out.write(indent * level + l + "\n")
 
         if l and (l[-1] == "{" or l[-1] == "("):
             level += 2

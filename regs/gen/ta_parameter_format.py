@@ -37,13 +37,14 @@ _field_types = {
     "a_u_a_v": "uint32_t",
     "b_u_b_v": "uint32_t",
     "c_u_c_v": "uint32_t",
+    "_res": "uint32_t"
 }
 
 def get_type(field_name: str):
     match = None
     match_len = 0
     for name, type in _field_types.items():
-        if field_name.startswith(type) and len(name) >= match_len:
+        if field_name.startswith(name) and len(name) >= match_len:
             match = type
             assert match_len != len(name), (name, match)
             match_len = len(name)
@@ -75,6 +76,7 @@ class FieldDeclaration:
 class StructDeclaration:
     name: str
     fields: list[FieldDeclaration]
+    size: int
 
 def parse_type_declaration(ix, rows):
     ix, row = next_row(ix, rows, advance=True)
@@ -83,20 +85,33 @@ def parse_type_declaration(ix, rows):
     assert empty == "", row
     fields = []
     last_offset = -4
+    res_ix = 0
+
+    def terminate():
+        size = last_offset + 4
+        assert size == 32 or size == 64, size
+        return ix, StructDeclaration(
+            struct_name,
+            fields,
+            size
+        )
+
     while True:
-        ix, row = next_row(ix, rows, advance=False)
+        try:
+            ix, row = next_row(ix, rows, advance=False)
+        except EndOfInput:
+            return terminate()
         if row[0] == "":
-            assert last_offset + 4 == 32 or last_offset + 4 == 64, last_offset + 4
-            return ix, StructDeclaration(
-                struct_name,
-                fields
-            )
+            return terminate()
         else:
             assert len(row) == 2, row
             _offset, name = row
             offset = int(_offset, 16)
             assert offset == last_offset + 4, (hex(offset), hex(last_offset))
             last_offset = offset
+            if name == "":
+                name = f"_res{res_ix}"
+                res_ix += 1
             fields.append(FieldDeclaration(offset, name))
 
 def parse(rows):
@@ -111,12 +126,44 @@ def parse(rows):
 
     return declarations
 
+def render_initializer(declaration):
+    initializer = f"{declaration.name}("
+    padding = " " * len(initializer)
+    def start(i):
+        if i == 0:
+            return initializer
+        else:
+            return padding
+
+    nonres_fields = [f for f in declaration.fields if not f.name.startswith('_res')]
+    for i, field in enumerate(nonres_fields):
+        s = start(i)
+        type = get_type(field.name)
+        comma = ',' if i + 1 < len(nonres_fields) else ''
+        yield s + f"const {type} {field.name}" + comma
+    yield padding + ')'
+
+    for i, field in enumerate(declaration.fields):
+        value = field.name if not field.name.startswith('_res') else '0'
+        s = ':' if i == 0 else ','
+        yield "  " + s + f" {field.name}({value})"
+    yield "{ }"
+
+
+def render_static_assertions(declaration):
+    yield f"static_assert((sizeof ({declaration.name})) == {declaration.size});"
+    for field in declaration.fields:
+        yield f"static_assert((offsetof (struct {declaration.name}, {field.name})) == 0x{field.offset:02x});"
+
 def render_declaration(declaration):
     yield f"struct {declaration.name} {{"
     for field in declaration.fields:
-        yield f""
+        type = get_type(field.name)
+        yield f"{type} {field.name};"
+    yield ""
+    yield from render_initializer(declaration)
     yield "};"
-
+    yield from render_static_assertions(declaration)
 
 def render_declarations(namespace, declarations):
     yield f"namespace {namespace} {{"
@@ -125,10 +172,16 @@ def render_declarations(namespace, declarations):
         yield ""
     yield "}"
 
+def headers():
+    yield "#pragma once"
+    yield ""
+    yield "#include <cstdint>"
+    yield ""
+
 def read_input(filename):
     with open(filename) as f:
         reader = csv.reader(f, delimiter=",", quotechar='"')
-         rows = [
+        rows = [
             [s.strip() for s in row]
             for row in reader
         ]
@@ -139,5 +192,6 @@ if __name__ == "__main__":
     namespace = sys.argv[2]
     declarations = parse(rows)
     render, out = renderer()
+    render(headers())
     render(render_declarations(namespace, declarations))
     print(out.getvalue())

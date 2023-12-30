@@ -136,6 +136,12 @@ maple/maple_bus_commands.hpp: regs/maple_bus_commands.csv regs/gen/maple_bus_com
 maple/maple_bus_bits.hpp: regs/maple_bus_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+holly/ta_global_parameter.hpp: regs/global_parameter_format.csv regs/gen/ta_parameter_format.py
+	python regs/gen/ta_parameter_format.py $< ta_global_parameter > $@
+
+holly/ta_vertex_parameter.hpp: regs/vertex_parameter_format.csv regs/gen/ta_parameter_format.py
+	python regs/gen/ta_parameter_format.py $< ta_vertex_parameter > $@
+
 clean:
 	find -P \
 		-regextype posix-egrep \
