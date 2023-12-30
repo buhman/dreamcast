@@ -410,8 +410,8 @@ namespace ta_vertex_parameter {
     float x;
     float y;
     float z;
-    float base_color_0;
-    float base_color_1;
+    uint32_t base_color_0;
+    uint32_t base_color_1;
     uint32_t _res0;
     uint32_t _res1;
 
@@ -419,8 +419,8 @@ namespace ta_vertex_parameter {
                    const float x,
                    const float y,
                    const float z,
-                   const float base_color_0,
-                   const float base_color_1
+                   const uint32_t base_color_0,
+                   const uint32_t base_color_1
                    )
       : parameter_control_word(parameter_control_word)
       , x(x)
@@ -447,8 +447,8 @@ namespace ta_vertex_parameter {
     float x;
     float y;
     float z;
-    float base_intensity_0;
-    float base_intensity_1;
+    uint32_t base_intensity_0;
+    uint32_t base_intensity_1;
     uint32_t _res0;
     uint32_t _res1;
 
@@ -456,8 +456,8 @@ namespace ta_vertex_parameter {
                     const float x,
                     const float y,
                     const float z,
-                    const float base_intensity_0,
-                    const float base_intensity_1
+                    const uint32_t base_intensity_0,
+                    const uint32_t base_intensity_1
                     )
       : parameter_control_word(parameter_control_word)
       , x(x)
@@ -486,12 +486,12 @@ namespace ta_vertex_parameter {
     float z;
     float u_0;
     float v_0;
-    float base_color_0;
-    float offset_color_0;
+    uint32_t base_color_0;
+    uint32_t offset_color_0;
     float u_1;
     float v_1;
-    float base_color_1;
-    float offset_color_1;
+    uint32_t base_color_1;
+    uint32_t offset_color_1;
     uint32_t _res0;
     uint32_t _res1;
     uint32_t _res2;
@@ -503,12 +503,12 @@ namespace ta_vertex_parameter {
                     const float z,
                     const float u_0,
                     const float v_0,
-                    const float base_color_0,
-                    const float offset_color_0,
+                    const uint32_t base_color_0,
+                    const uint32_t offset_color_0,
                     const float u_1,
                     const float v_1,
-                    const float base_color_1,
-                    const float offset_color_1
+                    const uint32_t base_color_1,
+                    const uint32_t offset_color_1
                     )
       : parameter_control_word(parameter_control_word)
       , x(x)
@@ -553,12 +553,12 @@ namespace ta_vertex_parameter {
     float z;
     uint32_t u_v_0;
     uint32_t _res0;
-    float base_color_0;
-    float offset_color_0;
+    uint32_t base_color_0;
+    uint32_t offset_color_0;
     uint32_t u_v_1;
     uint32_t _res1;
-    float base_color_1;
-    float offset_color_1;
+    uint32_t base_color_1;
+    uint32_t offset_color_1;
     uint32_t _res2;
     uint32_t _res3;
     uint32_t _res4;
@@ -569,11 +569,11 @@ namespace ta_vertex_parameter {
                     const float y,
                     const float z,
                     const uint32_t u_v_0,
-                    const float base_color_0,
-                    const float offset_color_0,
+                    const uint32_t base_color_0,
+                    const uint32_t offset_color_0,
                     const uint32_t u_v_1,
-                    const float base_color_1,
-                    const float offset_color_1
+                    const uint32_t base_color_1,
+                    const uint32_t offset_color_1
                     )
       : parameter_control_word(parameter_control_word)
       , x(x)
@@ -618,11 +618,11 @@ namespace ta_vertex_parameter {
     float z;
     float u_0;
     float v_0;
-    float base_intensity_0;
+    uint32_t base_intensity_0;
     float offset_intensity_0;
     float u_1;
     float v_1;
-    float base_intensity_1;
+    uint32_t base_intensity_1;
     float offset_intensity_1;
     uint32_t _res0;
     uint32_t _res1;
@@ -635,11 +635,11 @@ namespace ta_vertex_parameter {
                     const float z,
                     const float u_0,
                     const float v_0,
-                    const float base_intensity_0,
+                    const uint32_t base_intensity_0,
                     const float offset_intensity_0,
                     const float u_1,
                     const float v_1,
-                    const float base_intensity_1,
+                    const uint32_t base_intensity_1,
                     const float offset_intensity_1
                     )
       : parameter_control_word(parameter_control_word)
@@ -685,11 +685,11 @@ namespace ta_vertex_parameter {
     float z;
     uint32_t u_v_0;
     uint32_t _res0;
-    float base_intensity_0;
+    uint32_t base_intensity_0;
     float offset_intensity_0;
     uint32_t u_v_1;
     uint32_t _res1;
-    float base_intensity_1;
+    uint32_t base_intensity_1;
     float offset_intensity_1;
     uint32_t _res2;
     uint32_t _res3;
@@ -701,10 +701,10 @@ namespace ta_vertex_parameter {
                     const float y,
                     const float z,
                     const uint32_t u_v_0,
-                    const float base_intensity_0,
+                    const uint32_t base_intensity_0,
                     const float offset_intensity_0,
                     const uint32_t u_v_1,
-                    const float base_intensity_1,
+                    const uint32_t base_intensity_1,
                     const float offset_intensity_1
                     )
       : parameter_control_word(parameter_control_word)

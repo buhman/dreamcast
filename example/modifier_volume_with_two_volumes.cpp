@@ -9,9 +9,12 @@
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
 #include "holly/ta_bits.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
+#include "holly/isp_tsp.hpp"
 #include "memorymap.hpp"
 
 #include "geometry/plane.hpp"
@@ -60,17 +63,27 @@ vec3 _transform(const vec3& point,
   return {x, y, z};
 }
 
+uint32_t argb8888(const vec4& color)
+{
+  return ((static_cast<int>(255.f * color.a) & 0xff) << 24)
+       | ((static_cast<int>(255.f * color.r) & 0xff) << 16)
+       | ((static_cast<int>(255.f * color.g) & 0xff) << 8)
+       | ((static_cast<int>(255.f * color.b) & 0xff) << 0)
+       ;
+}
+
 void transform_polygon(ta_parameter_writer& parameter,
                        const vec3 * vertices,
                        const face& face,
                        const float scale,
-                       const vec4& color,
+                       const vec4& color0,
+                       const vec4& color1,
                        const float theta)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
-                                        | obj_control::col_type::floating_color
-                                        | obj_control::shadow;
+                                        | obj_control::shadow
+                                        | obj_control::volume::polygon::with_two_volumes;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
@@ -79,10 +92,16 @@ void transform_polygon(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_3>() =
+    ta_global_parameter::polygon_type_3(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word, // tsp_instruction_word_0
+					0,                    // texture_control_word_0
+					tsp_instruction_word, // tsp_instruction_word_1
+					0,                    // texture_control_word_1
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
 
   constexpr uint32_t strip_length = 3;
   for (uint32_t i = 0; i < strip_length; i++) {
@@ -92,16 +111,14 @@ void transform_polygon(ta_parameter_writer& parameter,
     auto point = _transform(vertex, scale, theta);
 
     bool end_of_strip = i == strip_length - 1;
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
-                            point.x,
-                            point.y,
-                            point.z,
-			    color.a, // alpha
-			    color.r, // red
-			    color.g, // green
-			    color.b  // blue
-                            );
+    parameter.append<ta_vertex_parameter::polygon_type_9>() =
+      ta_vertex_parameter::polygon_type_9(polygon_vertex_parameter_control_word(end_of_strip),
+					  point.x,
+					  point.y,
+					  point.z,
+					  argb8888(color0),
+					  argb8888(color1)
+					  );
   }
 }
 
@@ -120,9 +137,10 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::normal_polygon
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
-  parameter.append<global_modifier_volume>() =
-    global_modifier_volume(parameter_control_word,
-                           isp_tsp_instruction_word);
+  parameter.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(parameter_control_word,
+					 isp_tsp_instruction_word
+					 );
 
   for (uint32_t i = 0; i < num_faces; i++) {
     // world transform
@@ -144,17 +162,17 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
       const uint32_t last_isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::inside_last_polygon
                                                    | isp_tsp_instruction_word::culling_mode::no_culling;
 
-      parameter.append<global_modifier_volume>() =
-        global_modifier_volume(last_parameter_control_word,
-                               last_isp_tsp_instruction_word);
+      parameter.append<ta_global_parameter::modifier_volume>() =
+        ta_global_parameter::modifier_volume(last_parameter_control_word,
+					     last_isp_tsp_instruction_word);
 
     }
 
-    parameter.append<vertex_modifier_volume>() =
-      vertex_modifier_volume(modifier_volume_vertex_parameter_control_word(),
-                             a.x, a.y, a.z,
-                             b.x, b.y, b.z,
-                             c.x, c.y, c.z);
+    parameter.append<ta_vertex_parameter::modifier_volume>() =
+      ta_vertex_parameter::modifier_volume(modifier_volume_vertex_parameter_control_word(),
+					   a.x, a.y, a.z,
+					   b.x, b.y, b.z,
+					   c.x, c.y, c.z);
   }
 }
 
@@ -200,6 +218,7 @@ void main()
   holly.SOFTRESET = 0;
 
   core_init();
+  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
@@ -214,14 +233,16 @@ void main()
 			      480 / 32);
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     { // plane
-      vec4 color = {1.0, 0.9, 0.4, 0.2};
+      vec4 color0 = {1.0, 0.9, 0.4, 0.2};
+      vec4 color1 = {1.0, 0.2, 0.9, 0.9};
       float scale = 2.f;
       for (uint32_t i = 0; i < plane::num_faces; i++) {
         transform_polygon(parameter,
                           plane::vertices,
                           plane::faces[i],
                           scale,
-                          color,
+                          color0,
+                          color1,
                           theta);
       }
 
@@ -236,7 +257,7 @@ void main()
       */
     }
     // end of opaque list
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     { // cube
       float scale = 1.f;
@@ -247,7 +268,7 @@ void main()
                                 scale);
     }
     // end of opaque modifier list
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_modifier_volume_list();
