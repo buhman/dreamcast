@@ -148,7 +148,9 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	wolf.data.o \
-	macaw.data.o
+	macaw.data.o \
+	maple/maple.o \
+	$(LIBGCC)
 
 example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/alt.lds
 example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ)

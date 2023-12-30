@@ -1,4 +1,5 @@
 #include <cstdint>
+#include <bit>
 
 #include "align.hpp"
 #include "vga.hpp"
@@ -22,13 +23,94 @@
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
 
+#include "maple/maple.hpp"
+#include "maple/maple_impl.hpp"
+#include "maple/maple_bus_bits.hpp"
+#include "maple/maple_bus_commands.hpp"
+#include "maple/maple_bus_ft0.hpp"
+
 #include "macaw.hpp"
 #include "wolf.hpp"
 #include "twiddle.hpp"
 
+static ft0::data_transfer::data_format data[4];
+
+void do_get_condition(uint32_t * command_buf,
+		      uint32_t * receive_buf)
+{
+  using command_type = get_condition;
+  using response_type = data_transfer<ft0::data_transfer::data_format>;
+
+  get_condition::data_fields data_fields = {
+    .function_type = std::byteswap(function_type::controller)
+  };
+
+  maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
+								  data_fields);
+  maple::dma_start(command_buf);
+
+  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  for (uint8_t port = 0; port < 4; port++) {
+    auto response = reinterpret_cast<command_response_type *>(receive_buf);
+    auto& bus_data = response[port].bus_data;
+    if (bus_data.command_code != response_type::command_code) {
+      return;
+    }
+    auto& data_fields = bus_data.data_fields;
+    if ((data_fields.function_type & std::byteswap(function_type::controller)) == 0) {
+      return;
+    }
+
+    data[port].analog_axis_1 = data_fields.data.analog_axis_1;
+    data[port].analog_axis_2 = data_fields.data.analog_axis_2;
+    data[port].analog_axis_3 = data_fields.data.analog_axis_3;
+    data[port].analog_axis_4 = data_fields.data.analog_axis_4;
+  }
+}
+
+struct rot_pos {
+  float theta;
+  float x;
+  float y;
+};
+
+vec3 _transform(const vec3& point,
+                const uint32_t scale)
+{
+  float x = point.x;
+  float y = point.y;
+  float z = point.z;
+
+  x *= scale;
+  y *= scale;
+  z *= scale;
+
+  // world transform
+  y += 2.0f;
+  x *= 0.8;
+  y *= 0.8;
+  z *= 0.8;
+
+  // camera transform
+  z += 4;
+
+  // perspective
+  x = x / z;
+  y = y / z;
+
+  // screen space transform
+  x *= 240.f;
+  y *= 240.f;
+  x += 320.f;
+  y += 240.f;
+  z = 1 / z;
+
+  return {x, y, z};
+}
+
 vec3 _transform(const vec3& point,
                 const uint32_t scale,
-                const float theta)
+                const struct rot_pos& rot_pos)
 {
   float x = point.x;
   float y = point.y;
@@ -36,9 +118,12 @@ vec3 _transform(const vec3& point,
   float t;
 
   // object transform
-  //t  = z * cos(theta) - x * sin(theta);
-  //x  = z * sin(theta) + x * cos(theta);
-  //z  = t;
+  t  = z * cos(rot_pos.theta) - x * sin(rot_pos.theta);
+  x  = z * sin(rot_pos.theta) + x * cos(rot_pos.theta);
+  z  = t;
+
+  x += rot_pos.x;
+  z += rot_pos.y;
 
   x *= scale;
   y *= scale;
@@ -83,7 +168,7 @@ void transform_polygon(ta_parameter_writer& parameter,
                        const float scale,
                        const vec4& color0,
                        const vec4& color1,
-                       const float theta)
+                       const struct rot_pos& rot_pos)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
@@ -128,7 +213,7 @@ void transform_polygon(ta_parameter_writer& parameter,
     // world transform
     uint32_t vertex_ix = face[i].vertex;
     auto& vertex = vertices[vertex_ix];
-    auto point = _transform(vertex, scale, theta);
+    auto point = _transform(vertex, scale, rot_pos);
 
     uint32_t texture_ix = face[i].texture;
     auto& uv = texture[texture_ix];
@@ -179,9 +264,9 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
     auto& _a = vertices[ix_a];
     auto& _b = vertices[ix_b];
     auto& _c = vertices[ix_c];
-    auto a = _transform(_a, scale, 0.f);
-    auto b = _transform(_b, scale, 0.f);
-    auto c = _transform(_c, scale, 0.f);
+    auto a = _transform(_a, scale);
+    auto b = _transform(_b, scale);
+    auto c = _transform(_c, scale);
 
     if (i == (num_faces - 1)) {
       const uint32_t last_parameter_control_word = para_control::para_type::polygon_or_modifier_volume
@@ -238,8 +323,26 @@ load_texture(const uint8_t * src,
   twiddle::texture(&mem->texture[(128 * 128 * 2 * ix) / 2], temp, 128, 128);
 }
 
+void update_rot_pos(struct rot_pos& rot_pos)
+{
+  const float l_pos = static_cast<float>(data[0].analog_axis_1) * (1.f / 255.f);
+  const float r_pos = static_cast<float>(data[0].analog_axis_2) * (1.f / 255.f);
+
+  const float x_pos = static_cast<float>(data[0].analog_axis_3 - 0x80) * (0.5f / 127.f);
+  const float y_pos = static_cast<float>(data[0].analog_axis_4 - 0x80) * (0.5f / 127.f);
+
+  const float rotation = (l_pos > r_pos) ? (l_pos) : (-r_pos);
+
+  constexpr float half_degree = 0.01745329f / 2;
+
+  rot_pos.x += x_pos / 10.f;
+  rot_pos.y += y_pos / 10.f;
+  rot_pos.theta += rotation * half_degree * 10.f;
+}
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
+uint32_t _command_buf[1024 / 4 + 32];
+uint32_t _receive_buf[1024 / 4 + 32];
 
 void main()
 {
@@ -257,6 +360,8 @@ void main()
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
   uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
+  uint32_t * command_buf = align_32byte(_command_buf);
+  uint32_t * receive_buf = align_32byte(_receive_buf);
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
@@ -282,9 +387,13 @@ void main()
   uint32_t frame_ix = 0;
   constexpr uint32_t num_frames = 1;
 
-  float theta = 0;
+  struct rot_pos rot_pos = { 0.f, 0.f, 0.f };
 
   while (true) {
+    do_get_condition(command_buf, receive_buf);
+
+    update_rot_pos(rot_pos);
+
     ta_polygon_converter_init(opb_size.total(),
 			      ta_alloc,
 			      640 / 32,
@@ -302,7 +411,7 @@ void main()
                           scale,
                           color0,
                           color1,
-                          theta);
+                          rot_pos);
       }
 
       /*
@@ -337,8 +446,6 @@ void main()
     v_sync_in();
     core_wait_end_of_render_video(frame_ix, num_frames);
 
-    constexpr float half_degree = 0.01745329f / 2;
-    //theta += half_degree;
     frame_ix += 1;
   }
 }
