@@ -22,6 +22,10 @@
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
 
+#include "macaw.hpp"
+#include "wolf.hpp"
+#include "twiddle.hpp"
+
 vec3 _transform(const vec3& point,
                 const uint32_t scale,
                 const float theta)
@@ -32,9 +36,9 @@ vec3 _transform(const vec3& point,
   float t;
 
   // object transform
-  t  = z * cos(theta) - x * sin(theta);
-  x  = z * sin(theta) + x * cos(theta);
-  z  = t;
+  //t  = z * cos(theta) - x * sin(theta);
+  //x  = z * sin(theta) + x * cos(theta);
+  //z  = t;
 
   x *= scale;
   y *= scale;
@@ -74,6 +78,7 @@ uint32_t argb8888(const vec4& color)
 
 void transform_polygon(ta_parameter_writer& parameter,
                        const vec3 * vertices,
+		       const vec2 * texture,
                        const face& face,
                        const float scale,
                        const vec4& color0,
@@ -82,23 +87,38 @@ void transform_polygon(ta_parameter_writer& parameter,
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
+                                        | obj_control::col_type::packed_color
                                         | obj_control::shadow
-                                        | obj_control::volume::polygon::with_two_volumes;
+                                        | obj_control::volume::polygon::with_two_volumes
+					| obj_control::texture;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                       | tsp_instruction_word::dst_alpha_instr::zero
-                                      | tsp_instruction_word::fog_control::no_fog;
+                                      | tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::texture_u_size::from_int(128)
+                                      | tsp_instruction_word::texture_v_size::from_int(128);
+
+  uint32_t texture_address0 = (offsetof (struct texture_memory_alloc, texture)) + 128 * 128 * 2 * 0;
+  uint32_t texture_address1 = (offsetof (struct texture_memory_alloc, texture)) + 128 * 128 * 2 * 1;
+
+  const uint32_t texture_control_word_0 = texture_control_word::pixel_format::_565
+					| texture_control_word::scan_order::twiddled
+					| texture_control_word::texture_address(texture_address0 / 8);
+
+  const uint32_t texture_control_word_1 = texture_control_word::pixel_format::_565
+					| texture_control_word::scan_order::twiddled
+					| texture_control_word::texture_address(texture_address1 / 8);
 
   parameter.append<ta_global_parameter::polygon_type_3>() =
     ta_global_parameter::polygon_type_3(parameter_control_word,
 					isp_tsp_instruction_word,
-					tsp_instruction_word, // tsp_instruction_word_0
-					0,                    // texture_control_word_0
-					tsp_instruction_word, // tsp_instruction_word_1
-					0,                    // texture_control_word_1
+					tsp_instruction_word,   // tsp_instruction_word_0
+					texture_control_word_0, // texture_control_word_0
+					tsp_instruction_word,   // tsp_instruction_word_1
+					texture_control_word_1, // texture_control_word_1
 					0, // data_size_for_sort_dma
 					0  // next_address_for_sort_dma
 					);
@@ -110,15 +130,24 @@ void transform_polygon(ta_parameter_writer& parameter,
     auto& vertex = vertices[vertex_ix];
     auto point = _transform(vertex, scale, theta);
 
+    uint32_t texture_ix = face[i].texture;
+    auto& uv = texture[texture_ix];
+
     bool end_of_strip = i == strip_length - 1;
-    parameter.append<ta_vertex_parameter::polygon_type_9>() =
-      ta_vertex_parameter::polygon_type_9(polygon_vertex_parameter_control_word(end_of_strip),
-					  point.x,
-					  point.y,
-					  point.z,
-					  argb8888(color0),
-					  argb8888(color1)
-					  );
+    parameter.append<ta_vertex_parameter::polygon_type_11>() =
+      ta_vertex_parameter::polygon_type_11(polygon_vertex_parameter_control_word(end_of_strip),
+					   point.x,
+					   point.y,
+					   point.z,
+					   uv.u,
+					   uv.v,
+					   argb8888(color0), // base_color_0
+					   0,                // offset_color_0
+					   uv.u,
+					   uv.v,
+					   argb8888(color1), // base_color_1
+					   0                 // offset_color_1
+					   );
   }
 }
 
@@ -190,11 +219,40 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
+void
+load_texture(const uint8_t * src,
+	     const uint32_t size,
+	     const uint32_t ix)
+{
+  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+
+  uint16_t temp[size / 3];
+  for (uint32_t px = 0; px < size / 3; px++) {
+    uint8_t r = src[px * 3 + 0];
+    uint8_t g = src[px * 3 + 1];
+    uint8_t b = src[px * 3 + 2];
+
+    uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
+    temp[px] = rgb565;
+  }
+  twiddle::texture(&mem->texture[(128 * 128 * 2 * ix) / 2], temp, 128, 128);
+}
+
+
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 
 void main()
 {
   vga();
+
+  auto src0 = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
+  auto size0 = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
+
+  auto src1 = reinterpret_cast<const uint8_t *>(&_binary_wolf_data_start);
+  auto size1 = reinterpret_cast<const uint32_t>(&_binary_wolf_data_size);
+
+  load_texture(src0, size0, 0);
+  load_texture(src1, size1, 1);
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
@@ -233,12 +291,13 @@ void main()
 			      480 / 32);
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     { // plane
-      vec4 color0 = {1.0, 0.9, 0.4, 0.2};
-      vec4 color1 = {1.0, 0.2, 0.9, 0.9};
+      vec4 color0 = {1.0, 0.9, 0.9, 0.9};
+      vec4 color1 = {1.0, 0.9, 0.9, 0.9};
       float scale = 2.f;
       for (uint32_t i = 0; i < plane::num_faces; i++) {
         transform_polygon(parameter,
                           plane::vertices,
+                          plane::texture,
                           plane::faces[i],
                           scale,
                           color0,
@@ -279,7 +338,7 @@ void main()
     core_wait_end_of_render_video(frame_ix, num_frames);
 
     constexpr float half_degree = 0.01745329f / 2;
-    theta += half_degree;
+    //theta += half_degree;
     frame_ix += 1;
   }
 }
