@@ -152,6 +152,17 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	maple/maple.o \
 	$(LIBGCC)
 
+HEART_OBJ = \
+	example/heart.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o
+
+example/heart.elf: LDSCRIPT = $(LIB)/alt.lds
+example/heart.elf: $(START_OBJ) $(HEART_OBJ)
+
 example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/alt.lds
 example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ)
 

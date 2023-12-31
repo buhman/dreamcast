@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 #include "../float_uint32.hpp"
@@ -139,7 +141,7 @@ namespace fpu_shad_scale {
 }
 
 namespace fpu_cull_val {
-  constexpr uint32_t culling_comparison_value(float num) { return _i(__builtin_fabsf(num));; }
+  inline uint32_t culling_comparison_value(float num) { return _i(__builtin_fabsf(num));; }
 }
 
 namespace fpu_param_cfg {
@@ -180,11 +182,11 @@ namespace half_offset {
 }
 
 namespace fpu_perp_val {
-  constexpr uint32_t perpendicular_triangle_compare(float num) { return _i(__builtin_fabsf(num));; }
+  inline uint32_t perpendicular_triangle_compare(float num) { return _i(__builtin_fabsf(num));; }
 }
 
 namespace isp_backgnd_d {
-  constexpr uint32_t background_plane_depth(float num) { return _i(num) & 0xfffffff0; }
+  inline uint32_t background_plane_depth(float num) { return _i(num) & 0xfffffff0; }
 }
 
 namespace isp_backgnd_t {

@@ -1,6 +1,7 @@
 import math
 from dataclasses import dataclass
 import sys
+from typing import Union
 
 from generate import renderer
 
@@ -14,9 +15,20 @@ class Vertex:
     z: float
 
 @dataclass(frozen=True)
+class Color:
+    r: float
+    g: float
+    b: float
+
+@dataclass(frozen=True)
 class TextureCoordinate:
     u: float
     v: float
+
+@dataclass
+class VertexNormal:
+    vertex: int
+    normal: int
 
 @dataclass
 class VertexTextureNormal:
@@ -24,7 +36,8 @@ class VertexTextureNormal:
     texture: int
     normal: int
 
-Face = tuple[VertexTextureNormal, VertexTextureNormal, VertexTextureNormal]
+Face = Union[tuple[VertexTextureNormal, VertexTextureNormal, VertexTextureNormal],
+             tuple[VertexNormal, VertexNormal, VertexNormal]]
 
 name = None
 
@@ -34,10 +47,17 @@ def parse_object(line):
     return name.lower()
 
 def parse_vertex(line):
-    h, *xyz = line.split()
+    h, *xyz_rgb = line.split()
     assert h == 'v' or h == 'vn'
-    assert len(xyz) == 3
-    return Vertex(*map(float, xyz))
+    if h == 'vn':
+        assert len(xyz_rgb) == 3
+    if h == 'v':
+        assert len(xyz_rgb) == 6 or len(xyz_rgb) == 3
+    coords = list(map(float, xyz_rgb))
+    if len(xyz_rgb) == 6:
+        return Vertex(*coords[0:3]), Color(*coords[3:6])
+    else:
+        return Vertex(*coords[0:3])
 
 def parse_texture_coordinate(line):
     h, *uv = line.split()
@@ -47,7 +67,7 @@ def parse_texture_coordinate(line):
 
 def maybe_int(i, offset):
     if i.strip() == "":
-        assert False
+        return None
     else:
         return int(i) + offset
 
@@ -62,14 +82,36 @@ def parse_face(line):
             maybe_int(iix, offset=-1)
             for iix in ix
         ]
-        return VertexTextureNormal(vertex_ix, uv_ix, normal_ix)
+        assert vertex_ix is not None
+        assert normal_ix is not None
+        if uv_ix is None:
+            return VertexNormal(vertex_ix, normal_ix)
+        else:
+            return VertexTextureNormal(vertex_ix, uv_ix, normal_ix)
 
     return tuple(map(parse_ixs, tri))
 
+def vertex_type(vertices):
+    types = set(type(v) for v in vertices)
+    assert len(types) == 1, types
+    if type(vertices[0]) is tuple:
+        return "position__color"
+    elif type(vertices[0]) is Vertex:
+        return "vec3"
+    else:
+        assert False, type(verticies[0])
+
 def generate_vertices(vertices):
-    yield "constexpr vec3 vertices[] = {"
-    for v in vertices:
-        yield f"{{ {v.x:9f}f, {v.y:9f}f, {v.z:9f}f }},"
+    type_str = vertex_type(vertices)
+    yield f"constexpr {type_str} vertices[] = {{"
+    for p_c in vertices:
+        if type(p_c) is tuple:
+            p, c = p_c
+            yield f"{{ {{{p.x:9f}f, {p.y:9f}f, {p.z:9f}f}}, {{{c.r:9f}f, {c.g:9f}f, {c.b:9f}f}} }},"
+        else:
+            assert type(p_c) is Vertex
+            p = p_c
+            yield f"{{ {v.x:9f}f, {v.y:9f}f, {v.z:9f}f }},"
     yield "};"
     yield ""
 
@@ -87,26 +129,42 @@ def generate_texture_coordinates(texture_coordinates):
     yield "};"
     yield ""
 
-def generate_faces(faces):
+def face_type_str(face_type):
+    if face_type is VertexNormal:
+        return "face_vn"
+    elif face_type is VertexTextureNormal:
+        return "face_vtn"
+    else:
+        assert False, face_type
+
+def generate_faces(faces, face_type):
+    def face_coords(vtn):
+        if face_type is VertexNormal:
+            return [vtn.vertex, vtn.normal]
+        elif face_type is VertexTextureNormal:
+            return [vtn.vertex, vtn.texture, vtn.normal]
+        else:
+            assert False, face_type
     max_ix = max(
         i
         for f in faces
         for vtn in f
-        for i in [vtn.vertex, vtn.texture, vtn.normal]
+        for i in face_coords(vtn)
     )
     align = 1 + math.floor(math.log(max_ix) / math.log(10))
-    yield "constexpr face faces[] = {"
+    type_str = face_type_str(face_type)
+    yield f"constexpr {type_str} faces[] = {{"
     def align_vtn(vtn):
-        return ", ".join(str(ix).rjust(align) for ix in [vtn.vertex, vtn.texture, vtn.normal])
+        return ", ".join(str(ix).rjust(align) for ix in face_coords(vtn))
     for f in faces:
         inner = ", ".join(f"{{{align_vtn(vtn)}}}" for vtn in f)
         yield f"{{{inner}}},"
     yield "};"
     yield ""
-    yield "constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof (face));"
+    yield f"constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof ({type_str}));"
     yield ""
 
-def generate_namespace(vertices, texture_coordinates, normals, faces):
+def generate_namespace(vertices, texture_coordinates, normals, faces, face_type):
     global name
     assert name is not None
     yield "#pragma once"
@@ -116,9 +174,10 @@ def generate_namespace(vertices, texture_coordinates, normals, faces):
     yield f"namespace {name} {{"
 
     yield from generate_vertices(vertices)
-    yield from generate_texture_coordinates(texture_coordinates)
+    if texture_coordinates != []:
+        yield from generate_texture_coordinates(texture_coordinates)
     yield from generate_normals(normals)
-    yield from generate_faces(faces)
+    yield from generate_faces(faces, face_type)
 
     yield "}"
 
@@ -163,10 +222,14 @@ def main():
         else:
             pass
 
-    texture_coordinates, faces = merge_texture_coordinates(texture_coordinates, faces)
+    face_types = set(type(vtn) for f in faces for vtn in f)
+    assert len(face_types) == 1, face_types
+    face_type = next(iter(face_types))
+    if face_type is VertexTextureNormal:
+        texture_coordinates, faces = merge_texture_coordinates(texture_coordinates, faces)
 
     render, out = renderer()
-    render(generate_namespace(vertices, texture_coordinates, normals, faces))
+    render(generate_namespace(vertices, texture_coordinates, normals, faces, face_type))
     sys.stdout.write(out.getvalue())
 
 if __name__ == '__main__':

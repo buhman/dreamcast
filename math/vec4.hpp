@@ -18,6 +18,7 @@ struct vec<4, T>
   inline constexpr vec();
   inline constexpr vec(T scalar);
   inline constexpr vec(T _x, T _y, T _z, T _w);
+  inline constexpr vec(const vec<3, T>& v);
 
   constexpr inline vec<4, T> operator-() const;
   inline constexpr T const& operator[](int i) const;
@@ -39,6 +40,11 @@ inline constexpr vec<4, T>::vec(T scalar)
 template <typename T>
 inline constexpr vec<4, T>::vec(T _x, T _y, T _z, T _w)
   : x(_x), y(_y), z(_z), w(_w)
+{}
+
+template <typename T>
+inline constexpr vec<4, T>::vec(const vec<3, T>& v)
+  : x(v.x), y(v.y), z(v.z), w(1.f)
 {}
 
 template <typename T>
