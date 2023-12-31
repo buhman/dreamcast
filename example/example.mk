@@ -249,3 +249,10 @@ SERIAL_TRANSFER_OBJ = \
 
 example/serial_transfer.elf: LDSCRIPT = $(LIB)/alt.lds
 example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
+
+INTERRUPT_OBJ = \
+	example/interrupt.o \
+	serial.o
+
+example/interrupt.elf: LDSCRIPT = $(LIB)/alt.lds
+example/interrupt.elf: $(START_OBJ) $(INTERRUPT_OBJ)

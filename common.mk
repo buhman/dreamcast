@@ -130,6 +130,9 @@ audio.pcm:
 %.data.o: %.data
 	$(BUILD_BINARY_O)
 
+regs/%.csv: regs/%.ods
+	libreoffice --headless -convert-to csv:"Text - txt - csv (StarCalc)":44,34,76,,,,true --outdir regs/ $<
+
 maple/maple_bus_commands.hpp: regs/maple_bus_commands.csv regs/gen/maple_bus_commands.py
 	python regs/gen/maple_bus_commands.py $< > $@
 
