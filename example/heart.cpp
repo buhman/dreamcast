@@ -4,7 +4,7 @@
 #include "vga.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
-#include "holly.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"

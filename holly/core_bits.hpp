@@ -53,24 +53,24 @@ namespace fb_r_ctrl {
   namespace vclk_div {
     constexpr uint32_t pclk_vclk_2 = 0 << 23;
     constexpr uint32_t pclk_vclk_1 = 1 << 23;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 23;
   }
-  
+
   constexpr uint32_t fb_strip_buf_en = 1 << 22;
   constexpr uint32_t fb_stripsize(uint32_t num) { return (num & 0x3e) << 16; }
   constexpr uint32_t fb_chroma_threshold(uint32_t num) { return (num & 0xff) << 8; }
   constexpr uint32_t fb_concat(uint32_t num) { return (num & 0x3) << 4; }
-  
+
   namespace fb_depth {
     constexpr uint32_t _0555_rgb_16bit = 0 << 2;
     constexpr uint32_t _0565_rgb_16bit = 1 << 2;
     constexpr uint32_t _888_rgb_24bit_packed = 2 << 2;
     constexpr uint32_t _0888_rgb_32bit = 3 << 2;
-    
+
     constexpr uint32_t bit_mask = 0x3 << 2;
   }
-  
+
   constexpr uint32_t fb_line_double = 1 << 1;
   constexpr uint32_t fb_enable = 1 << 0;
 }
@@ -79,7 +79,7 @@ namespace fb_w_ctrl {
   constexpr uint32_t fb_alpha_threshold(uint32_t num) { return (num & 0xff) << 16; }
   constexpr uint32_t fb_kval(uint32_t num) { return (num & 0xff) << 8; }
   constexpr uint32_t fb_dither = 1 << 3;
-  
+
   namespace fb_packmode {
     constexpr uint32_t _0555_krgb_16bit = 0 << 0;
     constexpr uint32_t _565_rgb_16bit = 1 << 0;
@@ -88,7 +88,7 @@ namespace fb_w_ctrl {
     constexpr uint32_t _888_rgb_24bit_packed = 4 << 0;
     constexpr uint32_t _0888_krgb_32bit = 5 << 0;
     constexpr uint32_t _8888_argb_32bit = 6 << 0;
-    
+
     constexpr uint32_t bit_mask = 0x7 << 0;
   }
 }
@@ -133,10 +133,10 @@ namespace fpu_shad_scale {
   namespace simple_shadow_enable {
     constexpr uint32_t parameter_selection_volume_mode = 0 << 8;
     constexpr uint32_t intensity_volume_mode = 1 << 8;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 8;
   }
-  
+
   constexpr uint32_t scale_factor_for_shadows(uint32_t num) { return (num & 0xff) << 0; }
 }
 
@@ -148,10 +148,10 @@ namespace fpu_param_cfg {
   namespace region_header_type {
     constexpr uint32_t type_1 = 0 << 21;
     constexpr uint32_t type_2 = 1 << 21;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 21;
   }
-  
+
   constexpr uint32_t tsp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 14; }
   constexpr uint32_t isp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 8; }
   constexpr uint32_t pointer_burst_size(uint32_t num) { return (num & 0xf) << 4; }
@@ -162,21 +162,21 @@ namespace half_offset {
   namespace tsp_texel_sampling_position {
     constexpr uint32_t top_left = 1 << 2;
     constexpr uint32_t center = 1 << 2;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 2;
   }
-  
+
   namespace tsp_pixel_sampling_position {
     constexpr uint32_t top_left = 1 << 1;
     constexpr uint32_t center = 1 << 1;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 1;
   }
-  
+
   namespace fpu_pixel_sampling_position {
     constexpr uint32_t top_left = 1 << 0;
     constexpr uint32_t center = 1 << 0;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 0;
   }
 }
@@ -222,18 +222,18 @@ namespace sdram_arb_cfg {
     constexpr uint32_t isp_pointer_data = 0x9 << 18;
     constexpr uint32_t isp_parameters = 0xa << 18;
     constexpr uint32_t crt_controller = 0xb << 18;
-    
+
     constexpr uint32_t bit_mask = 0xf << 18;
   }
-  
+
   namespace arbiter_priority_control {
     constexpr uint32_t priority_arbitration_only = 0x0 << 16;
     constexpr uint32_t override_value_field = 0x1 << 16;
     constexpr uint32_t round_robin_counter = 0x2 << 16;
-    
+
     constexpr uint32_t bit_mask = 0x3 << 16;
   }
-  
+
   constexpr uint32_t arbiter_crt_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 8; }
   constexpr uint32_t arbiter_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 0; }
 }
@@ -289,15 +289,15 @@ namespace spg_trigger_pos {
 
 namespace spg_hblank_int {
   constexpr uint32_t hblank_in_interrupt(uint32_t reg) { return (reg >> 16) & 0x3ff; }
-  
+
   namespace hblank_int_mode {
     constexpr uint32_t output_equal_line_comp_val = 0x0 << 12;
     constexpr uint32_t output_every_line_comp_val = 0x1 << 12;
     constexpr uint32_t output_every_line = 0x2 << 12;
-    
+
     constexpr uint32_t bit_mask = 0x3 << 12;
   }
-  
+
   constexpr uint32_t line_comp_val(uint32_t num) { return (num & 0x3ff) << 0; }
 }
 
@@ -310,41 +310,41 @@ namespace spg_control {
   namespace csync_on_h {
     constexpr uint32_t hsync = 0 << 9;
     constexpr uint32_t csync = 1 << 9;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 9;
   }
-  
+
   namespace sync_direction {
     constexpr uint32_t input = 0 << 8;
     constexpr uint32_t output = 1 << 8;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 8;
   }
-  
+
   constexpr uint32_t pal = 1 << 7;
   constexpr uint32_t ntsc = 1 << 6;
   constexpr uint32_t force_field2 = 1 << 5;
   constexpr uint32_t interlace = 1 << 4;
   constexpr uint32_t spg_lock = 1 << 3;
-  
+
   namespace mcsync_pol {
     constexpr uint32_t active_low = 0 << 2;
     constexpr uint32_t active_high = 1 << 2;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 2;
   }
-  
+
   namespace mvsync_pol {
     constexpr uint32_t active_low = 0 << 1;
     constexpr uint32_t active_high = 1 << 1;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 1;
   }
-  
+
   namespace mhsync_pol {
     constexpr uint32_t active_low = 0 << 0;
     constexpr uint32_t active_high = 1 << 0;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 0;
   }
 }
@@ -375,17 +375,17 @@ namespace text_control {
   namespace code_book_endian {
     constexpr uint32_t little_endian = 0 << 17;
     constexpr uint32_t big_endian = 1 << 17;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 17;
   }
-  
+
   namespace index_endian {
     constexpr uint32_t little_endian = 0 << 16;
     constexpr uint32_t big_endian = 1 << 16;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 16;
   }
-  
+
   constexpr uint32_t bank_bit(uint32_t num) { return (num & 0x1f) << 8; }
   constexpr uint32_t stride(uint32_t num) { return (num & 0x1f) << 0; }
 }
@@ -394,7 +394,7 @@ namespace vo_control {
   constexpr uint32_t pclk_delay_reset = 1 << 21;
   constexpr uint32_t pclk_delay(uint32_t num) { return (num & 0xf) << 16; }
   constexpr uint32_t pixel_double = 1 << 8;
-  
+
   namespace field_mode {
     constexpr uint32_t use_field_flag_from_spg = 0x0 << 4;
     constexpr uint32_t use_inverse_of_field_flag_from_spg = 0x1 << 4;
@@ -405,30 +405,30 @@ namespace vo_control {
     constexpr uint32_t field_1_when_hsync_becomes_active_in_the_middle_of_the_vsync_active_edge = 0x6 << 4;
     constexpr uint32_t field_2_when_hsync_becomes_active_in_the_middle_of_the_vsync_active_edge = 0x7 << 4;
     constexpr uint32_t inverted_at_the_active_edge_of_vsync = 0x8 << 4;
-    
+
     constexpr uint32_t bit_mask = 0xf << 4;
   }
-  
+
   constexpr uint32_t blank_video = 1 << 3;
-  
+
   namespace blank_pol {
     constexpr uint32_t active_low = 0 << 2;
     constexpr uint32_t active_high = 1 << 2;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 2;
   }
-  
+
   namespace vsync_pol {
     constexpr uint32_t active_low = 0 << 1;
     constexpr uint32_t active_high = 1 << 1;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 1;
   }
-  
+
   namespace hsync_pol {
     constexpr uint32_t active_low = 0 << 0;
     constexpr uint32_t active_high = 1 << 0;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 0;
   }
 }
@@ -446,10 +446,10 @@ namespace scaler_ctl {
   namespace field_select {
     constexpr uint32_t field_1 = 0 << 18;
     constexpr uint32_t field_2 = 1 << 18;
-    
+
     constexpr uint32_t bit_mask = 0x1 << 18;
   }
-  
+
   constexpr uint32_t interlace = 1 << 17;
   constexpr uint32_t horizontal_scaling_enable = 1 << 16;
   constexpr uint32_t vertical_scale_factor(uint32_t num) { return (num & 0xffff) << 0; }
@@ -461,7 +461,7 @@ namespace pal_ram_ctrl {
     constexpr uint32_t rgb565 = 1 << 0;
     constexpr uint32_t argb4444 = 2 << 0;
     constexpr uint32_t argb8888 = 3 << 0;
-    
+
     constexpr uint32_t bit_mask = 0x3 << 0;
   }
 }

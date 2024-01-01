@@ -1,9 +1,9 @@
 #include <cstdint>
 
-#include "sh7091.hpp"
-#include "sh7091_bits.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
+#include "sh7091/cache.hpp"
 
-#include "cache.hpp"
 #include "serial_load.hpp"
 
 extern uint32_t __bss_link_start __asm("__bss_link_start");
@@ -22,13 +22,15 @@ void main()
   load_init();
 
   while (1) {
-    while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0) {
+    using namespace scif;
+
+    while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0) {
       // wait
     }
-    while ((sh7091.SCIF.SCFDR2 & 0b11111) > 0) {
+    while ((scfdr2::receive_data_bytes(sh7091.SCIF.SCFDR2)) > 0) {
       uint8_t c = sh7091.SCIF.SCFRDR2;
       load_recv(c);
     }
-    sh7091.SCIF.SCFSR2 = sh7091.SCIF.SCFSR2 & (~SCFSR2__RDF);
+    sh7091.SCIF.SCFSR2 = sh7091.SCIF.SCFSR2 & (~scfsr2::rdf::bit_mask);
   }
 }

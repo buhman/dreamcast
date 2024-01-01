@@ -55,7 +55,7 @@ IP_OBJ = \
 START_OBJ = \
 	start.o \
 	runtime.o \
-	cache.o
+	sh7091/cache.o
 
 %.bin.o: %.bin
 	$(BUILD_BINARY_O)
@@ -139,11 +139,23 @@ maple/maple_bus_commands.hpp: regs/maple_bus_commands.csv regs/gen/maple_bus_com
 maple/maple_bus_bits.hpp: regs/maple_bus_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+holly/core_bits.hpp: regs/core_bits.csv regs/gen/core_bits.py
+	python regs/gen/core_bits.py $< > $@
+
+holly/holly.hpp: regs/holly.csv regs/gen/holly.py
+	python regs/gen/holly.py $< > $@
+
 holly/ta_global_parameter.hpp: regs/global_parameter_format.csv regs/gen/ta_parameter_format.py
 	python regs/gen/ta_parameter_format.py $< ta_global_parameter > $@
 
 holly/ta_vertex_parameter.hpp: regs/vertex_parameter_format.csv regs/gen/ta_parameter_format.py
 	python regs/gen/ta_parameter_format.py $< ta_vertex_parameter > $@
+
+sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
+	python regs/gen/sh7091.py $< > $@
+
+sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
+	python regs/gen/core_bits.py $< > $@
 
 clean:
 	find -P \

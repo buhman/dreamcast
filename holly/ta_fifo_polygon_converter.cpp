@@ -1,13 +1,13 @@
 #include <cstdint>
 
+#include "systembus.hpp"
+#include "systembus_bits.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
+
 #include "core_bits.hpp"
 #include "ta_bits.hpp"
-#include "../holly.hpp"
-#include "../systembus.hpp"
-#include "../systembus_bits.hpp"
-#include "../sh7091.hpp"
-#include "../sh7091_bits.hpp"
-
+#include "holly.hpp"
 #include "texture_memory_alloc.hpp"
 
 #include "ta_fifo_polygon_converter.hpp"
@@ -79,23 +79,25 @@ void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
   volatile uint32_t _dummy = sh7091.DMAC.CHCR2;
   (void)_dummy;
 
+  using namespace dmac;
+
   /* start a new CH2-DMA transfer from "system memory" to "TA FIFO polygon converter" */
   sh7091.DMAC.CHCR2 = 0; /* disable DMA channel */
-  sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(&buf[0]); /* start address, must be aligned to a CHCHR__TS-sized (32-byte) boundary */
-  sh7091.DMAC.DMATCR2 = DMATCR2__TRANSFER_COUNT(size / 32); /* transfer count, in CHCHR__TS-sized (32-byte) units */
-  sh7091.DMAC.CHCR2 = CHCR2__DM__DESTINATION_ADDRESS_FIXED
-                    | CHCR2__SM__SOURCE_ADDRESS_INCREMENTED
-		    | CHCR2__RS(0b0010) /* external request, single address mode;
-					   external address space → external device */
-                    | CHCR2__TM__BURST_MODE /* transmit mode */
-                    | CHCR2__TS__32_BYTE    /* transfer size */
-                    | CHCR2__DE;            /* DMAC (channel) enable */
+  sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(&buf[0]);  /* start address, must be aligned to a CHCHR__TS-sized (32-byte) boundary */
+  sh7091.DMAC.DMATCR2 = dmatcr::transfer_count(size / 32); /* transfer count, in CHCHR__TS-sized (32-byte) units */
+  sh7091.DMAC.CHCR2 = chcr::dm::destination_address_fixed
+                    | chcr::sm::source_address_incremented
+                    | chcr::rs::resource_select(0b0010) /* external request, single address mode;
+					                   external address space → external device */
+                    | chcr::tm::cycle_burst_mode /* transmit mode */
+                    | chcr::ts::_32_byte         /* transfer size */
+                    | chcr::de::channel_operation_enabled;
 
-  sh7091.DMAC.DMAOR = DMAOR__DDT                 /* on-demand data transfer mode */
-                    | DMAOR__PR__CH2_CH0_CH1_CH3 /* priority mode; CH2 > CH0 > CH1 > CH3 */
-                    | DMAOR__DME;                /* DMAC master enable */
+  sh7091.DMAC.DMAOR = dmaor::ddt::on_demand_data_transfer_mode       /* on-demand data transfer mode */
+                    | dmaor::pr::ch2_ch0_ch1_ch3                     /* priority mode; CH2 > CH0 > CH1 > CH3 */
+                    | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
   system.C2DSTAT = C2DSTAT__ADDRESS(0x10000000); /* CH2-DMA destination address */
-  system.C2DLEN  = CD2LEN__LENGTH(size) ; /* CH2-DMA length (must be a multiple of 32) */
+  system.C2DLEN  = CD2LEN__LENGTH(size);         /* CH2-DMA length (must be a multiple of 32) */
   system.C2DST   = 1;          /* CH2-DMA start (an 'external' request from SH7091's perspective) */
 
   // wait for CH2-DMA completion

@@ -90,9 +90,9 @@ struct bsc_reg {
   reg8  _pad7[2];
   reg16 GPIOIC;            /* GPIO interrupt control register */
   reg8  _pad8[1048502];
-  reg8  SDMR2[65536];      /* Synchronous DRAM mode registers */
+  reg32 SDMR2[16384];      /* Synchronous DRAM mode registers */
   reg8  _pad9[196608];
-  reg8  SDMR3[65536];      /* Synchronous DRAM mode registers */
+  reg32 SDMR3[16384];      /* Synchronous DRAM mode registers */
 };
 
 static_assert((offsetof (struct bsc_reg, BCR1)) == 0x0);

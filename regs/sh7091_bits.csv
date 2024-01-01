@@ -1,0 +1,293 @@
+"block","register_name","enum_name","bits","bit_name","value","mask","description"
+"CCN","PTEH",,"31-10","VPN",,,"Virtual Page Number"
+"CCN","PTEH",,"7-0","ASID",,,"Address space identifier"
+,,,,,,,
+"CCN","PTEL",,"28-10","PPN",,,"Physical page number"
+"CCN","PTEL","V","8","invalid","0",,"Validity"
+"CCN","PTEL","V","8","valid","1",,"Validity"
+"CCN","PTEL","SZ","7,4","1_kbyte_page","0b0000",,"Page size"
+"CCN","PTEL","SZ","7,4","4_kbyte_page","0b0001",,"Page size"
+"CCN","PTEL","SZ","7,4","64_kbyte_page","0b1000",,"Page size"
+"CCN","PTEL","SZ","7,4","1_mbyte_page","0b1001",,"Page size"
+"CCN","PTEL","PR","6-5","read_only_in_privileged_mode","0b00",,"Protection key data"
+"CCN","PTEL","PR","6-5","read_write_in_privileged_mode","0b01",,"Protection key data"
+"CCN","PTEL","PR","6-5","read_only_in_privileged_and_user_mode","0b10",,"Protection key data"
+"CCN","PTEL","PR","6-5","read_write_in_privileged_and_user_mode","0b11",,"Protection key data"
+"CCN","PTEL","C","3","not_cacheable","0",,"Cacheability bit"
+"CCN","PTEL","C","3","cacheable","1",,"Cacheability bit"
+"CCN","PTEL","D","2","write_has_not_been_performed","0",,"Dirty bit"
+"CCN","PTEL","D","2","write_has_been_performed","1",,"Dirty bit"
+"CCN","PTEL","SH","1","pages_are_shared_by_processes","0",,"Share status bit"
+"CCN","PTEL","SH","1","pages_are_not_shared_by_processes","1",,"Share status bit"
+"CCN","PTEL","WT","0","copy_back_mode","0",,"Write-through bit"
+"CCN","PTEL","WT","0","write_through_mode","1",,"Write-through bit"
+,,,,,,,
+"CCN","MMUCR",,"31-26","LRUI",,,"Least recently used ITLB"
+"CCN","MMUCR",,"23-18","URB",,,"UTLB replace boundary"
+"CCN","MMUCR",,"15-10","URC",,,"UTLB replace counter"
+"CCN","MMUCR","SQMD","9","user_privileged_access_possible","0",,"Store queue mode bit"
+"CCN","MMUCR","SQMD","9","privileged_access_possible","1",,"Store queue mode bit"
+"CCN","MMUCR","SV","8","multiple_virtual_memory_mode","0",,"Single virtual mode bit"
+"CCN","MMUCR","SV","8","single_virtual_memory_mode","1",,"Single virtual mode bit"
+"CCN","MMUCR","TI","2","invalidate_all_utlb_itlb_bits","1",,"TLB invalidate"
+"CCN","MMUCR","AT","0","mmu_disabled","0",,"Address translation bit"
+"CCN","MMUCR","AT","0","mmu_enabled","1",,"Address translation bit"
+,,,,,,,
+"CCN","BASRA",,"7-0","basa",,"0xff",
+,,,,,,,
+"CCN","BASRB",,"7-0","basa",,"0xff",
+,,,,,,,
+"CCN","CCR","IIX","15","address_bits_12_5_used_for_ic_entry_selection","0",,"IC index enable"
+"CCN","CCR","IIX","15","address_bits_25_and_11_5_used_for_ic_entry_selection","1",,"IC index enable"
+"CCN","CCR","ICI","11","clear_v_bits_of_all_ic_entries","1",,"IC invalidation"
+"CCN","CCR","ICE","8","ic_not_used","0",,"IC enable"
+"CCN","CCR","ICE","8","ic_used","1",,"IC enable"
+"CCN","CCR","OIX","7","address_bits_13_5_used_for_oc_entry_selection","0",,"OC index enable"
+"CCN","CCR","OIX","7","address_bits_25_and_12_5_used_for_oc_entry_selection","1",,"OC index enable"
+"CCN","CCR","ORA","5","16_kbytes_used_as_cache","0",,"OC RAM enable"
+"CCN","CCR","ORA","5","8_kbytes_used_as_cache_8_kbytes_used_as_ram","1",,"OC RAM enable"
+"CCN","CCR","OCI","3","clear_v_and_u_bits_of_all_oc_entries","1",,"OC invalidation"
+"CCN","CCR","CB","2","write_through_mode","0",,"Copy-back enable"
+"CCN","CCR","CB","2","copy_back_mode","1",,"Copy-back enable"
+"CCN","CCR","WT","1","copy_back_mode","0",,"Write-through enable"
+"CCN","CCR","WT","1","write_through_mode","1",,"Write-through enable"
+"CCN","CCR","OCE","0","oc_not_used","0",,"OC enable"
+"CCN","CCR","OCE","0","oc_used","1",,"OC enable"
+,,,,,,,
+"CCN","TRA",,"9-2","imm",,,
+,,,,,,,
+"CCN","EXPEVT",,"11-0","exception_code",,,
+,,,,,,,
+"CCN","INTEVT",,"11-0","exception_code",,,
+,,,,,,,
+"CCN","PTEA","TC","3","area_5_is_used","0",,"Timing control bit"
+"CCN","PTEA","TC","3","area_6_is_used","1",,"Timing control bit"
+"CCN","PTEA","SA","2-0","undefined","0b000",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","variable_size_io_space","0b001",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","8_bit_io_space","0b010",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","16_bit_io_space","0b011",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","8_bit_common_memory_space","0b100",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","16_bit_common_memory_space","0b101",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","8_bit_attribute_memory_space","0b110",,"Space attribute bits"
+"CCN","PTEA","SA","2-0","16_bit_attribute_memory_space","0b111",,"Space attribute bits"
+,,,,,,,
+"CCN","QACR0",,"4-2","area",,"0b111",
+,,,,,,,
+"CCN","QACR1",,"4-2","area",,"0b111",
+,,,,,,,
+"DMAC","DMATCR",,"23-0","transfer_count",,"0xffffff",
+,,,,,,,
+"DMAC","CHCR","SSA","31-29","reserved_in_pcmcia_access","0b000",,
+"DMAC","CHCR","SSA","31-29","dynamic_bus_sizing_io_space","0b001",,
+"DMAC","CHCR","SSA","31-29","8_bit_io_space","0b010",,
+"DMAC","CHCR","SSA","31-29","16_bit_io_space","0b011",,
+"DMAC","CHCR","SSA","31-29","8_bit_common_memory_space","0b100",,
+"DMAC","CHCR","SSA","31-29","16_bit_common_memory_space","0b101",,
+"DMAC","CHCR","SSA","31-29","8_bit_attribute_memory_space","0b110",,
+"DMAC","CHCR","SSA","31-29","16_bit_attribute_memory_space","0b111",,
+"DMAC","CHCR","STC","28","c5_space_wait_cycle_selection","0",,
+"DMAC","CHCR","STC","28","c6_space_wait_cycle_selection","1",,
+"DMAC","CHCR","DSA","27-25","reserved_in_pcmcia_access","0b000",,
+"DMAC","CHCR","DSA","27-25","dynamic_bus_sizing_io_space","0b001",,
+"DMAC","CHCR","DSA","27-25","8_bit_io_space","0b010",,
+"DMAC","CHCR","DSA","27-25","16_bit_io_space","0b011",,
+"DMAC","CHCR","DSA","27-25","8_bit_common_memory_space","0b100",,
+"DMAC","CHCR","DSA","27-25","16_bit_common_memory_space","0b101",,
+"DMAC","CHCR","DSA","27-25","8_bit_attribute_memory_space","0b110",,
+"DMAC","CHCR","DSA","27-25","16_bit_attribute_memory_space","0b111",,
+"DMAC","CHCR","DTC","24","c5_space_wait_cycle_selection","0",,
+"DMAC","CHCR","DTC","24","c6_space_wait_cycle_selection","1",,
+"DMAC","CHCR","DS","19","low_level_detection","0",,
+"DMAC","CHCR","DS","19","falling_edge_detection","1",,
+"DMAC","CHCR","RL","18","drak_is_an_active_high","0",,
+"DMAC","CHCR","RL","18","drak_is_an_active_low","1",,
+"DMAC","CHCR","AM","17","dack_is_output_in_read_cycle","0",,
+"DMAC","CHCR","AM","17","dack_is_output_in_write_cycle","1",,
+"DMAC","CHCR","AL","16","active_high_output","0",,
+"DMAC","CHCR","AL","16","active_low_output","1",,
+"DMAC","CHCR","DM","15-14","destination_address_fixed","0b00",,
+"DMAC","CHCR","DM","15-14","destination_address_incremented","0b01",,
+"DMAC","CHCR","DM","15-14","destination_address_decremented","0b10",,
+"DMAC","CHCR","SM","13-12","source_address_fixed","0b00",,
+"DMAC","CHCR","SM","13-12","source_address_incremented","0b01",,
+"DMAC","CHCR","SM","13-12","source_address_decremented","0b10",,
+"DMAC","CHCR","RS","11-8","resource_select",,"0b1111",
+"DMAC","CHCR","TM","7","cycle_steal_mode","0",,
+"DMAC","CHCR","TM","7","cycle_burst_mode","1",,
+"DMAC","CHCR","TS","6-4","64_bit","0b000",,
+"DMAC","CHCR","TS","6-4","8_bit","0b001",,
+"DMAC","CHCR","TS","6-4","16_bit","0b010",,
+"DMAC","CHCR","TS","6-4","32_bit","0b011",,
+"DMAC","CHCR","TS","6-4","32_byte","0b100",,
+"DMAC","CHCR","IE","2","interrupt_request_not_generated","0",,
+"DMAC","CHCR","IE","2","interrupt_request_generated","1",,
+"DMAC","CHCR","TE","1","transfers_not_completed","0",,
+"DMAC","CHCR","TE","1","transfers_completed","1",,
+"DMAC","CHCR","DE","0","channel_operation_disabled","0",,
+"DMAC","CHCR","DE","0","channel_operation_enabled","1",,
+,,,,,,,
+"DMAC","DMAOR","DDT","15","normal_dma_mode","0",,
+"DMAC","DMAOR","DDT","15","on_demand_data_transfer_mode","1",,
+"DMAC","DMAOR","PR","9-8","ch0_ch1_ch2_ch3","0b00",,
+"DMAC","DMAOR","PR","9-8","ch0_ch2_ch3_ch1","0b01",,
+"DMAC","DMAOR","PR","9-8","ch2_ch0_ch1_ch3","0b10",,
+"DMAC","DMAOR","PR","9-8","round_robin","0b11",,
+"DMAC","DMAOR","AE","2","no_address_error__dma_transfer_enabled","0",,
+"DMAC","DMAOR","AE","2","address_error__dma_transfer_disabled","1",,
+"DMAC","DMAOR","NMIF","1","no_nmi__dma_transfer_enabled","0",,
+"DMAC","DMAOR","NMIF","1","nmi__dma_transfer_disabled","1",,
+"DMAC","DMAOR","DME","0","operation_disabled_on_all_channels","0",,
+"DMAC","DMAOR","DME","0","operation_enabled_on_all_channels","1",,
+,,,,,,,
+"INTC","ICR","NMIL","15","pin_input_level_is_low","0",,
+"INTC","ICR","NMIL","15","pin_input_level_is_high","1",,
+"INTC","ICR","MAI","14","interrupts_enabled_while_nmi_pin_is_low","0",,
+"INTC","ICR","MAI","14","interrupts_disabled_while_nmi_pin_is_low","1",,
+"INTC","ICR","NMIB","9","interrupt_requests_witheld","0",,
+"INTC","ICR","NMIB","9","interrupt_requests_detected","1",,
+"INTC","ICR","NMIE","8","interrupt_on_falling_edge_of_nmi","0",,
+"INTC","ICR","NMIE","8","interrupt_on_rising_edge_of_nmi","1",,
+"INTC","ICR","IRLM","7","level_encoded_interrupt_requests","0",,
+"INTC","ICR","IRLM","7","independent_interrupt_request","1",,
+,,,,,,,
+"INTC","IPRA",,"15-12","TMU0",,"0b1111",
+"INTC","IPRA",,"11-8","TMU1",,"0b1111",
+"INTC","IPRA",,"7-4","TMU2",,"0b1111",
+"INTC","IPRA",,"3-0","RTC",,"0b1111",
+,,,,,,,
+"INTC","IPRB",,"15-12","WDT",,"0b1111",
+"INTC","IPRB",,"11-8","REF",,"0b1111",
+"INTC","IPRB",,"7-4","SCI1",,"0b1111",
+,,,,,,,
+"INTC","IPRC",,"15-12","GPIO",,"0b1111",
+"INTC","IPRC",,"11-8","DMAC",,"0b1111",
+"INTC","IPRC",,"7-4","SCIF",,"0b1111",
+"INTC","IPRC",,"3-0","UDI",,"0b1111",
+,,,,,,,
+"TMU","TOCR","TCOE","0","tclk_is_external_clock_or_input_capture","0",,"Timer Clock Pin Control"
+"TMU","TOCR","TCOE","0","tclk_is_on_chip_rtc","1",,"Timer Clock Pin Control"
+,,,,,,,
+"TMU","TSTR","STR2","2","counter_start","1",,"Counter Start 2"
+"TMU","TSTR","STR1","1","counter_start","1",,"Counter Start 1"
+"TMU","TSTR","STR0","0","counter_start","1",,"Counter Start 0"
+,,,,,,,
+"TMU","TCR0",,"8","UNF","1",,"Underflow Flag"
+"TMU","TCR0",,"5","UNIE","1",,"Underflow Interrupt Control"
+"TMU","TCR0","CKEG","4-3","rising","0b00",,"Clock Edge"
+"TMU","TCR0","CKEG","4-3","falling","0b01",,"Clock Edge"
+"TMU","TCR0","CKEG","4-3","rising_falling","0b10",,"Clock Edge"
+"TMU","TCR0","TPSC","2-0","p_phi_4","0b000",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","p_phi_16","0b001",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","p_phi_64","0b010",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","p_phi_256","0b011",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","p_phi_1024","0b100",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","rtc_output","0b110",,"Timer Prescaler"
+"TMU","TCR0","TPSC","2-0","external","0b111",,"Timer Prescaler"
+,,,,,,,
+"TMU","TCR1",,"8","UNF","1",,"Underflow Flag"
+"TMU","TCR1",,"5","UNIE","1",,"Underflow Interrupt Control"
+"TMU","TCR1","CKEG","4-3","rising","0b00",,"Clock Edge"
+"TMU","TCR1","CKEG","4-3","falling","0b01",,"Clock Edge"
+"TMU","TCR1","CKEG","4-3","rising_falling","0b10",,"Clock Edge"
+"TMU","TCR1","TPSC","2-0","p_phi_4","0b000",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","p_phi_16","0b001",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","p_phi_64","0b010",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","p_phi_256","0b011",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","p_phi_1024","0b100",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","rtc_output","0b110",,"Timer Prescaler"
+"TMU","TCR1","TPSC","2-0","external","0b111",,"Timer Prescaler"
+,,,,,,,
+"TMU","TCR2",,"9","ICPF","1",,"Input Capture Interrupt Flag"
+"TMU","TCR2",,"8","UNF","1",,"Underflow Flag"
+"TMU","TCR2","ICPE","7-6","disabled","0b00",,"Input Capture Control"
+"TMU","TCR2","ICPE","7-6","enabled","0b10",,"Input Capture Control"
+"TMU","TCR2","ICPE","7-6","enabled_with_interrupts","0b11",,"Input Capture Control"
+"TMU","TCR2",,"5","UNIE","1",,"Underflow Interrupt Control"
+"TMU","TCR2","CKEG","4-3","rising","0b00",,"Clock Edge"
+"TMU","TCR2","CKEG","4-3","falling","0b01",,"Clock Edge"
+"TMU","TCR2","CKEG","4-3","rising_falling","0b10",,"Clock Edge"
+"TMU","TCR2","TPSC","2-0","p_phi_4","0b000",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","p_phi_16","0b001",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","p_phi_64","0b010",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","p_phi_256","0b011",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","p_phi_1024","0b100",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","rtc_output","0b110",,"Timer Prescaler"
+"TMU","TCR2","TPSC","2-0","external","0b111",,"Timer Prescaler"
+,,,,,,,
+"SCIF","SCSMR2","CHR","6","8_bit_data","0",,
+"SCIF","SCSMR2","CHR","6","7_bit_data","1",,
+"SCIF","SCSMR2","PE","5","parity_disabled","0",,
+"SCIF","SCSMR2","PE","5","parity_enabled","1",,
+"SCIF","SCSMR2","OE","4","even_parity","0",,
+"SCIF","SCSMR2","OE","4","odd_parity","1",,
+"SCIF","SCSMR2","STOP","3","1_stop_bit","0",,
+"SCIF","SCSMR2","STOP","3","2_stop_bits","1",,
+"SCIF","SCSMR2","CKS","1-0","p_phi_clock","0b00",,
+"SCIF","SCSMR2","CKS","1-0","p_phi_4_clock","0b01",,
+"SCIF","SCSMR2","CKS","1-0","p_phi_16_clock","0b10",,
+"SCIF","SCSMR2","CKS","1-0","p_phi_64_clock","0b11",,
+,,,,,,,
+"SCIF","SCSCR2","TIE","7","transmit_fifo_data_empty_interrupt_disabled","0",,
+"SCIF","SCSCR2","TIE","7","transmit_fifo_data_empty_interrupt_enabled","1",,
+"SCIF","SCSCR2","RIE","6","request_disabled","0",,
+"SCIF","SCSCR2","RIE","6","request_enabled","1",,
+"SCIF","SCSCR2","TE","5","transmission_disabled","0",,
+"SCIF","SCSCR2","TE","5","transmission_enabled","1",,
+"SCIF","SCSCR2","RE","4","reception_disabled","0",,
+"SCIF","SCSCR2","RE","4","reception_enabled","1",,
+"SCIF","SCSCR2","REIE","3","requests_disabled","0",,
+"SCIF","SCSCR2","REIE","3","requests_enabled","1",,
+"SCIF","SCSCR2","CKE1","1","sck2_pin_functions_as_input_pin","0",,
+"SCIF","SCSCR2","CKE1","1","sck2_pin_functions_as_clock_input","1",,
+,,,,,,,
+"SCIF","SCFSR2","PER3_0","15-12","number_of_parity_errors",,,
+"SCIF","SCFSR2","FER3_0","11-8","number_of_framing_errors",,,
+"SCIF","SCFSR2","ER","7","no_framing_error_or_parity_error","0",,
+"SCIF","SCFSR2","ER","7","framing_error_or_parity_error","1",,
+"SCIF","SCFSR2","TEND","6","transmission_in_progress","0",,
+"SCIF","SCFSR2","TEND","6","transmission_has_ended","1",,
+"SCIF","SCFSR2","TDFE","5","transmit_data_bytes_does_exceed_trigger","0",,
+"SCIF","SCFSR2","TDFE","5","transmit_data_bytes_does_not_exceed_trigger","1",,
+"SCIF","SCFSR2","BRK","4","break_not_received","0",,
+"SCIF","SCFSR2","BRK","4","break_received","1",,
+"SCIF","SCFSR2","FER","3","no_framing_error","0",,
+"SCIF","SCFSR2","FER","3","framing_error","1",,
+"SCIF","SCFSR2","PER","2","parity_error","0",,
+"SCIF","SCFSR2","PER","2","no_parity_error","1",,
+"SCIF","SCFSR2","RDF","1","receive_data_bytes_less_than_receive_trigger","0",,
+"SCIF","SCFSR2","RDF","1","receive_data_bytes_greater_than_or_equal_receive_trigger","1",,
+"SCIF","SCFSR2","DR","0","reception_is_in_progress","0",,
+"SCIF","SCFSR2","DR","0","no_further_data_has_arrived","1",,
+,,,,,,,
+"SCIF","SCFCR2","RTRG","7-6","trigger_on_1_byte","0b00",,
+"SCIF","SCFCR2","RTRG","7-6","trigger_on_4_bytes","0b01",,
+"SCIF","SCFCR2","RTRG","7-6","trigger_on_8_bytes","0b10",,
+"SCIF","SCFCR2","RTRG","7-6","trigger_on_14_byte","0b11",,
+"SCIF","SCFCR2","TTRG","5-4","trigger_on_8_bytes","0b00",,
+"SCIF","SCFCR2","TTRG","5-4","trigger_on_4_bytes","0b01",,
+"SCIF","SCFCR2","TTRG","5-4","trigger_on_2_bytes","0b10",,
+"SCIF","SCFCR2","TTRG","5-4","trigger_on_1_bytes","0b11",,
+"SCIF","SCFCR2","MCE","3","modem_signals_disabled","0",,
+"SCIF","SCFCR2","MCE","3","modem_signals_enabled","1",,
+"SCIF","SCFCR2","TFRST","2","reset_operation_disabled","0",,
+"SCIF","SCFCR2","TFRST","2","reset_operation_enabled","1",,
+"SCIF","SCFCR2","RFRST","1","reset_operation_disabled","0",,
+"SCIF","SCFCR2","RFRST","1","reset_operation_enabled","1",,
+"SCIF","SCFCR2","LOOP","0","loopback_test_disabled","0",,
+"SCIF","SCFCR2","LOOP","0","loopback_test_enabled","1",,
+,,,,,,,
+"SCIF","SCFDR2",,"12-8","transmit_data_bytes",,,
+"SCIF","SCFDR2",,"4-0","receive_data_bytes",,,
+,,,,,,,
+"SCIF","SCSPTR2","RTSIO","7","rtsdt_not_output_to_rts2","0",,
+"SCIF","SCSPTR2","RTSIO","7","rtsdt_output_to_rts2","1",,
+"SCIF","SCSPTR2","RTSDT","6","input_output_data_is_low_level","0",,
+"SCIF","SCSPTR2","RTSDT","6","input_output_data_is_high_level","1",,
+"SCIF","SCSPTR2","CTSIO","5","ctsdt_is_not_output_to_cts2","0",,
+"SCIF","SCSPTR2","CTSIO","5","ctsdt_is_output_to_cts2","1",,
+"SCIF","SCSPTR2","CTSDT","4","input_output_data_is_low_level","0",,
+"SCIF","SCSPTR2","CTSDT","4","input_output_data_is_high_level","1",,
+"SCIF","SCSPTR2","SPB2IO","1","spb2dt_is_not_output_to_txd2","0",,
+"SCIF","SCSPTR2","SPB2IO","1","spb2dt_is_output_to_txd2","1",,
+"SCIF","SCSPTR2","SPB2DT","0","input_output_data_is_low_level","0",,
+"SCIF","SCSPTR2","SPB2DT","0","input_output_data_is_high_level","1",,

@@ -1,8 +1,8 @@
 #include <cstdint>
 
-#include "sh7091.hpp"
-#include "sh7091_bits.hpp"
-#include "holly.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
+#include "holly/holly.hpp"
 
 enum load_command {
   CMD_NONE,
@@ -48,7 +48,8 @@ void debug(const char * s)
 {
   char c;
   while ((c = *s++)) {
-    while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0);
+    using namespace scif;
+    while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
     sh7091.SCIF.SCFTDR2 = (uint8_t)c;
   }
 }

@@ -45,13 +45,12 @@ def new_writer():
 
     def terminate():
         nonlocal last_block
-        nonlocal first_address
         nonlocal stack
 
         if last_block is not None:
             yield "};"
             for address, name in stack:
-                yield f"static_assert((offsetof (struct {last_block.lower()}_reg, {name})) == {hex(address)});"
+                yield f"static_assert((offsetof (struct {last_block.lower()}_reg, {name})) == {hex(address - first_address)});"
             yield ""
         stack = []
 
@@ -68,15 +67,16 @@ def new_writer():
         _address = int(row["address"], 16)
         assert _offset  <= 0xff
         assert _address <= 0xffff
-        address = (_offset << 16) | (_address << 0)
+        offset_address = (_offset << 16)
+        address = offset_address | (_address << 0)
         size = int(row["size"], 10)
         name = row["name"]
         description = row["description"]
 
         if block != last_block:
             yield from terminate()
-            first_address = 0 # hmm...
-            last_address = 0
+            first_address = offset_address
+            last_address = offset_address
             size_total = 0
             reserved_num = 0
             yield f"struct {block.lower()}_reg {{"

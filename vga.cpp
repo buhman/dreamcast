@@ -1,8 +1,8 @@
 #include <cstdint>
 
-#include "sh7091.hpp"
-#include "sh7091_bits.hpp"
-#include "holly.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
+#include "holly/holly.hpp"
 #include "holly/core_bits.hpp"
 #include "aica.hpp"
 #include "memorymap.hpp"
@@ -10,14 +10,16 @@
 #include "vga.hpp"
 #include "rgb.hpp"
 
+/*
 uint32_t get_cable_type()
 {
-  /* set all pins to input */
+  // set all pins to input
   sh7091.BSC.PCTRA = 0;
 
-  /* get cable type from pins 9 + 8 */
+  // get cable type from pins 9 + 8
   return sh7091.BSC.PDTRA & PDTRA__MASK;
 }
+*/
 
 void vga1()
 {
@@ -117,8 +119,6 @@ void v_sync_out()
 
 void vga()
 {
-  get_cable_type();
-
   holly.SOFTRESET = softreset::sdram_if_soft_reset
 		  | softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;

@@ -1,13 +1,12 @@
-#include "../float_uint32.hpp"
-#include "core_bits.hpp"
-#include "../holly.hpp"
-#include "../memorymap.hpp"
-#include "../systembus.hpp"
-#include "../systembus_bits.hpp"
+#include "float_uint32.hpp"
+#include "memorymap.hpp"
+#include "systembus.hpp"
+#include "systembus_bits.hpp"
 
 #include "texture_memory_alloc.hpp"
-
+#include "holly.hpp"
 #include "core.hpp"
+#include "core_bits.hpp"
 #include "background.hpp"
 #include "region_array.hpp"
 

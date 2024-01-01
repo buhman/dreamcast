@@ -1,6 +1,6 @@
 #include <cstdint>
 
-#include "cache.hpp"
+#include "sh7091/cache.hpp"
 
 extern uint32_t __bss_link_start __asm("__bss_link_start");
 extern uint32_t __bss_link_end __asm("__bss_link_end");

@@ -18,11 +18,19 @@ def parse_bit_number(s):
     assert '-' not in s
     return int(s, 10)
 
+def parse_bit_set(s, split_char):
+    assert len(list(c for c in s if c == split_char)) == 1
+    left, right = map(parse_bit_number, s.split(split_char, maxsplit=1))
+    assert left > right, (left, right)
+    return left, right
+
 def parse_bit_range(s):
     if '-' in s:
-        left, right = map(parse_bit_number, s.split('-', maxsplit=1))
-        assert left > right, (left, right)
+        left, right = parse_bit_set(s, '-')
         return set(range(right, left+1))
+    elif ',' in s:
+        left, right = parse_bit_set(s, ',')
+        return set([right, left])
     else:
         num = parse_bit_number(s)
         return set([num])
@@ -41,7 +49,7 @@ def aggregate_enums(aggregated_rows):
 
     for row in aggregated_rows:
         bits = parse_bit_range(row["bits"])
-        assert row["bit_name"] != ""
+        assert row["bit_name"] != "", row
         if row["enum_name"] == "":
             assert_unique_ordered(bits)
             non_enum.append(row)
@@ -50,7 +58,7 @@ def aggregate_enums(aggregated_rows):
                 assert_unique_ordered(bits)
                 non_enum.append(row["enum_name"])
             else:
-                assert enum_bits[row["enum_name"]] == bits
+                assert enum_bits[row["enum_name"]] == bits, row
 
             enum_bits[row["enum_name"]] = bits
             enum_aggregated[row["enum_name"]].append(row)
@@ -64,6 +72,7 @@ class enum:
 
 @dataclass
 class register:
+    block: Union[None, str]
     name: str
     defs: list[Union[dict, enum]]
 
@@ -79,9 +88,17 @@ def aggregate_all_enums(aggregated):
                 return row_or_string
             else:
                 assert False, (row_or_string, type(row_or_string))
-        out.append(
-            register(register_name,
-                     [resolve(aggregate) for aggregate in non_enum]))
+
+        defs = [resolve(aggregate) for aggregate in non_enum]
+        if 'block' in rows[0]:
+            blocks = set(row['block'] for row in rows)
+            assert len(blocks) == 1, blocks
+            block_name = next(iter(blocks))
+            out.append(
+                register(block_name, register_name, defs))
+        else:
+            out.append(
+                register(None, register_name, defs))
     return out
 
 '''
@@ -107,11 +124,18 @@ def aggregate_all_enums(aggregated):
 '''
 
 def mask_from_bits(bits):
-    mask = 2 ** len(bits) - 1
+    h, l = max(bits), min(bits)
+    mask = 2 ** ((h - l) + 1) - 1
     return mask
 
 def parse_value(value):
     return eval(value)
+
+def escape(bit_name):
+    if bit_name[0] in {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9'}:
+        return '_' + bit_name
+    else:
+        return bit_name
 
 def render_read_only(bit_def):
     assert bit_def["value"] == ""
@@ -119,7 +143,7 @@ def render_read_only(bit_def):
     bits = parse_bit_range(bit_def["bits"])
     mask_value = mask_from_bits(bits)
     yield (
-        f"constexpr uint32_t {bit_def['bit_name']}(uint32_t reg) {{ "
+        f"constexpr uint32_t {escape(bit_def['bit_name'])}(uint32_t reg) {{ "
         f"return (reg >> {min(bits)}) & {hex(mask_value)};"
         " }"
     )
@@ -145,7 +169,7 @@ def render_mask(bit_def):
     bits = parse_bit_range(bit_def["bits"])
     if mask.startswith("float_"):
         yield (
-            f"constexpr uint32_t {bit_def['bit_name']}(float num) {{ "
+            f"inline uint32_t {escape(bit_def['bit_name'])}(float num) {{ "
             f"return {render_float_mask(mask)};"
             " }"
         )
@@ -155,7 +179,7 @@ def render_mask(bit_def):
         assert mask_value & mask_from_bits(bits) == mask_value, (mask_value, mask_from_bits(bits))
 
         yield (
-            f"constexpr uint32_t {bit_def['bit_name']}(uint32_t num) {{ "
+            f"constexpr uint32_t {escape(bit_def['bit_name'])}(uint32_t num) {{ "
             f"return (num & {hex(mask_value)}) << {min(bits)};"
             " }"
         )
@@ -163,9 +187,9 @@ def render_mask(bit_def):
 def render_value(bit_def):
     assert bit_def["mask"] == ""
     bits = parse_bit_range(bit_def["bits"])
-    assert parse_value(bit_def["value"]) <= mask_from_bits(bits), bit_def["value"]
+    assert parse_value(bit_def["value"]) <= mask_from_bits(bits), (bit_def["value"], mask_from_bits(bits), bits)
     bit_ix = min(bits)
-    yield f"constexpr uint32_t {bit_def['bit_name']} = {bit_def['value']} << {bit_ix};"
+    yield f"constexpr uint32_t {escape(bit_def['bit_name'])} = {bit_def['value']} << {bit_ix};"
 
 def render_defs(bit_def):
     if bit_def["value"] != "":
@@ -212,8 +236,22 @@ def render_register(register):
     yield ""
 
 def render_registers(registers):
+    last_block = None
     for register in registers:
+        if register.block != last_block:
+            assert register.block is not None
+            if last_block is not None:
+                yield '}' # end of previous namespace
+                yield ""
+            yield f'namespace {register.block.lower()} {{'
+        if register.block is None:
+            assert last_block is None
+        last_block = register.block
+
         yield from render_register(register)
+
+    if last_block is not None:
+        yield '}' # end of block namespace
 
 def header():
     yield "#pragma once"
