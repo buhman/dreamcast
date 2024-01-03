@@ -9,24 +9,29 @@ namespace serial {
 
 void init()
 {
+  using namespace scif;
+
   sh7091.SCIF.SCSCR2 = 0;
   sh7091.SCIF.SCSMR2 = 0;
   sh7091.SCIF.SCBRR2 = 1; // 520833.3
 
-  sh7091.SCIF.SCFCR2 = SCFCR2__TFRST | SCFCR2__RFRST;
+  sh7091.SCIF.SCFCR2 = scfcr2::tfrst::reset_operation_enabled
+                     | scfcr2::rfrst::reset_operation_enabled;
   // tx/rx trigger on 1 byte
   sh7091.SCIF.SCFCR2 = 0;
 
   sh7091.SCIF.SCSPTR2 = 0;
   sh7091.SCIF.SCLSR2 = 0;
 
-  sh7091.SCIF.SCSCR2 = SCSCR2__TE | SCSCR2__RE;
+  sh7091.SCIF.SCSCR2 = scscr2::te::transmission_enabled
+                     | scscr2::re::reception_enabled;
 }
 
 void character(const char c)
 {
+  using namespace scif;
   // wait for transmit fifo to become empty
-  while ((sh7091.SCIF.SCFSR2 & SCFSR2__TDFE) == 0);
+  while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
 
   for (int i = 0; i < 100000; i++) {
     asm volatile ("nop;");

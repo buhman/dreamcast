@@ -40,7 +40,6 @@ FONT_BITMAP_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	serial.o \
 	sperrypc.data.o
 
 example/font_bitmap.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -53,7 +52,6 @@ FONT_OUTLINE_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	serial.o \
 	dejavusansmono.data.o
 
 example/font_outline.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -66,7 +64,6 @@ FONT_OUTLINE_PUNCH_THROUGH_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	serial.o \
 	dejavusansmono_mono.data.o
 
 example/font_outline_punch_through.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -185,7 +182,6 @@ MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	serial.o \
 	macaw.data.o
 
 example/macaw_cube_render_to_texture.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -203,7 +199,7 @@ example/maple_device_request.elf: $(START_OBJ) $(MAPLE_DEVICE_REQUEST_OBJ)
 MAPLE_CONTROLLER_OBJ = \
 	example/maple_controller.o \
 	vga.o \
-	serial.o \
+	sh7091/serial.o \
 	maple/maple.o
 
 example/maple_controller.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -237,7 +233,6 @@ MAPLE_ANALOG_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	serial.o \
 	maple/maple.o
 
 example/maple_analog.elf: LDSCRIPT = $(LIB)/alt.lds

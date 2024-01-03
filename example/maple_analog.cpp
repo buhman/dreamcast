@@ -4,17 +4,20 @@
 #include "align.hpp"
 
 #include "vga.hpp"
-#include "holly.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
 #include "holly/ta_bits.hpp"
+#include "holly/isp_tsp.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
-#include "serial.hpp"
+#include "sh7091/serial.hpp"
 
 #include "geometry/border.hpp"
 #include "geometry/circle.hpp"
@@ -57,15 +60,6 @@ void do_get_condition(uint32_t * command_buf,
       return;
     }
 
-    /*
-    bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
-    if (a == 0) {
-      serial::string("port ");
-      serial::integer<uint8_t>(port);
-      serial::string("  `a` press ");
-      serial::integer<uint8_t>(a);
-    }
-    */
     data[port].analog_axis_3 = data_fields.data.analog_axis_3;
     data[port].analog_axis_4 = data_fields.data.analog_axis_4;
   }
@@ -73,7 +67,7 @@ void do_get_condition(uint32_t * command_buf,
 
 void transform(ta_parameter_writer& parameter,
 	       const vec3 * vertices,
-	       const face& face,
+	       const face_vn& face,
 	       const vec4& color,
 	       const vec3& position,
 	       const float scale
@@ -91,14 +85,17 @@ void transform(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word,
+					0, // texture_control_word
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
 
   constexpr uint32_t strip_length = 3;
   for (uint32_t i = 0; i < strip_length; i++) {
-    bool end_of_strip = i == strip_length - 1;
 
     // world transform
     uint32_t vertex_ix = face[i].vertex;
@@ -131,13 +128,16 @@ void transform(ta_parameter_writer& parameter,
     y += 240.f;
     z = 1 / z;
 
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(x, y, z,
-			    color.w, // alpha
-			    color.x, // r
-			    color.y, // g
-			    color.z, // b
-			    end_of_strip);
+    bool end_of_strip = i == strip_length - 1;
+
+    parameter.append<ta_vertex_parameter::polygon_type_1>() =
+      ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
+					  x, y, z,
+					  color.w, // alpha
+					  color.x, // r
+					  color.y, // g
+					  color.z  // b
+					  );
   }
 }
 
@@ -223,7 +223,7 @@ void main()
 		);
     }
 
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
     core_start_render(frame_ix, num_frames);

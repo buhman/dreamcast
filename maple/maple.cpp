@@ -3,8 +3,8 @@
 
 #include "align.hpp"
 
-#include "sh7091.hpp"
-#include "sh7091_bits.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
 
@@ -97,9 +97,11 @@ void init_block_write(uint32_t * command_buf, uint32_t * receive_buf,
 
 void dma_start(uint32_t * command_buf)
 {
-  sh7091.DMAC.DMAOR = DMAOR__DDT                 // on-demand data transfer mode
-                    | DMAOR__PR__CH2_CH0_CH1_CH3 // priority mode; CH2 > CH0 > CH1 > CH3
-                    | DMAOR__DME;                // DMAC master enable
+  using namespace dmac;
+
+  sh7091.DMAC.DMAOR = dmaor::ddt::on_demand_data_transfer_mode       /* on-demand data transfer mode */
+                    | dmaor::pr::ch2_ch0_ch1_ch3                     /* priority mode; CH2 > CH0 > CH1 > CH3 */
+                    | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
 
   // clear maple-DMA end status
   system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;

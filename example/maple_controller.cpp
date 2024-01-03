@@ -4,10 +4,11 @@
 #include "align.hpp"
 
 #include "maple/maple.hpp"
+#include "maple/maple_impl.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
-#include "serial.hpp"
+#include "sh7091/serial.hpp"
 
 uint32_t _command_buf[1024 / 4 + 32] = {0};
 uint32_t _receive_buf[1024 / 4 + 32] = {0};
@@ -47,10 +48,11 @@ void do_get_condition(uint32_t port)
 			    std::byteswap(function_type::controller));
   maple::dma_start(command_buf);
 
-  using response_type = struct maple::command_response<data_transfer::data_fields<struct ft0::data_transfer::data_format>>;
-  auto response = reinterpret_cast<response_type *>(receive_buf);
+  using response_type = data_transfer<ft0::data_transfer::data_format>;
+  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  auto response = reinterpret_cast<command_response_type *>(receive_buf);
   auto& bus_data = response->bus_data;
-  if (bus_data.command_code != data_transfer::command_code) {
+  if (bus_data.command_code != response_type::command_code) {
     return;
   }
   auto& data_fields = bus_data.data_fields;
@@ -69,20 +71,17 @@ void do_get_condition(uint32_t port)
 
 void do_device_request()
 {
-  using response_type = struct maple::command_response<device_status::data_fields>;
-  constexpr uint32_t response_size = align_32byte(sizeof (response_type));
+  using command_type = device_request;
+  using response_type = device_status;
 
-  maple::init_host_command_all_ports(command_buf, receive_buf,
-                                     device_request::command_code,
-				     (sizeof (device_request::data_fields)), // command_data_size
-				     (sizeof (device_status::data_fields))); // response_data_size
+  maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
   maple::dma_start(command_buf);
 
+  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  auto response = reinterpret_cast<command_response_type *>(receive_buf);
   for (uint8_t port = 0; port < 4; port++) {
-    auto response = reinterpret_cast<response_type *>(&receive_buf[response_size * port / 4]);
-
-    auto& bus_data = response->bus_data;
-    auto& data_fields = response->bus_data.data_fields;
+    auto& bus_data = response[port].bus_data;
+    auto& data_fields = response[port].bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
       // the controller is disconnected
     } else {

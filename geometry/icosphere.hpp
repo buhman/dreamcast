@@ -47,7 +47,7 @@ namespace icosphere {
     { -0.425323f,  0.850654f, -0.309011f },
     {  0.162456f,  0.850654f, -0.499995f },
   };
-  
+
   constexpr vec3 normals[] = {
     {  0.102400f, -0.943500f,  0.315100f },
     {  0.700200f, -0.661700f,  0.268000f },
@@ -130,8 +130,8 @@ namespace icosphere {
     {  0.187600f, -0.794700f,  0.577300f },
     {  0.471300f, -0.661700f,  0.583100f },
   };
-  
-  constexpr face faces[] = {
+
+  constexpr face_vn faces[] = {
     {{ 0,  0}, {13,  0}, {12,  0}},
     {{ 1,  1}, {13,  1}, {15,  1}},
     {{ 0,  2}, {12,  2}, {17,  2}},
@@ -213,7 +213,7 @@ namespace icosphere {
     {{12, 78}, {13, 78}, {14, 78}},
     {{13, 79}, { 1, 79}, {14, 79}},
   };
-  
-  constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof (face));
-  
+
+  constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof (face_vn));
+
 }

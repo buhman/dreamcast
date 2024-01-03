@@ -37,12 +37,12 @@ namespace circle {
     {  0.382683f,  0.000000f, -0.923880f },
     {  0.195090f,  0.000000f, -0.980785f },
   };
-  
+
   constexpr vec3 normals[] = {
     { -0.000000f,  1.000000f, -0.000000f },
   };
-  
-  constexpr face faces[] = {
+
+  constexpr face_vn faces[] = {
     {{31,  0}, { 0,  0}, { 1,  0}},
     {{30,  0}, {31,  0}, { 1,  0}},
     {{20,  0}, {13,  0}, {18,  0}},
@@ -74,7 +74,7 @@ namespace circle {
     {{17,  0}, {14,  0}, {15,  0}},
     {{16,  0}, {17,  0}, {15,  0}},
   };
-  
-  constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof (face));
-  
+
+  constexpr uint32_t num_faces = (sizeof (faces)) / (sizeof (face_vn));
+
 }

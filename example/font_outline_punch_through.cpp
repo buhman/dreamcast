@@ -1,26 +1,26 @@
 #include <cstdint>
 
 #include "align.hpp"
-
 #include "vga.hpp"
-#include "holly.hpp"
+
+#include "holly/texture_memory_alloc.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
-#include "holly/ta_parameter.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
-#include "holly/texture_memory_alloc.hpp"
+#include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
+#include "holly/ta_bits.hpp"
+#include "holly/isp_tsp.hpp"
 #include "memorymap.hpp"
 #include "holly/background.hpp"
 #include "holly/region_array.hpp"
-#include "holly/ta_bits.hpp"
 #include "twiddle.hpp"
-#include "serial.hpp"
 #include "palette.hpp"
 
 #include "font/font.hpp"
 #include "dejavusansmono_mono.hpp"
-
-#include "sperrypc.hpp"
 
 struct vertex {
   float x;
@@ -58,27 +58,34 @@ uint32_t transform(ta_parameter_writer& parameter,
       continue;
     }
 
-    auto polygon = global_polygon_type_0(texture_address);
-    polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-				   | para_control::list_type::punch_through
-				   | obj_control::col_type::packed_color
-				   | obj_control::texture;
+    const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+					  | para_control::list_type::punch_through
+					  | obj_control::col_type::packed_color
+					  | obj_control::texture;
 
-    polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
-                                 | tsp_instruction_word::dst_alpha_instr::one
-                                 | tsp_instruction_word::fog_control::no_fog
-                                 //| tsp_instruction_word::use_alpha
-                                 | tsp_instruction_word::texture_u_size::from_int(texture_width)
-                                 | tsp_instruction_word::texture_v_size::from_int(texture_height);
+    const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+					    | isp_tsp_instruction_word::culling_mode::no_culling;
 
-    polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
-                                 | texture_control_word::scan_order::twiddled
-                                 | texture_control_word::texture_address(texture_address / 8);
-    parameter.append<global_polygon_type_0>() = polygon;
+    const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
+					| tsp_instruction_word::dst_alpha_instr::zero
+					| tsp_instruction_word::fog_control::no_fog
+					| tsp_instruction_word::texture_u_size::from_int(texture_width)
+					| tsp_instruction_word::texture_v_size::from_int(texture_height);
+
+    const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+					| texture_control_word::scan_order::twiddled
+					| texture_control_word::texture_address(texture_address / 8);
+
+    parameter.append<ta_global_parameter::polygon_type_0>() =
+      ta_global_parameter::polygon_type_0(parameter_control_word,
+					  isp_tsp_instruction_word,
+					  tsp_instruction_word,
+					  texture_control_word,
+					  0, // data_size_for_sort_dma
+					  0  // next_address_for_sort_dma
+					  );
 
     for (uint32_t i = 0; i < strip_length; i++) {
-      bool end_of_strip = i == strip_length - 1;
-
       float x = strip_vertices[i].x;
       float y = strip_vertices[i].y;
       float z = strip_vertices[i].z;
@@ -99,11 +106,14 @@ uint32_t transform(ta_parameter_writer& parameter,
       u = u / static_cast<float>(texture_width);
       v = v / static_cast<float>(texture_height);
 
-      parameter.append<vertex_polygon_type_3>() =
-        vertex_polygon_type_3(x, y, z,
-                              u, v,
-                              0x00000000, // base_color
-                              end_of_strip);
+      bool end_of_strip = i == strip_length - 1;
+      parameter.append<ta_vertex_parameter::polygon_type_3>() =
+	ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(end_of_strip),
+					    x, y, z,
+					    u, v,
+					    0, // base_color
+					    0  // offset_color
+					    );
     }
 
     advance += glyph.metrics.horiAdvance;
@@ -117,26 +127,34 @@ uint32_t transform2(ta_parameter_writer& parameter,
 {
   uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
 
-  auto polygon = global_polygon_type_0(texture_address);
-  polygon.parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                 | para_control::list_type::opaque
-                                 | obj_control::col_type::packed_color
-                                 | obj_control::texture;
+  const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+					| para_control::list_type::opaque
+					| obj_control::col_type::packed_color
+					| obj_control::texture;
 
-  polygon.tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
-                               | tsp_instruction_word::dst_alpha_instr::zero
-                               | tsp_instruction_word::fog_control::no_fog
-                               | tsp_instruction_word::texture_u_size::from_int(texture_width)
-                               | tsp_instruction_word::texture_v_size::from_int(texture_height);
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+					  | isp_tsp_instruction_word::culling_mode::no_culling;
 
-  polygon.texture_control_word = texture_control_word::pixel_format::_4bpp_palette
-                               | texture_control_word::scan_order::twiddled
-                               | texture_control_word::texture_address(texture_address / 8);
-  parameter.append<global_polygon_type_0>() = polygon;
+  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
+				      | tsp_instruction_word::dst_alpha_instr::zero
+				      | tsp_instruction_word::fog_control::no_fog
+				      | tsp_instruction_word::texture_u_size::from_int(texture_width)
+				      | tsp_instruction_word::texture_v_size::from_int(texture_height);
+
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+				      | texture_control_word::scan_order::twiddled
+				      | texture_control_word::texture_address(texture_address / 8);
+
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word,
+					texture_control_word,
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
 
   for (uint32_t i = 0; i < strip_length; i++) {
-    bool end_of_strip = i == strip_length - 1;
-
     float x = strip_vertices[i].x;
     float y = strip_vertices[i].y;
     float z = strip_vertices[i].z;
@@ -150,11 +168,14 @@ uint32_t transform2(ta_parameter_writer& parameter,
     float u = strip_vertices[i].u;
     float v = strip_vertices[i].v;
 
-    parameter.append<vertex_polygon_type_3>() =
-      vertex_polygon_type_3(x, y, z,
-                            u, v,
-                            0x00000000, // base_color
-                            end_of_strip);
+    bool end_of_strip = i == strip_length - 1;
+    parameter.append<ta_vertex_parameter::polygon_type_3>() =
+      ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(end_of_strip),
+					  x, y, z,
+					  u, v,
+					  0, // base_color
+					  0  // offset_color
+					  );
   }
 
   return parameter.offset;
@@ -234,8 +255,6 @@ void main()
                                        , .punch_through = 16 * 4
                                        };
 
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
                   | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -251,15 +270,17 @@ void main()
   const char cabal[27] = "where is this secret cabal";
 
   while (true) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc,
-                              640, 480);
+    ta_polygon_converter_init(opb_size.total(),
+                              ta_alloc,
+                              640 / 32,
+                              480 / 32);
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
     transform2(parameter,
                font->texture_width, font->texture_height);
 
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     transform(parameter,
               font->texture_width, font->texture_height,
@@ -275,7 +296,7 @@ void main()
               cabal, 26,
               font->glyph_height * 1);
 
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_punch_through_list();

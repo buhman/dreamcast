@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 #include "../float_uint32.hpp"
@@ -35,41 +37,53 @@ namespace ta_alloc_ctrl {
   namespace opb_mode {
     constexpr uint32_t increasing_addresses = 0 << 20;
     constexpr uint32_t decreasing_addresses = 1 << 20;
+
+    constexpr uint32_t bit_mask = 0x1 << 20;
   }
-  
+
   namespace pt_opb {
     constexpr uint32_t no_list = 0 << 16;
     constexpr uint32_t _8x4byte = 1 << 16;
     constexpr uint32_t _16x4byte = 2 << 16;
     constexpr uint32_t _32x4byte = 3 << 16;
+
+    constexpr uint32_t bit_mask = 0x3 << 16;
   }
-  
+
   namespace tm_opb {
     constexpr uint32_t no_list = 0 << 12;
     constexpr uint32_t _8x4byte = 1 << 12;
     constexpr uint32_t _16x4byte = 2 << 12;
     constexpr uint32_t _32x4byte = 3 << 12;
+
+    constexpr uint32_t bit_mask = 0x3 << 12;
   }
-  
+
   namespace t_opb {
     constexpr uint32_t no_list = 0 << 8;
     constexpr uint32_t _8x4byte = 1 << 8;
     constexpr uint32_t _16x4byte = 2 << 8;
     constexpr uint32_t _32x4byte = 3 << 8;
+
+    constexpr uint32_t bit_mask = 0x3 << 8;
   }
-  
+
   namespace om_opb {
     constexpr uint32_t no_list = 0 << 4;
     constexpr uint32_t _8x4byte = 1 << 4;
     constexpr uint32_t _16x4byte = 2 << 4;
     constexpr uint32_t _32x4byte = 3 << 4;
+
+    constexpr uint32_t bit_mask = 0x3 << 4;
   }
-  
+
   namespace o_opb {
     constexpr uint32_t no_list = 0 << 0;
     constexpr uint32_t _8x4byte = 1 << 0;
     constexpr uint32_t _16x4byte = 2 << 0;
     constexpr uint32_t _32x4byte = 3 << 0;
+
+    constexpr uint32_t bit_mask = 0x3 << 0;
   }
 }
 
@@ -85,13 +99,17 @@ namespace ta_yuv_tex_ctrl {
   namespace yuv_form {
     constexpr uint32_t yuv420 = 0 << 24;
     constexpr uint32_t yuv422 = 1 << 24;
+
+    constexpr uint32_t bit_mask = 0x1 << 24;
   }
-  
+
   namespace yuv_tex {
     constexpr uint32_t one_texture = 0 << 16;
     constexpr uint32_t multiple_textures = 1 << 16;
+
+    constexpr uint32_t bit_mask = 0x1 << 16;
   }
-  
+
   constexpr uint32_t yuv_v_size(uint32_t num) { return (num & 0x3f) << 8; }
   constexpr uint32_t yuv_u_size(uint32_t num) { return (num & 0x3f) << 0; }
 }

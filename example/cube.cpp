@@ -3,17 +3,19 @@
 #include "align.hpp"
 
 #include "vga.hpp"
-#include "holly.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
 #include "holly/ta_bits.hpp"
+#include "holly/isp_tsp.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
-#include "serial.hpp"
 
 #include "geometry/cube.hpp"
 #include "math/vec4.hpp"
@@ -59,10 +61,14 @@ void transform(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+                                        isp_tsp_instruction_word,
+                                        tsp_instruction_word,
+                                        0, // texture_control_word
+                                        0, // data_size_for_sort_dma
+                                        0  // next_address_for_sort_dma
+                                        );
   auto& face = cube::faces[face_ix];
 
   constexpr uint32_t strip_length = 3;
@@ -116,13 +122,14 @@ void transform(ta_parameter_writer& parameter,
     y += 240.f;
     z = 1 / z;
 
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(x, y, z,
+    parameter.append<ta_vertex_parameter::polygon_type_1>() =
+      ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
+			    x, y, z,
 			    color.w, // alpha
 			    color.x, // r
 			    color.y, // g
-			    color.z, // b
-			    end_of_strip);
+			    color.z // b
+			    );
   }
 }
 
@@ -163,8 +170,6 @@ void main()
 				       , .punch_through = 0
 				       };
 
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
@@ -182,8 +187,10 @@ void main()
   };
 
   while (1) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc,
-                              640, 480);
+    ta_polygon_converter_init(opb_size.total(),
+                              ta_alloc,
+                              640 / 32,
+                              480 / 32);
 
     //lights[0].x = cos(theta) * 10;
     //lights[0].z = sin(theta) * 10;
@@ -195,7 +202,7 @@ void main()
     for (uint32_t i = 0; i < cube::num_faces; i++) {
       transform(parameter, i, theta, lights);
     }
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
     core_start_render(frame_ix, num_frames);

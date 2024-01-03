@@ -108,6 +108,12 @@ inline constexpr vec<2, T> operator*(vec<2, T> const& v1, T const& scalar)
 }
 
 template <typename T>
+inline constexpr vec<2, T> operator*(T const& scalar, vec<2, T> const& v1)
+{
+  return vec<2, T>(scalar) * v1;
+}
+
+template <typename T>
 inline constexpr vec<2, T> operator/(vec<2, T> const& v1, vec<2, T> const& v2)
 {
   return vec<2, T>(v1.x / v2.x,

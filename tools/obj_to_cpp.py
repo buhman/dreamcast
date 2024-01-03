@@ -111,7 +111,7 @@ def generate_vertices(vertices):
         else:
             assert type(p_c) is Vertex
             p = p_c
-            yield f"{{ {v.x:9f}f, {v.y:9f}f, {v.z:9f}f }},"
+            yield f"{{ {p.x:9f}f, {p.y:9f}f, {p.z:9f}f }},"
     yield "};"
     yield ""
 

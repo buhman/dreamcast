@@ -1,19 +1,21 @@
 #include <cstdint>
 
 #include "align.hpp"
-
 #include "vga.hpp"
-#include "holly.hpp"
+
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
 #include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
+#include "holly/isp_tsp.hpp"
 #include "holly/ta_bits.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
-#include "serial.hpp"
 
 #include "geometry/icosphere.hpp"
 #include "geometry/suzanne.hpp"
@@ -21,7 +23,7 @@
 
 constexpr float half_degree = 0.01745329f / 2;
 
-#define MODEL suzanne
+#define MODEL icosphere
 
 vec3 rotate(const vec3& vertex,
             const float theta)
@@ -61,16 +63,18 @@ void transform(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word,
+					0, // texture_control_word
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
   auto& face = MODEL::faces[face_ix];
 
   constexpr uint32_t strip_length = 3;
   for (uint32_t i = 0; i < strip_length; i++) {
-    bool end_of_strip = i == strip_length - 1;
-
     // world transform
     uint32_t vertex_ix = face[i].vertex;
     auto& vertex = MODEL::vertices[vertex_ix];
@@ -130,13 +134,15 @@ void transform(ta_parameter_writer& parameter,
     y += 240.f;
     z = 1 / z;
 
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(x, y, z,
-			    color.w, // alpha
-			    color.x, // r
-			    color.y, // g
-			    color.z, // b
-			    end_of_strip);
+    bool end_of_strip = i == strip_length - 1;
+    parameter.append<ta_vertex_parameter::polygon_type_1>() =
+      ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
+					  x, y, z,
+					  color.w, // alpha
+					  color.x, // r
+					  color.y, // g
+					  color.z  // b
+					  );
   }
 }
 
@@ -156,10 +162,14 @@ void transform2(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog;
 
-  parameter.append<global_polygon_type_0>() = global_polygon_type_0(parameter_control_word,
-                                                                    isp_tsp_instruction_word,
-                                                                    tsp_instruction_word,
-                                                                    0);
+  parameter.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+					isp_tsp_instruction_word,
+					tsp_instruction_word,
+					0, // texture_control_word
+					0, // data_size_for_sort_dma
+					0  // next_address_for_sort_dma
+					);
 
   constexpr vec3 triangle[] = {
     { 0.f, -1.f, 0.f},
@@ -169,7 +179,6 @@ void transform2(ta_parameter_writer& parameter,
 
   constexpr uint32_t strip_length = 3;
   for (uint32_t i = 0; i < strip_length; i++) {
-    bool end_of_strip = i == strip_length - 1;
     float x = triangle[i].x;
     float y = triangle[i].y;
     float z = triangle[i].z;
@@ -196,13 +205,15 @@ void transform2(ta_parameter_writer& parameter,
     y += 240.f;
     z = 1 / z;
 
-    parameter.append<vertex_polygon_type_1>() =
-      vertex_polygon_type_1(x, y, z,
-			    color.w, // alpha
-			    color.x, // r
-			    color.y, // g
-			    color.z, // b
-			    end_of_strip);
+    bool end_of_strip = i == strip_length - 1;
+    parameter.append<ta_vertex_parameter::polygon_type_1>() =
+      ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(end_of_strip),
+					  x, y, z,
+					  color.w, // alpha
+					  color.x, // r
+					  color.y, // g
+					  color.z // b
+					  );
   }
 }
 
@@ -285,7 +296,7 @@ void main()
     transform2(parameter, lights[1], {0.f, 1.f, 0.f, 1.f});
     transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
 
-    parameter.append<global_end_of_list>() = global_end_of_list();
+    parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
     core_start_render(frame_ix, num_frames);
