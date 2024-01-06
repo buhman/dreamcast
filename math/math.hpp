@@ -26,3 +26,5 @@ constexpr float sin(const float n) noexcept
 {
   return __builtin_sinf(n);
 }
+
+constexpr float pi = 3.141592653589793;

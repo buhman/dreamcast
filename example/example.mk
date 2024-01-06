@@ -149,6 +149,9 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	maple/maple.o \
 	$(LIBGCC)
 
+example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/alt.lds
+example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ)
+
 HEART_OBJ = \
 	example/heart.o \
 	vga.o \
@@ -159,9 +162,6 @@ HEART_OBJ = \
 
 example/heart.elf: LDSCRIPT = $(LIB)/alt.lds
 example/heart.elf: $(START_OBJ) $(HEART_OBJ)
-
-example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/alt.lds
-example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ)
 
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
@@ -186,6 +186,18 @@ MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
 
 example/macaw_cube_render_to_texture.elf: LDSCRIPT = $(LIB)/alt.lds
 example/macaw_cube_render_to_texture.elf: $(START_OBJ) $(MACAW_CUBE_RENDER_TO_TEXTURE_OBJ)
+
+CLIPPING_OBJ = \
+	example/clipping.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	maple/maple.o
+
+example/clipping.elf: LDSCRIPT = $(LIB)/alt.lds
+example/clipping.elf: $(START_OBJ) $(CLIPPING_OBJ)
 
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
