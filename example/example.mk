@@ -163,6 +163,18 @@ HEART_OBJ = \
 example/heart.elf: LDSCRIPT = $(LIB)/alt.lds
 example/heart.elf: $(START_OBJ) $(HEART_OBJ)
 
+VIEWING_SYSTEM_OBJ = \
+	example/viewing_system.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	$(LIBGCC)
+
+example/viewing_system.elf: LDSCRIPT = $(LIB)/alt.lds
+example/viewing_system.elf: $(START_OBJ) $(VIEWING_SYSTEM_OBJ)
+
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
 	vga.o \

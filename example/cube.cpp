@@ -17,10 +17,9 @@
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
 
+#include "geometry/geometry.hpp"
 #include "geometry/cube.hpp"
 #include "math/vec4.hpp"
-
-using vec4 = vec<4, float>;
 
 constexpr float half_degree = 0.01745329f / 2;
 
