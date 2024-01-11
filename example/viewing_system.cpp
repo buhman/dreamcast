@@ -19,6 +19,7 @@
 
 #include "geometry/geometry.hpp"
 #include "geometry/suzanne2.hpp"
+#include "geometry/plane2.hpp"
 
 #include "viewing_system/view_space.hpp"
 #include "viewing_system/screen_space.hpp"
@@ -28,17 +29,15 @@ uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 struct viewer {
   vec3 position;
   vec3 orientation;
+  float azimuth;
+  float colatitude;
 };
-
-constexpr mat4x4 world_transform = { 1.f, 0.f, 0.f, 0.f,
-                                     0.f, 1.f, 0.f, 0.f,
-                                     0.f, 0.f, 1.f, 3.f,
-                                     0.f, 0.f, 0.f, 1.f };
 
 void ta_upload(ta_parameter_writer& parameter,
                const position__color * vertices,
                const face_vtn * faces,
                const uint32_t num_faces,
+	       const mat4x4 world_transform,
                const mat4x4 screen_transform
                )
 {
@@ -80,7 +79,7 @@ void ta_upload(ta_parameter_writer& parameter,
       vec4 v = transform * vertex;
 
       float x = v.x / v.w;
-      float y = v.y / v.w;
+      float y = -v.y / v.w;
       float z = v.w / v.z;
 
       x = x * 240.f + 320.f;
@@ -145,46 +144,67 @@ void main()
   core_init();
   init_texture_memory(opb_size);
 
-  viewer viewer {
-    .position    = {0.f, -3.f, 0.f},
-    .orientation = {0.f, -1.f, 0.f}, // approximate "up" orientation
-  };
-
-  vec3 plane_normal = view_space::viewing_direction(pi / 2.f, // azimuth
-                                                    pi / 4.f  // colatitude
-                                                    );
-  vec3 up_vector = view_space::project_vector_to_plane(plane_normal,
-                                                       viewer.orientation
-                                                       );
-
-  const mat4x4 view_space_transform = view_space::transformation_matrix(viewer.position,
-                                                                        plane_normal,
-                                                                        up_vector);
-
-  const mat4x4 perspective_transform = screen_space::transformation_matrix(1.f,   // the z-coordinate of the view window
-                                                                           100.f, // the z-coordinate of the far clip plane
-                                                                           1.f    // the dimension of the square view window
-                                                                           );
-
-  const mat4x4 screen_transform = perspective_transform * view_space_transform;
-
+  float delta = 0;
 
   uint32_t frame_ix = 0;
   constexpr uint32_t num_frames = 1;
 
   while (true) {
+
+    viewer viewer {
+      .position    = {0.f, -1.f, -2.f},
+      .orientation = {0.f, -1.f,  0.f}, // approximate "up" orientation
+      .azimuth     = 0,
+      .colatitude  = pi / 4.f * sin(delta) * 0.9f,
+    };
+
+    const vec3 plane_normal = view_space::viewing_direction(viewer.azimuth, viewer.colatitude);
+    const vec3 up_vector = view_space::project_vector_to_plane(plane_normal, viewer.orientation);
+
+    const mat4x4 view_space_transform = view_space::transformation_matrix(viewer.position, plane_normal, up_vector);
+
+    const mat4x4 perspective_transform = screen_space::transformation_matrix(1.f,   // the z-coordinate of the view window
+									     100.f, // the z-coordinate of the far clip plane
+									     1.f    // the dimension of the square view window
+									     );
+
+    const mat4x4 screen_transform = perspective_transform * view_space_transform;
+
+
     ta_polygon_converter_init(opb_size.total(),
 			      ta_alloc,
 			      640 / 32,
 			      480 / 32);
     auto parameter = ta_parameter_writer(ta_parameter_buf);
 
-    ta_upload(parameter,
-              suzanne::vertices,
-              suzanne::faces,
-              suzanne::num_faces,
-              screen_transform
-              );
+
+    {
+      constexpr mat4x4 world_transform = { 1.f, 0.f, 0.f, 0.f,
+					   0.f, 1.f, 0.f, 0.f,
+					   0.f, 0.f, 1.f, 3.f,
+					   0.f, 0.f, 0.f, 1.f };
+      ta_upload(parameter,
+		suzanne::vertices,
+		suzanne::faces,
+		suzanne::num_faces,
+		world_transform,
+		screen_transform
+		);
+    }
+
+    {
+      constexpr mat4x4 world_transform = { 0.1f, 0.f,  0.f,  0.f,
+					   0.f,  0.1f, 0.f,  1.2f,
+					   0.f,  0.f,  0.1f, 3.f,
+					   0.f,  0.f,  0.f,  1.f };
+      ta_upload(parameter,
+		plane::vertices,
+		plane::faces,
+		plane::num_faces,
+		world_transform,
+		screen_transform
+		);
+    }
 
     // end of opaque list
     parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -194,9 +214,10 @@ void main()
 
     core_start_render(frame_ix, num_frames);
 
-    v_sync_in();
+    v_sync_out();
     core_wait_end_of_render_video(frame_ix, num_frames);
 
     frame_ix += 1;
+    delta += pi * 2 / 360;
   }
 }
