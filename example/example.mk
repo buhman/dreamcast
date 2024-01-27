@@ -211,6 +211,20 @@ CLIPPING_OBJ = \
 example/clipping.elf: LDSCRIPT = $(LIB)/alt.lds
 example/clipping.elf: $(START_OBJ) $(CLIPPING_OBJ)
 
+CLIPPING2_OBJ = \
+	example/clipping2.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	maple/maple.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/clipping2.elf: LDSCRIPT = $(LIB)/alt.lds
+example/clipping2.elf: $(START_OBJ) $(CLIPPING2_OBJ)
+
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
 	vga.o \

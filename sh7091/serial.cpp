@@ -48,7 +48,7 @@ void string(const char * s)
 }
 
 template <typename T>
-void integer(const T n)
+void integer(const T n, const char end)
 {
   constexpr uint32_t length = (sizeof (T)) * 2;
   char num_buf[length + 1];
@@ -56,11 +56,21 @@ void integer(const T n)
   num_buf[length] = 0;
   string("0x");
   string(num_buf);
-  string("\n");
+  character(end);
+}
+
+template <typename T>
+void integer(const T n)
+{
+  return integer(n, '\n');
 }
 
 template void integer<uint32_t>(uint32_t param);
 template void integer<uint16_t>(uint16_t param);
 template void integer<uint8_t>(uint8_t param);
+
+template void integer<uint32_t>(uint32_t param, char end);
+template void integer<uint16_t>(uint16_t param, char end);
+template void integer<uint8_t>(uint8_t param, char end);
 
 }
