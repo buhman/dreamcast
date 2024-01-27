@@ -225,6 +225,21 @@ CLIPPING2_OBJ = \
 example/clipping2.elf: LDSCRIPT = $(LIB)/alt.lds
 example/clipping2.elf: $(START_OBJ) $(CLIPPING2_OBJ)
 
+CLIPPING_TEXTURED_OBJ = \
+	example/clipping_textured.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	maple/maple.o \
+	sh7091/serial.o \
+	macaw.data.o \
+	$(LIBGCC)
+
+example/clipping_textured.elf: LDSCRIPT = $(LIB)/alt.lds
+example/clipping_textured.elf: $(START_OBJ) $(CLIPPING_TEXTURED_OBJ)
+
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
 	vga.o \

@@ -119,12 +119,8 @@ void init_texture_memory(const struct opb_size& opb_size)
 		);
 }
 
-uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
-
-void main()
+void init_macaw_texture()
 {
-  vga();
-
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
@@ -139,6 +135,14 @@ void main()
     temp[px] = rgb565;
   }
   twiddle::texture(mem->texture, temp, 128, 128);
+}
+
+uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
+
+void main()
+{
+  vga();
+  init_macaw_texture();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
