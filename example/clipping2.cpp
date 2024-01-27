@@ -108,7 +108,7 @@ void transform1(ta_parameter_writer& parameter,
 
 void transform(ta_parameter_writer& parameter,
 	       const vec3 * vertices,
-	       const face_vn& face,
+	       const face_vtn& face,
 	       const vec4& color,
 	       const vec3& position,
 	       const float theta,
