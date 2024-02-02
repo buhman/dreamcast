@@ -18,7 +18,7 @@
 #include "holly/region_array.hpp"
 #include "twiddle.hpp"
 
-#include "sperrypc.hpp"
+#include "sperrypc_8x8.hpp"
 
 struct vertex {
   float x;
@@ -229,7 +229,7 @@ void main()
 {
   vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_sperrypc_data_start);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_sperrypc_8x8_data_start);
   inflate_font(src);
   palette_data();
 

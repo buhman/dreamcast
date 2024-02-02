@@ -40,7 +40,7 @@ FONT_BITMAP_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	sperrypc.data.o
+	sperrypc_8x8.data.o
 
 example/font_bitmap.elf: LDSCRIPT = $(LIB)/alt.lds
 example/font_bitmap.elf: $(START_OBJ) $(FONT_BITMAP_OBJ)
@@ -124,7 +124,7 @@ SUZANNE_PROFILE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	font/font_bitmap.o \
 	sh7091/serial.o \
-	europc_mono.data.o
+	verite_8x16.data.o
 
 example/suzanne_profile.elf: LDSCRIPT = $(LIB)/alt.lds
 example/suzanne_profile.elf: $(START_OBJ) $(SUZANNE_PROFILE_OBJ)

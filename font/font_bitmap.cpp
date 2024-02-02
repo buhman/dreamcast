@@ -156,8 +156,8 @@ void transform_string(ta_parameter_writer& parameter,
       y += static_cast<float>(position_y);
       z = 1.f / (z + 10.f);
 
-      u *= static_cast<float>(glyph_width - 1) / static_cast<float>(texture_width);
-      v *= static_cast<float>(glyph_height - 1) / static_cast<float>(texture_height);
+      u *= static_cast<float>(glyph_width) / static_cast<float>(texture_width);
+      v *= static_cast<float>(glyph_height) / static_cast<float>(texture_height);
 
       parameter.append<ta_vertex_parameter::polygon_type_3>() =
 	ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(end_of_strip),

@@ -21,7 +21,7 @@
 #include "math/vec4.hpp"
 
 #include "font/font_bitmap.hpp"
-#include "europc_mono.hpp"
+#include "verite_8x16.hpp"
 
 constexpr float half_degree = 0.01745329f / 2;
 
@@ -239,11 +239,11 @@ void main()
 {
   vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_europc_mono_data_start);
-  font_bitmap::inflate(2, // pitch
-                       9, // width
-                       14, // height
-                       16, // texture_width
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_verite_8x16_data_start);
+  font_bitmap::inflate(1,  // pitch
+                       8,  // width
+                       16, // height
+                       8,  // texture_width
                        16, // texture_height
                        src);
   font_bitmap::palette_data();
@@ -308,8 +308,8 @@ void main()
     transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
 
     font_bitmap::transform_string(parameter,
-                                  16, 16, // texture
-                                  9, 14, // glyph
+                                  8,  16, // texture
+                                  8,  16, // glyph
                                   40, 40, // position
                                   "test", 4);
 
