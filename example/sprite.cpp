@@ -109,9 +109,12 @@ void main()
     ta_wait_opaque_list();
 
     core_start_render(frame_ix, num_frames);
+    core_wait_end_of_render_video();
 
-    v_sync_in();
-    core_wait_end_of_render_video(frame_ix, num_frames);
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    core_flip(frame_ix, num_frames);
+    while (spg_status::vsync(holly.SPG_STATUS));
+
     frame_ix += 1;
   }
 }

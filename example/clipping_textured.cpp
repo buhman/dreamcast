@@ -49,9 +49,9 @@ void do_get_condition(uint32_t * command_buf,
     .function_type = std::byteswap(function_type::controller)
   };
 
-  maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
-								  data_fields);
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
+                                                                                        data_fields);
+  maple::dma_start(command_buf, size);
 
   using command_response_type = struct maple::command_response<response_type::data_fields>;
   for (uint8_t port = 0; port < 4; port++) {
@@ -326,9 +326,12 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
     core_start_render(frame_ix, num_frames);
+    core_wait_end_of_render_video();
 
-    v_sync_in();
-    core_wait_end_of_render_video(frame_ix, num_frames);
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    core_flip(frame_ix, num_frames);
+    while (spg_status::vsync(holly.SPG_STATUS));
+
     frame_ix += 1;
   }
 }

@@ -5,7 +5,7 @@
 #include "vga.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
-#include "holly.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
@@ -45,9 +45,9 @@ void do_get_condition(uint32_t * command_buf,
     .function_type = std::byteswap(function_type::controller)
   };
 
-  maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
-								  data_fields);
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
+                                                                                        data_fields);
+  maple::dma_start(command_buf, size);
 
   using command_response_type = struct maple::command_response<response_type::data_fields>;
   for (uint8_t port = 0; port < 4; port++) {
@@ -164,7 +164,7 @@ uint32_t argb8888(const vec4& color)
 void transform_polygon(ta_parameter_writer& parameter,
                        const vec3 * vertices,
 		       const vec2 * texture,
-                       const face& face,
+                       const face_vtn& face,
                        const float scale,
                        const vec4& color0,
                        const vec4& color1,
@@ -238,7 +238,7 @@ void transform_polygon(ta_parameter_writer& parameter,
 
 void transform_modifier_volume(ta_parameter_writer& parameter,
                                const vec3 * vertices,
-                               const face * faces,
+                               const face_vtn * faces,
                                const uint32_t num_faces,
                                const float scale)
 {
@@ -442,9 +442,11 @@ void main()
     ta_wait_opaque_modifier_volume_list();
 
     core_start_render(frame_ix, num_frames);
+    core_wait_end_of_render_video();
 
-    v_sync_in();
-    core_wait_end_of_render_video(frame_ix, num_frames);
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    core_flip(frame_ix, num_frames);
+    while (spg_status::vsync(holly.SPG_STATUS));
 
     frame_ix += 1;
   }

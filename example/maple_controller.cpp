@@ -42,11 +42,11 @@ void do_get_condition(uint32_t port)
     return;
   }
 
-  maple::init_get_condition(command_buf, receive_buf,
-			    destination_port,
-			    destination_ap,
-			    std::byteswap(function_type::controller));
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_get_condition(command_buf, receive_buf,
+                                                  destination_port,
+                                                  destination_ap,
+                                                  std::byteswap(function_type::controller));
+  maple::dma_start(command_buf, size);
 
   using response_type = data_transfer<ft0::data_transfer::data_format>;
   using command_response_type = struct maple::command_response<response_type::data_fields>;
@@ -74,8 +74,8 @@ void do_device_request()
   using command_type = device_request;
   using response_type = device_status;
 
-  maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
+  maple::dma_start(command_buf, size * 10);
 
   using command_response_type = struct maple::command_response<response_type::data_fields>;
   auto response = reinterpret_cast<command_response_type *>(receive_buf);
@@ -97,6 +97,7 @@ void do_device_request()
 void main()
 {
   command_buf = align_32byte(_command_buf);
+  command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
   receive_buf = align_32byte(_receive_buf);
 
   // flycast needs this in HLE mode, or else it won't start the vcount

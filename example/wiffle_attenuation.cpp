@@ -311,9 +311,12 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
     core_start_render(frame_ix, num_frames);
+    core_wait_end_of_render_video();
 
-    v_sync_out();
-    core_wait_end_of_render_video(frame_ix, num_frames);
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    core_flip(frame_ix, num_frames);
+    while (spg_status::vsync(holly.SPG_STATUS));
+
     theta += half_degree;
     frame_ix += 1;
   }

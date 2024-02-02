@@ -14,6 +14,11 @@ class CommandNamespace:
 
 def command_namespace(namespace: CommandNamespace,
                       data_fields: list[tuple[str, tuple[int, str]]]):
+    length, variable = namespace.data_size
+    if variable is not None:
+        assert variable.lower() == "n"
+        yield "template <typename T>"
+
     yield f"struct {namespace.name} {{"
     yield f"static constexpr uint32_t command_code = {hex(namespace.command_code)};"
     yield ""
@@ -21,14 +26,9 @@ def command_namespace(namespace: CommandNamespace,
     if namespace.data_size == (0, None):
         assert data_fields == []
         yield "struct data_fields {"
+        yield "uint8_t _empty[0];"
         yield "};"
     else:
-        length, variable = namespace.data_size
-
-        if variable is not None:
-            assert variable.lower() == "n"
-            yield "template <typename T>"
-
         yield "struct data_fields {"
 
         for field_name, field_size in data_fields:
@@ -51,13 +51,13 @@ def command_namespace(namespace: CommandNamespace,
 
         yield ""
 
-        if variable is not None:
-            assert variable == "n"
-            yield f"static_assert((sizeof (struct data_fields<char[0]>)) == {length});"
-        else:
-            yield f"static_assert((sizeof (struct data_fields)) == {length});"
-
     yield "};"
+    if variable is not None:
+        assert variable == "n"
+        yield f"static_assert((sizeof (struct {namespace.name}<uint8_t[0]>::data_fields)) == {length});"
+    else:
+        yield f"static_assert((sizeof (struct {namespace.name}::data_fields)) == {length});"
+
     yield ""
 
 def parse_data_size(data_size, base, multiple) -> tuple[int, str]:

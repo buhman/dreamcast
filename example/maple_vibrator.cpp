@@ -4,13 +4,11 @@
 #include "align.hpp"
 
 #include "maple/maple.hpp"
+#include "maple/maple_impl.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft8.hpp"
-#include "serial.hpp"
-
-uint32_t _command_buf[1024 / 4 + 32] = {0};
-uint32_t _receive_buf[1024 / 4 + 32] = {0};
+#include "sh7091/serial.hpp"
 
 static uint32_t * command_buf;
 static uint32_t * receive_buf;
@@ -56,12 +54,23 @@ void do_lm_request(uint8_t port, uint8_t lm)
   fields.function_type = std::byteswap(function_type::vibration);
   fields.pt = std::byteswap(1 << 24);
 
-  maple::dma_start(command_buf);
+  serial::string("dma start\n");
+  const uint32_t size = (reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]));
+  maple::dma_start(command_buf, size * 2);
 
-  using response_type = struct maple::command_response<data_transfer::data_fields<struct ft8::data_transfer::data_format>>;
-  auto response = reinterpret_cast<response_type *>(receive_buf);
+  using response_type = data_transfer<ft8::data_transfer::data_format>;
+  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  for (uint32_t i = 0; i < (sizeof (command_response_type)) / 32; i++) {
+    asm volatile ("ocbp @%0"
+                  :                                  // output
+                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
+                  );
+  }
+
+  auto response = reinterpret_cast<command_response_type *>(receive_buf);
+
   auto& bus_data = response->bus_data;
-  if (bus_data.command_code != data_transfer::command_code) {
+  if (bus_data.command_code != response_type::command_code) {
     serial::string("lm did not reply to vibration get_media_info: ");
     serial::integer<uint8_t>(lm);
     return;
@@ -99,15 +108,15 @@ void do_lm_request(uint8_t port, uint8_t lm)
      set condition
    */
   {
-    using data_field_type = set_condition::data_fields<ft8::set_condition::data_format>;
+    using command_type = set_condition<ft8::set_condition::data_format>;
 
     maple::init_host_command(command_buf, receive_buf,
 			     destination_port,
-			     destination_ap, set_condition::command_code, (sizeof (data_field_type)),
+			     destination_ap, command_type::command_code, (sizeof (command_type::data_fields)),
 			     true);
 
-    using command_type = struct maple::host_command<data_field_type>;
-    auto host_command = reinterpret_cast<command_type *>(command_buf);
+    using host_command_type = struct maple::host_command<command_type::data_fields>;
+    auto host_command = reinterpret_cast<host_command_type *>(command_buf);
     auto& fields = host_command->bus_data.data_fields;
     fields.function_type = std::byteswap(function_type::vibration);
     fields.write_in_data.ctrl = 0x11;
@@ -115,11 +124,18 @@ void do_lm_request(uint8_t port, uint8_t lm)
     fields.write_in_data.freq = 0x27;
     fields.write_in_data.inc = 0x00;
 
-    maple::dma_start(command_buf);
+    const uint32_t size = (reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]));
+    maple::dma_start(command_buf, size);
 
-    using response_type = struct maple::command_response<device_reply::data_fields>;
-    auto response = reinterpret_cast<response_type *>(receive_buf);
-    auto& bus_data = response->bus_data;
+    using command_response_type = struct maple::command_response<device_reply::data_fields>;
+    for (uint32_t i = 0; i < (sizeof (command_response_type)) / 32; i++) {
+      asm volatile ("ocbp @%0"
+                    :                                  // output
+                    : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
+                    );
+    }
+    auto command_response = reinterpret_cast<command_response_type *>(receive_buf);
+    auto& bus_data = command_response->bus_data;
 
     if (bus_data.command_code != device_reply::command_code) {
       serial::string("lm did not reply to vibration set_condition: ");
@@ -148,20 +164,23 @@ void do_lm_requests(uint8_t port, uint8_t lm)
 
 void do_device_request()
 {
-  using response_type = struct maple::command_response<device_status::data_fields>;
-  constexpr uint32_t response_size = align_32byte(sizeof (response_type));
+  using command_type = device_request;
+  using response_type = device_status;
 
-  maple::init_host_command_all_ports(command_buf, receive_buf,
-                                     device_request::command_code,
-				     (sizeof (device_request::data_fields)), // command_data_size
-				     (sizeof (device_status::data_fields))); // response_data_size
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
+  maple::dma_start(command_buf, size);
 
+  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  for (uint32_t i = 0; i < ((sizeof (command_response_type)) * 4) / 32; i++) {
+    asm volatile ("ocbp @%0"
+                  :                                  // output
+                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
+                  );
+  }
+  auto response = reinterpret_cast<command_response_type *>(receive_buf);
   for (uint8_t port = 0; port < 4; port++) {
-    auto response = reinterpret_cast<response_type *>(&receive_buf[response_size * port / 4]);
-
-    auto& bus_data = response->bus_data;
-    auto& data_fields = response->bus_data.data_fields;
+    auto& bus_data = response[port].bus_data;
+    auto& data_fields = response[port].bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
       // the controller is disconnected
     } else {
@@ -177,7 +196,11 @@ void do_device_request()
 
 void main()
 {
+  uint32_t _command_buf[1024 / 4 + 32];
+  uint32_t _receive_buf[1024 / 4 + 32];
+
   command_buf = align_32byte(_command_buf);
+  command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
   receive_buf = align_32byte(_receive_buf);
 
   vga();

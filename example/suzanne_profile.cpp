@@ -391,11 +391,9 @@ void main()
     core_wait_end_of_render_video();
     t_render_end = sh7091.TMU.TCNT0;
 
-    while (!spg_status::vsync(holly.SPG_STATUS)) {
-    }
+    while (!spg_status::vsync(holly.SPG_STATUS));
     core_flip(frame_ix, num_frames);
-    while (spg_status::vsync(holly.SPG_STATUS)) {
-    }
+    while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree * 0.5;
     frame_ix += 1;

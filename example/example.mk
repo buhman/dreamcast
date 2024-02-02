@@ -257,7 +257,7 @@ example/clipping_textured.elf: $(START_OBJ) $(CLIPPING_TEXTURED_OBJ)
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
 	vga.o \
-	serial.o \
+	sh7091/serial.o \
 	maple/maple.o
 
 example/maple_device_request.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -276,7 +276,7 @@ MAPLE_WINK_OBJ = \
 	example/maple_wink.o \
 	vga.o \
 	rgb.o \
-	serial.o \
+	sh7091/serial.o \
 	maple/maple.o \
 	wink.data.o
 
@@ -287,7 +287,7 @@ MAPLE_VIBRATOR_OBJ = \
 	example/maple_vibrator.o \
 	vga.o \
 	rgb.o \
-	serial.o \
+	sh7091/serial.o \
 	maple/maple.o
 
 example/maple_vibrator.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -314,7 +314,7 @@ example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
 
 INTERRUPT_OBJ = \
 	example/interrupt.o \
-	serial.o
+	sh7091/serial.o
 
 example/interrupt.elf: LDSCRIPT = $(LIB)/alt.lds
 example/interrupt.elf: $(START_OBJ) $(INTERRUPT_OBJ)

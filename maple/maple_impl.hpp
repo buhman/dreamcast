@@ -9,8 +9,8 @@
 namespace maple {
 
 template <typename C, typename R>
-void init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf,
-				 const typename C::data_fields& data_fields)
+uint32_t init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf,
+                                     const typename C::data_fields& data_fields)
 {
   using command_type = maple::host_command<typename C::data_fields>;
   using response_type = maple::command_response<typename R::data_fields>;
@@ -41,13 +41,16 @@ void init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf,
                     ap::de::device | ap::port_select::d, C::command_code, (sizeof (typename C::data_fields)),
                     true); // end_flag
   host_command[3].bus_data.data_fields = data_fields;
+
+  return reinterpret_cast<uint32_t>(&host_command[4]) - reinterpret_cast<uint32_t>(&host_command[0]);
 }
 
 template <typename C, typename R>
-void init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf)
+uint32_t init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf)
 {
   using command_type = maple::host_command<typename C::data_fields>;
   using response_type = maple::command_response<typename R::data_fields>;
+  //static_assert((sizeof (command_type)) == 12);
 
   auto host_command = reinterpret_cast<command_type *>(command_buf);
   auto response_command = reinterpret_cast<response_type *>(receive_buf);
@@ -71,6 +74,8 @@ void init_host_command_all_ports(uint32_t * command_buf, uint32_t * receive_buf)
                     host_instruction::port_select::d, // destination_port
                     ap::de::device | ap::port_select::d, C::command_code, (sizeof (typename C::data_fields)),
                     true); // end_flag
+
+  return reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]);
 }
 
 }

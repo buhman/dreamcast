@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O2
+OPT ?= -Og
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 
@@ -85,6 +85,7 @@ START_OBJ = \
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@
+	du -b $@
 
 ip.elf: $(IP_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@

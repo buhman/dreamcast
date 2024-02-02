@@ -4,7 +4,7 @@
 #include "maple/maple_bus_bits.hpp"
 #include "vga.hpp"
 #include "align.hpp"
-#include "serial.hpp"
+#include "sh7091/serial.hpp"
 
 extern uint32_t _binary_wink_data_start __asm("_binary_wink_data_start");
 
@@ -40,12 +40,12 @@ void main()
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_buf = align_32byte(_receive_buf);
 
-  maple::init_block_write(command_buf, receive_buf,
-                          host_instruction::port_select::a,
-                          ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0,
-                          wink_buf,
-                          wink_size);
-  maple::dma_start(command_buf);
+  const uint32_t size = maple::init_block_write(command_buf, receive_buf,
+                                                host_instruction::port_select::a,
+                                                ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0,
+                                                wink_buf,
+                                                wink_size);
+  maple::dma_start(command_buf, size);
 
   for (int i = 0; i < 1; i++) {
     serial::integer<uint32_t>(receive_buf[i]);

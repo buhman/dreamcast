@@ -8,10 +8,10 @@ dest = 0xac02_0000
 
 ret = []
 
-def sync(ser, b, wait=1):
+def sync(ser, b, wait=0.5):
     l = []
     for i, c in enumerate(b):
-        if i % 32 == 0:
+        if i % 32 == 0 and i != 0:
             print(i, end=' ')
             sys.stdout.flush()
         ser.write(bytes([c]))
@@ -60,15 +60,18 @@ def do(ser, b):
     _ = ser.read(ser.in_waiting)
 
     ret = sync(ser, b'DATA')
-    print(ret)
+    #print(ret)
     size = len(b)
     args = struct.pack("<II", size, dest)
-    print("dargs", args)
+    #print("dargs", args)
     ret = sync(ser, args)
-    print(ret)
+    #print(ret)
     if ret != b'data\n':
+        print(".", end=' ')
+        sys.stdout.flush()
+        sync(ser, b'prime', wait=0)
         do(ser, b)
-
+    print("\nDATA")
     ret = symmetric(ser, b)
     print(ret[-5:])
     if ret[:-5] != b:
@@ -97,4 +100,6 @@ with open(sys.argv[1], 'rb') as f:
 
 with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
     #console(ser)
+    print("waiting: ", end=' ')
+    sys.stdout.flush()
     do(ser, b)
