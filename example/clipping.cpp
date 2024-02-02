@@ -73,7 +73,7 @@ vec3 intersection(vec3& a, vec3& b, vec3& n)
 
 void transform(ta_parameter_writer& parameter,
 	       const vec3 * vertices,
-	       const face_vn& face,
+	       const face_vtn& face,
 	       const vec4& color,
 	       const vec3& position,
 	       const bool enable_clipping
