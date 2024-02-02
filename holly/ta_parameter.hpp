@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 #include <cstddef>
 
@@ -96,7 +98,7 @@ struct ta_parameter_writer {
   }
 };
 
-uint32_t uv_16bit(float u, float v)
+constexpr inline uint32_t uv_16bit(float u, float v)
 {
   uint32_t * ui = (reinterpret_cast<uint32_t *>(&u));
   uint32_t * vi = (reinterpret_cast<uint32_t *>(&v));

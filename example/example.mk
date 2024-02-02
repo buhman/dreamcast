@@ -115,6 +115,20 @@ ICOSPHERE_OBJ = \
 example/icosphere.elf: LDSCRIPT = $(LIB)/alt.lds
 example/icosphere.elf: $(START_OBJ) $(ICOSPHERE_OBJ)
 
+SUZANNE_PROFILE_OBJ = \
+	example/suzanne_profile.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	font/font_bitmap.o \
+	sh7091/serial.o \
+	europc_mono.data.o
+
+example/suzanne_profile.elf: LDSCRIPT = $(LIB)/alt.lds
+example/suzanne_profile.elf: $(START_OBJ) $(SUZANNE_PROFILE_OBJ)
+
 WIFFLE_ATTENUATION_OBJ = \
 	example/wiffle_attenuation.o \
 	vga.o \
