@@ -25,7 +25,7 @@ void init()
                  | ice::ic_used                              // instruction cache enable
                  | oci::clear_v_and_u_bits_of_all_oc_entries // operand cache invalidate
                  | oce::oc_used                              // operand cache enable
-              // | cb::copy_back_mode                        // enable copy-back mode for the P1 area
+                 | cb::copy_back_mode                        // enable copy-back mode for the P1 area
                  ;
 
   sh7091.CCN.MMUCR = ccn::mmucr::at::mmu_disabled;

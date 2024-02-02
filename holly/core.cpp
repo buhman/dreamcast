@@ -67,7 +67,7 @@ void core_start_render(uint32_t frame_address,
   holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
   holly.FB_W_LINESTRIDE = (frame_linestride * 2) / 8;
 
-  uint32_t w_fb = ((frame_ix + 0) & num_frames) * frame_size;
+  uint32_t w_fb = (frame_ix & num_frames) * frame_size;
   holly.FB_W_SOF1 = frame_address + w_fb;
 
   holly.STARTRENDER = 1;
@@ -95,11 +95,8 @@ void core_wait_end_of_render_video()
 		| ISTNRM__END_OF_RENDER_VIDEO;
 }
 
-void core_wait_end_of_render_video(uint32_t frame_ix, uint32_t num_frames)
+void core_flip(uint32_t frame_ix, uint32_t num_frames)
 {
-  core_wait_end_of_render_video();
-
-  // hmm hacky...
-  uint32_t r_fb = ((frame_ix + 1) & num_frames) * 0x00096000;
+  uint32_t r_fb = (frame_ix & num_frames) * 0x00096000;
   holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
 }

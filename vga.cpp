@@ -100,20 +100,16 @@ void vga2()
 void v_sync_in()
 {
   while (!spg_status::vsync(holly.SPG_STATUS)) {
-    asm volatile ("nop");
   }
   while (spg_status::vsync(holly.SPG_STATUS)) {
-    asm volatile ("nop");
   }
 }
 
 void v_sync_out()
 {
   while (spg_status::vsync(holly.SPG_STATUS)) {
-    asm volatile ("nop");
   }
   while (!spg_status::vsync(holly.SPG_STATUS)) {
-    asm volatile ("nop");
   }
 }
 

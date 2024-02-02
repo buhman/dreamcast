@@ -16,12 +16,17 @@
 #include "holly/background.hpp"
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
+#include "sh7091/serial.hpp"
 
 #include "geometry/suzanne.hpp"
+#include "geometry/circle.hpp"
 #include "math/vec4.hpp"
 
 #include "font/font_bitmap.hpp"
 #include "verite_8x16.hpp"
+#include "string.hpp"
 
 constexpr float half_degree = 0.01745329f / 2;
 
@@ -235,8 +240,39 @@ void init_texture_memory(const struct opb_size& opb_size)
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 
+static inline void label_number(ta_parameter_writer& parameter,
+                                const char * label,
+                                const uint32_t len,
+                                const uint32_t number,
+                                const uint32_t row)
+{
+  constexpr uint32_t max_label_len = 10;
+  char buf[8];
+
+  string::hex(buf, 8, number);
+  font_bitmap::transform_string(parameter,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + (8 * (max_label_len - len)), // position x
+                                16 * row,                         // position y
+                                label, len);
+  font_bitmap::transform_string(parameter,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + (8 * (max_label_len + 1)),   // position x
+                                16 * row,                         // position y
+                                buf, 8);
+}
+
 void main()
 {
+  sh7091.TMU.TSTR = 0; // stop all timers
+  sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
+  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 200MHz = 1.28 μs ; underflows in ~1 hour
+  sh7091.TMU.TCOR0 = 0xffff'ffff;
+  sh7091.TMU.TCNT0 = 0xffff'ffff;
+  sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
+
   vga();
 
   auto src = reinterpret_cast<const uint8_t *>(&_binary_verite_8x16_data_start);
@@ -282,45 +318,86 @@ void main()
     {0.f, 0.f, 0.f},
   };
 
+  uint32_t t_transform_start = 0;
+  uint32_t t_transform_end = 0;
+  uint32_t t_text_start = 0;
+  uint32_t t_text_end = 0;
+  uint32_t t_transfer_start = 0;
+  uint32_t t_transfer_end = 0;
+  uint32_t t_render_start = 0;
+  uint32_t t_render_end = 0;
+
   while (1) {
     ta_polygon_converter_init(opb_size.total(),
 			      ta_alloc,
 			      640 / 32,
 			      480 / 32);
-
-    float theta2 = 3.14 * 2 * sin(theta / 7);
-
-    lights[0].x = cos(theta) * 15;
-    lights[0].z = sin(theta) * 15;
-
-    lights[1].x = cos(theta2 + half_degree * 180.f) * 15;
-    lights[1].z = sin(theta2 + half_degree * 180.f) * 15;
-
-    lights[2].x = cos(theta + half_degree * 360.f) * 15;
-    lights[2].z = sin(theta + half_degree * 360.f) * 15;
-
     auto parameter = ta_parameter_writer(ta_parameter_buf);
-    for (uint32_t i = 0; i < MODEL::num_faces; i++) {
-      transform(parameter, i, theta, lights);
-    }
-    transform2(parameter, lights[0], {1.f, 0.f, 0.f, 1.f});
-    transform2(parameter, lights[1], {0.f, 1.f, 0.f, 1.f});
-    transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
 
-    font_bitmap::transform_string(parameter,
-                                  8,  16, // texture
-                                  8,  16, // glyph
-                                  40, 40, // position
-                                  "test", 4);
+    // transform start
+    t_transform_start = sh7091.TMU.TCNT0;
+    {
+      const float theta2 = 3.14 * 2 * sin(theta / 7);
+
+      lights[0].x = cos(theta) * 15;
+      lights[0].z = sin(theta) * 15;
+
+      lights[1].x = cos(theta2 + half_degree * 180.f) * 15;
+      lights[1].z = sin(theta2 + half_degree * 180.f) * 15;
+
+      lights[2].x = cos(theta + half_degree * 360.f) * 15;
+      lights[2].z = sin(theta + half_degree * 360.f) * 15;
+
+      for (uint32_t i = 0; i < MODEL::num_faces; i++) {
+        transform(parameter, i, theta, lights);
+      }
+      transform2(parameter, lights[0], {1.f, 0.f, 0.f, 1.f});
+      transform2(parameter, lights[1], {0.f, 1.f, 0.f, 1.f});
+      transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
+    }
+    t_transform_end = sh7091.TMU.TCNT0;
+    // transform end
+
+    uint32_t _t_text_start = sh7091.TMU.TCNT0;
+    {
+
+      const uint32_t transform = t_transform_start - t_transform_end;
+      label_number(parameter, "transform:", 10, transform, 1);
+
+      const uint32_t text = t_text_start - t_text_end;
+      label_number(parameter, "text:", 5, text, 2);
+
+      const uint32_t transfer = t_transfer_start - t_transfer_end;
+      label_number(parameter, "transfer:", 9, transfer, 3);
+
+      const uint32_t render = t_render_start - t_render_end;
+      label_number(parameter, "render:", 7, render, 4);
+    }
+    t_text_start = _t_text_start;
+    t_text_end = sh7091.TMU.TCNT0;
 
     parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-    ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
-    ta_wait_opaque_list();
-    core_start_render(frame_ix, num_frames);
 
-    v_sync_out();
-    core_wait_end_of_render_video(frame_ix, num_frames);
-    theta += half_degree;
+    // transfer start
+    t_transfer_start = sh7091.TMU.TCNT0;
+    {
+      ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
+      ta_wait_opaque_list();
+    }
+    t_transfer_end = sh7091.TMU.TCNT0;
+
+    t_render_start = sh7091.TMU.TCNT0;
+    core_start_render(frame_ix, num_frames);
+    core_wait_end_of_render_video();
+    t_render_end = sh7091.TMU.TCNT0;
+
+    while (!spg_status::vsync(holly.SPG_STATUS)) {
+    }
+    core_flip(frame_ix, num_frames);
+    while (spg_status::vsync(holly.SPG_STATUS)) {
+    }
+
+    theta += half_degree * 0.5;
     frame_ix += 1;
   }
 }

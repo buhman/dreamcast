@@ -152,7 +152,7 @@ void transform_string(ta_parameter_writer& parameter,
 
       x *= static_cast<float>(glyph_width * 1);
       y *= static_cast<float>(glyph_height * 1);
-      x += static_cast<float>(position_x + glyph_width * 4 * string_ix);
+      x += static_cast<float>(position_x + glyph_width * string_ix);
       y += static_cast<float>(position_y);
       z = 1.f / (z + 10.f);
 
