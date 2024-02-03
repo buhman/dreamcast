@@ -105,16 +105,9 @@ uint32_t init_block_write(uint32_t * command_buf, uint32_t * receive_buf,
     + data_size;
 }
 
-void dma_start(const uint32_t * command_buf, const uint32_t size)
+static inline void _dma_start(const uint32_t * command_buf)
 {
   using namespace dmac;
-
-  for (uint32_t i = 0; i < align_32byte(size) / 32; i++) {
-    asm volatile ("ocbwb @%0"
-                  :                                  // output
-                  : "r" (reinterpret_cast<uint32_t>(&command_buf[(32 * i) / 4])) // input
-                  );
-  }
 
   //command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
 
@@ -148,6 +141,57 @@ void dma_start(const uint32_t * command_buf, const uint32_t size)
 
   maple_if.MDEN = mden::dma_enable::enable;
   maple_if.MDST = mdst::start_status::start;
+}
+
+void dma_start(const uint32_t * command_buf,
+               const uint32_t command_size,
+               const uint32_t * receive_buf,
+               const uint32_t receive_size
+               )
+{
+  // write back operand cache blocks for command buffer prior to starting DMA
+  for (uint32_t i = 0; i < align_32byte(command_size) / 32; i++) {
+    asm volatile ("ocbwb @%0"
+                  :                                                              // output
+                  : "r" (reinterpret_cast<uint32_t>(&command_buf[(32 * i) / 4])) // input
+                  );
+  }
+
+  // start maple DMA
+  _dma_start(command_buf);
+
+  // purge operand cache block for receive buffer, prior to returning to the caller
+  for (uint32_t i = 0; i < align_32byte(receive_size) / 32; i++) {
+    asm volatile ("ocbp @%0"
+                  :                                                              // output
+                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
+                  );
+  }
+
+  // wait for maple DMA completion
+  while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
+  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
+}
+
+void dma_start(const uint32_t * command_buf,
+               const uint32_t command_size
+               )
+{
+  // write back operand cache blocks for command buffer prior to starting DMA
+  for (uint32_t i = 0; i < align_32byte(command_size) / 32; i++) {
+    asm volatile ("ocbwb @%0"
+                  :                                                              // output
+                  : "r" (reinterpret_cast<uint32_t>(&command_buf[(32 * i) / 4])) // input
+                  );
+  }
+
+  // start maple DMA
+  _dma_start(command_buf);
+
+  // wait for maple DMA completion
+  while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
+  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
+}
 
   // wait for completion
   //while (mdst::start_status::status(maple_if.MDST) != 0);
@@ -163,8 +207,5 @@ void dma_start(const uint32_t * command_buf, const uint32_t size)
     }
   }
   */
-  while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
-  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
-}
 
 }

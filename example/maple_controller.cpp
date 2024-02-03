@@ -10,8 +10,8 @@
 #include "maple/maple_bus_ft0.hpp"
 #include "sh7091/serial.hpp"
 
-uint32_t _command_buf[1024 / 4 + 32] = {0};
-uint32_t _receive_buf[1024 / 4 + 32] = {0};
+uint32_t _command_buf[(1024 + 32) / 4];
+uint32_t _receive_buf[(1024 + 32) / 4];
 
 static uint32_t * command_buf;
 static uint32_t * receive_buf;

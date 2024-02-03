@@ -29,8 +29,8 @@
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
 
-uint32_t _command_buf[1024 / 4 + 32];
-uint32_t _receive_buf[1024 / 4 + 32];
+uint32_t _command_buf[(1024 + 32) / 4];
+uint32_t _receive_buf[(1024 + 32) / 4];
 
 static ft0::data_transfer::data_format data[4];
 

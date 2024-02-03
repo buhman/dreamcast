@@ -48,28 +48,21 @@ void do_lm_request(uint8_t port, uint8_t lm)
 			   destination_ap, get_media_info::command_code, (sizeof (struct get_media_info::data_fields)),
 			   true);
 
-  using command_type = struct maple::host_command<get_media_info::data_fields>;
-  auto host_command = reinterpret_cast<command_type *>(command_buf);
+  using host_command_type = struct maple::host_command<get_media_info::data_fields>;
+  auto host_command = reinterpret_cast<host_command_type *>(command_buf);
   auto& fields = host_command->bus_data.data_fields;
   fields.function_type = std::byteswap(function_type::vibration);
   fields.pt = std::byteswap(1 << 24);
 
-  serial::string("dma start\n");
-  const uint32_t size = (reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]));
-  maple::dma_start(command_buf, size * 2);
-
   using response_type = data_transfer<ft8::data_transfer::data_format>;
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
-  for (uint32_t i = 0; i < (sizeof (command_response_type)) / 32; i++) {
-    asm volatile ("ocbp @%0"
-                  :                                  // output
-                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
-                  );
-  }
+  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
 
-  auto response = reinterpret_cast<command_response_type *>(receive_buf);
+  serial::string("dma start\n");
+  maple::dma_start(command_buf, maple::sizeof_command(host_command),
+                   receive_buf, maple::sizeof_command(host_response));
 
-  auto& bus_data = response->bus_data;
+  auto& bus_data = host_response->bus_data;
   if (bus_data.command_code != response_type::command_code) {
     serial::string("lm did not reply to vibration get_media_info: ");
     serial::integer<uint8_t>(lm);
@@ -124,18 +117,12 @@ void do_lm_request(uint8_t port, uint8_t lm)
     fields.write_in_data.freq = 0x27;
     fields.write_in_data.inc = 0x00;
 
-    const uint32_t size = (reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]));
-    maple::dma_start(command_buf, size);
+    using host_response_type = struct maple::command_response<device_reply::data_fields>;
+    auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+    maple::dma_start(command_buf, maple::sizeof_command(host_command),
+                     receive_buf, maple::sizeof_command(host_response));
 
-    using command_response_type = struct maple::command_response<device_reply::data_fields>;
-    for (uint32_t i = 0; i < (sizeof (command_response_type)) / 32; i++) {
-      asm volatile ("ocbp @%0"
-                    :                                  // output
-                    : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
-                    );
-    }
-    auto command_response = reinterpret_cast<command_response_type *>(receive_buf);
-    auto& bus_data = command_response->bus_data;
+    auto& bus_data = host_response->bus_data;
 
     if (bus_data.command_code != device_reply::command_code) {
       serial::string("lm did not reply to vibration set_condition: ");
@@ -166,21 +153,15 @@ void do_device_request()
 {
   using command_type = device_request;
   using response_type = device_status;
+  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
+  maple::dma_start(command_buf, command_size,
+                   receive_buf, maple::sizeof_command(host_response));
 
-  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  maple::dma_start(command_buf, size);
-
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
-  for (uint32_t i = 0; i < ((sizeof (command_response_type)) * 4) / 32; i++) {
-    asm volatile ("ocbp @%0"
-                  :                                  // output
-                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
-                  );
-  }
-  auto response = reinterpret_cast<command_response_type *>(receive_buf);
   for (uint8_t port = 0; port < 4; port++) {
-    auto& bus_data = response[port].bus_data;
-    auto& data_fields = response[port].bus_data.data_fields;
+    auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
       // the controller is disconnected
     } else {
@@ -194,11 +175,11 @@ void do_device_request()
   }
 }
 
+uint32_t _command_buf[(1024 + 32) / 4];
+uint32_t _receive_buf[(1024 + 32) / 4];
+
 void main()
 {
-  uint32_t _command_buf[1024 / 4 + 32];
-  uint32_t _receive_buf[1024 / 4 + 32];
-
   command_buf = align_32byte(_command_buf);
   command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
   receive_buf = align_32byte(_receive_buf);

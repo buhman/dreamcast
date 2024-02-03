@@ -341,8 +341,8 @@ void update_rot_pos(struct rot_pos& rot_pos)
 }
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
-uint32_t _command_buf[1024 / 4 + 32];
-uint32_t _receive_buf[1024 / 4 + 32];
+uint32_t _command_buf[(1024 + 32) / 4];
+uint32_t _receive_buf[(1024 + 32) / 4];
 
 void main()
 {
