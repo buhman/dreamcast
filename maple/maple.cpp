@@ -173,26 +173,6 @@ void dma_start(const uint32_t * command_buf,
   system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
 }
 
-void dma_start(const uint32_t * command_buf,
-               const uint32_t command_size
-               )
-{
-  // write back operand cache blocks for command buffer prior to starting DMA
-  for (uint32_t i = 0; i < align_32byte(command_size) / 32; i++) {
-    asm volatile ("ocbwb @%0"
-                  :                                                              // output
-                  : "r" (reinterpret_cast<uint32_t>(&command_buf[(32 * i) / 4])) // input
-                  );
-  }
-
-  // start maple DMA
-  _dma_start(command_buf);
-
-  // wait for maple DMA completion
-  while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
-  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
-}
-
   // wait for completion
   //while (mdst::start_status::status(maple_if.MDST) != 0);
   /*

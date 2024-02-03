@@ -42,16 +42,19 @@ void do_get_condition(uint32_t port)
     return;
   }
 
-  const uint32_t size = maple::init_get_condition(command_buf, receive_buf,
-                                                  destination_port,
-                                                  destination_ap,
-                                                  std::byteswap(function_type::controller));
-  maple::dma_start(command_buf, size);
+  const uint32_t command_size = maple::init_get_condition(command_buf, receive_buf,
+                                                          destination_port,
+                                                          destination_ap,
+                                                          std::byteswap(function_type::controller));
 
   using response_type = data_transfer<ft0::data_transfer::data_format>;
   using command_response_type = struct maple::command_response<response_type::data_fields>;
-  auto response = reinterpret_cast<command_response_type *>(receive_buf);
-  auto& bus_data = response->bus_data;
+  auto host_response = reinterpret_cast<command_response_type *>(receive_buf);
+
+  maple::dma_start(command_buf, command_size,
+                   receive_buf, maple::sizeof_command(host_response));
+
+  auto& bus_data = host_response->bus_data;
   if (bus_data.command_code != response_type::command_code) {
     return;
   }
@@ -74,11 +77,13 @@ void do_device_request()
   using command_type = device_request;
   using response_type = device_status;
 
-  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  maple::dma_start(command_buf, size * 10);
+  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
+  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
 
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
-  auto response = reinterpret_cast<command_response_type *>(receive_buf);
+  maple::dma_start(command_buf, command_size,
+                   receive_buf, maple::sizeof_command(host_response));
+
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = response[port].bus_data;
     auto& data_fields = response[port].bus_data.data_fields;

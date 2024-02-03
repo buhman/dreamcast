@@ -16,16 +16,19 @@ void main()
   using command_type = device_request;
   using response_type = device_status;
 
-  uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  maple::dma_start(command_buf, size);
+  uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
+
+  constexpr uint32_t host_response_size = (sizeof (maple::command_response<response_type::data_fields>));
+
+  maple::dma_start(command_buf, command_size,
+                   receive_buf, host_response_size);
 
   uint8_t * buf = reinterpret_cast<uint8_t *>(receive_buf);
   for (uint8_t port = 0; port < 4; port++) {
     serial::string("port ");
     serial::integer<uint8_t>(port);
 
-    constexpr uint32_t command_response_size = (sizeof (maple::command_response<response_type::data_fields>));
-    for (uint32_t i = 0; i < command_response_size; i++) {
+    for (uint32_t i = 0; i < host_response_size; i++) {
       serial::integer<uint8_t>(buf[port * command_response_size + i]);
     }
     serial::character('\n');

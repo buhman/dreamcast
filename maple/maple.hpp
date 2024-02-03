@@ -60,10 +60,6 @@ void dma_start(const uint32_t * command_buf,
                const uint32_t receive_size
                );
 
-void dma_start(const uint32_t * command_buf,
-               const uint32_t command_size
-               );
-
 template <typename T>
 constexpr uint32_t sizeof_command(T * c)
 {

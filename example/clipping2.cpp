@@ -30,6 +30,8 @@
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
 
+#include "sh7091/serial.hpp"
+
 uint32_t _command_buf[(1024 + 32) / 4];
 uint32_t _receive_buf[(1024 + 32) / 4];
 
@@ -45,14 +47,15 @@ void do_get_condition(uint32_t * command_buf,
     .function_type = std::byteswap(function_type::controller)
   };
 
-  const uint32_t size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
+  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
                                                                                         data_fields);
-  maple::dma_start(command_buf, size);
+  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  maple::dma_start(command_buf, command_size,
+                   receive_buf, maple::sizeof_command(host_response));
 
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
   for (uint8_t port = 0; port < 4; port++) {
-    auto response = reinterpret_cast<command_response_type *>(receive_buf);
-    auto& bus_data = response[port].bus_data;
+    auto& bus_data = host_response[port].bus_data;
     if (bus_data.command_code != response_type::command_code) {
       return;
     }
@@ -249,6 +252,9 @@ void main()
 
   while (1) {
     do_get_condition(command_buf, receive_buf);
+    if (frame_ix % 120 == 0) {
+      serial::integer(data[0].analog_axis_3);
+    }
 
     ta_polygon_converter_init(opb_size.total(),
 			      ta_alloc,
