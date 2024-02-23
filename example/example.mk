@@ -318,3 +318,15 @@ INTERRUPT_OBJ = \
 
 example/interrupt.elf: LDSCRIPT = $(LIB)/alt.lds
 example/interrupt.elf: $(START_OBJ) $(INTERRUPT_OBJ)
+
+DUMP_OBJECT_LIST_OBJ = \
+	example/dump_object_list.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o
+
+example/dump_object_list.elf: LDSCRIPT = $(LIB)/alt.lds
+example/dump_object_list.elf: $(START_OBJ) $(DUMP_OBJECT_LIST_OBJ)

@@ -3,8 +3,8 @@
 #include <cstdint>
 
 /*
-  object_list[0x00100000 / 4] is enough space for 81 sets of
-  0x3200-byte lists (16 * 4 * (640 / 32) * (320 / 32))
+  object_list[0x00100000 / 4] is enough space for 54 sets of
+  19200-byte lists (16 * 4 * (640 / 32) * (480 / 32))
 
   (that is, it is significantly more space than required for trivial
   TA/CORE drawings)
