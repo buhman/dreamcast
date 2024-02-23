@@ -18,13 +18,12 @@
 #include "memorymap.hpp"
 
 #include "geometry/heart.hpp"
+#include "math/math.hpp"
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
 #include "math/mat4x4.hpp"
 
 using mat4x4 = mat<4, 4, float>;
-
-constexpr float pi = 3.141592653589793;
 
 struct rotation_weights {
   float drx;
