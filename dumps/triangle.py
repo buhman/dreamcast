@@ -1236,7 +1236,7 @@ _isp_tsp = """
 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee
 """
 
-isp_tsp = [int(i, 16) for i in s.strip().split()]
+isp_tsp = [int(i, 16) for i in _isp_tsp.strip().split()]
 
 isp_tsp_instruction_word = 0x80000000
 tsp_instruction_word = 0x20800000

@@ -1217,7 +1217,7 @@ _object_list = """
 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee
 """
 
-object_list = [int(i, 16) for i in s.strip().split()]
+object_list = [int(i, 16) for i in _object_list.strip().split()]
 
 _isp_tsp = """
 0x80400000 0x20800000 0x00000000 0x43480000
@@ -1238,7 +1238,7 @@ _isp_tsp = """
 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee 0xeeeeeeee
 """
 
-isp_tsp = [int(i, 16) for i in s.strip().split()]
+isp_tsp = [int(i, 16) for i in _isp_tsp.strip().split()]
 
 isp_tsp_instruction_word = 0x80400000
 # Depth Compare Greater | 16Bit UV

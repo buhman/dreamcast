@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 namespace isp_tsp_instruction_word {

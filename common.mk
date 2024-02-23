@@ -13,7 +13,7 @@ CARCH = -m4-single-only -ml
 CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds= -Wno-array-bounds
-CFLAGS += -mfsca -funsafe-math-optimizations
+CFLAGS += -mfsca -funsafe-math-optimizations -ffast-math
 CFLAGS += -I$(dir $(MAKEFILE_PATH))
 DEPFLAGS = -MMD -E
 # --print-gc-sections
@@ -102,7 +102,7 @@ audio.pcm:
 		synth 1 sin 440 vol -10dB
 	mv $@.raw $@
 
-1ST_READ.BIN: example/macaw_multipass.bin
+1ST_READ.BIN: example/dump_object_list.bin
 	./scramble $< $@
 
 %.iso: 1ST_READ.BIN ip.bin
@@ -152,6 +152,9 @@ holly/ta_global_parameter.hpp: regs/global_parameter_format.csv regs/gen/ta_para
 holly/ta_vertex_parameter.hpp: regs/vertex_parameter_format.csv regs/gen/ta_parameter_format.py
 	python regs/gen/ta_parameter_format.py $< ta_vertex_parameter > $@
 
+holly/object_list_data.hpp: regs/object_list.csv regs/gen/core_bits.py
+	python regs/gen/core_bits.py $< object_list_data > $@
+
 sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
 	python regs/gen/sh7091.py $< > $@
 
@@ -163,6 +166,7 @@ clean:
 		-regextype posix-egrep \
 		-regex '.*\.(iso|o|d|bin|elf|cue|gch)$$' \
 		-exec rm {} \;
+	rm 1ST_READ.BIN
 
 .SUFFIXES:
 .INTERMEDIATE:

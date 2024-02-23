@@ -6,7 +6,15 @@ MEMORY
 }
 SECTIONS
 {
-  . = ORIGIN(p1ram);
+  . = ORIGIN(p2ram);
+
+  .text ALIGN(4) : SUBALIGN(4)
+  {
+    KEEP(*(.text.start))
+    *(.text.startup.*)
+  } > p2ram AT>p1ram
+
+  . = ORIGIN(p1ram) + (. - ORIGIN(p2ram));
 
   .text ALIGN(4) : SUBALIGN(4)
   {
@@ -33,16 +41,6 @@ SECTIONS
     KEEP(*(.ctors))
     KEEP(*(.ctors.*))
   } > p1ram
-
-  . = ORIGIN(p2ram) + (. - ORIGIN(p1ram));
-
-  .text.p2ram ALIGN(4) : SUBALIGN(4)
-  {
-    *(.p2ram)
-    *(.p2ram.*)
-  } > p2ram AT>p1ram
-
-  . = ORIGIN(p1ram) + (. - ORIGIN(p2ram));
 
   .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
   {

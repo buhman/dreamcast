@@ -10,7 +10,7 @@ from generate import renderer
 def aggregate_registers(d):
     aggregated = defaultdict(list)
     for row in d:
-        assert row["register_name"] != ""
+        #assert row["register_name"] != ""
         aggregated[row["register_name"]].append(row)
     return dict(aggregated)
 
@@ -218,7 +218,8 @@ def render_enum(enum_def):
     yield "}"
 
 def render_register(register):
-    yield f"namespace {register.name.lower()} {{"
+    if register.name != "":
+        yield f"namespace {register.name.lower()} {{"
 
     last = None
     for ix, bit_def in enumerate(register.defs):
@@ -232,10 +233,14 @@ def render_register(register):
             yield from render_defs(bit_def)
         last = bit_def
 
-    yield "}"
+    if register.name != "":
+        yield "}"
     yield ""
 
-def render_registers(registers):
+def render_registers(registers, file_namespace):
+    if file_namespace is not None:
+        yield f"namespace {file_namespace} {{"
+
     last_block = None
     for register in registers:
         if register.block != last_block:
@@ -253,6 +258,9 @@ def render_registers(registers):
     if last_block is not None:
         yield '}' # end of block namespace
 
+    if file_namespace is not None:
+        yield '}' # end of file namespace
+
 def header():
     yield "#pragma once"
     yield ""
@@ -263,9 +271,10 @@ def header():
 
 if __name__ == "__main__":
     d = read_input(sys.argv[1])
+    file_namespace = sys.argv[2] if len(sys.argv) > 2 else None
     aggregated = aggregate_registers(d)
     registers = aggregate_all_enums(aggregated)
     render, out = renderer()
     render(header())
-    render(render_registers(registers))
+    render(render_registers(registers, file_namespace))
     sys.stdout.write(out.getvalue())

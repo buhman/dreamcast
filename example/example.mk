@@ -326,7 +326,21 @@ DUMP_OBJECT_LIST_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	sh7091/serial.o
+	sh7091/serial.o \
+	libm.o
 
-example/dump_object_list.elf: LDSCRIPT = $(LIB)/alt.lds
+example/dump_object_list.elf: LDSCRIPT = $(LIB)/main.lds
 example/dump_object_list.elf: $(START_OBJ) $(DUMP_OBJECT_LIST_OBJ)
+
+SOFTWARE_TA_OBJ = \
+	example/software_ta.o \
+	vga.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o \
+	libm.o
+
+example/software_ta.elf: LDSCRIPT = $(LIB)/main.lds
+example/software_ta.elf: $(START_OBJ) $(SOFTWARE_TA_OBJ)
