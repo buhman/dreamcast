@@ -329,7 +329,7 @@ DUMP_OBJECT_LIST_OBJ = \
 	sh7091/serial.o \
 	libm.o
 
-example/dump_object_list.elf: LDSCRIPT = $(LIB)/main.lds
+example/dump_object_list.elf: LDSCRIPT = $(LIB)/alt.lds
 example/dump_object_list.elf: $(START_OBJ) $(DUMP_OBJECT_LIST_OBJ)
 
 SOFTWARE_TA_OBJ = \
@@ -342,5 +342,5 @@ SOFTWARE_TA_OBJ = \
 	sh7091/serial.o \
 	libm.o
 
-example/software_ta.elf: LDSCRIPT = $(LIB)/main.lds
+example/software_ta.elf: LDSCRIPT = $(LIB)/alt.lds
 example/software_ta.elf: $(START_OBJ) $(SOFTWARE_TA_OBJ)

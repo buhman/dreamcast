@@ -7,13 +7,13 @@
 
 namespace serial {
 
-void init()
+void init(uint8_t bit_rate)
 {
   using namespace scif;
 
   sh7091.SCIF.SCSCR2 = 0;
   sh7091.SCIF.SCSMR2 = 0;
-  sh7091.SCIF.SCBRR2 = 1; // 520833.3
+  sh7091.SCIF.SCBRR2 = bit_rate; // bps = 1562500 / (SCBRR2 + 1)
 
   sh7091.SCIF.SCFCR2 = scfcr2::tfrst::reset_operation_enabled
                      | scfcr2::rfrst::reset_operation_enabled;

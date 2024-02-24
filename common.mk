@@ -166,7 +166,7 @@ clean:
 		-regextype posix-egrep \
 		-regex '.*\.(iso|o|d|bin|elf|cue|gch)$$' \
 		-exec rm {} \;
-	rm 1ST_READ.BIN
+	rm -f 1ST_READ.BIN
 
 .SUFFIXES:
 .INTERMEDIATE:

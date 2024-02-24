@@ -137,7 +137,8 @@ void isp_tsp_parameters(volatile uint32_t * mem, const quad& quad)
 {
   auto params = reinterpret_cast<volatile __untextured_quad *>(mem);
   params->isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                   | isp_tsp_instruction_word::culling_mode::no_culling;
+                                   | isp_tsp_instruction_word::culling_mode::no_culling
+                                   | isp_tsp_instruction_word::gouraud_shading;
 
   params->tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                | tsp_instruction_word::dst_alpha_instr::zero
@@ -148,12 +149,12 @@ void isp_tsp_parameters(volatile uint32_t * mem, const quad& quad)
   params->a.x = quad.a.x;
   params->a.y = quad.a.y;
   params->a.z = 0.1f;
-  params->b.color = 0; // invalid
+  params->b.color = 0xff0000ff; // invalid
 
   params->b.x = quad.b.x;
   params->b.y = quad.b.y;
   params->b.z = 0.1f;
-  params->b.color = 0; // invalid
+  params->b.color = 0xff00ff00; // invalid
 
   params->c.x = quad.c.x;
   params->c.y = quad.c.y;
@@ -163,7 +164,7 @@ void isp_tsp_parameters(volatile uint32_t * mem, const quad& quad)
   params->d.x = quad.d.x;
   params->d.y = quad.d.y;
   params->d.z = 0.f; // invalid
-  params->b.color = 0; // invalid
+  params->b.color = 0xff00ff00; // invalid
 }
 
 }

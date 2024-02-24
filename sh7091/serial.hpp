@@ -1,6 +1,6 @@
 namespace serial {
 
-void init();
+void init(uint8_t bit_rate);
 
 void character(const char c);
 
