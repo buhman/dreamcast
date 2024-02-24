@@ -37,7 +37,7 @@ def size_to_type(size):
 
 def new_writer():
     first_address = 0
-    last_address = 0
+    next_address = 0
     last_block = None
     size_total = 0
     reserved_num = 0
@@ -56,7 +56,7 @@ def new_writer():
 
     def process_row(row):
         nonlocal first_address
-        nonlocal last_address
+        nonlocal next_address
         nonlocal last_block
         nonlocal reserved_num
         nonlocal size_total
@@ -76,14 +76,14 @@ def new_writer():
         if block != last_block:
             yield from terminate()
             first_address = offset_address
-            last_address = offset_address
+            next_address = offset_address
             size_total = 0
             reserved_num = 0
             yield f"struct {block.lower()}_reg {{"
 
-        if address != last_address:
-            padding = address - last_address
-            assert padding > 0, (row, address, last_address)
+        assert address >= next_address, row
+        if address > next_address:
+            padding = address - next_address
             type = size_to_type(1)
             yield f"{type} _pad{reserved_num}[{padding}];"
             reserved_num += 1
@@ -101,7 +101,7 @@ def new_writer():
         yield field().ljust(27) + f"/* {description} */"
 
         stack.append((address, name))
-        last_address = address + size
+        next_address = address + size
         last_block = block
         size_total += size
 

@@ -161,6 +161,12 @@ sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
 sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+systembus.hpp: regs/systembus.csv regs/gen/systembus.py
+	python regs/gen/systembus.py $< > $@
+
+gdrom.hpp: regs/gdrom.csv regs/gen/gdrom.py
+	python regs/gen/gdrom.py $< > $@
+
 clean:
 	find -P \
 		-regextype posix-egrep \
