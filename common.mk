@@ -102,10 +102,10 @@ audio.pcm:
 		synth 1 sin 440 vol -10dB
 	mv $@.raw $@
 
-1ST_READ.BIN: example/dump_object_list.bin
+%.scramble: %.bin
 	./scramble $< $@
 
-%.iso: 1ST_READ.BIN ip.bin
+%.iso: %.scramble ip.bin
 	mkisofs \
 		-C 0,11702 \
 		-sysid     "SEGA SEGAKATANA" \
@@ -116,11 +116,10 @@ audio.pcm:
 		-copyright "COPYRIGH.TXT" \
 		-abstract  "ABSTRACT.TXT" \
 		-biblio    "BIBLIOGR.TXT" \
-		-sectype data \
 		-G ip.bin \
 		-o $@ \
 		-graft-points \
-		/=./1ST_READ.BIN \
+		/1ST_READ.BIN=./$< \
 		/=./COPYRIGH.TXT \
 		/=./ABSTRACT.TXT \
 		/=./BIBLIOGR.TXT
@@ -161,18 +160,11 @@ sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
 sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
-systembus.hpp: regs/systembus.csv regs/gen/systembus.py
-	python regs/gen/systembus.py $< > $@
-
-gdrom.hpp: regs/gdrom.csv regs/gen/gdrom.py
-	python regs/gen/gdrom.py $< > $@
-
 clean:
 	find -P \
 		-regextype posix-egrep \
-		-regex '.*\.(iso|o|d|bin|elf|cue|gch)$$' \
+		-regex '.*\.(iso|o|d|bin|elf|cue|gch|scramble)$$' \
 		-exec rm {} \;
-	rm -f 1ST_READ.BIN
 
 .SUFFIXES:
 .INTERMEDIATE:
