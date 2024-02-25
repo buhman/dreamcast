@@ -142,7 +142,9 @@ struct g1_if_reg {
   reg32 G1SYSM;              /* System mode */
   reg32 G1CRDYC;             /* G1IORDY signal control */
   reg32 GDAPRO;              /* GD-DMA address range */
-  reg8  _pad5[56];
+  reg8  _pad5[40];
+  reg32 GDUNLOCK;            /* (undocumented unlock register) */
+  reg8  _pad6[12];
   reg32 GDSTARD;             /* GD-DMA address count (on Root Bus) */
   reg32 GDLEND;              /* GD-DMA transfer counter */
 };
@@ -163,6 +165,7 @@ static_assert((offsetof (struct g1_if_reg, G1GDWC)) == 0xa4);
 static_assert((offsetof (struct g1_if_reg, G1SYSM)) == 0xb0);
 static_assert((offsetof (struct g1_if_reg, G1CRDYC)) == 0xb4);
 static_assert((offsetof (struct g1_if_reg, GDAPRO)) == 0xb8);
+static_assert((offsetof (struct g1_if_reg, GDUNLOCK)) == 0xe4);
 static_assert((offsetof (struct g1_if_reg, GDSTARD)) == 0xf4);
 static_assert((offsetof (struct g1_if_reg, GDLEND)) == 0xf8);
 

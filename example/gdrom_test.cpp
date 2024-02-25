@@ -1,6 +1,7 @@
 #include "gdrom.hpp"
 #include "gdrom_bits.hpp"
 #include "memorymap.hpp"
+#include "systembus.hpp"
 
 #include "sh7091/serial.hpp"
 
@@ -234,7 +235,7 @@ void cd_read()
 void main()
 {
   // gdrom unlock undocumented register
-  *((volatile unsigned long *)0xa05f74e4) = 0x1fffff;
+  g1_if.GDUNLOCK = 0x1fffff;
 
   // Without this read from system_boot_rom, the read value of
   // gdrom_if.status is always 0xff

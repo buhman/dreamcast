@@ -83,6 +83,7 @@
 "G1_IF","b4","4","G1CRDYC","W","G1IORDY signal control"
 "G1_IF","b8","4","GDAPRO","W","GD-DMA address range"
 ,,,,,
+"G1_IF","e4","4","GDUNLOCK","W","(undocumented unlock register)"
 "G1_IF","f4","4","GDSTARD","R","GD-DMA address count (on Root Bus)"
 "G1_IF","f8","4","GDLEND","R","GD-DMA transfer counter"
 ,,,,,
