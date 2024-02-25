@@ -116,6 +116,21 @@ void object_pointer_blocks(volatile uint32_t * mem, const quad& quad)
   }
 }
 
+template <int N>
+void opb_checkerboard_pattern(volatile uint32_t * mem)
+{
+  auto block = reinterpret_cast<volatile object_pointer_block<N> *>(mem);
+  for (uint32_t y = 0; y < tile_height; y++) {
+    for (uint32_t x = 0; x < tile_width; x++) {
+      if (((x + (y & 1)) & 1) == 0) continue;
+
+      auto& opb = block[y * tile_width + x];
+      opb.pointer[0] = object_list_data::pointer_type::object_pointer_block_link
+                      | object_list_data::object_pointer_block_link::end_of_list;
+    }
+  }
+}
+
 struct __untextured_quad_vertex {
   float x;
   float y;

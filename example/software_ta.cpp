@@ -210,6 +210,7 @@ void main()
     qq.c = rotate(q.c, theta);
     qq.d = rotate(q.d, theta);
 
+    auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
     if (hardware_ta) {
       ta_polygon_converter_init(opb_size.total(),
                                 ta_alloc,
@@ -219,11 +220,10 @@ void main()
       ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
       ta_wait_opaque_list();
     } else {
-      auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-      software_ta::object_pointer_blocks<8>(&mem->object_list[0], qq);
-      software_ta::isp_tsp_parameters(&mem->isp_tsp_parameters[0], qq);
+      software_ta::object_pointer_blocks<8>(mem->object_list, qq);
+      software_ta::isp_tsp_parameters(mem->isp_tsp_parameters, qq);
     }
+    software_ta::opb_checkerboard_pattern<8>(mem->object_list);
 
     core_start_render(frame_ix, num_frames);
     core_wait_end_of_render_video();

@@ -47,6 +47,15 @@ void string(const char * s)
   }
 }
 
+void hexlify(const uint8_t n)
+{
+  constexpr uint32_t length = 2;
+  char num_buf[length];
+  string::hex<char>(num_buf, length, n);
+  character(num_buf[0]);
+  character(num_buf[1]);
+}
+
 template <typename T>
 void integer(const T n, const char end)
 {

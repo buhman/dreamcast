@@ -326,11 +326,17 @@ DUMP_OBJECT_LIST_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	sh7091/serial.o \
-	libm.o
+	sh7091/serial.o
 
 example/dump_object_list.elf: LDSCRIPT = $(LIB)/alt.lds
 example/dump_object_list.elf: $(START_OBJ) $(DUMP_OBJECT_LIST_OBJ)
+
+DUMP_RAM_OBJ = \
+	example/dump_ram.o \
+	sh7091/serial.o
+
+example/dump_ram.elf: LDSCRIPT = $(LIB)/alt.lds
+example/dump_ram.elf: $(START_OBJ) $(DUMP_RAM_OBJ)
 
 SOFTWARE_TA_OBJ = \
 	example/software_ta.o \
@@ -344,3 +350,10 @@ SOFTWARE_TA_OBJ = \
 
 example/software_ta.elf: LDSCRIPT = $(LIB)/alt.lds
 example/software_ta.elf: $(START_OBJ) $(SOFTWARE_TA_OBJ)
+
+GDROM_TEST_OBJ = \
+	example/gdrom_test.o \
+	sh7091/serial.o
+
+example/gdrom_test.elf: LDSCRIPT = $(LIB)/alt.lds
+example/gdrom_test.elf: $(START_OBJ) $(GDROM_TEST_OBJ)
