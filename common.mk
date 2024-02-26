@@ -131,7 +131,7 @@ audio.pcm:
 	$(BUILD_BINARY_O)
 
 %.csv: %.ods
-	libreoffice --headless -convert-to csv:"Text - txt - csv (StarCalc)":44,34,76,,,,true --outdir $(dir $@) $<
+	libreoffice --headless --convert-to csv:"Text - txt - csv (StarCalc)":44,34,76,,,,true --outdir $(dir $@) $<
 
 maple/maple_bus_commands.hpp: regs/maple_bus_commands.csv regs/gen/maple_bus_commands.py
 	python regs/gen/maple_bus_commands.py $< > $@
@@ -159,6 +159,9 @@ sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
 
 sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
+
+gdrom/gdrom_bits.hpp: regs/gdrom_bits.csv regs/gen/core_bits.py
+	python regs/gen/core_bits.py $< gdrom > $@
 
 gdrom/command_packet_format.hpp: regs/gdrom_command_packet_format.csv regs/gen/gdrom_command_packet_format.py regs/gen/generic_sparse_struct.py
 	python regs/gen/gdrom_command_packet_format.py $< gdrom_command_packet_format > $@

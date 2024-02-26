@@ -11,29 +11,28 @@ union data {
 };
 static_assert((sizeof (data)) == 2);
 
-
 void test_unit()
 {
   serial::string("test_unit\n");
   // wait for BSY == 0 && DRQ == 0
-  while ((gdrom_if.status & (gdrom::status::bsy | gdrom::status::drq)) != 0) {
+  while ((gdrom::status::bsy(gdrom_if.status) | gdrom::status::drq(gdrom_if.status)) != 0) {
     serial::integer<uint8_t>(gdrom_if.status);
     for (int i = 0; i < 1000000; i++) { asm volatile ("nop;"); }
   };
   serial::string("bsy | drq == 0\n");
 
   gdrom_if.command = 0xa0; // packet command
-  while ((gdrom_if.status & gdrom::status::drq) == 0);
+  while ((gdrom::status::drq(gdrom_if.status)) == 0);
   serial::string("drq != 0; CoD: ");
   serial::integer<uint8_t>(gdrom_if.interrupt_reason & 1);
 
   serial::string("bsy1: ");
-  serial::integer<uint8_t>(gdrom_if.status & gdrom::status::bsy);
+  serial::integer<uint8_t>(gdrom::status::bsy(gdrom_if.status));
   for (int i = 0; i < 6; i++)
     gdrom_if.data = 0;
-  serial::integer<uint8_t>(gdrom_if.status & gdrom::status::bsy);
+  serial::integer<uint8_t>(gdrom::status::bsy(gdrom_if.status));
 
-  while ((gdrom_if.status & (gdrom::status::bsy | gdrom::status::drq)) != 0);
+  while ((gdrom::status::bsy(gdrom_if.status) | gdrom::status::drq(gdrom_if.status)) != 0);
   serial::string("bsy2: ");
   serial::integer<uint8_t>(gdrom_if.status);
   serial::string("\n");
@@ -41,7 +40,7 @@ void test_unit()
 
 void pio_data(const uint8_t * data)
 {
-  while ((gdrom_if.status & (gdrom::status::bsy | gdrom::status::drq)) != 0);
+  while ((gdrom::status::bsy(gdrom_if.status) | gdrom::status::drq(gdrom_if.status)) != 0);
   serial::string("bsy | drq == 0\n");
 
   gdrom_if.features = 0; // not DMA
@@ -49,10 +48,7 @@ void pio_data(const uint8_t * data)
 
   gdrom_if.command = 0xa0; // packet command
   // CoD
-  //serial::string("wait CoD\n");
-  while ((gdrom_if.interrupt_reason & 0b11) != gdrom::interrupt_reason::cod);
-  //serial::string("done CoD\n");
-  while ((gdrom_if.status & gdrom::status::drq) == 0);
+  while (gdrom::status::drq(gdrom_if.status) == 0);
   serial::string("drq == 1\n");
 
   const uint16_t * buf = reinterpret_cast<const uint16_t *>(&data[0]);
@@ -62,7 +58,7 @@ void pio_data(const uint8_t * data)
 
   serial::string("status1: ");
   serial::integer<uint8_t>(gdrom_if.status);
-  while ((gdrom_if.status & gdrom::status::bsy) != 0) {
+  while (gdrom::status::bsy(gdrom_if.status) != 0) {
     serial::integer<uint8_t>(gdrom_if.status);
     for (int i = 0; i < 10000000; i++) { asm volatile ("nop;"); }
   };

@@ -41,9 +41,9 @@ def aggregate_enums(aggregated_rows):
     all_bits = set()
     enum_bits = dict()
 
-    def assert_unique_ordered(bits):
+    def assert_unique_ordered(bits, row):
         nonlocal all_bits
-        assert all(bit not in all_bits for bit in bits), bits
+        assert all(bit not in all_bits for bit in bits), (bits, row)
         assert max(all_bits, default=32) > max(bits), (all_bits, bits)
         all_bits |= bits
 
@@ -51,11 +51,11 @@ def aggregate_enums(aggregated_rows):
         bits = parse_bit_range(row["bits"])
         assert row["bit_name"] != "", row
         if row["enum_name"] == "":
-            assert_unique_ordered(bits)
+            assert_unique_ordered(bits, row)
             non_enum.append(row)
         else:
             if row["enum_name"] not in enum_bits:
-                assert_unique_ordered(bits)
+                assert_unique_ordered(bits, row)
                 non_enum.append(row["enum_name"])
             else:
                 assert enum_bits[row["enum_name"]] == bits, row
