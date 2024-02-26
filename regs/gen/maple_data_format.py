@@ -1,8 +1,8 @@
-import csv
 import sys
 from dataclasses import dataclass
 from collections import defaultdict
 
+from csv_input import read_input_headerless
 from generate import renderer
 
 @dataclass
@@ -22,15 +22,6 @@ class Format:
     fields: list[Field]
     field_order: list[str]
     size: int
-
-def read_input(filename):
-    with open(filename) as f:
-        reader = csv.reader(f, delimiter=",", quotechar='"')
-        rows = [
-            [s.strip() for s in row]
-            for row in reader
-        ]
-    return rows
 
 def parse_bits(bits: list[str]):
     bit_order = [7, 6, 5, 4, 3, 2, 1, 0]
@@ -135,7 +126,7 @@ def render_formats(name, formats):
     yield "}"
 
 if __name__ == "__main__":
-    rows = read_input(sys.argv[1])
+    rows = read_input_headerless(sys.argv[1])
     name = sys.argv[1].split('.')[0].split('_')[-1]
     assert len(name) == 3 or len(name) == 4
     formats = parse(rows)

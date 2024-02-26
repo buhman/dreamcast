@@ -1,7 +1,7 @@
 import sys
 
 from sh7091 import new_writer
-from sh7091 import read_input
+from csv_input import read_input
 from sh7091 import headers
 from sh7091 import blocks
 from generate import renderer

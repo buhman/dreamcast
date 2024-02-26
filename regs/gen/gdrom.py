@@ -2,7 +2,9 @@ from collections import defaultdict
 from dataclasses import dataclass
 import sys
 
-from sh7091 import read_input, size_to_type, headers
+from csv_input import read_input
+from sh7091 import size_to_type
+from sh7091 import headers
 from generate import renderer
 
 @dataclass

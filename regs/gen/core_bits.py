@@ -4,7 +4,7 @@ from pprint import pprint
 from dataclasses import dataclass
 from typing import Union
 
-from sh7091 import read_input
+from csv_input import read_input
 from generate import renderer
 
 def aggregate_registers(d):

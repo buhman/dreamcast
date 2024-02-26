@@ -1,6 +1,6 @@
 import sys
 
-from sh7091 import read_input
+from csv_input import read_input
 
 from generate import renderer
 

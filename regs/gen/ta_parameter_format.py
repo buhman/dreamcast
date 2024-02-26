@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from pprint import pprint
 import sys
-import csv
 
+from csv_input import read_input_headerless
 from generate import renderer
 
 _field_types = {
@@ -182,17 +182,8 @@ def headers():
     yield "#include <cstdint>"
     yield ""
 
-def read_input(filename):
-    with open(filename) as f:
-        reader = csv.reader(f, delimiter=",", quotechar='"')
-        rows = [
-            [s.strip() for s in row]
-            for row in reader
-        ]
-    return rows
-
 if __name__ == "__main__":
-    rows = read_input(sys.argv[1])
+    rows = read_input_headerless(sys.argv[1])
     namespace = sys.argv[2]
     declarations = parse(rows)
     render, out = renderer()
