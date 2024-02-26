@@ -9,6 +9,10 @@ from generic_sparse_struct import render_declarations
 def get_type(field_name: str):
     return "uint8_t"
 
+def headers2():
+    yield '#include "command_packet_format_byte_order.hpp"'
+    yield ""
+
 if __name__ == "__main__":
     rows = read_input_headerless(sys.argv[1])
     namespace = sys.argv[2]
@@ -18,5 +22,6 @@ if __name__ == "__main__":
     from pprint import pprint
     render, out = renderer()
     render(headers())
+    render(headers2())
     render(render_declarations(namespace, declarations, get_type))
     print(out.getvalue())

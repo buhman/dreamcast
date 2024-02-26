@@ -104,12 +104,12 @@ def render_initializer(declaration, get_type):
 
     constructor_fields = [f for f in declaration.fields
                           if (not f.name.startswith('_res')
-                              and not f.array_length > 1
                               and f.default is None
                               )]
     for i, field in enumerate(constructor_fields):
         s = start(i)
-        type = get_type(field.name)
+        assert field.array_length <= 4, field
+        type = get_type(field.name) if field.array_length == 1 else "uint32_t"
         comma = ',' if i + 1 < len(constructor_fields) else ''
         yield s + f"const {type} {field.name}" + comma
 
@@ -119,20 +119,37 @@ def render_initializer(declaration, get_type):
         yield initializer + ')'
 
     for i, field in enumerate(declaration.fields):
+        if field.array_length > 1:
+            continue
         value = field.name if not field.name.startswith('_res') else '0'
         value = hex(field.default) if field.default is not None else value
-        value = '' if field.array_length > 1 else value
         s = ':' if i == 0 else ','
         yield "  " + s + f" {field.name}({value})"
-    yield "{ }"
+
+    array_fields = [f for f in declaration.fields
+                    if f.array_length > 1]
+    if array_fields:
+        yield "{"
+        for field in array_fields:
+            yield f"byte_order<{field.array_length}>(&this->{field.name}[0], {field.name});"
+        yield "}"
+    else:
+        yield "{ }"
 
 def render_static_assertions(declaration):
     yield f"static_assert((sizeof ({declaration.name})) == {declaration.size});"
     for field in declaration.fields:
         yield f"static_assert((offsetof (struct {declaration.name}, {field.name})) == 0x{field.offset:02x});"
 
+def render_data_method():
+    yield "const uint8_t * _data()"
+    yield "{"
+    yield "return reinterpret_cast<const uint8_t *>(this);"
+    yield "}"
+
 def render_declaration(declaration, get_type):
     yield f"struct {declaration.name} {{"
+
     for field in declaration.fields:
         type = get_type(field.name)
         if field.array_length == 1:
@@ -140,8 +157,12 @@ def render_declaration(declaration, get_type):
         else:
             yield f"{type} {field.name}[{field.array_length}];"
     yield ""
+
     yield from render_initializer(declaration, get_type)
-    yield "};"
+    yield ""
+    yield from render_data_method();
+
+    yield "};" # struct {declaration.name}
     yield from render_static_assertions(declaration)
 
 def render_declarations(namespace, declarations, get_type):

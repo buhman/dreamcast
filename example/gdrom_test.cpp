@@ -5,12 +5,6 @@
 
 #include "sh7091/serial.hpp"
 
-union data {
-  uint8_t u8[2];
-  uint16_t u16;
-};
-static_assert((sizeof (data)) == 2);
-
 void test_unit()
 {
   serial::string("test_unit\n");

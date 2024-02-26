@@ -3,6 +3,8 @@
 #include <cstdint>
 #include <cstddef>
 
+#include "command_packet_format_byte_order.hpp"
+
 namespace gdrom_command_packet_format {
   struct test_unit {
     uint8_t command_code;
@@ -32,6 +34,11 @@ namespace gdrom_command_packet_format {
       , _res9(0)
       , _res10(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (test_unit)) == 12);
   static_assert((offsetof (struct test_unit, command_code)) == 0x00);
@@ -77,6 +84,11 @@ namespace gdrom_command_packet_format {
       , _res7(0)
       , _res8(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (req_stat)) == 12);
   static_assert((offsetof (struct req_stat, command_code)) == 0x00);
@@ -122,6 +134,11 @@ namespace gdrom_command_packet_format {
       , _res7(0)
       , _res8(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (req_mode)) == 12);
   static_assert((offsetof (struct req_mode, command_code)) == 0x00);
@@ -167,6 +184,11 @@ namespace gdrom_command_packet_format {
       , _res7(0)
       , _res8(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (set_mode)) == 12);
   static_assert((offsetof (struct set_mode, command_code)) == 0x00);
@@ -211,6 +233,11 @@ namespace gdrom_command_packet_format {
       , _res8(0)
       , _res9(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (req_error)) == 12);
   static_assert((offsetof (struct req_error, command_code)) == 0x00);
@@ -239,12 +266,12 @@ namespace gdrom_command_packet_format {
     uint8_t _res6;
     uint8_t _res7;
 
-    get_toc(const uint8_t select
+    get_toc(const uint8_t select,
+            const uint32_t allocation_length
             )
       : command_code(0x14)
       , select(select)
       , _res0(0)
-      , allocation_length()
       , _res1(0)
       , _res2(0)
       , _res3(0)
@@ -252,7 +279,14 @@ namespace gdrom_command_packet_format {
       , _res5(0)
       , _res6(0)
       , _res7(0)
-    { }
+    {
+      byte_order<2>(&this->allocation_length[0], allocation_length);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (get_toc)) == 12);
   static_assert((offsetof (struct get_toc, command_code)) == 0x00);
@@ -297,6 +331,11 @@ namespace gdrom_command_packet_format {
       , _res7(0)
       , _res8(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (req_ses)) == 12);
   static_assert((offsetof (struct req_ses, command_code)) == 0x00);
@@ -340,6 +379,11 @@ namespace gdrom_command_packet_format {
       , _res9(0)
       , _res10(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_open)) == 12);
   static_assert((offsetof (struct cd_open, command_code)) == 0x00);
@@ -366,17 +410,25 @@ namespace gdrom_command_packet_format {
     uint8_t _res2;
 
     cd_play(const uint8_t parameter_type,
-            const uint8_t repeat_times
+            const uint32_t starting_point,
+            const uint8_t repeat_times,
+            const uint32_t end_point
             )
       : command_code(0x20)
       , parameter_type(parameter_type)
-      , starting_point()
       , _res0(0)
       , repeat_times(repeat_times)
       , _res1(0)
-      , end_point()
       , _res2(0)
-    { }
+    {
+      byte_order<3>(&this->starting_point[0], starting_point);
+      byte_order<3>(&this->end_point[0], end_point);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_play)) == 12);
   static_assert((offsetof (struct cd_play, command_code)) == 0x00);
@@ -400,11 +452,11 @@ namespace gdrom_command_packet_format {
     uint8_t _res5;
     uint8_t _res6;
 
-    cd_seek(const uint8_t parameter_type
+    cd_seek(const uint8_t parameter_type,
+            const uint32_t seek_point
             )
       : command_code(0x21)
       , parameter_type(parameter_type)
-      , seek_point()
       , _res0(0)
       , _res1(0)
       , _res2(0)
@@ -412,7 +464,14 @@ namespace gdrom_command_packet_format {
       , _res4(0)
       , _res5(0)
       , _res6(0)
-    { }
+    {
+      byte_order<3>(&this->seek_point[0], seek_point);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_seek)) == 12);
   static_assert((offsetof (struct cd_seek, command_code)) == 0x00);
@@ -456,6 +515,11 @@ namespace gdrom_command_packet_format {
       , _res7(0)
       , _res8(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_scan)) == 12);
   static_assert((offsetof (struct cd_scan, command_code)) == 0x00);
@@ -481,17 +545,25 @@ namespace gdrom_command_packet_format {
     uint8_t transfer_length[3];
     uint8_t _res3;
 
-    cd_read(const uint8_t data
+    cd_read(const uint8_t data,
+            const uint32_t starting_address,
+            const uint32_t transfer_length
             )
       : command_code(0x30)
       , data(data)
-      , starting_address()
       , _res0(0)
       , _res1(0)
       , _res2(0)
-      , transfer_length()
       , _res3(0)
-    { }
+    {
+      byte_order<3>(&this->starting_address[0], starting_address);
+      byte_order<3>(&this->transfer_length[0], transfer_length);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_read)) == 12);
   static_assert((offsetof (struct cd_read, command_code)) == 0x00);
@@ -512,16 +584,25 @@ namespace gdrom_command_packet_format {
     uint8_t next_address[3];
     uint8_t _res1;
 
-    cd_read2(const uint8_t data
+    cd_read2(const uint8_t data,
+             const uint32_t starting_address,
+             const uint32_t transfer_length,
+             const uint32_t next_address
              )
       : command_code(0x31)
       , data(data)
-      , starting_address()
       , _res0(0)
-      , transfer_length()
-      , next_address()
       , _res1(0)
-    { }
+    {
+      byte_order<3>(&this->starting_address[0], starting_address);
+      byte_order<2>(&this->transfer_length[0], transfer_length);
+      byte_order<3>(&this->next_address[0], next_address);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_read2)) == 12);
   static_assert((offsetof (struct cd_read2, command_code)) == 0x00);
@@ -545,12 +626,12 @@ namespace gdrom_command_packet_format {
     uint8_t _res6;
     uint8_t _res7;
 
-    cd_scd(const uint8_t data_format
+    cd_scd(const uint8_t data_format,
+           const uint32_t allocation_length
            )
       : command_code(0x40)
       , data_format(data_format)
       , _res0(0)
-      , allocation_length()
       , _res1(0)
       , _res2(0)
       , _res3(0)
@@ -558,7 +639,14 @@ namespace gdrom_command_packet_format {
       , _res5(0)
       , _res6(0)
       , _res7(0)
-    { }
+    {
+      byte_order<2>(&this->allocation_length[0], allocation_length);
+    }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (cd_scd)) == 12);
   static_assert((offsetof (struct cd_scd, command_code)) == 0x00);
