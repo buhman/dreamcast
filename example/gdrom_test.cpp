@@ -1,5 +1,5 @@
-#include "gdrom.hpp"
-#include "gdrom_bits.hpp"
+#include "gdrom/gdrom.hpp"
+#include "gdrom/gdrom_bits.hpp"
 #include "memorymap.hpp"
 #include "systembus.hpp"
 

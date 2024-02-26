@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <cstddef>
 
 namespace ta_vertex_parameter {
   struct polygon_type_0 {
