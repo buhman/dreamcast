@@ -160,11 +160,17 @@ sh7091/sh7091.hpp: regs/sh7091.csv regs/gen/sh7091.py
 sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+gdrom/gdrom.hpp: regs/gdrom.csv regs/gen/gdrom.py
+	python regs/gen/gdrom.py $< gdrom > $@
+
 gdrom/gdrom_bits.hpp: regs/gdrom_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< gdrom > $@
 
 gdrom/command_packet_format.hpp: regs/gdrom_command_packet_format.csv regs/gen/gdrom_command_packet_format.py regs/gen/generic_sparse_struct.py
 	python regs/gen/gdrom_command_packet_format.py $< gdrom_command_packet_format > $@
+
+iso9660/%.hpp: iso9660/%.csv iso9660/byte_position.py
+	python iso9660/byte_position.py $< > $@
 
 clean:
 	find -P \

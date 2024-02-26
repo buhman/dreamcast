@@ -1,6 +1,6 @@
 import sys
 from dataclasses import dataclass
-from os.path import splitext
+from os import path
 
 from csv_input import read_input
 from generate import renderer
@@ -89,6 +89,8 @@ def header():
     yield ""
 
 def render_fields(input_name, fields):
+    yield "namespace iso9660 {"
+
     yield f"struct {input_name} {{"
     for field in fields:
         field_size = (field.end - field.start) + 1
@@ -108,9 +110,12 @@ def render_fields(input_name, fields):
     for field in fields:
         yield f"static_assert((offsetof (struct {input_name}, {field.name})) == {field.start - 1});"
 
+    yield "}" # namespace
+
 if __name__ == "__main__":
     input_file = sys.argv[1]
-    input_name, _ = splitext(input_file)
+    input_name0, _ = path.splitext(input_file)
+    _, input_name = path.split(input_name0)
     rows = read_input(input_file)
     fields = list(parse(rows))
     render, out = renderer()

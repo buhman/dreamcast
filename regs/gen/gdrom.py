@@ -40,6 +40,12 @@ def group_by_address(rows):
 
     return list(sorted(_groups.items(), key=lambda kv: kv[0]))
 
+def byte_count():
+    yield "uint16_t byte_count() const"
+    yield "{"
+    yield "return (byte_count_high << 8) | (byte_count_low << 0);"
+    yield "}"
+
 def render_groups(groups):
     next_address = 0
     reserved_num = 0
@@ -66,6 +72,9 @@ def render_groups(groups):
             yield "};" # end of union
 
         next_address = address + group[0].size
+
+    yield ""
+    yield from byte_count()
 
     yield "};"
 

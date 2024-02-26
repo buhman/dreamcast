@@ -47,6 +47,14 @@ void string(const char * s)
   }
 }
 
+void string(const uint8_t * s, uint32_t len)
+{
+  while (len > 0) {
+    character(*s++);
+    len--;
+  }
+}
+
 void hexlify(const uint8_t n)
 {
   constexpr uint32_t length = 2;

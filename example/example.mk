@@ -357,3 +357,10 @@ GDROM_TEST_OBJ = \
 
 example/gdrom_test.elf: LDSCRIPT = $(LIB)/alt.lds
 example/gdrom_test.elf: $(START_OBJ) $(GDROM_TEST_OBJ)
+
+GDROM_ISO9660_OBJ = \
+	example/gdrom_iso9660.o \
+	sh7091/serial.o
+
+example/gdrom_iso9660.elf: LDSCRIPT = $(LIB)/alt.lds
+example/gdrom_iso9660.elf: $(START_OBJ) $(GDROM_ISO9660_OBJ)

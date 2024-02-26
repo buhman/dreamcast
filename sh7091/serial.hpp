@@ -6,6 +6,8 @@ void character(const char c);
 
 void string(const char * s);
 
+void string(const uint8_t * s, uint32_t len);
+
 void hexlify(const uint8_t n);
 
 template <typename T>

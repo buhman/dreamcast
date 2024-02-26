@@ -1,8 +1,9 @@
-#include "gdrom/gdrom.hpp"
-#include "gdrom/gdrom_bits.hpp"
+#include <cstdint>
+
 #include "memorymap.hpp"
 #include "systembus.hpp"
-
+#include "gdrom/gdrom.hpp"
+#include "gdrom/gdrom_bits.hpp"
 #include "sh7091/serial.hpp"
 
 void test_unit()
@@ -172,7 +173,7 @@ void get_toc()
    41 00 2f 7c (lead-out information)
 */
 
-void cd_read()
+void cd_read2()
 {
   // CD-ROM XA mode 2 form 1
 
@@ -182,7 +183,7 @@ void cd_read()
 
 
   const uint8_t data[12] = {
-    0x31, // CD_READ
+    0x31, // CD_READ2
     (data_select << 4) | (expected_data_type << 1) | (parameter_type << 0),
 
     0x00, // starting address (msb)
@@ -238,7 +239,7 @@ void main()
   req_mode();
   get_toc();
 
-  cd_read();
+  cd_read2();
 
   while (1);
 }
