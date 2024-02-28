@@ -4,7 +4,7 @@
 #include "sh7091/sh7091_bits.hpp"
 #include "holly/holly.hpp"
 #include "holly/core_bits.hpp"
-#include "aica.hpp"
+#include "aica/aica.hpp"
 #include "memorymap.hpp"
 
 #include "vga.hpp"
@@ -90,10 +90,8 @@ void vga2()
                   | fb_r_ctrl::fb_depth::_0565_rgb_16bit
                   | fb_r_ctrl::fb_enable;
 
-#define DVE_OUTPUT_MODE (&aica[0x2c00])
 #define DVE_OUTPUT_MODE__VGA (0b00 << 0)
-  *DVE_OUTPUT_MODE = DVE_OUTPUT_MODE__VGA;
-#undef DVE_OUTPUT_MODE
+  aica.common.VREG(DVE_OUTPUT_MODE__VGA);
 #undef DVE_OUTPUT_MODE__VGA
 }
 

@@ -1,0 +1,4 @@
+"name","part","address","register_bits","argument_bits"
+"RTC","0","0x0000","15-0","31-16"
+"RTC","1","0x0004","15-0","15-0"
+"EN",,"0x0008","0",

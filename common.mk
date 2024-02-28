@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O2
+OPT ?= -O0
 DEBUG ?= -g -gdwarf-4
 GENERATED ?=
 
@@ -168,6 +168,18 @@ gdrom/gdrom_bits.hpp: regs/gdrom_bits.csv regs/gen/core_bits.py
 
 gdrom/command_packet_format.hpp: regs/gdrom_command_packet_format.csv regs/gen/gdrom_command_packet_format.py regs/gen/generic_sparse_struct.py
 	python regs/gen/gdrom_command_packet_format.py $< gdrom_command_packet_format > $@
+
+aica/aica_channel.hpp: regs/aica_channel_data.csv regs/gen/aica.py
+	python regs/gen/aica.py $< aica_channel 0x80 > $@
+
+aica/aica_common.hpp: regs/aica_common_data.csv regs/gen/aica.py
+	python regs/gen/aica.py $< aica_common > $@
+
+aica/aica_rtc.hpp: regs/aica_rtc_data.csv regs/gen/aica.py
+	python regs/gen/aica.py $< aica_rtc > $@
+
+aica/aica_dsp_out.hpp: regs/aica_dsp_out_data.csv regs/gen/aica.py
+	python regs/gen/aica.py $< aica_dsp_out > $@
 
 iso9660/%.hpp: iso9660/%.csv iso9660/byte_position.py
 	python iso9660/byte_position.py $< > $@
