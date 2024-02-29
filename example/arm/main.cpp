@@ -2,7 +2,7 @@
 
 extern void * _sine_start __asm("_binary_audio_pcm_start");
 
-extern volatile uint32_t * dram __asm("dram");
+extern volatile uint32_t dram[0x200000] __asm("dram");
 
 extern "C"
 void main()
@@ -45,6 +45,8 @@ void main()
   aica.common.TACTL(7); // increment once every 128 samples
   aica.common.TIMA(0);
   aica.channel[0].KYONEX(1);
+
+  dram[0] = 0x11223344;
 
   while (1) {
     if (aica.common.TIMA() >= 1) {
