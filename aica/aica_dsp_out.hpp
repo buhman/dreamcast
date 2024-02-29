@@ -1,11 +1,10 @@
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 #include "type.hpp"
 
 struct aica_dsp_out {
-  reg16 reg_0000;
-  const reg16 _pad0[1];
+  reg32 reg_0000;
 
   uint32_t EFDSL() const
   {

@@ -1,62 +1,37 @@
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 #include "type.hpp"
 
 struct aica_common {
-  reg16 reg_2800;
-  const reg16 _pad0[1];
-  reg16 reg_2804;
-  const reg16 _pad1[1];
-  reg16 reg_2808;
-  const reg16 _pad2[1];
-  reg16 reg_280c;
-  const reg16 _pad3[1];
-  reg16 reg_2810;
-  const reg16 _pad4[1];
-  reg16 reg_2814;
-  const reg16 _pad5[1];
-  const reg16 _pad6[52];
-  reg16 reg_2880;
-  const reg16 _pad7[1];
-  reg16 reg_2884;
-  const reg16 _pad8[1];
-  reg16 reg_2888;
-  const reg16 _pad9[1];
-  reg16 reg_288c;
-  const reg16 _pad10[1];
-  reg16 reg_2890;
-  const reg16 _pad11[1];
-  reg16 reg_2894;
-  const reg16 _pad12[1];
-  reg16 reg_2898;
-  const reg16 _pad13[1];
-  reg16 reg_289c;
-  const reg16 _pad14[1];
-  reg16 reg_28a0;
-  const reg16 _pad15[1];
-  reg16 reg_28a4;
-  const reg16 _pad16[1];
-  reg16 reg_28a8;
-  const reg16 _pad17[1];
-  reg16 reg_28ac;
-  const reg16 _pad18[1];
-  reg16 reg_28b0;
-  const reg16 _pad19[1];
-  reg16 reg_28b4;
-  const reg16 _pad20[1];
-  reg16 reg_28b8;
-  const reg16 _pad21[1];
-  reg16 reg_28bc;
-  const reg16 _pad22[1];
-  const reg16 _pad23[416];
-  reg16 reg_2c00;
-  const reg16 _pad24[1];
-  const reg16 _pad25[126];
-  reg16 reg_2d00;
-  const reg16 _pad26[1];
-  reg16 reg_2d04;
-  const reg16 _pad27[1];
+  reg32 reg_2800;
+  reg32 reg_2804;
+  reg32 reg_2808;
+  reg32 reg_280c;
+  reg32 reg_2810;
+  reg32 reg_2814;
+  const reg32 _pad0[26];
+  reg32 reg_2880;
+  reg32 reg_2884;
+  reg32 reg_2888;
+  reg32 reg_288c;
+  reg32 reg_2890;
+  reg32 reg_2894;
+  reg32 reg_2898;
+  reg32 reg_289c;
+  reg32 reg_28a0;
+  reg32 reg_28a4;
+  reg32 reg_28a8;
+  reg32 reg_28ac;
+  reg32 reg_28b0;
+  reg32 reg_28b4;
+  reg32 reg_28b8;
+  reg32 reg_28bc;
+  const reg32 _pad1[208];
+  reg32 reg_2c00;
+  const reg32 _pad2[63];
+  reg32 reg_2d00;
+  reg32 reg_2d04;
 
   uint32_t MONO() const
   {

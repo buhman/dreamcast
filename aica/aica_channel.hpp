@@ -1,46 +1,28 @@
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 #include "type.hpp"
 
 struct aica_channel {
-  reg16 reg_0000;
-  const reg16 _pad0[1];
-  reg16 reg_0004;
-  const reg16 _pad1[1];
-  reg16 reg_0008;
-  const reg16 _pad2[1];
-  reg16 reg_000c;
-  const reg16 _pad3[1];
-  reg16 reg_0010;
-  const reg16 _pad4[1];
-  reg16 reg_0014;
-  const reg16 _pad5[1];
-  reg16 reg_0018;
-  const reg16 _pad6[1];
-  reg16 reg_001c;
-  const reg16 _pad7[1];
-  reg16 reg_0020;
-  const reg16 _pad8[1];
-  reg16 reg_0024;
-  const reg16 _pad9[1];
-  reg16 reg_0028;
-  const reg16 _pad10[1];
-  reg16 reg_002c;
-  const reg16 _pad11[1];
-  reg16 reg_0030;
-  const reg16 _pad12[1];
-  reg16 reg_0034;
-  const reg16 _pad13[1];
-  reg16 reg_0038;
-  const reg16 _pad14[1];
-  reg16 reg_003c;
-  const reg16 _pad15[1];
-  reg16 reg_0040;
-  const reg16 _pad16[1];
-  reg16 reg_0044;
-  const reg16 _pad17[1];
-  const reg16 _pad18[28];
+  reg32 reg_0000;
+  reg32 reg_0004;
+  reg32 reg_0008;
+  reg32 reg_000c;
+  reg32 reg_0010;
+  reg32 reg_0014;
+  reg32 reg_0018;
+  reg32 reg_001c;
+  reg32 reg_0020;
+  reg32 reg_0024;
+  reg32 reg_0028;
+  reg32 reg_002c;
+  reg32 reg_0030;
+  reg32 reg_0034;
+  reg32 reg_0038;
+  reg32 reg_003c;
+  reg32 reg_0040;
+  reg32 reg_0044;
+  const reg32 _pad0[14];
 
   uint32_t KYONEX() const
   {

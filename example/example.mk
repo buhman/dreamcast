@@ -364,3 +364,11 @@ GDROM_ISO9660_OBJ = \
 
 example/gdrom_iso9660.elf: LDSCRIPT = $(LIB)/alt.lds
 example/gdrom_iso9660.elf: $(START_OBJ) $(GDROM_ISO9660_OBJ)
+
+AICA_OBJ = \
+	example/aica.o \
+	sh7091/serial.o \
+	example/arm/main.bin.o \
+
+example/aica.elf: LDSCRIPT = $(LIB)/alt.lds
+example/aica.elf: $(START_OBJ) $(AICA_OBJ)

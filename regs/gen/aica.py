@@ -142,20 +142,20 @@ def part_get_expression(part):
     arg_mask = mask_from_bits(part.argument_bits)
     return f"(static_cast<uint32_t>(({format_reg(part.address)} >> {reg_end}) & {hex(arg_mask)}) << {arg_end})"
 
-def part_set_statement(addresses_dict, c_type_size, part):
+def part_set_statement(addresses_dict, c_type_real_size, part):
     _, reg_end = part.register_bits
     _, arg_end = part.argument_bits
     arg_mask = mask_from_bits(part.argument_bits)
     assignment = f"{format_reg(part.address)} = (((v >> {arg_end}) & {hex(arg_mask)}) << {reg_end})"
     if len(addresses_dict[part.address]) > 1:
         reg_mask = mask_from_bits(part.register_bits) << reg_end
-        inverse_mask = (~reg_mask) & ((2 ** (c_type_size * 8)) - 1)
+        inverse_mask = (~reg_mask) & ((2 ** (c_type_real_size * 8)) - 1)
         assignment += f" | ({format_reg(part.address)} & {hex(inverse_mask)});"
     else:
         assignment += ";"
     return assignment
 
-def render_struct_accessors(addresses_dict, c_type, c_type_size, registers):
+def render_struct_accessors(addresses_dict, c_type, c_type_real_size, registers):
     for register in registers:
         yield f"uint32_t {register.name}() const"
         yield "{"
@@ -165,22 +165,22 @@ def render_struct_accessors(addresses_dict, c_type, c_type_size, registers):
         yield f"void {register.name}(const uint32_t v)"
         yield "{"
         for part in register.parts:
-            yield part_set_statement(addresses_dict, c_type_size, part)
+            yield part_set_statement(addresses_dict, c_type_real_size, part)
         yield "}"
         yield ""
 
-def render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, registers):
+def render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers):
     yield f"struct {struct_name} {{"
     yield from render_struct_fields(struct_size, addresses, address_increment, c_type, c_type_size)
     yield ""
     addresses_dict = dict(addresses)
-    yield from render_struct_accessors(addresses_dict, c_type, c_type_size, registers)
+    yield from render_struct_accessors(addresses_dict, c_type, c_type_real_size, registers)
     yield "};"
     yield from render_struct_static_assertions(struct_name, struct_size, addresses, address_increment)
 
 def header():
-    yield "#include <cstdint>"
-    yield "#include <cstddef>"
+    yield '#include <stdint.h>'
+    yield '#include <stddef.h>'
     yield ""
     yield '#include "type.hpp"'
     yield ""
@@ -191,10 +191,11 @@ if __name__ == "__main__":
     struct_size = int(sys.argv[3], 16) if len(sys.argv) > 3 else None
     rows = read_input(input_file)
     address_increment = 4
-    c_type = "reg16"
-    c_type_size = 2
+    c_type = "reg32"
+    c_type_size = 4
+    c_type_real_size = 2
     addresses, registers = group_parts(rows, address_increment)
     render, out = renderer()
     render(header())
-    render(render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, registers))
+    render(render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers))
     sys.stdout.write(out.getvalue())

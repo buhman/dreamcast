@@ -1,15 +1,12 @@
-#include <cstdint>
-#include <cstddef>
+#include <stdint.h>
+#include <stddef.h>
 
 #include "type.hpp"
 
 struct aica_rtc {
-  reg16 reg_0000;
-  const reg16 _pad0[1];
-  reg16 reg_0004;
-  const reg16 _pad1[1];
-  reg16 reg_0008;
-  const reg16 _pad2[1];
+  reg32 reg_0000;
+  reg32 reg_0004;
+  reg32 reg_0008;
 
   uint32_t RTC() const
   {

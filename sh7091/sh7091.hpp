@@ -4,23 +4,23 @@
 #include "type.hpp"
 
 struct ccn_reg {
-  reg32 PTEH;              /* Page table entry high register */
-  reg32 PTEL;              /* Page table entry low register */
-  reg32 TTB;               /* Translation table base register */
-  reg32 TEA;               /* TLB exception address register */
-  reg32 MMUCR;             /* MMU control register */
-  reg8  BASRA;             /* Break ASID register A */
+  reg32 PTEH;                /* Page table entry high register */
+  reg32 PTEL;                /* Page table entry low register */
+  reg32 TTB;                 /* Translation table base register */
+  reg32 TEA;                 /* TLB exception address register */
+  reg32 MMUCR;               /* MMU control register */
+  reg8  BASRA;               /* Break ASID register A */
   reg8  _pad0[3];
-  reg8  BASRB;             /* Break ASID register B */
+  reg8  BASRB;               /* Break ASID register B */
   reg8  _pad1[3];
-  reg32 CCR;               /* Cache control register */
-  reg32 TRA;               /* TRAPA exception register */
-  reg32 EXPEVT;            /* Exception event register */
-  reg32 INTEVT;            /* Interrupt event register */
+  reg32 CCR;                 /* Cache control register */
+  reg32 TRA;                 /* TRAPA exception register */
+  reg32 EXPEVT;              /* Exception event register */
+  reg32 INTEVT;              /* Interrupt event register */
   reg8  _pad2[8];
-  reg32 PTEA;              /* Page table entry assistance register */
-  reg32 QACR0;             /* Queue address control register 0 */
-  reg32 QACR1;             /* Queue address control register 1 */
+  reg32 PTEA;                /* Page table entry assistance register */
+  reg32 QACR0;               /* Queue address control register 0 */
+  reg32 QACR1;               /* Queue address control register 1 */
 };
 
 static_assert((offsetof (struct ccn_reg, PTEH)) == 0x0);
@@ -39,19 +39,19 @@ static_assert((offsetof (struct ccn_reg, QACR0)) == 0x38);
 static_assert((offsetof (struct ccn_reg, QACR1)) == 0x3c);
 
 struct ubc_reg {
-  reg32 BARA;              /* Break address register A */
-  reg8  BAMRA;             /* Break address mask register A */
+  reg32 BARA;                /* Break address register A */
+  reg8  BAMRA;               /* Break address mask register A */
   reg8  _pad0[3];
-  reg16 BBRA;              /* Break bus cycle register A */
+  reg16 BBRA;                /* Break bus cycle register A */
   reg8  _pad1[2];
-  reg32 BARB;              /* Break address register B */
-  reg8  BAMRB;             /* Break address mask register B */
+  reg32 BARB;                /* Break address register B */
+  reg8  BAMRB;               /* Break address mask register B */
   reg8  _pad2[3];
-  reg16 BBRB;              /* Break bus cycle register B */
+  reg16 BBRB;                /* Break bus cycle register B */
   reg8  _pad3[2];
-  reg32 BDRB;              /* Break data register B */
-  reg32 BDMRB;             /* Break data mask register B */
-  reg16 BRCR;              /* Break control register */
+  reg32 BDRB;                /* Break data register B */
+  reg32 BDMRB;               /* Break data mask register B */
+  reg16 BRCR;                /* Break control register */
 };
 
 static_assert((offsetof (struct ubc_reg, BARA)) == 0x0);
@@ -65,34 +65,34 @@ static_assert((offsetof (struct ubc_reg, BDMRB)) == 0x1c);
 static_assert((offsetof (struct ubc_reg, BRCR)) == 0x20);
 
 struct bsc_reg {
-  reg32 BCR1;              /* Bus control register 1 */
-  reg16 BCR2;              /* Bus control register 2 */
+  reg32 BCR1;                /* Bus control register 1 */
+  reg16 BCR2;                /* Bus control register 2 */
   reg8  _pad0[2];
-  reg32 WCR1;              /* Wait state control register 1 */
-  reg32 WCR2;              /* Wait state control register 2 */
-  reg32 WCR3;              /* Wait state control register 3 */
-  reg32 MCR;               /* Memory control register */
-  reg16 PCR;               /* PCMCIA control register */
+  reg32 WCR1;                /* Wait state control register 1 */
+  reg32 WCR2;                /* Wait state control register 2 */
+  reg32 WCR3;                /* Wait state control register 3 */
+  reg32 MCR;                 /* Memory control register */
+  reg16 PCR;                 /* PCMCIA control register */
   reg8  _pad1[2];
-  reg16 RTCSR;             /* Refresh timer control/status register */
+  reg16 RTCSR;               /* Refresh timer control/status register */
   reg8  _pad2[2];
-  reg16 RTCNT;             /* Refresh timer counter */
+  reg16 RTCNT;               /* Refresh timer counter */
   reg8  _pad3[2];
-  reg16 RTCOR;             /* Refresh timer constant counter */
+  reg16 RTCOR;               /* Refresh timer constant counter */
   reg8  _pad4[2];
-  reg16 RFCR;              /* Refresh count register */
+  reg16 RFCR;                /* Refresh count register */
   reg8  _pad5[2];
-  reg32 PCTRA;             /* Port control register A */
-  reg16 PDTRA;             /* Port data register A */
+  reg32 PCTRA;               /* Port control register A */
+  reg16 PDTRA;               /* Port data register A */
   reg8  _pad6[14];
-  reg32 PCTRB;             /* Port control register B */
-  reg16 PDTRB;             /* Port data register B */
+  reg32 PCTRB;               /* Port control register B */
+  reg16 PDTRB;               /* Port data register B */
   reg8  _pad7[2];
-  reg16 GPIOIC;            /* GPIO interrupt control register */
+  reg16 GPIOIC;              /* GPIO interrupt control register */
   reg8  _pad8[1048502];
-  reg32 SDMR2[16384];      /* Synchronous DRAM mode registers */
+  reg32 SDMR2[16384];        /* Synchronous DRAM mode registers */
   reg8  _pad9[196608];
-  reg32 SDMR3[16384];      /* Synchronous DRAM mode registers */
+  reg32 SDMR3[16384];        /* Synchronous DRAM mode registers */
 };
 
 static_assert((offsetof (struct bsc_reg, BCR1)) == 0x0);
@@ -115,23 +115,23 @@ static_assert((offsetof (struct bsc_reg, SDMR2)) == 0x100000);
 static_assert((offsetof (struct bsc_reg, SDMR3)) == 0x140000);
 
 struct dmac_reg {
-  reg32 SAR0;              /* DMA source address register 0 */
-  reg32 DAR0;              /* DMA destination address register 0 */
-  reg32 DMATCR0;           /* DMA transfer count register 0 */
-  reg32 CHCR0;             /* DMA control register 0 */
-  reg32 SAR1;              /* DMA source address register 1 */
-  reg32 DAR1;              /* DMA destination address register 1 */
-  reg32 DMATCR1;           /* DMA transfer count register 1 */
-  reg32 CHCR1;             /* DMA control register 1 */
-  reg32 SAR2;              /* DMA source address register 2 */
-  reg32 DAR2;              /* DMA destination address register 2 */
-  reg32 DMATCR2;           /* DMA transfer count register 2 */
-  reg32 CHCR2;             /* DMA control register 2 */
-  reg32 SAR3;              /* DMA source address register 3 */
-  reg32 DAR3;              /* DMA destination address register 3 */
-  reg32 DMATCR3;           /* DMA transfer count register 3 */
-  reg32 CHCR3;             /* DMA control register 3 */
-  reg32 DMAOR;             /* DMA operation register */
+  reg32 SAR0;                /* DMA source address register 0 */
+  reg32 DAR0;                /* DMA destination address register 0 */
+  reg32 DMATCR0;             /* DMA transfer count register 0 */
+  reg32 CHCR0;               /* DMA control register 0 */
+  reg32 SAR1;                /* DMA source address register 1 */
+  reg32 DAR1;                /* DMA destination address register 1 */
+  reg32 DMATCR1;             /* DMA transfer count register 1 */
+  reg32 CHCR1;               /* DMA control register 1 */
+  reg32 SAR2;                /* DMA source address register 2 */
+  reg32 DAR2;                /* DMA destination address register 2 */
+  reg32 DMATCR2;             /* DMA transfer count register 2 */
+  reg32 CHCR2;               /* DMA control register 2 */
+  reg32 SAR3;                /* DMA source address register 3 */
+  reg32 DAR3;                /* DMA destination address register 3 */
+  reg32 DMATCR3;             /* DMA transfer count register 3 */
+  reg32 CHCR3;               /* DMA control register 3 */
+  reg32 DMAOR;               /* DMA operation register */
 };
 
 static_assert((offsetof (struct dmac_reg, SAR0)) == 0x0);
@@ -153,15 +153,15 @@ static_assert((offsetof (struct dmac_reg, CHCR3)) == 0x3c);
 static_assert((offsetof (struct dmac_reg, DMAOR)) == 0x40);
 
 struct cpg_reg {
-  reg16 FRQCR;             /* Frequency control register */
+  reg16 FRQCR;               /* Frequency control register */
   reg8  _pad0[2];
-  reg8  STBCR;             /* Standby control register */
+  reg8  STBCR;               /* Standby control register */
   reg8  _pad1[3];
-  reg16 WTCNT;             /* Watchdog timer counter */
+  reg16 WTCNT;               /* Watchdog timer counter */
   reg8  _pad2[2];
-  reg16 WTCSR;             /* Watchdog timer control/status register */
+  reg16 WTCSR;               /* Watchdog timer control/status register */
   reg8  _pad3[2];
-  reg8  STBCR2;            /* Standby control register 2 */
+  reg8  STBCR2;              /* Standby control register 2 */
 };
 
 static_assert((offsetof (struct cpg_reg, FRQCR)) == 0x0);
@@ -171,37 +171,37 @@ static_assert((offsetof (struct cpg_reg, WTCSR)) == 0xc);
 static_assert((offsetof (struct cpg_reg, STBCR2)) == 0x10);
 
 struct rtc_reg {
-  reg8  R64CNT;            /* 64 Hz counter */
+  reg8  R64CNT;              /* 64 Hz counter */
   reg8  _pad0[3];
-  reg8  RSECCNT;           /* Second counter */
+  reg8  RSECCNT;             /* Second counter */
   reg8  _pad1[3];
-  reg8  RMINCNT;           /* Minute counter */
+  reg8  RMINCNT;             /* Minute counter */
   reg8  _pad2[3];
-  reg8  RHRCNT;            /* Hour counter */
+  reg8  RHRCNT;              /* Hour counter */
   reg8  _pad3[3];
-  reg8  RWKCNT;            /* Day-of-week counter */
+  reg8  RWKCNT;              /* Day-of-week counter */
   reg8  _pad4[3];
-  reg8  RDAYCNT;           /* Day counter */
+  reg8  RDAYCNT;             /* Day counter */
   reg8  _pad5[3];
-  reg8  RMONCNT;           /* Month counter */
+  reg8  RMONCNT;             /* Month counter */
   reg8  _pad6[3];
-  reg16 RYRCNT;            /* Year counter */
+  reg16 RYRCNT;              /* Year counter */
   reg8  _pad7[2];
-  reg8  RSECAR;            /* Second alarm register */
+  reg8  RSECAR;              /* Second alarm register */
   reg8  _pad8[3];
-  reg8  RMINAR;            /* Minute alarm register */
+  reg8  RMINAR;              /* Minute alarm register */
   reg8  _pad9[3];
-  reg8  RHRAR;             /* Hour alarm register */
+  reg8  RHRAR;               /* Hour alarm register */
   reg8  _pad10[3];
-  reg8  RWKAR;             /* Day-of-week alarm register */
+  reg8  RWKAR;               /* Day-of-week alarm register */
   reg8  _pad11[3];
-  reg8  RDAYAR;            /* Day alarm register */
+  reg8  RDAYAR;              /* Day alarm register */
   reg8  _pad12[3];
-  reg8  RMONAR;            /* Month alarm register */
+  reg8  RMONAR;              /* Month alarm register */
   reg8  _pad13[3];
-  reg8  RCR1;              /* RTC control register 1 */
+  reg8  RCR1;                /* RTC control register 1 */
   reg8  _pad14[3];
-  reg8  RCR2;              /* RTC control register 2 */
+  reg8  RCR2;                /* RTC control register 2 */
 };
 
 static_assert((offsetof (struct rtc_reg, R64CNT)) == 0x0);
@@ -222,13 +222,13 @@ static_assert((offsetof (struct rtc_reg, RCR1)) == 0x38);
 static_assert((offsetof (struct rtc_reg, RCR2)) == 0x3c);
 
 struct intc_reg {
-  reg16 ICR;               /* Interrupt control register */
+  reg16 ICR;                 /* Interrupt control register */
   reg8  _pad0[2];
-  reg16 IPRA;              /* Interrupt priority register A */
+  reg16 IPRA;                /* Interrupt priority register A */
   reg8  _pad1[2];
-  reg16 IPRB;              /* Interrupt priority register B */
+  reg16 IPRB;                /* Interrupt priority register B */
   reg8  _pad2[2];
-  reg16 IPRC;              /* Interrupt priority register C */
+  reg16 IPRC;                /* Interrupt priority register C */
 };
 
 static_assert((offsetof (struct intc_reg, ICR)) == 0x0);
@@ -237,23 +237,23 @@ static_assert((offsetof (struct intc_reg, IPRB)) == 0x8);
 static_assert((offsetof (struct intc_reg, IPRC)) == 0xc);
 
 struct tmu_reg {
-  reg8  TOCR;              /* Timer output control register */
+  reg8  TOCR;                /* Timer output control register */
   reg8  _pad0[3];
-  reg8  TSTR;              /* Timer start register */
+  reg8  TSTR;                /* Timer start register */
   reg8  _pad1[3];
-  reg32 TCOR0;             /* Timer constant register 0 */
-  reg32 TCNT0;             /* Timer counter 0 */
-  reg16 TCR0;              /* Timer control register 0 */
+  reg32 TCOR0;               /* Timer constant register 0 */
+  reg32 TCNT0;               /* Timer counter 0 */
+  reg16 TCR0;                /* Timer control register 0 */
   reg8  _pad2[2];
-  reg32 TCOR1;             /* Timer constant register 1 */
-  reg32 TCNT1;             /* Timer counter 1 */
-  reg16 TCR1;              /* Timer control register 1 */
+  reg32 TCOR1;               /* Timer constant register 1 */
+  reg32 TCNT1;               /* Timer counter 1 */
+  reg16 TCR1;                /* Timer control register 1 */
   reg8  _pad3[2];
-  reg32 TCOR2;             /* Timer constant register 2 */
-  reg32 TCNT2;             /* Timer counter 2 */
-  reg16 TCR2;              /* Timer control register 2 */
+  reg32 TCOR2;               /* Timer constant register 2 */
+  reg32 TCNT2;               /* Timer counter 2 */
+  reg16 TCR2;                /* Timer control register 2 */
   reg8  _pad4[2];
-  reg32 TCPR2;             /* Timer input capture register 2 */
+  reg32 TCPR2;               /* Timer input capture register 2 */
 };
 
 static_assert((offsetof (struct tmu_reg, TOCR)) == 0x0);
@@ -270,21 +270,21 @@ static_assert((offsetof (struct tmu_reg, TCR2)) == 0x28);
 static_assert((offsetof (struct tmu_reg, TCPR2)) == 0x2c);
 
 struct sci_reg {
-  reg8  SCSMR1;            /* Serial mode register 1 */
+  reg8  SCSMR1;              /* Serial mode register 1 */
   reg8  _pad0[3];
-  reg8  SCBRR1;            /* Bit rate register 1 */
+  reg8  SCBRR1;              /* Bit rate register 1 */
   reg8  _pad1[3];
-  reg8  SCSCR1;            /* Serial control register 1 */
+  reg8  SCSCR1;              /* Serial control register 1 */
   reg8  _pad2[3];
-  reg8  SCTDR1;            /* Transmit data register 1 */
+  reg8  SCTDR1;              /* Transmit data register 1 */
   reg8  _pad3[3];
-  reg8  SCSSR1;            /* Serial status register 1 */
+  reg8  SCSSR1;              /* Serial status register 1 */
   reg8  _pad4[3];
-  reg8  SCRDR1;            /* Receive data register 1 */
+  reg8  SCRDR1;              /* Receive data register 1 */
   reg8  _pad5[3];
-  reg8  SCSCMR1;           /* Smart card mode register 1 */
+  reg8  SCSCMR1;             /* Smart card mode register 1 */
   reg8  _pad6[3];
-  reg8  SCSPTR1;           /* Serial port register */
+  reg8  SCSPTR1;             /* Serial port register */
 };
 
 static_assert((offsetof (struct sci_reg, SCSMR1)) == 0x0);
@@ -297,25 +297,25 @@ static_assert((offsetof (struct sci_reg, SCSCMR1)) == 0x18);
 static_assert((offsetof (struct sci_reg, SCSPTR1)) == 0x1c);
 
 struct scif_reg {
-  reg16 SCSMR2;            /* Serial mode register 2 */
+  reg16 SCSMR2;              /* Serial mode register 2 */
   reg8  _pad0[2];
-  reg8  SCBRR2;            /* Bit rate register 2 */
+  reg8  SCBRR2;              /* Bit rate register 2 */
   reg8  _pad1[3];
-  reg16 SCSCR2;            /* Serial control register 2 */
+  reg16 SCSCR2;              /* Serial control register 2 */
   reg8  _pad2[2];
-  reg8  SCFTDR2;           /* Transmit FIFO data register 2 */
+  reg8  SCFTDR2;             /* Transmit FIFO data register 2 */
   reg8  _pad3[3];
-  reg16 SCFSR2;            /* Serial status register 2 */
+  reg16 SCFSR2;              /* Serial status register 2 */
   reg8  _pad4[2];
-  reg8  SCFRDR2;           /* Receive FIFO data register 2 */
+  reg8  SCFRDR2;             /* Receive FIFO data register 2 */
   reg8  _pad5[3];
-  reg16 SCFCR2;            /* FIFO control register */
+  reg16 SCFCR2;              /* FIFO control register */
   reg8  _pad6[2];
-  reg16 SCFDR2;            /* FIFO data count register */
+  reg16 SCFDR2;              /* FIFO data count register */
   reg8  _pad7[2];
-  reg16 SCSPTR2;           /* Serial port register 2 */
+  reg16 SCSPTR2;             /* Serial port register 2 */
   reg8  _pad8[2];
-  reg16 SCLSR2;            /* Line status register 2 */
+  reg16 SCLSR2;              /* Line status register 2 */
 };
 
 static_assert((offsetof (struct scif_reg, SCSMR2)) == 0x0);
@@ -330,9 +330,9 @@ static_assert((offsetof (struct scif_reg, SCSPTR2)) == 0x20);
 static_assert((offsetof (struct scif_reg, SCLSR2)) == 0x24);
 
 struct udi_reg {
-  reg16 SDIR;              /* Instruction register */
+  reg16 SDIR;                /* Instruction register */
   reg8  _pad0[6];
-  reg32 SDDR;              /* Data register */
+  reg32 SDDR;                /* Data register */
 };
 
 static_assert((offsetof (struct udi_reg, SDIR)) == 0x0);
