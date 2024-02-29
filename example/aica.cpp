@@ -4,8 +4,8 @@
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
 
-extern void * _binary_start __asm("_binary_example_arm_main_bin_start");
-extern void * _binary_size __asm("_binary_example_arm_main_bin_size");
+extern void * _binary_start __asm("_binary_example_arm_channel_bin_start");
+extern void * _binary_size __asm("_binary_example_arm_channel_bin_size");
 
 void wait()
 {

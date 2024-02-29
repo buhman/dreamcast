@@ -18,8 +18,14 @@ TARGET = arm-none-eabi-
 
 include base.mk
 
-main.elf: LDSCRIPT = main.lds
-main.elf: start.o main.o audio.pcm.o
+channel.elf: LDSCRIPT = main.lds
+channel.elf: start.o channel.o audio.pcm.o
+
+clean:
+	find -P \
+		-regextype posix-egrep \
+		-regex '.*\.(o|d|bin|elf|gch)$$' \
+		-exec rm {} \;
 
 .SUFFIXES:
 .INTERMEDIATE:
