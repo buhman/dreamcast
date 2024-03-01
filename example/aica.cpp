@@ -14,7 +14,7 @@ void wait()
 
 void wait_read()
 {
-  uint32_t ffst = ~0;
+  uint32_t ffst = system.FFST;
   while ( ffst::holly_cpu_if_block_internal_write_buffer(ffst)
 	| ffst::holly_g2_if_block_internal_write_buffer(ffst)
 	| ffst::aica_internal_write_buffer(ffst)) {

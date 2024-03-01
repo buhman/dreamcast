@@ -1,14 +1,27 @@
 #include "aica/aica.hpp"
 
-extern void * _sine_start __asm("_binary_audio_pcm_start");
-
 extern volatile uint32_t dram[0x200000] __asm("dram");
+
+__attribute__((section(".buffers.chunk")))
+static uint32_t chunk[2][(128 * 2) / 4];
+
+void request_chunk()
+{
+  constexpr uint32_t mcipd__sh4_interrupt = (1 << 5);
+  aica_sound.common.mcipd = mcipd__sh4_interrupt;
+}
+
+void wait_sh4_response()
+{
+  constexpr uint32_t scipd__arm_interrupt = (1 << 5);
+  while ((aica_sound.common.SCIPD() & scipd__arm_interrupt) == 0) {
+  }
+  aica_sound.common.scire = scipd__arm_interrupt;
+}
 
 extern "C"
 void main()
 {
-  const uint32_t sine_addr = reinterpret_cast<uint32_t>(&_sine_start);
-
   volatile uint32_t * slot = reinterpret_cast<volatile uint32_t*>(0x00800000);
   for (uint32_t i = 0; i < (sizeof (struct aica_channel)) * 64 / 4; i++) {
     slot[i] = 0;
@@ -45,31 +58,35 @@ void main()
     | aica::mono_mem8mb_dac18b_ver_mvol::MVOL(0xf) // 15/15 volume
     ;
 
-  uint32_t segment = 0;
+  constexpr uint32_t tactl = 0;        // increment once every 1 samples
+  constexpr uint32_t tima = 256 - 128; // interrupt after 1 count
 
-  dram[0] = 0x11223344;
-  dram[1] = sine_addr;
+  dram[0] = reinterpret_cast<uint32_t>(&chunk[0][0]);
+  dram[1] = reinterpret_cast<uint32_t>(&chunk[1][0]);
+
+  uint32_t next_chunk = 0;
+  aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
+  aica_sound.channel[0].KYONEX(1);
+  next_chunk = (next_chunk + 1) % 2;
+  request_chunk();
+
   constexpr uint32_t timer_a_interrupt = (1 << 6);
+  aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
+			       | aica::tactl_tima::TIMA(tima);
   aica_sound.common.scire = timer_a_interrupt;
-  uint32_t next_sa = sine_addr;
-  bool started = 0;
 
+  uint32_t index = 0;
   while (1) {
-    if (!started || (aica_sound.common.SCIPD() & timer_a_interrupt)) {
-      aica_sound.channel[0].SA(next_sa);
-      aica_sound.common.tactl_tima =
-          aica::tactl_tima::TACTL(0)  // increment once every 128 samples
-        | aica::tactl_tima::TIMA(256 - 128) // interrupt after 128 counts
-        ;
-
-      if (!started) { aica_sound.channel[0].KYONEX(1); started = 1; }
+    if (aica_sound.common.SCIPD() & timer_a_interrupt) {
+      aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
+      aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
+				   | aica::tactl_tima::TIMA(tima);
 
       aica_sound.common.scire = timer_a_interrupt;
-      dram[1] = next_sa;
 
-      segment += 1;
-      if (segment >= 3440) segment = 0;
-      next_sa = sine_addr + (128 * 2) * segment;
+      next_chunk = (next_chunk + 1) % 2;
+      request_chunk();
+      //dram[0] = (0xEE << 24) | index++;
     }
   }
 }

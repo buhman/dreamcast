@@ -368,7 +368,16 @@ example/gdrom_iso9660.elf: $(START_OBJ) $(GDROM_ISO9660_OBJ)
 AICA_OBJ = \
 	example/aica.o \
 	sh7091/serial.o \
-	example/arm/channel.bin.o \
+	example/arm/channel.bin.o
 
 example/aica.elf: LDSCRIPT = $(LIB)/alt.lds
 example/aica.elf: $(START_OBJ) $(AICA_OBJ)
+
+AICA_GDROM_OBJ = \
+	example/aica_gdrom.o \
+	sh7091/serial.o \
+	example/arm/sh4_interrupt.bin.o \
+	audio.pcm.o
+
+example/aica_gdrom.elf: LDSCRIPT = $(LIB)/alt.lds
+example/aica_gdrom.elf: $(START_OBJ) $(AICA_GDROM_OBJ)

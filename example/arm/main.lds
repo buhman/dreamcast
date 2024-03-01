@@ -1,7 +1,8 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 MEMORY
 {
-  ram : ORIGIN = 0x00000000, LENGTH = 0x200000
+  ram     : ORIGIN = 0x00000000, LENGTH = 0x1ff000
+  buffers : ORIGIN = 0x001ff000, LENGTH = 0x1000
 }
 SECTIONS
 {
@@ -39,6 +40,14 @@ SECTIONS
     *(.bss.*)
     *(COMMON)
   } > ram
+
+  . = ORIGIN(buffers);
+
+  .buffers ALIGN(4) (NOLOAD) : SUBALIGN(4)
+  {
+    *(.buffers)
+    *(.buffers.*)
+  } > buffers
 
   INCLUDE "../../debug.lds"
   INCLUDE "arm.lds"
