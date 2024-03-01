@@ -8,7 +8,7 @@ g2_if = 0xa05f7800;
 pvr_if = 0xa05f7c00;
 holly = 0xa05f8000;
 modem = 0xa0600000;
-aica = 0xa0700000;
+aica_sound = 0xa0700000;
 aica_rtc = 0xa0710000;
 
 system_boot_rom = 0xa0000000;

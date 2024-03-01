@@ -4,34 +4,109 @@
 #include "type.hpp"
 
 struct aica_common {
-  reg32 reg_2800;
-  reg32 reg_2804;
-  reg32 reg_2808;
-  reg32 reg_280c;
-  reg32 reg_2810;
-  reg32 reg_2814;
+  union {
+    reg32 reg_2800;
+    reg32 mono_mem8mb_dac18b_ver_mvol;
+  };
+  union {
+    reg32 reg_2804;
+    reg32 rbl_rbp;
+  };
+  union {
+    reg32 reg_2808;
+    reg32 moful_moemp_miovf_miful_miemp_mibuf;
+  };
+  union {
+    reg32 reg_280c;
+    reg32 afsel_mslc_mobuf;
+  };
+  union {
+    reg32 reg_2810;
+    reg32 lp_sgc_eg;
+  };
+  union {
+    reg32 reg_2814;
+    reg32 ca;
+  };
   const reg32 _pad0[26];
-  reg32 reg_2880;
-  reg32 reg_2884;
-  reg32 reg_2888;
-  reg32 reg_288c;
-  reg32 reg_2890;
-  reg32 reg_2894;
-  reg32 reg_2898;
-  reg32 reg_289c;
-  reg32 reg_28a0;
-  reg32 reg_28a4;
-  reg32 reg_28a8;
-  reg32 reg_28ac;
-  reg32 reg_28b0;
-  reg32 reg_28b4;
-  reg32 reg_28b8;
-  reg32 reg_28bc;
+  union {
+    reg32 reg_2880;
+    reg32 dmea0_mrwinh;
+  };
+  union {
+    reg32 reg_2884;
+    reg32 dmea1;
+  };
+  union {
+    reg32 reg_2888;
+    reg32 dgate_drga;
+  };
+  union {
+    reg32 reg_288c;
+    reg32 ddir_dlg_dexe;
+  };
+  union {
+    reg32 reg_2890;
+    reg32 tactl_tima;
+  };
+  union {
+    reg32 reg_2894;
+    reg32 tbctl_timb;
+  };
+  union {
+    reg32 reg_2898;
+    reg32 tcctl_timc;
+  };
+  union {
+    reg32 reg_289c;
+    reg32 scieb;
+  };
+  union {
+    reg32 reg_28a0;
+    reg32 scipd;
+  };
+  union {
+    reg32 reg_28a4;
+    reg32 scire;
+  };
+  union {
+    reg32 reg_28a8;
+    reg32 scilv0;
+  };
+  union {
+    reg32 reg_28ac;
+    reg32 scilv1;
+  };
+  union {
+    reg32 reg_28b0;
+    reg32 scilv2;
+  };
+  union {
+    reg32 reg_28b4;
+    reg32 mcieb;
+  };
+  union {
+    reg32 reg_28b8;
+    reg32 mcipd;
+  };
+  union {
+    reg32 reg_28bc;
+    reg32 mcire;
+  };
   const reg32 _pad1[208];
-  reg32 reg_2c00;
+  union {
+    reg32 reg_2c00;
+    reg32 vreg_armrst;
+  };
   const reg32 _pad2[63];
-  reg32 reg_2d00;
-  reg32 reg_2d04;
+  union {
+    reg32 reg_2d00;
+    reg32 l7_l6_l5_l4_l3_l2_l1_l0;
+  };
+  union {
+    reg32 reg_2d04;
+    reg32 rp_m7_m6_m5_m4_m3_m2_m1_m0;
+  };
 
   uint32_t MONO() const
   {
@@ -76,15 +151,6 @@ struct aica_common {
   void MVOL(const uint32_t v)
   {
     reg_2800 = (((v >> 0) & 0xf) << 0) | (reg_2800 & 0xfff0);
-  }
-
-  uint32_t TESTB0() const
-  {
-    return (static_cast<uint32_t>((reg_2804 >> 15) & 0x1) << 0);
-  }
-  void TESTB0(const uint32_t v)
-  {
-    reg_2804 = (((v >> 0) & 0x1) << 15) | (reg_2804 & 0x7fff);
   }
 
   uint32_t RBL() const
@@ -159,11 +225,11 @@ struct aica_common {
     reg_2808 = (((v >> 0) & 0xff) << 0) | (reg_2808 & 0xff00);
   }
 
-  uint32_t AFSET() const
+  uint32_t AFSEL() const
   {
     return (static_cast<uint32_t>((reg_280c >> 14) & 0x1) << 0);
   }
-  void AFSET(const uint32_t v)
+  void AFSEL(const uint32_t v)
   {
     reg_280c = (((v >> 0) & 0x1) << 14) | (reg_280c & 0xbfff);
   }
@@ -230,24 +296,6 @@ struct aica_common {
   {
     reg_2880 = (((v >> 16) & 0x7f) << 9) | (reg_2880 & 0x1ff);
     reg_2884 = (((v >> 2) & 0x3fff) << 2);
-  }
-
-  uint32_t TSCD() const
-  {
-    return (static_cast<uint32_t>((reg_2880 >> 5) & 0x7) << 0);
-  }
-  void TSCD(const uint32_t v)
-  {
-    reg_2880 = (((v >> 0) & 0x7) << 5) | (reg_2880 & 0xff1f);
-  }
-
-  uint32_t T() const
-  {
-    return (static_cast<uint32_t>((reg_2880 >> 4) & 0x1) << 0);
-  }
-  void T(const uint32_t v)
-  {
-    reg_2880 = (((v >> 0) & 0x1) << 4) | (reg_2880 & 0xffef);
   }
 
   uint32_t MRWINH() const
@@ -421,11 +469,11 @@ struct aica_common {
     reg_28b4 = (((v >> 0) & 0x7ff) << 0);
   }
 
-  uint32_t MCIPB() const
+  uint32_t MCIPD() const
   {
     return (static_cast<uint32_t>((reg_28b8 >> 0) & 0x7ff) << 0);
   }
-  void MCIPB(const uint32_t v)
+  void MCIPD(const uint32_t v)
   {
     reg_28b8 = (((v >> 0) & 0x7ff) << 0);
   }
@@ -638,3 +686,118 @@ static_assert((offsetof (aica_common, reg_28bc)) == 0x28bc - 0x2800);
 static_assert((offsetof (aica_common, reg_2c00)) == 0x2c00 - 0x2800);
 static_assert((offsetof (aica_common, reg_2d00)) == 0x2d00 - 0x2800);
 static_assert((offsetof (aica_common, reg_2d04)) == 0x2d04 - 0x2800);
+
+namespace aica {
+  namespace mono_mem8mb_dac18b_ver_mvol {
+    constexpr uint32_t MONO(const uint32_t v) { return (((v >> 0) & 0x1) << 15); }
+    constexpr uint32_t MEM8MB(const uint32_t v) { return (((v >> 0) & 0x1) << 9); }
+    constexpr uint32_t DAC18B(const uint32_t v) { return (((v >> 0) & 0x1) << 8); }
+    constexpr uint32_t VER(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 4) & 0xf) << 0); }
+    constexpr uint32_t MVOL(const uint32_t v) { return (((v >> 0) & 0xf) << 0); }
+  }
+  namespace rbl_rbp {
+    constexpr uint32_t RBL(const uint32_t v) { return (((v >> 0) & 0x3) << 13); }
+    constexpr uint32_t RBP(const uint32_t v) { return (((v >> 11) & 0xfff) << 0); }
+  }
+  namespace moful_moemp_miovf_miful_miemp_mibuf {
+    constexpr uint32_t MOFUL(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 12) & 0x1) << 0); }
+    constexpr uint32_t MOEMP(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 11) & 0x1) << 0); }
+    constexpr uint32_t MIOVF(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 10) & 0x1) << 0); }
+    constexpr uint32_t MIFUL(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 9) & 0x1) << 0); }
+    constexpr uint32_t MIEMP(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 8) & 0x1) << 0); }
+    constexpr uint32_t MIBUF(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 0) & 0xff) << 0); }
+  }
+  namespace afsel_mslc_mobuf {
+    constexpr uint32_t AFSEL(const uint32_t v) { return (((v >> 0) & 0x1) << 14); }
+    constexpr uint32_t MSLC(const uint32_t v) { return (((v >> 0) & 0x3f) << 8); }
+    constexpr uint32_t MOBUF(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace lp_sgc_eg {
+    constexpr uint32_t LP(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 15) & 0x1) << 0); }
+    constexpr uint32_t SGC(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 14) & 0x1) << 0); }
+    constexpr uint32_t EG(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 0) & 0x1fff) << 0); }
+  }
+  namespace ca {
+    constexpr uint32_t CA(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 0) & 0xffff) << 0); }
+  }
+  namespace dmea0_mrwinh {
+    constexpr uint32_t DMEA(const uint32_t v) { return (((v >> 16) & 0x7f) << 9); }
+    constexpr uint32_t MRWINH(const uint32_t v) { return (((v >> 0) & 0xf) << 0); }
+  }
+  namespace dmea1 {
+    constexpr uint32_t DMEA(const uint32_t v) { return (((v >> 2) & 0x3fff) << 2); }
+  }
+  namespace dgate_drga {
+    constexpr uint32_t DGATE(const uint32_t v) { return (((v >> 0) & 0x1) << 15); }
+    constexpr uint32_t DRGA(const uint32_t v) { return (((v >> 2) & 0x1fff) << 2); }
+  }
+  namespace ddir_dlg_dexe {
+    constexpr uint32_t DDIR(const uint32_t v) { return (((v >> 0) & 0x1) << 15); }
+    constexpr uint32_t DLG(const uint32_t v) { return (((v >> 2) & 0x1fff) << 2); }
+    constexpr uint32_t DEXE(const uint32_t v) { return (((v >> 0) & 0x1) << 0); }
+  }
+  namespace tactl_tima {
+    constexpr uint32_t TACTL(const uint32_t v) { return (((v >> 0) & 0x7) << 8); }
+    constexpr uint32_t TIMA(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace tbctl_timb {
+    constexpr uint32_t TBCTL(const uint32_t v) { return (((v >> 0) & 0x7) << 8); }
+    constexpr uint32_t TIMB(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace tcctl_timc {
+    constexpr uint32_t TCCTL(const uint32_t v) { return (((v >> 0) & 0x7) << 8); }
+    constexpr uint32_t TIMC(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace scieb {
+    constexpr uint32_t SCIEB(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace scipd {
+    constexpr uint32_t SCIPD(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace scire {
+    constexpr uint32_t SCIRE(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace scilv0 {
+    constexpr uint32_t SCILV0(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace scilv1 {
+    constexpr uint32_t SCILV1(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace scilv2 {
+    constexpr uint32_t SCILV2(const uint32_t v) { return (((v >> 0) & 0xff) << 0); }
+  }
+  namespace mcieb {
+    constexpr uint32_t MCIEB(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace mcipd {
+    constexpr uint32_t MCIPD(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace mcire {
+    constexpr uint32_t MCIRE(const uint32_t v) { return (((v >> 0) & 0x7ff) << 0); }
+  }
+  namespace vreg_armrst {
+    constexpr uint32_t VREG(const uint32_t v) { return (((v >> 0) & 0x3) << 8); }
+    constexpr uint32_t ARMRST(const uint32_t v) { return (((v >> 0) & 0x1) << 0); }
+  }
+  namespace l7_l6_l5_l4_l3_l2_l1_l0 {
+    constexpr uint32_t L7(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 7) & 0x1) << 0); }
+    constexpr uint32_t L6(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 6) & 0x1) << 0); }
+    constexpr uint32_t L5(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 5) & 0x1) << 0); }
+    constexpr uint32_t L4(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 4) & 0x1) << 0); }
+    constexpr uint32_t L3(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 3) & 0x1) << 0); }
+    constexpr uint32_t L2(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 2) & 0x1) << 0); }
+    constexpr uint32_t L1(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 1) & 0x1) << 0); }
+    constexpr uint32_t L0(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 0) & 0x1) << 0); }
+  }
+  namespace rp_m7_m6_m5_m4_m3_m2_m1_m0 {
+    constexpr uint32_t RP(const uint32_t v) { return (((v >> 0) & 0x1) << 8); }
+    constexpr uint32_t M7(const uint32_t v) { return (((v >> 0) & 0x1) << 7); }
+    constexpr uint32_t M6(const uint32_t v) { return (((v >> 0) & 0x1) << 6); }
+    constexpr uint32_t M5(const uint32_t v) { return (((v >> 0) & 0x1) << 5); }
+    constexpr uint32_t M4(const uint32_t v) { return (((v >> 0) & 0x1) << 4); }
+    constexpr uint32_t M3(const uint32_t v) { return (((v >> 0) & 0x1) << 3); }
+    constexpr uint32_t M2(const uint32_t v) { return (((v >> 0) & 0x1) << 2); }
+    constexpr uint32_t M1(const uint32_t v) { return (((v >> 0) & 0x1) << 1); }
+    constexpr uint32_t M0(const uint32_t v) { return (((v >> 0) & 0x1) << 0); }
+  }
+}

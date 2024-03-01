@@ -4,9 +4,18 @@
 #include "type.hpp"
 
 struct aica_rtc {
-  reg32 reg_0000;
-  reg32 reg_0004;
-  reg32 reg_0008;
+  union {
+    reg32 reg_0000;
+    reg32 rtc0;
+  };
+  union {
+    reg32 reg_0004;
+    reg32 rtc1;
+  };
+  union {
+    reg32 reg_0008;
+    reg32 en;
+  };
 
   uint32_t RTC() const
   {
@@ -33,3 +42,15 @@ static_assert((sizeof (aica_rtc)) == 0xc - 0x0);
 static_assert((offsetof (aica_rtc, reg_0000)) == 0x0 - 0x0);
 static_assert((offsetof (aica_rtc, reg_0004)) == 0x4 - 0x0);
 static_assert((offsetof (aica_rtc, reg_0008)) == 0x8 - 0x0);
+
+namespace aica {
+  namespace rtc0 {
+    constexpr uint32_t RTC(const uint32_t v) { return (((v >> 16) & 0xffff) << 0); }
+  }
+  namespace rtc1 {
+    constexpr uint32_t RTC(const uint32_t v) { return (((v >> 0) & 0xffff) << 0); }
+  }
+  namespace en {
+    constexpr uint32_t EN(const uint32_t v) { return (((v >> 0) & 0x1) << 0); }
+  }
+}

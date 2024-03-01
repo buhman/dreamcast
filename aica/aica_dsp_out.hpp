@@ -4,7 +4,10 @@
 #include "type.hpp"
 
 struct aica_dsp_out {
-  reg32 reg_0000;
+  union {
+    reg32 reg_0000;
+    reg32 efdsl_efpan;
+  };
 
   uint32_t EFDSL() const
   {
@@ -28,3 +31,10 @@ struct aica_dsp_out {
 
 static_assert((sizeof (aica_dsp_out)) == 0x4 - 0x0);
 static_assert((offsetof (aica_dsp_out, reg_0000)) == 0x0 - 0x0);
+
+namespace aica {
+  namespace efdsl_efpan {
+    constexpr uint32_t EFDSL(const uint32_t v) { return (((v >> 0) & 0xf) << 8); }
+    constexpr uint32_t EFPAN(const uint32_t v) { return (((v >> 0) & 0x1f) << 0); }
+  }
+}

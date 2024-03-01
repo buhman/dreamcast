@@ -15,6 +15,7 @@ class Part:
 @dataclass
 class Register:
     name: str
+    rw: set[str]
     parts: list[Part]
 
 def parse_slice(s):
@@ -51,7 +52,8 @@ def parse_row(row):
         register_bits,
         argument_bits,
     )
-    return name, part
+    rw = set(row["rw"])
+    return name, rw, part
 
 def group_parts(rows, address_increment):
     by_name: dict[str, Register] = {}
@@ -60,17 +62,20 @@ def group_parts(rows, address_increment):
     register_order = []
     addresses = []
     last_address = 0
+    parts_by_register_name: dict[str, list] = defaultdict(list)
 
     for row in rows:
-        name, part = parse_row(row)
+        name, rw, part = parse_row(row)
+        if rw == set():
+            continue
         assert part.address >= last_address, row
         assert part.address % address_increment == 0, row
         last_address = part.address
         if part.address not in set(a[0] for a in addresses):
-            addresses.append((part.address, [name]))
+            addresses.append((part.address, [(name, part.index)]))
         else:
             assert addresses[-1][0] == part.address
-            addresses[-1][1].append(name)
+            addresses[-1][1].append((name, part.index))
 
         bits = slice_bits(part.register_bits)
         assert bits.intersection(register_bit_alloc[part.address]) == set(), row
@@ -82,24 +87,33 @@ def group_parts(rows, address_increment):
 
         if name not in by_name:
             assert part.index == 0, row
-            register = Register(name, [part])
+            register = Register(name, rw, [part])
             by_name[name] = register
             register_order.append(register)
         else:
             assert len(by_name[name].parts) == part.index
             by_name[name].parts.append(part)
 
-    return addresses, register_order
+        parts_by_register_name[name].append(part.index)
+
+    return addresses, register_order, parts_by_register_name
 
 def format_reg(address):
     return f"reg_{address:04x}"
 
-def render_struct_fields(struct_size, addresses, address_increment, c_type, c_type_size):
+def format_reg_friendly_name(names, parts_by_register_name):
+    return "_".join(
+        name.lower() if len(parts_by_register_name[name]) == 1
+        else f"{name.lower()}{part_index}"
+        for name, part_index in names
+    )
+
+def render_struct_fields(struct_size, addresses, address_increment, c_type, c_type_size, parts_by_register_name):
     assert address_increment >= c_type_size
     assert address_increment % c_type_size == 0
     next_address = None
     pad_index = 0
-    for address, _ in addresses:
+    for address, names in addresses:
         if next_address is None:
             next_address = address
         if address != next_address:
@@ -108,7 +122,12 @@ def render_struct_fields(struct_size, addresses, address_increment, c_type, c_ty
             yield f"const {c_type} _pad{pad_index}[{padding}];"
             pad_index += 1
 
+        # render the actual field
+        yield "union {"
         yield f"{c_type} {format_reg(address)};"
+        yield f"{c_type} {format_reg_friendly_name(names, parts_by_register_name)};"
+        yield "};"
+
         if c_type_size < address_increment:
             padding = (address_increment - c_type_size) // c_type_size
             yield f"const {c_type} _pad{pad_index}[{padding}];"
@@ -136,17 +155,23 @@ def mask_from_bits(bit_slice):
     mask = 2 ** ((h - l) + 1) - 1
     return mask
 
-def part_get_expression(part):
+def part_get_expression(part, value=None):
     _, reg_end = part.register_bits
     _, arg_end = part.argument_bits
     arg_mask = mask_from_bits(part.argument_bits)
-    return f"(static_cast<uint32_t>(({format_reg(part.address)} >> {reg_end}) & {hex(arg_mask)}) << {arg_end})"
+    value_expression = format_reg(part.address) if value is None else value
+    return f"(static_cast<uint32_t>(({value_expression} >> {reg_end}) & {hex(arg_mask)}) << {arg_end})"
+
+def part_set_expression(part):
+    _, reg_end = part.register_bits
+    _, arg_end = part.argument_bits
+    arg_mask = mask_from_bits(part.argument_bits)
+    expression = f"(((v >> {arg_end}) & {hex(arg_mask)}) << {reg_end})"
+    return expression
 
 def part_set_statement(addresses_dict, c_type_real_size, part):
     _, reg_end = part.register_bits
-    _, arg_end = part.argument_bits
-    arg_mask = mask_from_bits(part.argument_bits)
-    assignment = f"{format_reg(part.address)} = (((v >> {arg_end}) & {hex(arg_mask)}) << {reg_end})"
+    assignment = f"{format_reg(part.address)} = {part_set_expression(part)}"
     if len(addresses_dict[part.address]) > 1:
         reg_mask = mask_from_bits(part.register_bits) << reg_end
         inverse_mask = (~reg_mask) & ((2 ** (c_type_real_size * 8)) - 1)
@@ -169,14 +194,40 @@ def render_struct_accessors(addresses_dict, c_type, c_type_real_size, registers)
         yield "}"
         yield ""
 
-def render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers):
+def render_bits(addresses_dict, registers, parts_by_register_name):
+    parts_by_address = defaultdict(list)
+
+    for register in registers:
+        for part in register.parts:
+            parts_by_address[part.address].append((register, part))
+
+    for address, names in addresses_dict.items():
+        namespace = format_reg_friendly_name(names, parts_by_register_name)
+        yield f"namespace {namespace} {{"
+        for register, part in parts_by_address[address]:
+            if 'w' in register.rw:
+                arg = "v"
+                expression = part_set_expression(part)
+            elif 'r' in register.rw:
+                arg = "reg"
+                expression = part_get_expression(part, arg)
+            else:
+                continue
+            yield f"constexpr uint32_t {register.name}(const uint32_t {arg}) {{ return {expression}; }}";
+        yield "}"
+
+def render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers, parts_by_register_name):
     yield f"struct {struct_name} {{"
-    yield from render_struct_fields(struct_size, addresses, address_increment, c_type, c_type_size)
+    yield from render_struct_fields(struct_size, addresses, address_increment, c_type, c_type_size, parts_by_register_name)
     yield ""
     addresses_dict = dict(addresses)
     yield from render_struct_accessors(addresses_dict, c_type, c_type_real_size, registers)
     yield "};"
     yield from render_struct_static_assertions(struct_name, struct_size, addresses, address_increment)
+    yield ""
+    yield f"namespace aica {{"
+    yield from render_bits(addresses_dict, registers, parts_by_register_name)
+    yield "}"
 
 def header():
     yield '#include <stdint.h>'
@@ -194,8 +245,8 @@ if __name__ == "__main__":
     c_type = "reg32"
     c_type_size = 4
     c_type_real_size = 2
-    addresses, registers = group_parts(rows, address_increment)
+    addresses, registers, parts_by_register_name = group_parts(rows, address_increment)
     render, out = renderer()
     render(header())
-    render(render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers))
+    render(render_struct(struct_name, struct_size, addresses, address_increment, c_type, c_type_size, c_type_real_size, registers, parts_by_register_name))
     sys.stdout.write(out.getvalue())

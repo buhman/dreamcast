@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 #include <stddef.h>
 
@@ -8,7 +10,7 @@
 #include "aica_common.hpp"
 #include "aica_rtc.hpp"
 
-struct aica_reg {
+struct aica_sound {
   // 0x00700000 [64] channel data start
   // 0x00702000 [64] channel data end
   // 0x00702000 [18] dsp out start
@@ -22,10 +24,10 @@ struct aica_reg {
   struct aica_common common;
 };
 
-static_assert((sizeof (struct aica_reg)) == 0x2d08);
-static_assert((offsetof (struct aica_reg, channel)) == 0);
-static_assert((offsetof (struct aica_reg, dsp_out)) == 0x2000);
-static_assert((offsetof (struct aica_reg, common)) == 0x2800);
+static_assert((sizeof (struct aica_sound)) == 0x2d08);
+static_assert((offsetof (struct aica_sound, channel)) == 0);
+static_assert((offsetof (struct aica_sound, dsp_out)) == 0x2000);
+static_assert((offsetof (struct aica_sound, common)) == 0x2800);
 
-extern struct aica_reg aica __asm("aica");
+extern struct aica_sound aica_sound __asm("aica_sound");
 extern struct aica_rtc aica_rtc __asm("aica_rtc");

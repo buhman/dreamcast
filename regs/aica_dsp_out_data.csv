@@ -1,3 +1,3 @@
-"name","part","address","register_bits","argument_bits"
-"EFDSL",,"0x0000","11-8",
-"EFPAN",,"0x0000","4-0",
+"name","part","address","register_bits","argument_bits","rw"
+"EFDSL",,"0x0000","11-8",,"rw"
+"EFPAN",,"0x0000","4-0",,"rw"
