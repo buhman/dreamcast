@@ -307,9 +307,10 @@ example/maple_analog.elf: $(START_OBJ) $(MAPLE_ANALOG_OBJ)
 
 SERIAL_TRANSFER_OBJ = \
 	example/serial_transfer.o \
+	sh7091/serial.o \
 	serial_load.o
 
-example/serial_transfer.elf: LDSCRIPT = $(LIB)/alt.lds
+example/serial_transfer.elf: LDSCRIPT = $(LIB)/main.lds
 example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
 
 INTERRUPT_OBJ = \
@@ -376,8 +377,7 @@ example/aica.elf: $(START_OBJ) $(AICA_OBJ)
 AICA_GDROM_OBJ = \
 	example/aica_gdrom.o \
 	sh7091/serial.o \
-	example/arm/sh4_interrupt.bin.o \
-	audio.pcm.o
+	example/arm/sh4_interrupt.bin.o
 
 example/aica_gdrom.elf: LDSCRIPT = $(LIB)/alt.lds
 example/aica_gdrom.elf: $(START_OBJ) $(AICA_GDROM_OBJ)

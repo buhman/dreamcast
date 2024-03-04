@@ -2,8 +2,11 @@
 
 extern volatile uint32_t dram[0x200000] __asm("dram");
 
+constexpr uint32_t sectors_per_chunk = 16;
+constexpr uint32_t chunk_size = 2048 * sectors_per_chunk;
+
 __attribute__((section(".buffers.chunk")))
-static uint32_t chunk[2][(128 * 2) / 4];
+static uint32_t chunk[2][chunk_size / 4];
 
 void request_chunk()
 {
@@ -36,7 +39,7 @@ void main()
   aica_sound.channel[0].LPCTL(1);
   aica_sound.channel[0].PCMS(0);
   aica_sound.channel[0].LSA(0);
-  aica_sound.channel[0].LEA(128);
+  aica_sound.channel[0].LEA(chunk_size / 2);
   aica_sound.channel[0].D2R(0x0);
   aica_sound.channel[0].D1R(0x0);
   aica_sound.channel[0].RR(0x0);
@@ -58,8 +61,8 @@ void main()
     | aica::mono_mem8mb_dac18b_ver_mvol::MVOL(0xf) // 15/15 volume
     ;
 
-  constexpr uint32_t tactl = 0;        // increment once every 1 samples
-  constexpr uint32_t tima = 256 - 128; // interrupt after 1 count
+  constexpr uint32_t tactl = 7;        // increment once every 1 samples
+  constexpr uint32_t tima = 256 - 128; // interrupt after 128 samples
 
   dram[0] = reinterpret_cast<uint32_t>(&chunk[0][0]);
   dram[1] = reinterpret_cast<uint32_t>(&chunk[1][0]);
@@ -75,18 +78,16 @@ void main()
 			       | aica::tactl_tima::TIMA(tima);
   aica_sound.common.scire = timer_a_interrupt;
 
-  uint32_t index = 0;
+  uint32_t sample = 0;
   while (1) {
     if (aica_sound.common.SCIPD() & timer_a_interrupt) {
       aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
       aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
-				   | aica::tactl_tima::TIMA(tima);
-
-      aica_sound.common.scire = timer_a_interrupt;
-
+        | aica::tactl_tima::TIMA(tima);
       next_chunk = (next_chunk + 1) % 2;
       request_chunk();
-      //dram[0] = (0xEE << 24) | index++;
+
+      aica_sound.common.scire = timer_a_interrupt;
     }
   }
 }

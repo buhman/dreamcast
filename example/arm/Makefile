@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -Og
+OPT ?= -O3
 GENERATED ?=
 
 AARCH = -march=armv4 -mlittle-endian

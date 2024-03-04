@@ -81,8 +81,6 @@ uint32_t cd_read(uint16_t * buf,
   auto packet = gdrom_command_packet_format::cd_read(data,
                                                      starting_address,
                                                      transfer_length);
-
-  auto arst = packet._data();
   serial::string("cd_read\n");
   serial::string("starting_address: ");
   serial::integer<uint32_t>(starting_address);
