@@ -2,7 +2,7 @@
 
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
-#include "sh7091/cache.hpp"
+#include "sh7091/serial.hpp"
 
 #include "serial_load.hpp"
 
@@ -11,14 +11,7 @@ extern uint32_t __bss_link_end __asm("__bss_link_end");
 
 void main()
 {
-  cache::init();
-
-  uint32_t * start = &__bss_link_start;
-  uint32_t * end = &__bss_link_end;
-  while (start < end) {
-    *start++ = 0;
-  }
-
+  serial::init(4);
   load_init();
 
   while (1) {

@@ -8,7 +8,7 @@ dest = 0xac02_0000
 
 ret = []
 
-def sync(ser, b, wait=0.5):
+def sync(ser, b, wait=0.1):
     l = []
     for i, c in enumerate(b):
         if i % 32 == 0 and i != 0:
@@ -17,11 +17,11 @@ def sync(ser, b, wait=0.5):
         ser.write(bytes([c]))
         time.sleep(1000 / 1000000)
         if ser.in_waiting == 0:
-            time.sleep(0.01)
+            time.sleep(0.001)
         while ser.in_waiting > 0:
             res = ser.read(ser.in_waiting)
             l.extend(res)
-            time.sleep(0.01)
+            time.sleep(0.001)
 
     time.sleep(wait)
     res = ser.read(ser.in_waiting)
@@ -42,7 +42,7 @@ def symmetric(ser, b):
             if len(l) + 8 >= i:
                 break
             else:
-                time.sleep(0.001)
+                time.sleep(0.0001)
 
         ser.write(bytes([c]))
 
@@ -98,7 +98,8 @@ def console(ser):
 with open(sys.argv[1], 'rb') as f:
     b = f.read()
 
-with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
+#with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
+with serial.Serial('/dev/ttyUSB0', 312500, timeout=1) as ser:
     #console(ser)
     print("waiting: ", end=' ')
     sys.stdout.flush()

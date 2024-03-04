@@ -120,8 +120,8 @@ void load_recv(uint8_t c)
       debug("prejump\n");
       holly.VO_BORDER_COL = (31 << 11);
       void (*fptr)(void) = (void (*)(void))state.addr1;
-      holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
       fptr();
+      holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
       debug("postjump\n");
       return;
       break;
