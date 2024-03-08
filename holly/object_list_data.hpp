@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include "../float_uint32.hpp"
-
 namespace object_list_data {
   namespace pointer_type {
     constexpr uint32_t triangle_strip = 0b000 << 29;

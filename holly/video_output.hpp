@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 namespace video_output {
@@ -15,5 +17,11 @@ struct mode {
   const uint32_t spg_hblank_int;
   const uint32_t spg_vblank_int;
 };
+
+extern const struct mode vga;
+extern const struct mode ntsc_ni;
+extern const struct mode ntsc_i;
+extern const struct mode pal_ni;
+extern const struct mode pal_i;
 
 }

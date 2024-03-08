@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include "../float_uint32.hpp"
-
 namespace ccn {
   namespace pteh {
     constexpr uint32_t VPN(uint32_t reg) { return (reg >> 10) & 0x3fffff; }

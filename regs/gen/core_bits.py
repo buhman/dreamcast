@@ -261,13 +261,15 @@ def render_registers(registers, file_namespace):
     if file_namespace is not None:
         yield '}' # end of file namespace
 
-def header():
+def header(name):
     yield "#pragma once"
     yield ""
     yield "#include <cstdint>"
     yield ""
-    yield '#include "../float_uint32.hpp"'
-    yield ""
+    if "core_bits" in name:
+        # hack
+        yield '#include "../float_uint32.hpp"'
+        yield ""
 
 if __name__ == "__main__":
     d = read_input(sys.argv[1])
@@ -275,6 +277,6 @@ if __name__ == "__main__":
     aggregated = aggregate_registers(d)
     registers = aggregate_all_enums(aggregated)
     render, out = renderer()
-    render(header())
+    render(header(sys.argv[1]))
     render(render_registers(registers, file_namespace))
     sys.stdout.write(out.getvalue())

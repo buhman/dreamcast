@@ -2,8 +2,6 @@
 
 #include <cstdint>
 
-#include "../float_uint32.hpp"
-
 namespace gdrom {
   namespace status {
     constexpr uint32_t bsy(uint32_t reg) { return (reg >> 7) & 0x1; }

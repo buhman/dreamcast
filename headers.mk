@@ -14,6 +14,11 @@ sh7091/sh7091_bits.hpp: regs/sh7091_bits.csv regs/gen/core_bits.py
 systembus_bits.hpp: regs/systembus_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+# DVE
+
+dve.hpp: regs/dve.csv regs/gen/core_bits.py
+	python regs/gen/core_bits.py $< > $@
+
 # HOLLY
 
 holly/core_bits.hpp: regs/core_bits.csv regs/gen/core_bits.py
