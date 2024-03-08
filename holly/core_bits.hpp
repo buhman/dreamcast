@@ -392,7 +392,7 @@ namespace text_control {
 
 namespace vo_control {
   constexpr uint32_t pclk_delay_reset = 1 << 21;
-  constexpr uint32_t pclk_delay(uint32_t num) { return (num & 0xf) << 16; }
+  constexpr uint32_t pclk_delay(uint32_t num) { return (num & 0x1f) << 16; }
   constexpr uint32_t pixel_double = 1 << 8;
 
   namespace field_mode {

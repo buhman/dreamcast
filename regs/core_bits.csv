@@ -207,7 +207,7 @@
 "TEXT_CONTROL",,"4-0","stride",,"0x1f",,,,,,
 ,,,,,,,,,,,
 "VO_CONTROL",,21,"pclk_delay_reset",1,,,,,,,
-"VO_CONTROL",,"20-16","pclk_delay",,"0b1111",,,,,,
+"VO_CONTROL",,"20-16","pclk_delay",,"0b11111",,,,,,
 "VO_CONTROL",,8,"pixel_double",1,,,,,,,
 "VO_CONTROL","field_mode","7-4","use_field_flag_from_spg","0x0",,,,,,,
 "VO_CONTROL","field_mode","7-4","use_inverse_of_field_flag_from_spg","0x1",,,,,,,

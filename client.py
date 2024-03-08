@@ -41,8 +41,6 @@ def symmetric(ser, b):
                 l.extend(res)
             if len(l) + 8 >= i:
                 break
-            else:
-                time.sleep(0.0001)
 
         ser.write(bytes([c]))
 
