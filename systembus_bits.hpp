@@ -15,61 +15,61 @@ namespace c2dst {
 }
 
 namespace istnrm {
-  constexpr uint32_t end_of_transferring_punch_through_list(uint32_t reg) { return (reg >> 21) & 0x1; }
-  constexpr uint32_t end_of_dma_sort_dma(uint32_t reg) { return (reg >> 20) & 0x1; }
-  constexpr uint32_t end_of_dma_ch2_dma(uint32_t reg) { return (reg >> 19) & 0x1; }
-  constexpr uint32_t end_of_dma_dev_dma(uint32_t reg) { return (reg >> 18) & 0x1; }
-  constexpr uint32_t end_of_dma_ext_dma2(uint32_t reg) { return (reg >> 17) & 0x1; }
-  constexpr uint32_t end_of_dma_ext_dma1(uint32_t reg) { return (reg >> 16) & 0x1; }
-  constexpr uint32_t end_of_dma_aica_dma(uint32_t reg) { return (reg >> 15) & 0x1; }
-  constexpr uint32_t end_of_dma_gd_dma(uint32_t reg) { return (reg >> 14) & 0x1; }
-  constexpr uint32_t maple_v_blank_over_interrupt(uint32_t reg) { return (reg >> 13) & 0x1; }
-  constexpr uint32_t end_of_dma_maple_dma(uint32_t reg) { return (reg >> 12) & 0x1; }
-  constexpr uint32_t end_of_dma_pvr_dma(uint32_t reg) { return (reg >> 11) & 0x1; }
-  constexpr uint32_t end_of_transferring_translucent_modifier_volume_list(uint32_t reg) { return (reg >> 10) & 0x1; }
-  constexpr uint32_t end_of_transferring_translucent_list(uint32_t reg) { return (reg >> 9) & 0x1; }
-  constexpr uint32_t end_of_transferring_opaque_modifier_volume_list(uint32_t reg) { return (reg >> 8) & 0x1; }
-  constexpr uint32_t end_of_transferring_opaque_list(uint32_t reg) { return (reg >> 7) & 0x1; }
-  constexpr uint32_t end_of_transferring_yuv(uint32_t reg) { return (reg >> 6) & 0x1; }
-  constexpr uint32_t h_blank_in_interrupt(uint32_t reg) { return (reg >> 5) & 0x1; }
-  constexpr uint32_t v_blank_out_interrupt(uint32_t reg) { return (reg >> 4) & 0x1; }
-  constexpr uint32_t v_blank_in_interrupt(uint32_t reg) { return (reg >> 3) & 0x1; }
-  constexpr uint32_t end_of_render_tsp(uint32_t reg) { return (reg >> 2) & 0x1; }
-  constexpr uint32_t end_of_render_isp(uint32_t reg) { return (reg >> 1) & 0x1; }
-  constexpr uint32_t end_of_render_video(uint32_t reg) { return (reg >> 0) & 0x1; }
+  constexpr uint32_t end_of_transferring_punch_through_list = 1 << 21;
+  constexpr uint32_t end_of_dma_sort_dma = 1 << 20;
+  constexpr uint32_t end_of_dma_ch2_dma = 1 << 19;
+  constexpr uint32_t end_of_dma_dev_dma = 1 << 18;
+  constexpr uint32_t end_of_dma_ext_dma2 = 1 << 17;
+  constexpr uint32_t end_of_dma_ext_dma1 = 1 << 16;
+  constexpr uint32_t end_of_dma_aica_dma = 1 << 15;
+  constexpr uint32_t end_of_dma_gd_dma = 1 << 14;
+  constexpr uint32_t maple_v_blank_over_interrupt = 1 << 13;
+  constexpr uint32_t end_of_dma_maple_dma = 1 << 12;
+  constexpr uint32_t end_of_dma_pvr_dma = 1 << 11;
+  constexpr uint32_t end_of_transferring_translucent_modifier_volume_list = 1 << 10;
+  constexpr uint32_t end_of_transferring_translucent_list = 1 << 9;
+  constexpr uint32_t end_of_transferring_opaque_modifier_volume_list = 1 << 8;
+  constexpr uint32_t end_of_transferring_opaque_list = 1 << 7;
+  constexpr uint32_t end_of_transferring_yuv = 1 << 6;
+  constexpr uint32_t h_blank_in_interrupt = 1 << 5;
+  constexpr uint32_t v_blank_out_interrupt = 1 << 4;
+  constexpr uint32_t v_blank_in_interrupt = 1 << 3;
+  constexpr uint32_t end_of_render_tsp = 1 << 2;
+  constexpr uint32_t end_of_render_isp = 1 << 1;
+  constexpr uint32_t end_of_render_video = 1 << 0;
 }
 
 namespace isterr {
-  constexpr uint32_t sh4__if_access_inhibited_area(uint32_t reg) { return (reg >> 31) & 0x1; }
-  constexpr uint32_t ddt__if_sort_dma_command_error(uint32_t reg) { return (reg >> 28) & 0x1; }
-  constexpr uint32_t g2__time_out_in_cpu_access(uint32_t reg) { return (reg >> 27) & 0x1; }
-  constexpr uint32_t g2__dev_dma_time_out(uint32_t reg) { return (reg >> 26) & 0x1; }
-  constexpr uint32_t g2__ext_dma2_time_out(uint32_t reg) { return (reg >> 25) & 0x1; }
-  constexpr uint32_t g2__ext_dma1_time_out(uint32_t reg) { return (reg >> 24) & 0x1; }
-  constexpr uint32_t g2__aica_dma_time_out(uint32_t reg) { return (reg >> 23) & 0x1; }
-  constexpr uint32_t g2__dev_dma_over_run(uint32_t reg) { return (reg >> 22) & 0x1; }
-  constexpr uint32_t g2__ext_dma2_over_run(uint32_t reg) { return (reg >> 21) & 0x1; }
-  constexpr uint32_t g2__ext_dma1_over_run(uint32_t reg) { return (reg >> 20) & 0x1; }
-  constexpr uint32_t g2__aica_dma_over_run(uint32_t reg) { return (reg >> 19) & 0x1; }
-  constexpr uint32_t g2__dev_dma_illegal_address_set(uint32_t reg) { return (reg >> 18) & 0x1; }
-  constexpr uint32_t g2__ext_dma2_illegal_address_set(uint32_t reg) { return (reg >> 17) & 0x1; }
-  constexpr uint32_t g2__ext_dma1_illegal_address_set(uint32_t reg) { return (reg >> 16) & 0x1; }
-  constexpr uint32_t g2__aica_dma_illegal_address_set(uint32_t reg) { return (reg >> 15) & 0x1; }
-  constexpr uint32_t g1__rom_flash_access_at_gd_dma(uint32_t reg) { return (reg >> 14) & 0x1; }
-  constexpr uint32_t g1__gd_dma_over_run(uint32_t reg) { return (reg >> 13) & 0x1; }
-  constexpr uint32_t g1__illegal_address_set(uint32_t reg) { return (reg >> 12) & 0x1; }
-  constexpr uint32_t maple__illegal_command(uint32_t reg) { return (reg >> 11) & 0x1; }
-  constexpr uint32_t maple__write_fifo_over_flow(uint32_t reg) { return (reg >> 10) & 0x1; }
-  constexpr uint32_t maple__dma_over_run(uint32_t reg) { return (reg >> 9) & 0x1; }
-  constexpr uint32_t maple__illegal_address_set(uint32_t reg) { return (reg >> 8) & 0x1; }
-  constexpr uint32_t pvrif__dma_over_run(uint32_t reg) { return (reg >> 7) & 0x1; }
-  constexpr uint32_t pvrif__illegal_address_set(uint32_t reg) { return (reg >> 6) & 0x1; }
-  constexpr uint32_t ta__fifo_overflow(uint32_t reg) { return (reg >> 5) & 0x1; }
-  constexpr uint32_t ta__illegal_parameter(uint32_t reg) { return (reg >> 4) & 0x1; }
-  constexpr uint32_t ta__object_list_pointer_overflow(uint32_t reg) { return (reg >> 3) & 0x1; }
-  constexpr uint32_t ta__isp_tsp_parameter_overflow(uint32_t reg) { return (reg >> 2) & 0x1; }
-  constexpr uint32_t render__hazard_processing_of_strip_buffer(uint32_t reg) { return (reg >> 1) & 0x1; }
-  constexpr uint32_t render__isp_out_of_cache(uint32_t reg) { return (reg >> 0) & 0x1; }
+  constexpr uint32_t sh4__if_access_inhibited_area = 1 << 31;
+  constexpr uint32_t ddt__if_sort_dma_command_error = 1 << 28;
+  constexpr uint32_t g2__time_out_in_cpu_access = 1 << 27;
+  constexpr uint32_t g2__dev_dma_time_out = 1 << 26;
+  constexpr uint32_t g2__ext_dma2_time_out = 1 << 25;
+  constexpr uint32_t g2__ext_dma1_time_out = 1 << 24;
+  constexpr uint32_t g2__aica_dma_time_out = 1 << 23;
+  constexpr uint32_t g2__dev_dma_over_run = 1 << 22;
+  constexpr uint32_t g2__ext_dma2_over_run = 1 << 21;
+  constexpr uint32_t g2__ext_dma1_over_run = 1 << 20;
+  constexpr uint32_t g2__aica_dma_over_run = 1 << 19;
+  constexpr uint32_t g2__dev_dma_illegal_address_set = 1 << 18;
+  constexpr uint32_t g2__ext_dma2_illegal_address_set = 1 << 17;
+  constexpr uint32_t g2__ext_dma1_illegal_address_set = 1 << 16;
+  constexpr uint32_t g2__aica_dma_illegal_address_set = 1 << 15;
+  constexpr uint32_t g1__rom_flash_access_at_gd_dma = 1 << 14;
+  constexpr uint32_t g1__gd_dma_over_run = 1 << 13;
+  constexpr uint32_t g1__illegal_address_set = 1 << 12;
+  constexpr uint32_t maple__illegal_command = 1 << 11;
+  constexpr uint32_t maple__write_fifo_over_flow = 1 << 10;
+  constexpr uint32_t maple__dma_over_run = 1 << 9;
+  constexpr uint32_t maple__illegal_address_set = 1 << 8;
+  constexpr uint32_t pvrif__dma_over_run = 1 << 7;
+  constexpr uint32_t pvrif__illegal_address_set = 1 << 6;
+  constexpr uint32_t ta__fifo_overflow = 1 << 5;
+  constexpr uint32_t ta__illegal_parameter = 1 << 4;
+  constexpr uint32_t ta__object_list_pointer_overflow = 1 << 3;
+  constexpr uint32_t ta__isp_tsp_parameter_overflow = 1 << 2;
+  constexpr uint32_t render__hazard_processing_of_strip_buffer = 1 << 1;
+  constexpr uint32_t render__isp_out_of_cache = 1 << 0;
 }
 
 namespace ffst {

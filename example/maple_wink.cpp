@@ -3,7 +3,6 @@
 #include "maple/maple.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_bits.hpp"
-#include "vga.hpp"
 #include "align.hpp"
 #include "sh7091/serial.hpp"
 
@@ -58,8 +57,5 @@ void main()
   serial::integer<uint8_t>(host_response->bus_data.source_ap);
   serial::integer<uint8_t>(host_response->bus_data.data_size);
 
-  vga();
-  v_sync_in();
-  vga_fill_framebuffer();
   while(1);
 }

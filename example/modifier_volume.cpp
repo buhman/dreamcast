@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "align.hpp"
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
 #include "holly.hpp"
@@ -184,7 +184,7 @@ uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 
 void main()
 {
-  vga();
+  video_output::set_mode_vga();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.

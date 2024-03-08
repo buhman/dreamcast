@@ -2,7 +2,7 @@
 #include <bit>
 
 #include "align.hpp"
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
 #include "holly/holly.hpp"
@@ -348,7 +348,7 @@ uint32_t _receive_buf[(1024 + 32) / 4];
 
 void main()
 {
-  vga();
+  video_output::set_mode_vga();
 
   auto src0 = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size0 = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);

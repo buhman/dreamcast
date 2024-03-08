@@ -36,7 +36,7 @@ holly/ta_vertex_parameter.hpp: regs/vertex_parameter_format.csv regs/gen/ta_para
 holly/object_list_data.hpp: regs/object_list.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< object_list_data > $@
 
-holly/video_output_mode.cpp: regs/video_output.csv regs/gen/video_output.py
+holly/video_output_mode.inc: regs/video_output.csv regs/gen/video_output.py
 	python regs/gen/video_output.py $< > $@
 
 # MAPLE

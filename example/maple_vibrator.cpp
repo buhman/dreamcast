@@ -1,6 +1,6 @@
 #include <bit>
 
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 #include "align.hpp"
 
 #include "maple/maple.hpp"
@@ -184,7 +184,7 @@ void main()
   command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
   receive_buf = align_32byte(_receive_buf);
 
-  vga();
+  video_output::set_mode_vga();
 
   while (1) {
     for (int i = 0; i < 120; i++) {

@@ -1,6 +1,6 @@
 #include <bit>
 
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 #include "align.hpp"
 
 #include "maple/maple.hpp"
@@ -107,7 +107,7 @@ void main()
 
   // flycast needs this in HLE mode, or else it won't start the vcount
   // counter.
-  vga();
+  video_output::set_mode_vga();
 
   while (1) {
     v_sync_in();

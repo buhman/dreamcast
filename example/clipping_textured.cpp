@@ -3,7 +3,7 @@
 
 #include "align.hpp"
 
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 #include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
@@ -257,7 +257,7 @@ void main()
   uint32_t * command_buf = align_32byte(_command_buf);
   uint32_t * receive_buf = align_32byte(_receive_buf);
 
-  vga();
+  video_output::set_mode_vga();
   init_macaw_texture();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.

@@ -1,11 +1,14 @@
 #include <cstdint>
 
+#include "sh7091/sh7091.hpp"
 #include "sh7091/serial.hpp"
+#include "aica/aica.hpp"
 #include "dve.hpp"
 #include "holly.hpp"
-#include "holly_bits.hpp"
+#include "holly/core_bits.hpp"
 
 #include "video_output.hpp"
+#include "video_output_mode.inc"
 
 namespace video_output {
 
@@ -61,25 +64,45 @@ uint32_t get_cable_type()
   return sh7091.BSC.PDTRA & pdtra::cable_type::bit_mask;
 }
 
-void automatic()
+void set_mode_automatic()
 {
   switch (get_cable_type()) {
+  default: [[fallthrough]];
   case pdtra::cable_type::vga:
     set_mode(vga);
     set_framebuffer_resolution(640, 480);
-    aica.common.VREG(vreg::output_mode::vga);
+    aica_sound.common.VREG(vreg::output_mode::vga);
     break;
   case pdtra::cable_type::rgb:
     set_mode(ntsc_ni);
     set_framebuffer_resolution(320, 240);
-    aica.common.VREG(vreg::output_mode::rgb);
+    aica_sound.common.VREG(vreg::output_mode::rgb);
     break;
   case pdtra::cable_type::cvbs_yc:
-    set_mode(pal_ni);
+    set_mode(ntsc_ni);
     set_framebuffer_resolution(320, 240);
-    aica.common.VREG(vreg::output_mode::cvbs_yc);
+    aica_sound.common.VREG(vreg::output_mode::cvbs_yc);
     break;
   }
+}
+
+void set_mode_vga()
+{
+  set_mode(vga);
+  set_framebuffer_resolution(640, 480);
+  aica_sound.common.VREG(vreg::output_mode::vga);
+}
+
+void reset_sdram()
+{
+  holly.SOFTRESET = softreset::sdram_if_soft_reset
+		  | softreset::pipeline_soft_reset
+		  | softreset::ta_soft_reset;
+
+  holly.SDRAM_CFG = 0x15D1C951;
+  holly.SDRAM_REFRESH = 0x00000020;
+
+  holly.SOFTRESET = 0;
 }
 
 }

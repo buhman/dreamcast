@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "align.hpp"
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
 #include "holly/holly.hpp"
@@ -212,7 +212,7 @@ uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
 
 void main()
 {
-  vga();
+  video_output::set_mode_vga();
 
   auto font = reinterpret_cast<const struct font *>(&_binary_dejavusansmono_data_start);
   auto glyphs = reinterpret_cast<const struct glyph *>(&font[1]);

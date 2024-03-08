@@ -4,7 +4,7 @@
 "VREG","output_mode","1-0","cvbs_yc","0b11",,
 ,,,,,,
 "PDTRA","cable_type","9-8","vga","0b00",,
-"PDTRA","cable_type","9-8","rbg","0b10",,
+"PDTRA","cable_type","9-8","rgb","0b10",,
 "PDTRA","cable_type","9-8","cvbs_yc","0b11",,
 ,,,,,,
 "PDTRA","video_mode","4-2","ntsc","0b000",,

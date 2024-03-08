@@ -1,6 +1,6 @@
 SPRITE_OBJ = \
 	example/sprite.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -11,11 +11,11 @@ example/sprite.elf: $(START_OBJ) $(SPRITE_OBJ)
 
 MACAW_OBJ = \
 	example/macaw.o \
-	vga.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
 	macaw.data.o
 
 example/macaw.elf: LDSCRIPT = $(LIB)/alt.lds
@@ -23,7 +23,7 @@ example/macaw.elf: $(START_OBJ) $(MACAW_OBJ)
 
 MACAW_TWIDDLE_OBJ = \
 	example/macaw_twiddle.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -35,7 +35,7 @@ example/macaw_twiddle.elf: $(START_OBJ) $(MACAW_TWIDDLE_OBJ)
 
 FONT_BITMAP_OBJ = \
 	example/font_bitmap.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -47,7 +47,7 @@ example/font_bitmap.elf: $(START_OBJ) $(FONT_BITMAP_OBJ)
 
 FONT_OUTLINE_OBJ = \
 	example/font_outline.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -59,7 +59,7 @@ example/font_outline.elf: $(START_OBJ) $(FONT_OUTLINE_OBJ)
 
 FONT_OUTLINE_PUNCH_THROUGH_OBJ = \
 	example/font_outline_punch_through.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -71,7 +71,7 @@ example/font_outline_punch_through.elf: $(START_OBJ) $(FONT_OUTLINE_PUNCH_THROUG
 
 MACAW_MULTIPASS_OBJ = \
 	example/macaw_multipass.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -83,7 +83,7 @@ example/macaw_multipass.elf: $(START_OBJ) $(MACAW_MULTIPASS_OBJ)
 
 TRANSLUCENCY_OBJ = \
 	example/translucency.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -95,7 +95,7 @@ example/translucency.elf: $(START_OBJ) $(TRANSLUCENCY_OBJ)
 
 CUBE_OBJ = \
 	example/cube.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -106,7 +106,7 @@ example/cube.elf: $(START_OBJ) $(CUBE_OBJ)
 
 ICOSPHERE_OBJ = \
 	example/icosphere.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -117,7 +117,7 @@ example/icosphere.elf: $(START_OBJ) $(ICOSPHERE_OBJ)
 
 SUZANNE_PROFILE_OBJ = \
 	example/suzanne_profile.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -131,7 +131,7 @@ example/suzanne_profile.elf: $(START_OBJ) $(SUZANNE_PROFILE_OBJ)
 
 WIFFLE_ATTENUATION_OBJ = \
 	example/wiffle_attenuation.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -142,7 +142,7 @@ example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
 
 MODIFIER_VOLUME_OBJ = \
 	example/modifier_volume.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -153,7 +153,7 @@ example/modifier_volume.elf: $(START_OBJ) $(MODIFIER_VOLUME_OBJ)
 
 MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	example/modifier_volume_with_two_volumes.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -168,7 +168,7 @@ example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WIT
 
 HEART_OBJ = \
 	example/heart.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -179,7 +179,7 @@ example/heart.elf: $(START_OBJ) $(HEART_OBJ)
 
 VIEWING_SYSTEM_OBJ = \
 	example/viewing_system.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -191,7 +191,7 @@ example/viewing_system.elf: $(START_OBJ) $(VIEWING_SYSTEM_OBJ)
 
 MACAW_CUBE_OBJ = \
 	example/macaw_cube.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -203,7 +203,7 @@ example/macaw_cube.elf: $(START_OBJ) $(MACAW_CUBE_OBJ)
 
 MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
 	example/macaw_cube_render_to_texture.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -215,7 +215,7 @@ example/macaw_cube_render_to_texture.elf: $(START_OBJ) $(MACAW_CUBE_RENDER_TO_TE
 
 CLIPPING_OBJ = \
 	example/clipping.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -227,7 +227,7 @@ example/clipping.elf: $(START_OBJ) $(CLIPPING_OBJ)
 
 CLIPPING2_OBJ = \
 	example/clipping2.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -241,7 +241,7 @@ example/clipping2.elf: $(START_OBJ) $(CLIPPING2_OBJ)
 
 CLIPPING_TEXTURED_OBJ = \
 	example/clipping_textured.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -256,7 +256,7 @@ example/clipping_textured.elf: $(START_OBJ) $(CLIPPING_TEXTURED_OBJ)
 
 MAPLE_DEVICE_REQUEST_OBJ = \
 	example/maple_device_request.o \
-	vga.o \
+	holly/video_output.o \
 	sh7091/serial.o \
 	maple/maple.o
 
@@ -265,7 +265,7 @@ example/maple_device_request.elf: $(START_OBJ) $(MAPLE_DEVICE_REQUEST_OBJ)
 
 MAPLE_CONTROLLER_OBJ = \
 	example/maple_controller.o \
-	vga.o \
+	holly/video_output.o \
 	sh7091/serial.o \
 	maple/maple.o
 
@@ -274,7 +274,7 @@ example/maple_controller.elf: $(START_OBJ) $(MAPLE_CONTROLLER_OBJ)
 
 MAPLE_WINK_OBJ = \
 	example/maple_wink.o \
-	vga.o \
+	holly/video_output.o \
 	rgb.o \
 	sh7091/serial.o \
 	maple/maple.o \
@@ -285,7 +285,7 @@ example/maple_wink.elf: $(START_OBJ) $(MAPLE_WINK_OBJ)
 
 MAPLE_VIBRATOR_OBJ = \
 	example/maple_vibrator.o \
-	vga.o \
+	holly/video_output.o \
 	rgb.o \
 	sh7091/serial.o \
 	maple/maple.o
@@ -295,7 +295,7 @@ example/maple_vibrator.elf: $(START_OBJ) $(MAPLE_VIBRATOR_OBJ)
 
 MAPLE_ANALOG_OBJ = \
 	example/maple_analog.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -322,7 +322,7 @@ example/interrupt.elf: $(START_OBJ) $(INTERRUPT_OBJ)
 
 DUMP_OBJECT_LIST_OBJ = \
 	example/dump_object_list.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -341,7 +341,7 @@ example/dump_ram.elf: $(START_OBJ) $(DUMP_RAM_OBJ)
 
 SOFTWARE_TA_OBJ = \
 	example/software_ta.o \
-	vga.o \
+	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \

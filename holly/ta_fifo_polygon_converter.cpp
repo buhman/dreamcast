@@ -96,40 +96,40 @@ void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
   sh7091.DMAC.DMAOR = dmaor::ddt::on_demand_data_transfer_mode       /* on-demand data transfer mode */
                     | dmaor::pr::ch2_ch0_ch1_ch3                     /* priority mode; CH2 > CH0 > CH1 > CH3 */
                     | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
-  system.C2DSTAT = C2DSTAT__ADDRESS(0x10000000); /* CH2-DMA destination address */
-  system.C2DLEN  = CD2LEN__LENGTH(size);         /* CH2-DMA length (must be a multiple of 32) */
+  system.C2DSTAT = c2dstat::texture_memory_start_address(0x10000000); /* CH2-DMA destination address */
+  system.C2DLEN  = c2dlen::transfer_length(size);         /* CH2-DMA length (must be a multiple of 32) */
   system.C2DST   = 1;          /* CH2-DMA start (an 'external' request from SH7091's perspective) */
 
-  // wait for CH2-DMA completion
-  while ((system.ISTNRM & ISTNRM__END_OF_DMA_CH2_DMA) == 0);
-  // reset CH2-DMA interrupt status
-  system.ISTNRM = ISTNRM__END_OF_DMA_CH2_DMA;
+  // wait for ch2-dma completion
+  while ((system.ISTNRM & istnrm::end_of_dma_ch2_dma) == 0);
+  // reset ch2-dma interrupt status
+  system.ISTNRM = istnrm::end_of_dma_ch2_dma;
 }
 
 void ta_wait_opaque_list()
 {
-  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_OPAQUE_LIST) == 0);
+  while ((system.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0);
 
-  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_OPAQUE_LIST;
+  system.ISTNRM = istnrm::end_of_transferring_opaque_list;
 }
 
 void ta_wait_opaque_modifier_volume_list()
 {
-  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_OPAQUE_MODIFIER_VOLUME_LIST) == 0);
+  while ((system.ISTNRM & istnrm::end_of_transferring_opaque_modifier_volume_list) == 0);
 
-  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_OPAQUE_MODIFIER_VOLUME_LIST;
+  system.ISTNRM = istnrm::end_of_transferring_opaque_modifier_volume_list;
 }
 
 void ta_wait_translucent_list()
 {
-  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST) == 0);
+  while ((system.ISTNRM & istnrm::end_of_transferring_translucent_list) == 0);
 
-  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_TRANSLUCENT_LIST;
+  system.ISTNRM = istnrm::end_of_transferring_translucent_list;
 }
 
 void ta_wait_punch_through_list()
 {
-  while ((system.ISTNRM & ISTNRM__END_OF_TRANSFERRING_PUNCH_THROUGH_LIST) == 0);
+  while ((system.ISTNRM & istnrm::end_of_transferring_punch_through_list) == 0);
 
-  system.ISTNRM = ISTNRM__END_OF_TRANSFERRING_PUNCH_THROUGH_LIST;
+  system.ISTNRM = istnrm::end_of_transferring_punch_through_list;
 }

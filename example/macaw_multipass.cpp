@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "align.hpp"
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
 #include "holly.hpp"
@@ -100,7 +100,7 @@ uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
 
 void main()
 {
-  vga();
+  video_output::set_mode_vga();
 
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);

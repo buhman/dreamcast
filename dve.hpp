@@ -15,7 +15,7 @@ namespace vreg {
 namespace pdtra {
   namespace cable_type {
     constexpr uint32_t vga = 0b00 << 8;
-    constexpr uint32_t rbg = 0b10 << 8;
+    constexpr uint32_t rgb = 0b10 << 8;
     constexpr uint32_t cvbs_yc = 0b11 << 8;
 
     constexpr uint32_t bit_mask = 0x3 << 8;

@@ -116,7 +116,7 @@ static inline void _dma_start(const uint32_t * command_buf)
                     | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
 
   // clear maple-DMA end status
-  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
+  system.ISTNRM = istnrm::end_of_dma_maple_dma;
 
   // disable maple-DMA
   maple_if.MDEN = mden::dma_enable::abort;
@@ -169,8 +169,8 @@ void dma_start(const uint32_t * command_buf,
   }
 
   // wait for maple DMA completion
-  while ((system.ISTNRM & ISTNRM__END_OF_DMA_MAPLE_DMA) == 0);
-  system.ISTNRM = ISTNRM__END_OF_DMA_MAPLE_DMA;
+  while ((system.ISTNRM & istnrm::end_of_dma_maple_dma) == 0);
+  system.ISTNRM = istnrm::end_of_dma_maple_dma;
 }
 
   // wait for completion

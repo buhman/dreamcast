@@ -52,7 +52,7 @@ void core_init()
 }
 
 void core_start_render(uint32_t frame_address,
-		       uint32_t frame_linestride, // in pixels
+		       uint32_t frame_width,      // in pixels
 		       uint32_t frame_size,       // in bytes
 		       uint32_t frame_ix, uint32_t num_frames)
 {
@@ -65,9 +65,10 @@ void core_start_render(uint32_t frame_address,
   holly.ISP_BACKGND_D = _i(1.f/100000.f);
 
   holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
-  holly.FB_W_LINESTRIDE = (frame_linestride * 2) / 8;
+  constexpr uint32_t bytes_per_pixel = 2;
+  holly.FB_W_LINESTRIDE = (frame_width * bytes_per_pixel) / 8;
 
-  uint32_t w_fb = (frame_ix & num_frames) * frame_size;
+  const uint32_t w_fb = (frame_ix & num_frames) * frame_size;
   holly.FB_W_SOF1 = frame_address + w_fb;
 
   holly.STARTRENDER = 1;
@@ -76,7 +77,7 @@ void core_start_render(uint32_t frame_address,
 void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 {
   core_start_render((offsetof (struct texture_memory_alloc, framebuffer)),
-		    640,        // frame_linestride
+		    640,        // frame_width
 		    0x00096000, // frame_size
 		    frame_ix, num_frames);
 }
@@ -89,10 +90,10 @@ void core_wait_end_of_render_video()
     "Furthermore, it is strongly recommended that the End of ISP and End of Video interrupts
     be cleared at the same time in order to make debugging easier when an error occurs."
   */
-  while ((system.ISTNRM & ISTNRM__END_OF_RENDER_TSP) == 0);
-  system.ISTNRM = ISTNRM__END_OF_RENDER_TSP
-		| ISTNRM__END_OF_RENDER_ISP
-		| ISTNRM__END_OF_RENDER_VIDEO;
+  while ((system.ISTNRM & istnrm::end_of_render_tsp) == 0);
+  system.ISTNRM = istnrm::end_of_render_tsp
+		| istnrm::end_of_render_isp
+		| istnrm::end_of_render_video;
 }
 
 void core_flip(uint32_t frame_ix, uint32_t num_frames)
