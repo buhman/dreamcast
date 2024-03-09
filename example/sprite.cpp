@@ -1,18 +1,20 @@
 #include <cstdint>
 
 #include "align.hpp"
-
-#include "holly/video_output.hpp"
-#include "holly.hpp"
+#include "memorymap.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
-#include "holly/ta_fifo_polygon_converter.hpp"
-#include "holly/ta_parameter.hpp"
+#include "holly/video_output.hpp"
 #include "holly/ta_bits.hpp"
+#include "holly/ta_parameter.hpp"
+#include "holly/ta_global_parameter.hpp"
+#include "holly/ta_vertex_parameter.hpp"
+#include "holly/ta_fifo_polygon_converter.hpp"
+#include "holly/isp_tsp.hpp"
+#include "holly/texture_memory_alloc.hpp"
 #include "holly/background.hpp"
 #include "holly/region_array.hpp"
-#include "holly/texture_memory_alloc.hpp"
-#include "memorymap.hpp"
 
 struct vertex {
   float x;
@@ -32,23 +34,45 @@ uint32_t transform(uint32_t * ta_parameter_buf)
 {
   auto parameter = ta_parameter_writer(ta_parameter_buf);
 
+  const uint32_t parameter_control_word = para_control::para_type::sprite
+                                        | para_control::list_type::opaque
+                                        | obj_control::col_type::packed_color;
+
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+                                          | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+                                      | tsp_instruction_word::dst_alpha_instr::zero
+                                      | tsp_instruction_word::fog_control::no_fog;
+
+  const uint32_t texture_control_word = 0;
+
   constexpr uint32_t base_color = 0xffff0000;
-  parameter.append<global_sprite>() = global_sprite(base_color);
-  parameter.append<vertex_sprite_type_0>() =
-    vertex_sprite_type_0(quad_vertices[0].x,
-			 quad_vertices[0].y,
-			 quad_vertices[0].z,
-			 quad_vertices[1].x,
-			 quad_vertices[1].y,
-			 quad_vertices[1].z,
-			 quad_vertices[2].x,
-			 quad_vertices[2].y,
-			 quad_vertices[2].z,
-			 quad_vertices[3].x,
-			 quad_vertices[3].y);
+  parameter.append<ta_global_parameter::sprite>() =
+    ta_global_parameter::sprite(parameter_control_word,
+                                isp_tsp_instruction_word,
+                                tsp_instruction_word,
+                                texture_control_word,
+                                base_color,
+                                0, // offset_color
+                                0, // data_size_for_sort_dma
+                                0); // next_address_for_sort_dma
+  parameter.append<ta_vertex_parameter::sprite_type_0>() =
+    ta_vertex_parameter::sprite_type_0(para_control::para_type::vertex_parameter,
+				       quad_vertices[0].x,
+				       quad_vertices[0].y,
+				       quad_vertices[0].z,
+				       quad_vertices[1].x,
+				       quad_vertices[1].y,
+				       quad_vertices[1].z,
+				       quad_vertices[2].x,
+				       quad_vertices[2].y,
+				       quad_vertices[2].z,
+				       quad_vertices[3].x,
+				       quad_vertices[3].y);
   // curiously, there is no quad_veritices[3].z in vertex_sprite_type_0
 
-  parameter.append<global_end_of_list>() = global_end_of_list();
+  parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
   return parameter.offset;
 }
@@ -57,7 +81,7 @@ void init_texture_memory(const struct opb_size& opb_size)
 {
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
 
-  background_parameter(mem->background);
+  background_parameter(mem->background, 0xff220000);
 
   region_array2(mem->region_array,
 	        (offsetof (struct texture_memory_alloc, object_list)),
@@ -103,7 +127,10 @@ void main()
   constexpr uint32_t num_frames = 1;
 
   while (true) {
-    ta_polygon_converter_init(opb_size.total() * tiles, ta_alloc);
+    ta_polygon_converter_init(opb_size.total(),
+			      ta_alloc,
+			      640 / 32,
+			      480 / 32);
     uint32_t ta_parameter_size = transform(ta_parameter_buf);
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
