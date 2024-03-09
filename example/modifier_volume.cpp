@@ -4,7 +4,7 @@
 #include "holly/video_output.hpp"
 
 #include "holly/texture_memory_alloc.hpp"
-#include "holly.hpp"
+#include "holly/holly.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
 #include "holly/ta_fifo_polygon_converter.hpp"
@@ -65,7 +65,7 @@ vec3 _transform(const vec3& point,
 
 void transform_polygon(ta_parameter_writer& parameter,
                        const vec3 * vertices,
-                       const face& face,
+                       const face_vtn& face,
                        const float scale,
                        const vec4& color,
                        const float theta)
@@ -114,7 +114,7 @@ void transform_polygon(ta_parameter_writer& parameter,
 
 void transform_modifier_volume(ta_parameter_writer& parameter,
                                const vec3 * vertices,
-                               const face * faces,
+                               const face_vtn * faces,
                                const uint32_t num_faces,
                                const float scale)
 {
