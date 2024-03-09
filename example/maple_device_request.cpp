@@ -29,7 +29,7 @@ void main()
     serial::integer<uint8_t>(port);
 
     for (uint32_t i = 0; i < host_response_size; i++) {
-      serial::integer<uint8_t>(buf[port * command_response_size + i]);
+      serial::integer<uint8_t>(buf[port * host_response_size + i]);
     }
     serial::character('\n');
   }

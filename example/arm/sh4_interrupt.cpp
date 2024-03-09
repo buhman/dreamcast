@@ -39,20 +39,25 @@ void main()
   aica_sound.channel[0].LPCTL(1);
   aica_sound.channel[0].PCMS(0);
   aica_sound.channel[0].LSA(0);
-  aica_sound.channel[0].LEA(chunk_size / 2);
+  aica_sound.channel[0].LEA((chunk_size / 2) * 2);
   aica_sound.channel[0].D2R(0x0);
   aica_sound.channel[0].D1R(0x0);
-  aica_sound.channel[0].RR(0x0);
+  aica_sound.channel[0].RR(0x1f);
   aica_sound.channel[0].AR(0x1f);
 
-  aica_sound.channel[0].OCT(0);
-  aica_sound.channel[0].FNS(0);
+  aica_sound.channel[0].OCT(0xf);
+  aica_sound.channel[0].FNS(0x7d);
   aica_sound.channel[0].DISDL(0xf);
   aica_sound.channel[0].DIPAN(0x0);
 
   aica_sound.channel[0].Q(0b00100);
   aica_sound.channel[0].TL(0);
-  aica_sound.channel[0].LPOFF(1);
+  aica_sound.channel[0].LPOFF(0);
+  aica_sound.channel[0].FLV0(0x1ff8);
+  aica_sound.channel[0].FLV1(0x1ff8);
+  aica_sound.channel[0].FLV2(0x1ff8);
+  aica_sound.channel[0].FLV3(0x1ff8);
+  aica_sound.channel[0].FLV4(0x1ff8);
 
   aica_sound.common.mono_mem8mb_dac18b_ver_mvol =
       aica::mono_mem8mb_dac18b_ver_mvol::MONO(0)   // enable panpots
@@ -61,33 +66,51 @@ void main()
     | aica::mono_mem8mb_dac18b_ver_mvol::MVOL(0xf) // 15/15 volume
     ;
 
-  constexpr uint32_t tactl = 7;        // increment once every 1 samples
-  constexpr uint32_t tima = 256 - 128; // interrupt after 128 samples
+  //constexpr uint32_t tactl = 6;        // increment once every 1 samples
+  //constexpr uint32_t tima = 0; // interrupt after 128 samples
 
   dram[0] = reinterpret_cast<uint32_t>(&chunk[0][0]);
   dram[1] = reinterpret_cast<uint32_t>(&chunk[1][0]);
 
-  uint32_t next_chunk = 0;
-  aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
+  aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[0][0]));
   aica_sound.channel[0].KYONEX(1);
-  next_chunk = (next_chunk + 1) % 2;
-  request_chunk();
 
-  constexpr uint32_t timer_a_interrupt = (1 << 6);
-  aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
-			       | aica::tactl_tima::TIMA(tima);
-  aica_sound.common.scire = timer_a_interrupt;
+  //constexpr uint32_t scipd__arm_interrupt = (1 << 5);
+  //constexpr uint32_t timer_a_interrupt = (1 << 6);
 
-  uint32_t sample = 0;
+  uint8_t next_chunk = 1;
+
   while (1) {
-    if (aica_sound.common.SCIPD() & timer_a_interrupt) {
+    // detect buffer underrun
+    /*
+    if (!(aica_sound.common.SCIPD() & scipd__arm_interrupt)) {
+      //aica_sound.channel[0].KYONB(0);
+      aica_sound.channel[0].KYONEX(1);
+      while (!(aica_sound.common.SCIPD() & scipd__arm_interrupt));
+      aica_sound.channel[0].KYONB(1);
       aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
-      aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
-        | aica::tactl_tima::TIMA(tima);
-      next_chunk = (next_chunk + 1) % 2;
-      request_chunk();
+      aica_sound.channel[0].KYONEX(1);
+      aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[0][0]));
+    }
+    aica_sound.common.scire = scipd__arm_interrupt;
+    */
 
-      aica_sound.common.scire = timer_a_interrupt;
+    next_chunk = !next_chunk;
+    request_chunk();
+
+    uint32_t sample = 0;
+    const uint32_t target = 16384 + (16384 * 10 / 12);
+    constexpr uint32_t sample_interval = (1 << 10);
+    while (sample < target) {
+      //aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
+      //                           | aica::tactl_tima::TIMA(tima);
+
+      //while (!(aica_sound.common.SCIPD() & timer_a_interrupt));
+      //aica_sound.common.scire = timer_a_interrupt;
+      while (!(aica_sound.common.SCIPD() & sample_interval));
+      aica_sound.common.scire = sample_interval;
+
+      sample++;
     }
   }
 }

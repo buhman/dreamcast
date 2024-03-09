@@ -7,7 +7,7 @@
 void dump_ram(const volatile uint32_t * mem, const uint32_t len)
 {
   uint32_t sum = 0;
-  for (uint32_t i = 0; i < ; i++) {
+  for (uint32_t i = 0; i < len; i++) {
     uint8_t n = mem[i];
     sum += n;
     serial::hexlify(n);

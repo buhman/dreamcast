@@ -1,9 +1,9 @@
 #include <cstdint>
 
-#include "serial.hpp"
+#include "sh7091/serial.hpp"
 
-#include "sh7095.hpp"
-#include "sh7095_bits.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 
 void main()
 {

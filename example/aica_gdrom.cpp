@@ -1,4 +1,6 @@
 #include "memorymap.hpp"
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
@@ -73,6 +75,10 @@ void aica_init(uint32_t& chunk_index, const uint32_t * src_chunk)
   chunk_index = (chunk_index + 1) % 2;
 
   aica_wait_write(); aica_sound.common.vreg_armrst = aica::vreg_armrst::ARMRST(0);
+
+  { // send arm interrupt
+    aica_sound.common.scipd = scipd__arm_interrupt;
+  }
 }
 
 void aica_step(uint32_t& chunk_index, const uint32_t * src_chunk)
@@ -83,6 +89,8 @@ void aica_step(uint32_t& chunk_index, const uint32_t * src_chunk)
     aica_wait_write(); aica_sound.common.mcire = mcipd__sh4_interrupt;
   }
 
+  const uint32_t step_start = sh7091.TMU.TCNT0;
+
   { // fill the requested chunk
     aica_fill_chunk(&(*chunk)[chunk_index][0],
                     src_chunk,
@@ -90,6 +98,16 @@ void aica_step(uint32_t& chunk_index, const uint32_t * src_chunk)
 
     chunk_index = (chunk_index + 1) % 2;
   }
+
+  { // send arm interrupt
+    aica_sound.common.scipd = scipd__arm_interrupt;
+  }
+
+
+  const uint32_t step_end = sh7091.TMU.TCNT0;
+  const uint32_t step_time = step_start - step_end;
+  serial::string("step: ");
+  serial::integer<uint32_t>(step_time);
 }
 
 // gdrom
@@ -175,19 +193,21 @@ uint32_t gdrom_cd_read2(uint16_t * buf,
   //serial::integer<uint32_t>(next_address);
   gdrom_pio_data(packet._data());
 
+  while ((gdrom::status::bsy(gdrom_if.status)) != 0); // wait for drive to become not-busy
+
   uint32_t length = 0;
   while ((gdrom::status::drq(gdrom_if.status)) != 0) {
     const uint32_t byte_count = gdrom_if.byte_count();
     length += byte_count;
     gdrom_read_data(buf, byte_count);
 
-    serial::string("read status: ");
+    serial::string("status: ");
     serial::integer<uint8_t>(gdrom_if.status);
 
     while ((gdrom::status::bsy(gdrom_if.status)) != 0); // wait for drive to become not-busy
   }
 
-  serial::string("read length: ");
+  serial::string("length: ");
   serial::integer<uint32_t>(length);
   return length;
 }
@@ -237,11 +257,11 @@ struct extent gdrom_find_file()
 
   const uint32_t primary_volume_descriptor = fad + 16;
   uint16_t buf[2048 / 2];
-  const uint32_t length0 = gdrom_cd_read2(buf,
-                                          primary_volume_descriptor,     // starting address
-                                          1,                             // one sector; 2048 bytes
-                                          primary_volume_descriptor + 1  // next address
-                                          );
+  gdrom_cd_read2(buf,
+		 primary_volume_descriptor,     // starting address
+		 1,                             // one sector; 2048 bytes
+		 primary_volume_descriptor + 1  // next address
+		 );
   serial::character('\n');
 
   auto pvd = reinterpret_cast<const iso9660::primary_volume_descriptor *>(&buf[0]);
@@ -260,11 +280,11 @@ struct extent gdrom_find_file()
   serial::character('\n');
 
   const uint32_t root_directory_extent = root_dr->location_of_extent.get();
-  const uint32_t length1 = gdrom_cd_read2(buf,
-                                          root_directory_extent + 150, // 150?
-                                          1, // one sector; 2048 bytes
-                                          root_directory_extent + 151  // 150?
-                                          );
+  gdrom_cd_read2(buf,
+		 root_directory_extent + 150, // 150?
+		 1, // one sector; 2048 bytes
+		 root_directory_extent + 151  // 150?
+		 );
   serial::character('\n');
 
   auto buf8 = reinterpret_cast<const uint8_t *>(buf);
@@ -311,11 +331,18 @@ struct extent gdrom_find_file()
 
 void gdrom_read_chunk(uint32_t * buf, const uint32_t extent, const uint32_t num_extents)
 {
-  const uint32_t length1 = gdrom_cd_read2(reinterpret_cast<uint16_t *>(buf),
-                                          extent + 150, // 150?
-                                          num_extents,  // one sector; 2048 bytes
-                                          extent + 150 + num_extents  // 150?
-                                          );
+  const uint32_t gdrom_start = sh7091.TMU.TCNT0;
+
+  gdrom_cd_read2(reinterpret_cast<uint16_t *>(buf),
+		 extent + 150, // 150?
+		 num_extents,  // one sector; 2048 bytes
+		 extent + 150 + num_extents  // 150?
+		 );
+
+  const uint32_t gdrom_end = sh7091.TMU.TCNT0;
+  const uint32_t gdrom_time = gdrom_start - gdrom_end;
+  serial::string("time: ");
+  serial::integer<uint32_t>(gdrom_time);
 }
 
 void next_segment(const struct extent& extent, uint32_t& segment_index)
@@ -327,6 +354,13 @@ void next_segment(const struct extent& extent, uint32_t& segment_index)
 
 void main()
 {
+  sh7091.TMU.TSTR = 0; // stop all timers
+  sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
+  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 50MHz = 5.12 μs ; underflows in ~1 hour
+  sh7091.TMU.TCOR0 = 0xffff'ffff;
+  sh7091.TMU.TCNT0 = 0xffff'ffff;
+  sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
+
   uint32_t chunk_index = 0;
   uint32_t segment_index = 0;
 
@@ -338,13 +372,12 @@ void main()
 
   aica_init(chunk_index, &gdrom_buf[0]);
 
-  serial::string("aica wave memory:\n");
-  while (aica_wave_memory[0] == 0xeaffffff) { aica_wait_read(); };
-  aica_wait_read(); serial::integer<uint32_t>(aica_wave_memory[0]);
-  aica_wait_read(); serial::integer<uint32_t>(aica_wave_memory[1]);
+  //serial::string("aica wave memory:\n");
+  //while (aica_wave_memory[0] == 0xeaffffff) { aica_wait_read(); };
+  //aica_wait_read(); serial::integer<uint32_t>(aica_wave_memory[0]);
+  //aica_wait_read(); serial::integer<uint32_t>(aica_wave_memory[1]);
 
   while (1) {
-    //serial::integer<uint8_t>(chunk_index);
     gdrom_read_chunk(gdrom_buf, extent.location + segment_index, sectors_per_chunk);
     next_segment(extent, segment_index);
 

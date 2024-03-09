@@ -82,8 +82,6 @@ void core_start_render(uint32_t frame_ix, uint32_t num_frames)
 		    frame_ix, num_frames);
 }
 
-static bool flycast_bug = 0;
-
 void core_wait_end_of_render_video()
 {
   /*

@@ -4,7 +4,8 @@ AFLAGS += --fatal-warnings
 
 CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib
 CFLAGS += -Wall -Werror -Wfatal-errors
-CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds= -Wno-array-bounds
+CFLAGS += -Wno-array-bounds
+#CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds=
 
 CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 

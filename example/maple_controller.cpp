@@ -1,8 +1,9 @@
 #include <bit>
 
-#include "holly/video_output.hpp"
 #include "align.hpp"
-
+#include "holly/video_output.hpp"
+#include "holly/core_bits.hpp"
+#include "holly/holly.hpp"
 #include "maple/maple.hpp"
 #include "maple/maple_impl.hpp"
 #include "maple/maple_bus_bits.hpp"
@@ -85,8 +86,8 @@ void do_device_request()
                    receive_buf, maple::sizeof_command(host_response));
 
   for (uint8_t port = 0; port < 4; port++) {
-    auto& bus_data = response[port].bus_data;
-    auto& data_fields = response[port].bus_data.data_fields;
+    auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = host_response[port].bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
       // the controller is disconnected
     } else {
@@ -110,7 +111,8 @@ void main()
   video_output::set_mode_vga();
 
   while (1) {
-    v_sync_in();
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    while (spg_status::vsync(holly.SPG_STATUS));
     do_device_request();
   };
 }

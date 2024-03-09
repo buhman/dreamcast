@@ -60,9 +60,9 @@ void pio_data(const uint8_t * data)
   serial::string("status2: ");
   serial::integer<uint8_t>(gdrom_if.status);
 
-  serial::string("byte_control: ");
-  serial::integer<uint8_t>(gdrom_if.byte_control_high, ' ');
-  serial::integer<uint8_t>(gdrom_if.byte_control_low);
+  serial::string("byte_count: ");
+  serial::integer<uint8_t>(gdrom_if.byte_count_high, ' ');
+  serial::integer<uint8_t>(gdrom_if.byte_count_low);
 }
 
 void read_data(uint32_t length)
@@ -148,7 +148,7 @@ void get_toc()
 
   serial::string("\nget_toc\n");
   pio_data(data);
-  const uint32_t length = (gdrom_if.byte_control_high << 8) | (gdrom_if.byte_control_low << 0);
+  const uint32_t length = (gdrom_if.byte_count_high << 8) | (gdrom_if.byte_count_low << 0);
   // 102 entries ; 4 bytes per entry, 408 bytes (0x0198)
   read_data(length);
 }
@@ -210,14 +210,14 @@ void cd_read2()
     serial::string("offset: ");
     serial::integer<uint32_t>(read);
 
-    const uint32_t length = (gdrom_if.byte_control_high << 8) | (gdrom_if.byte_control_low << 0);
+    const uint32_t length = (gdrom_if.byte_count_high << 8) | (gdrom_if.byte_count_low << 0);
     // 102 entries ; 4 bytes per entry, 408 bytes (0x0198)
     read_data(length);
     read += length;
 
-    serial::string("byte_control: ");
-    serial::integer<uint8_t>(gdrom_if.byte_control_high, ' ');
-    serial::integer<uint8_t>(gdrom_if.byte_control_low);
+    serial::string("byte_count: ");
+    serial::integer<uint8_t>(gdrom_if.byte_count_high, ' ');
+    serial::integer<uint8_t>(gdrom_if.byte_count_low);
   }
   serial::string("read bytes: ");
   serial::integer<uint32_t>(read);

@@ -116,10 +116,10 @@ void main()
 
   const uint32_t primary_volume_descriptor = fad + 16;
   uint16_t buf[2048 / 2];
-  const uint32_t length0 = cd_read(buf,
-                                   primary_volume_descriptor,
-                                   1 // one sector; 2048 bytes
-                                   );
+  cd_read(buf,
+	  primary_volume_descriptor,
+	  1 // one sector; 2048 bytes
+	  );
   serial::character('\n');
 
   auto pvd = reinterpret_cast<const iso9660::primary_volume_descriptor *>(&buf[0]);
@@ -148,10 +148,10 @@ void main()
   serial::character('\n');
 
   const uint32_t root_directory_extent = root_dr->location_of_extent.get();
-  const uint32_t length1 = cd_read(buf,
-                                   root_directory_extent + 150, // 150?
-                                   1 // one sector; 2048 bytes
-                                   );
+  cd_read(buf,
+	  root_directory_extent + 150, // 150?
+	  1 // one sector; 2048 bytes
+	  );
   serial::character('\n');
 
   auto buf8 = reinterpret_cast<const uint8_t *>(buf);
@@ -182,10 +182,10 @@ void main()
 	const uint32_t extent = dr->location_of_extent.get();
 
         uint16_t buf2[2048 / 2];
-        const uint32_t length1 = cd_read(buf2,
-                                         extent + 150, // 150?
-                                         1 // one sector; 2048 bytes
-                                         );
+	cd_read(buf2,
+		extent + 150, // 150?
+		1 // one sector; 2048 bytes
+		);
 
 	auto file = reinterpret_cast<const uint8_t *>(&buf2[0]);
 	serial::string("---begin file content---\n");

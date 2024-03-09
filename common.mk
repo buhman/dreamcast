@@ -79,7 +79,9 @@ sine.pcm: common.mk
 		/1ST_READ.BIN=./$< \
 		/=./COPYRIGH.TXT \
 		/=./ABSTRACT.TXT \
-		/=./BIBLIOGR.TXT
+		/=./BIBLIOGR.TXT \
+		/DUNE.PCM=./dune.pcm \
+		/REIGN.PCM=./reign.pcm
 
 %.cdi: %.iso
 	./cdi4dc $< $@ >/dev/null

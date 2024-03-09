@@ -1,8 +1,9 @@
 #include <bit>
 
-#include "holly/video_output.hpp"
 #include "align.hpp"
-
+#include "holly/video_output.hpp"
+#include "holly/core_bits.hpp"
+#include "holly/holly.hpp"
 #include "maple/maple.hpp"
 #include "maple/maple_impl.hpp"
 #include "maple/maple_bus_bits.hpp"
@@ -188,8 +189,8 @@ void main()
 
   while (1) {
     for (int i = 0; i < 120; i++) {
-      v_sync_out();
-      v_sync_in();
+      while (!spg_status::vsync(holly.SPG_STATUS));
+      while (spg_status::vsync(holly.SPG_STATUS));
     }
     do_device_request();
   };

@@ -114,8 +114,6 @@ void main()
 				       , .punch_through = 0
 				       };
 
-  constexpr uint32_t tiles = (640 / 32) * (480 / 32);
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
