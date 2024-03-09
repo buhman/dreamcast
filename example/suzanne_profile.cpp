@@ -1,7 +1,7 @@
 #include <cstdint>
 
 #include "align.hpp"
-#include "vga.hpp"
+#include "holly/video_output.hpp"
 
 #include "holly/holly.hpp"
 #include "holly/core.hpp"
@@ -268,12 +268,12 @@ void main()
 {
   sh7091.TMU.TSTR = 0; // stop all timers
   sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
-  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 200MHz = 1.28 μs ; underflows in ~1 hour
+  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 50MHz = 5.12 μs ; underflows in ~1 hour
   sh7091.TMU.TCOR0 = 0xffff'ffff;
   sh7091.TMU.TCNT0 = 0xffff'ffff;
   sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
 
-  vga();
+  video_output::set_mode_vga();
 
   auto src = reinterpret_cast<const uint8_t *>(&_binary_verite_8x16_data_start);
   font_bitmap::inflate(1,  // pitch
