@@ -24,10 +24,15 @@ extern const struct mode ntsc_i;
 extern const struct mode pal_ni;
 extern const struct mode pal_i;
 
+struct framebuffer_resolution {
+  uint32_t width;
+  uint32_t height;
+};
+
 void set_framebuffer_resolution(const uint32_t x_size, const uint32_t y_size);
 void set_mode(const struct mode& mode);
 uint32_t get_cable_type();
-void set_mode_automatic();
+framebuffer_resolution set_mode_by_cable_type(uint32_t cable_type);
 void set_mode_vga();
 void reset_sdram();
 

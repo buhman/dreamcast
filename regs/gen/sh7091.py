@@ -126,6 +126,8 @@ def blocks(rows):
     yield 'extern struct sh7091_reg sh7091 __asm("sh7091");'
 
 def headers():
+    yield "#pragma once"
+    yield ""
     yield "#include <cstdint>"
     yield "#include <cstddef>"
     yield ""

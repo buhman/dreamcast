@@ -155,7 +155,7 @@ void main()
     }
   };
 
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
+  constexpr uint32_t tiles = (640 / 32) * (480 / 32);
 
   uint32_t frame_ix = 0;
   constexpr uint32_t num_frames = 1;

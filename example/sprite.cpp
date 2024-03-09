@@ -21,7 +21,7 @@ struct vertex {
 };
 
 // screen space coordinates
-const struct vertex quad_verticies[4] = {
+const struct vertex quad_vertices[4] = {
   { 200.f,  360.f, 0.1f },
   { 200.f,  120.f, 0.1f },
   { 440.f,  120.f, 0.1f },
@@ -35,17 +35,17 @@ uint32_t transform(uint32_t * ta_parameter_buf)
   constexpr uint32_t base_color = 0xffff0000;
   parameter.append<global_sprite>() = global_sprite(base_color);
   parameter.append<vertex_sprite_type_0>() =
-    vertex_sprite_type_0(quad_verticies[0].x,
-			 quad_verticies[0].y,
-			 quad_verticies[0].z,
-			 quad_verticies[1].x,
-			 quad_verticies[1].y,
-			 quad_verticies[1].z,
-			 quad_verticies[2].x,
-			 quad_verticies[2].y,
-			 quad_verticies[2].z,
-			 quad_verticies[3].x,
-			 quad_verticies[3].y);
+    vertex_sprite_type_0(quad_vertices[0].x,
+			 quad_vertices[0].y,
+			 quad_vertices[0].z,
+			 quad_vertices[1].x,
+			 quad_vertices[1].y,
+			 quad_vertices[1].z,
+			 quad_vertices[2].x,
+			 quad_vertices[2].y,
+			 quad_vertices[2].z,
+			 quad_vertices[3].x,
+			 quad_vertices[3].y);
   // curiously, there is no quad_veritices[3].z in vertex_sprite_type_0
 
   parameter.append<global_end_of_list>() = global_end_of_list();
@@ -90,7 +90,7 @@ void main()
 				       , .punch_through = 0
 				       };
 
-  constexpr uint32_t tiles = (640 / 32) * (320 / 32);
+  constexpr uint32_t tiles = (640 / 32) * (480 / 32);
 
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;

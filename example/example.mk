@@ -1,3 +1,15 @@
+VIDEO_OUTPUT_OBJ = \
+	example/video_output.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o
+
+example/video_output.elf: LDSCRIPT = $(LIB)/alt.lds
+example/video_output.elf: $(START_OBJ) $(VIDEO_OUTPUT_OBJ)
+
 SPRITE_OBJ = \
 	example/sprite.o \
 	holly/video_output.o \

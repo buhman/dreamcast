@@ -9,6 +9,7 @@
 
 #include "video_output.hpp"
 #include "video_output_mode.inc"
+#include "video_output.hpp"
 
 namespace video_output {
 
@@ -64,24 +65,27 @@ uint32_t get_cable_type()
   return sh7091.BSC.PDTRA & pdtra::cable_type::bit_mask;
 }
 
-void set_mode_automatic()
+framebuffer_resolution set_mode_by_cable_type(uint32_t cable_type)
 {
-  switch (get_cable_type()) {
+  switch (cable_type) {
   default: [[fallthrough]];
   case pdtra::cable_type::vga:
     set_mode(vga);
     set_framebuffer_resolution(640, 480);
     aica_sound.common.VREG(vreg::output_mode::vga);
+    return {640, 480};
     break;
   case pdtra::cable_type::rgb:
     set_mode(ntsc_ni);
     set_framebuffer_resolution(320, 240);
     aica_sound.common.VREG(vreg::output_mode::rgb);
+    return {320, 240};
     break;
   case pdtra::cable_type::cvbs_yc:
     set_mode(ntsc_ni);
     set_framebuffer_resolution(320, 240);
     aica_sound.common.VREG(vreg::output_mode::cvbs_yc);
+    return {320, 240};
     break;
   }
 }

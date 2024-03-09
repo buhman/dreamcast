@@ -29,6 +29,11 @@ namespace ta_vertex_parameter {
       , base_color(base_color)
       , _res2(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_0)) == 32);
   static_assert((offsetof (struct polygon_type_0, parameter_control_word)) == 0x00);
@@ -68,6 +73,11 @@ namespace ta_vertex_parameter {
       , base_color_g(base_color_g)
       , base_color_b(base_color_b)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_1)) == 32);
   static_assert((offsetof (struct polygon_type_1, parameter_control_word)) == 0x00);
@@ -104,6 +114,11 @@ namespace ta_vertex_parameter {
       , base_intensity(base_intensity)
       , _res2(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_2)) == 32);
   static_assert((offsetof (struct polygon_type_2, parameter_control_word)) == 0x00);
@@ -143,6 +158,11 @@ namespace ta_vertex_parameter {
       , base_color(base_color)
       , offset_color(offset_color)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_3)) == 32);
   static_assert((offsetof (struct polygon_type_3, parameter_control_word)) == 0x00);
@@ -181,6 +201,11 @@ namespace ta_vertex_parameter {
       , base_color(base_color)
       , offset_color(offset_color)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_4)) == 32);
   static_assert((offsetof (struct polygon_type_4, parameter_control_word)) == 0x00);
@@ -242,6 +267,11 @@ namespace ta_vertex_parameter {
       , offset_color_g(offset_color_g)
       , offset_color_b(offset_color_b)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_5)) == 64);
   static_assert((offsetof (struct polygon_type_5, parameter_control_word)) == 0x00);
@@ -310,6 +340,11 @@ namespace ta_vertex_parameter {
       , offset_color_g(offset_color_g)
       , offset_color_b(offset_color_b)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_6)) == 64);
   static_assert((offsetof (struct polygon_type_6, parameter_control_word)) == 0x00);
@@ -357,6 +392,11 @@ namespace ta_vertex_parameter {
       , base_intensity(base_intensity)
       , offset_intensity(offset_intensity)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_7)) == 32);
   static_assert((offsetof (struct polygon_type_7, parameter_control_word)) == 0x00);
@@ -395,6 +435,11 @@ namespace ta_vertex_parameter {
       , base_intensity(base_intensity)
       , offset_intensity(offset_intensity)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_8)) == 32);
   static_assert((offsetof (struct polygon_type_8, parameter_control_word)) == 0x00);
@@ -432,6 +477,11 @@ namespace ta_vertex_parameter {
       , _res0(0)
       , _res1(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_9)) == 32);
   static_assert((offsetof (struct polygon_type_9, parameter_control_word)) == 0x00);
@@ -469,6 +519,11 @@ namespace ta_vertex_parameter {
       , _res0(0)
       , _res1(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_10)) == 32);
   static_assert((offsetof (struct polygon_type_10, parameter_control_word)) == 0x00);
@@ -528,6 +583,11 @@ namespace ta_vertex_parameter {
       , _res2(0)
       , _res3(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_11)) == 64);
   static_assert((offsetof (struct polygon_type_11, parameter_control_word)) == 0x00);
@@ -593,6 +653,11 @@ namespace ta_vertex_parameter {
       , _res4(0)
       , _res5(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_12)) == 64);
   static_assert((offsetof (struct polygon_type_12, parameter_control_word)) == 0x00);
@@ -660,6 +725,11 @@ namespace ta_vertex_parameter {
       , _res2(0)
       , _res3(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_13)) == 64);
   static_assert((offsetof (struct polygon_type_13, parameter_control_word)) == 0x00);
@@ -725,6 +795,11 @@ namespace ta_vertex_parameter {
       , _res4(0)
       , _res5(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_14)) == 64);
   static_assert((offsetof (struct polygon_type_14, parameter_control_word)) == 0x00);
@@ -792,6 +867,11 @@ namespace ta_vertex_parameter {
       , _res2(0)
       , _res3(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (sprite_type_0)) == 64);
   static_assert((offsetof (struct sprite_type_0, parameter_control_word)) == 0x00);
@@ -862,6 +942,11 @@ namespace ta_vertex_parameter {
       , b_u_b_v(b_u_b_v)
       , c_u_c_v(c_u_c_v)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (sprite_type_1)) == 64);
   static_assert((offsetof (struct sprite_type_1, parameter_control_word)) == 0x00);
@@ -927,6 +1012,11 @@ namespace ta_vertex_parameter {
       , _res4(0)
       , _res5(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (modifier_volume)) == 64);
   static_assert((offsetof (struct modifier_volume, parameter_control_word)) == 0x00);

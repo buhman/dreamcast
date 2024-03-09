@@ -25,6 +25,11 @@ namespace ta_global_parameter {
       , _res5(0)
       , _res6(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (end_of_list)) == 32);
   static_assert((offsetof (struct end_of_list, parameter_control_word)) == 0x00);
@@ -61,6 +66,11 @@ namespace ta_global_parameter {
       , user_clip_x_max(user_clip_x_max)
       , user_clip_y_max(user_clip_y_max)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (user_tile_clip)) == 32);
   static_assert((offsetof (struct user_tile_clip, parameter_control_word)) == 0x00);
@@ -98,6 +108,11 @@ namespace ta_global_parameter {
       , bounding_box_x_max(bounding_box_x_max)
       , bounding_box_y_max(bounding_box_y_max)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (object_list_set)) == 32);
   static_assert((offsetof (struct object_list_set, parameter_control_word)) == 0x00);
@@ -135,6 +150,11 @@ namespace ta_global_parameter {
       , data_size_for_sort_dma(data_size_for_sort_dma)
       , next_address_for_sort_dma(next_address_for_sort_dma)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_0)) == 32);
   static_assert((offsetof (struct polygon_type_0, parameter_control_word)) == 0x00);
@@ -174,6 +194,11 @@ namespace ta_global_parameter {
       , face_color_g(face_color_g)
       , face_color_b(face_color_b)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_1)) == 32);
   static_assert((offsetof (struct polygon_type_1, parameter_control_word)) == 0x00);
@@ -235,6 +260,11 @@ namespace ta_global_parameter {
       , face_offset_color_g(face_offset_color_g)
       , face_offset_color_b(face_offset_color_b)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_2)) == 64);
   static_assert((offsetof (struct polygon_type_2, parameter_control_word)) == 0x00);
@@ -282,6 +312,11 @@ namespace ta_global_parameter {
       , data_size_for_sort_dma(data_size_for_sort_dma)
       , next_address_for_sort_dma(next_address_for_sort_dma)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_3)) == 32);
   static_assert((offsetof (struct polygon_type_3, parameter_control_word)) == 0x00);
@@ -345,6 +380,11 @@ namespace ta_global_parameter {
       , face_color_g_1(face_color_g_1)
       , face_color_b_1(face_color_b_1)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (polygon_type_4)) == 64);
   static_assert((offsetof (struct polygon_type_4, parameter_control_word)) == 0x00);
@@ -392,6 +432,11 @@ namespace ta_global_parameter {
       , data_size_for_sort_dma(data_size_for_sort_dma)
       , next_address_for_sort_dma(next_address_for_sort_dma)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (sprite)) == 32);
   static_assert((offsetof (struct sprite, parameter_control_word)) == 0x00);
@@ -425,6 +470,11 @@ namespace ta_global_parameter {
       , _res4(0)
       , _res5(0)
     { }
+
+    const uint8_t * _data()
+    {
+      return reinterpret_cast<const uint8_t *>(this);
+    }
   };
   static_assert((sizeof (modifier_volume)) == 32);
   static_assert((offsetof (struct modifier_volume, parameter_control_word)) == 0x00);

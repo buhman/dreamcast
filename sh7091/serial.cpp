@@ -1,9 +1,11 @@
 #include <cstdint>
+#include <type_traits>
 
 #include "sh7091.hpp"
 #include "sh7091_bits.hpp"
 
 #include "string.hpp"
+#include "serial.hpp"
 
 namespace serial {
 
@@ -64,30 +66,23 @@ void hexlify(const uint8_t n)
   character(num_buf[1]);
 }
 
-template <typename T>
-void integer(const T n, const char end)
+template <typename T, typename conv_type>
+void integer(const T n, const char end, const uint32_t length)
 {
-  constexpr uint32_t length = (sizeof (T)) * 2;
-  char num_buf[length + 1];
-  string::hex<char>(num_buf, length, n);
-  num_buf[length] = 0;
-  string("0x");
-  string(num_buf);
+  uint8_t num_buf[length];
+  conv_type::template render<uint8_t>(num_buf, length, n);
+  if constexpr (std::is_same<conv_type, string::hex_type>::value)
+    string("0x");
+  string(num_buf, length);
   character(end);
 }
 
-template <typename T>
-void integer(const T n)
-{
-  return integer(n, '\n');
-}
+template void integer<uint32_t, hex>(uint32_t param, char end, uint32_t length);
+template void integer<uint16_t, hex>(uint16_t param, char end, uint32_t length);
+template void integer<uint8_t, hex>(uint8_t param, char end, uint32_t length);
 
-template void integer<uint32_t>(uint32_t param);
-template void integer<uint16_t>(uint16_t param);
-template void integer<uint8_t>(uint8_t param);
-
-template void integer<uint32_t>(uint32_t param, char end);
-template void integer<uint16_t>(uint16_t param, char end);
-template void integer<uint8_t>(uint8_t param, char end);
+template void integer<uint32_t, dec>(uint32_t param, char end, uint32_t length);
+template void integer<uint16_t, dec>(uint16_t param, char end, uint32_t length);
+template void integer<uint8_t, dec>(uint8_t param, char end, uint32_t length);
 
 }
