@@ -6,24 +6,19 @@
 
 #include "serial_load.hpp"
 
-extern uint32_t __bss_link_start __asm("__bss_link_start");
-extern uint32_t __bss_link_end __asm("__bss_link_end");
+void main() __attribute__((section(".text.main")));
 
 void main()
 {
-  serial::init(4);
+  //serial::init(12);
   load_init();
 
   while (1) {
     using namespace scif;
 
-    while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0) {
-      // wait
-    }
     while ((scfdr2::receive_data_bytes(sh7091.SCIF.SCFDR2)) > 0) {
-      uint8_t c = sh7091.SCIF.SCFRDR2;
+      const uint8_t c = sh7091.SCIF.SCFRDR2;
       load_recv(c);
     }
-    sh7091.SCIF.SCFSR2 = sh7091.SCIF.SCFSR2 & (~scfsr2::rdf::bit_mask);
   }
 }

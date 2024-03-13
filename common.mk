@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O3
+OPT ?= -Og
 GENERATED ?=
 
 AARCH = --isa=sh4 --little
@@ -32,6 +32,11 @@ IP_OBJ = \
 	sg/sg_ini.o \
 	sg/aip.o
 
+%.o: %.obj
+	$(OBJCOPY) -g \
+		--rename-section IP=.text.$* \
+		$< $@
+
 ip.elf: $(IP_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
 
@@ -41,11 +46,6 @@ START_OBJ = \
 	sh7091/cache.o
 
 include base.mk
-
-%.o: %.obj
-	$(OBJCOPY) -g \
-		--rename-section IP=.text.$* \
-		$< $@
 
 sine.pcm: common.mk
 	sox \

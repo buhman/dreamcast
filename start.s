@@ -10,10 +10,21 @@ _start:
         or      r1,r0
         ldc     r0,sr
 
+	/* save pr */
+	sts.l pr,@-r15
+
         /* jump to runtime_init */
         mov.l runtime_init_ptr,r0
-        jmp @r0
+        jsr @r0
         nop
+
+	/* restore pr */
+	lds.l @r15+,pr
+
+	/* jump to main */
+	mov.l main_ptr,r0
+	jmp @r0
+	nop
 
         .align 4
 p1ram_end_ptr:
@@ -22,3 +33,5 @@ imask_all:
         .long 0xf0
 runtime_init_ptr:
         .long _runtime_init
+main_ptr:
+	.long _main

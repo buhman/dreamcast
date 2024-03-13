@@ -44,13 +44,5 @@ SECTIONS
   INCLUDE "debug.lds"
 }
 
-__p1ram_start = ORIGIN(p1ram);
-__p1ram_end = ORIGIN(p1ram) + LENGTH(p1ram);
-
-__bss_link_start = ADDR(.bss);
-__bss_link_end = ADDR(.bss) + SIZEOF(.bss);
-
-__ctors_link_start = ADDR(.ctors);
-__ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
-
+INCLUDE "symbols.lds"
 INCLUDE "addresses.lds"

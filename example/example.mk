@@ -16,7 +16,9 @@ SPRITE_OBJ = \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
-	holly/ta_fifo_polygon_converter.o
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o \
+	$(LIBGCC)
 
 example/sprite.elf: LDSCRIPT = $(LIB)/alt.lds
 example/sprite.elf: $(START_OBJ) $(SPRITE_OBJ)
@@ -149,7 +151,7 @@ WIFFLE_ATTENUATION_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o
 
-example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/alt.lds
+example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
 
 MODIFIER_VOLUME_OBJ = \
@@ -322,7 +324,7 @@ SERIAL_TRANSFER_OBJ = \
 	sh7091/serial.o \
 	serial_load.o
 
-example/serial_transfer.elf: LDSCRIPT = $(LIB)/main.lds
+example/serial_transfer.elf: LDSCRIPT = $(LIB)/loader.lds
 example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
 
 INTERRUPT_OBJ = \

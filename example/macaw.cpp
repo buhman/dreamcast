@@ -185,5 +185,8 @@ void main()
 
     theta += half_degree;
     frame_ix += 1;
+
+    if (frame_ix > 10)
+      break;
   }
 }

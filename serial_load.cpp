@@ -2,6 +2,7 @@
 
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
+#include "sh7091/serial.hpp"
 #include "holly/holly.hpp"
 
 enum load_command {
@@ -52,6 +53,24 @@ void debug(const char * s)
     while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
     sh7091.SCIF.SCFTDR2 = (uint8_t)c;
   }
+}
+
+void jump_to_func(const uint32_t addr)
+{
+  serial::string("jump to: ");
+  serial::integer<uint32_t>(addr);
+  // save our stack
+  asm volatile ("ldc r15, gbr; "
+		"mov #0, r15; "
+		"jsr @%0; "
+		"nop; "
+		"stc gbr, r15; "
+                :
+                : "r"(addr) /* input */
+	        /* clobbered register */
+                : "r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","macl","mach","gbr","pr"
+                );
+  // restore our stack
 }
 
 void load_recv(uint8_t c)
@@ -119,8 +138,7 @@ void load_recv(uint8_t c)
       state.command = CMD_NONE;
       debug("prejump\n");
       holly.VO_BORDER_COL = (31 << 11);
-      void (*fptr)(void) = (void (*)(void))state.addr1;
-      fptr();
+      jump_to_func(state.addr1);
       holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
       debug("postjump\n");
       return;

@@ -70,7 +70,11 @@ def do(ser, b):
         sync(ser, b'prime', wait=0)
         do(ser, b)
     print("\nDATA")
+    start = time.monotonic()
     ret = symmetric(ser, b)
+    end = time.monotonic()
+    duration = end - start
+    print("duration", duration)
     print(ret[-5:])
     if ret[:-5] != b:
         print("ret != b; dumped to asdf.bin")
@@ -96,8 +100,8 @@ def console(ser):
 with open(sys.argv[1], 'rb') as f:
     b = f.read()
 
-#with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
-with serial.Serial('/dev/ttyUSB0', 312500, timeout=1) as ser:
+with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
+#with serial.Serial('/dev/ttyUSB0', 312500, timeout=1) as ser:
     #console(ser)
     print("waiting: ", end=' ')
     sys.stdout.flush()

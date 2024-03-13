@@ -19,11 +19,20 @@ void init(uint8_t bit_rate)
 
   sh7091.SCIF.SCFCR2 = scfcr2::tfrst::reset_operation_enabled
                      | scfcr2::rfrst::reset_operation_enabled;
-  // tx/rx trigger on 1 byte
-  sh7091.SCIF.SCFCR2 = 0;
+
+  sh7091.SCIF.SCFCR2 = scfcr2::rtrg::trigger_on_1_byte
+		     | scfcr2::ttrg::trigger_on_8_bytes
+		     | scfcr2::mce::modem_signals_disabled;
 
   sh7091.SCIF.SCSPTR2 = 0;
-  sh7091.SCIF.SCLSR2 = 0;
+  sh7091.SCIF.SCFSR2 = (~scfsr2::er::bit_mask)
+		     & (~scfsr2::tend::bit_mask)
+		     & (~scfsr2::tdfe::bit_mask)
+		     & (~scfsr2::brk::bit_mask)
+		     & (~scfsr2::rdf::bit_mask)
+		     & (~scfsr2::dr::bit_mask)
+		     & 0xffff;
+  sh7091.SCIF.SCLSR2 = 0; // clear ORER
 
   sh7091.SCIF.SCSCR2 = scscr2::te::transmission_enabled
                      | scscr2::re::reception_enabled;
