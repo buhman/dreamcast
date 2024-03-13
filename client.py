@@ -31,18 +31,25 @@ def sync(ser, b, wait=0.1):
 
 def symmetric(ser, b):
     l = []
-    for i, c in enumerate(b):
-        if i % 32 == 0:
+    mem = memoryview(b)
+    i = 0
+    chunk_size = 16
+
+    while i < len(b):
+        if i % 128 == 0:
             print(i, end=' ')
             sys.stdout.flush()
         while True:
             if ser.in_waiting:
                 res = ser.read(ser.in_waiting)
                 l.extend(res)
-            if len(l) + 8 >= i:
+            if len(l) + chunk_size >= i:
                 break
 
-        ser.write(bytes([c]))
+        chunk_size = min(chunk_size, len(b) - i)
+        assert chunk_size > 0, chunk_size
+        ser.write(b[i:i+chunk_size])
+        i += chunk_size
 
     time.sleep(0.1)
     res = ser.read(ser.in_waiting)
