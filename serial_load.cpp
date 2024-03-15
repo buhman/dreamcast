@@ -9,6 +9,7 @@ enum load_command {
   CMD_NONE,
   CMD_DATA, // DATA 0000 0000 {data}
   CMD_JUMP, // JUMP 0000
+  CMD_RATE, // RATE 0000
 };
 
 struct load_state {
@@ -48,9 +49,8 @@ void load_init()
 void debug(const char * s)
 {
   char c;
+  while ((sh7091.SCIF.SCFSR2 & scif::scfsr2::tdfe::bit_mask) == 0);
   while ((c = *s++)) {
-    using namespace scif;
-    while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
     sh7091.SCIF.SCFTDR2 = (uint8_t)c;
   }
 }
@@ -75,12 +75,10 @@ void jump_to_func(const uint32_t addr)
 
 void load_recv(uint8_t c)
 {
-  if (state.command == CMD_NONE)
-    state.buf[state.len++] = c;
-
   while (1) {
     switch (state.command) {
     case CMD_NONE:
+      state.buf[state.len++] = c;
       if (state.len >= 4) {
 	if (state.buf[0] == 'D' &&
 	    state.buf[1] == 'A' &&
@@ -103,9 +101,19 @@ void load_recv(uint8_t c)
 	    debug("jump\n");
 	    state.command = CMD_JUMP;
 	  }
+	} else if (state.buf[0] == 'R' &&
+		   state.buf[1] == 'A' &&
+		   state.buf[2] == 'T' &&
+		   state.buf[3] == 'E') {
+	  if (state.len < 8) {
+	    return;
+	  } else {
+	    debug("rate\n");
+	    state.command = CMD_RATE;
+	  }
 	} else {
-	  move(&state.buf[0], &state.buf[4], state.len - 4);
-	  state.len -= 4;
+	  move(&state.buf[0], &state.buf[1], state.len - 1);
+	  state.len -= 1;
 	}
       } else {
 	return;
@@ -141,6 +149,14 @@ void load_recv(uint8_t c)
       jump_to_func(state.addr1);
       holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
       debug("postjump\n");
+      return;
+      break;
+    case CMD_RATE:
+      state.len = 0;
+      state.command = CMD_NONE;
+      debug("prerate\n");
+      serial::init(state.addr1 & 0xff);
+      debug("postrate\n");
       return;
       break;
     }

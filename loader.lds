@@ -1,8 +1,8 @@
 OUTPUT_FORMAT("elf32-shl", "elf32-shl", "elf32-shl")
 MEMORY
 {
-  p1ram : ORIGIN = 0x8c020000, LENGTH = 0xfe0000
-  p2ram : ORIGIN = 0xac020000, LENGTH = 0xfe0000
+  p1ram : ORIGIN = 0x8c010000, LENGTH = 0xff0000
+  p2ram : ORIGIN = 0xac010000, LENGTH = 0xff0000
   ldram : ORIGIN = 0x8cfff000, LENGTH = 0x1000
 }
 SECTIONS

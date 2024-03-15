@@ -33,10 +33,10 @@ def symmetric(ser, b):
     l = []
     mem = memoryview(b)
     i = 0
-    chunk_size = 16
+    chunk_size = 384
 
     while i < len(b):
-        if i % 128 == 0:
+        if i % 1024 == 0:
             print(i, end=' ')
             sys.stdout.flush()
         while True:
@@ -48,40 +48,45 @@ def symmetric(ser, b):
 
         chunk_size = min(chunk_size, len(b) - i)
         assert chunk_size > 0, chunk_size
-        ser.write(b[i:i+chunk_size])
+        ser.write(mem[i:i+chunk_size])
         i += chunk_size
 
-    time.sleep(0.1)
-    res = ser.read(ser.in_waiting)
-    l.extend(res)
+    orig_count = 1000
+    count = orig_count
+    while count > 0:
+        if len(l) >= len(b):
+            break
+        time.sleep(1 / orig_count)
+        if ser.in_waiting:
+            res = ser.read(ser.in_waiting)
+            l.extend(res)
+        count -= 1
 
     return bytes(l)
 
-def do(ser, b):
-    _ = ser.read(ser.in_waiting)
-    ser.flush()
-    ser.flushInput()
-    ser.flushOutput()
+def start_data(ser, b):
     _ = ser.read(ser.in_waiting)
 
-    ret = sync(ser, b'DATA')
-    #print(ret)
     size = len(b)
     args = struct.pack("<II", size, dest)
-    #print("dargs", args)
-    ret = sync(ser, args)
-    #print(ret)
+    ret = sync(ser, b'DATA' + args)
     if ret != b'data\n':
         print(".", end=' ')
         sys.stdout.flush()
         sync(ser, b'prime', wait=0)
-        do(ser, b)
+        start_data(ser, b)
+        return
     print("\nDATA")
+
+def do(ser, b):
+    start_data(ser, b)
+
     start = time.monotonic()
     ret = symmetric(ser, b)
+    #print("\nHERE", len(ret), len(b))
     end = time.monotonic()
     duration = end - start
-    print("duration", duration)
+    print("\n\nduration:", duration, "\n\n")
     print(ret[-5:])
     if ret[:-5] != b:
         print("ret != b; dumped to asdf.bin")
@@ -90,9 +95,8 @@ def do(ser, b):
         print("did not jump")
         return
 
-    ret = sync(ser, b'JUMP', wait=0)
     args = struct.pack("<I", dest)
-    ser.write(args)
+    ret = sync(ser, b'JUMP' + args, wait=0)
     print()
     console(ser)
 
@@ -107,8 +111,45 @@ def console(ser):
 with open(sys.argv[1], 'rb') as f:
     b = f.read()
 
-with serial.Serial('/dev/ttyUSB0', 120192, timeout=1) as ser:
-#with serial.Serial('/dev/ttyUSB0', 312500, timeout=1) as ser:
+def baudrate_from_scbrr2(n):
+    return 1562500 / (n+1)
+
+def change_rate(old_rate, new_rate):
+    with serial.Serial(port='/dev/ttyUSB0',
+                       baudrate=baudrate_from_scbrr2(old_rate),
+                       bytesize=serial.EIGHTBITS,
+                       parity=serial.PARITY_NONE,
+                       stopbits=serial.STOPBITS_ONE,
+                       timeout=1,
+                       xonxoff=False,
+                       #rtscts=False,
+                       rtscts=True,
+                       ) as ser:
+        buf = b'\x00\x00\x00\x00'
+        start_data(ser, buf)
+        ret = symmetric(ser, buf)
+        print('ret', ret)
+
+        print("change rate", int(baudrate_from_scbrr2(new_rate)))
+        args = struct.pack("<I", new_rate & 0xff)
+        ret = sync(ser, b'RATE' + args, wait=1)
+        print(ret)
+
+old_rate = 1
+new_rate = 1
+if old_rate != new_rate:
+    change_rate(old_rate, new_rate)
+
+with serial.Serial(port='/dev/ttyUSB0',
+                   baudrate=baudrate_from_scbrr2(new_rate),
+                   bytesize=serial.EIGHTBITS,
+                   parity=serial.PARITY_NONE,
+                   stopbits=serial.STOPBITS_ONE,
+                   timeout=1,
+                   xonxoff=False,
+                   #rtscts=False,
+                   rtscts=True,
+                   ) as ser:
     #console(ser)
     print("waiting: ", end=' ')
     sys.stdout.flush()
