@@ -2,7 +2,7 @@
         .global _start
 _start:
         /* set stack pointer */
-        mov.l p1ram_end_ptr,r15
+        mov.l stack_end_ptr,r15
 
         /* mask all interrupts */
         mov.l   imask_all,r0
@@ -27,8 +27,8 @@ _start:
 	nop
 
         .align 4
-p1ram_end_ptr:
-        .long __p1ram_end
+stack_end_ptr:
+        .long __stack_end
 imask_all:
         .long 0xf0
 runtime_init_ptr:

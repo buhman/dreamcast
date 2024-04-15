@@ -1,6 +1,5 @@
-__p1ram_start = ORIGIN(p1ram);
 /* reserve bytes for serial program loader */
-__p1ram_end = ORIGIN(p1ram) + LENGTH(p1ram) - __stack_reservation;
+__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - __stack_reservation;
 
 __text_link_start = ADDR(.text);
 __text_link_end = ADDR(.text) + SIZEOF(.text);
