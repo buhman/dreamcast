@@ -46,6 +46,8 @@ void copy(uint32_t * start, const uint32_t * end, uint32_t * load)
 extern "C"
 void runtime_init()
 {
+  cache::init();
+
   // relocate text (if necessary)
   copy(&__text_link_start, &__text_link_end, &__text_load_start);
 
@@ -71,6 +73,4 @@ void runtime_init()
   while (start < end) {
     ((init_t*)(*start++))();
   }
-
-  cache::init();
 }
