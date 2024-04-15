@@ -18,3 +18,7 @@ __ctors_link_end = ADDR(.ctors) + SIZEOF(.ctors);
 
 __bss_link_start = ADDR(.bss);
 __bss_link_end = ADDR(.bss) + SIZEOF(.bss);
+
+__vbr_link_start = ADDR(.text.vbr);
+__vbr_link_end = ADDR(.text.vbr) + SIZEOF(.text.vbr);
+__vbr_load_end = LOADADDR(.text.vbr);

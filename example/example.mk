@@ -329,6 +329,7 @@ example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
 
 INTERRUPT_OBJ = \
 	example/interrupt.o \
+	example/illslot.o \
 	sh7091/serial.o
 
 example/interrupt.elf: LDSCRIPT = $(LIB)/alt.lds
