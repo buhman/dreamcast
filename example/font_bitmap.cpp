@@ -110,10 +110,11 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
 					| tsp_instruction_word::texture_u_size::from_int(8)
 					| tsp_instruction_word::texture_v_size::from_int(8);
 
+    const uint32_t character_offset = ((8 * 8) / 2) * (s[string_ix] - ' ');
     const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
     const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 					| texture_control_word::scan_order::twiddled
-					| texture_control_word::texture_address((texture_address + 8 * 8 * (s[string_ix] - ' ')) / 8);
+                                        | texture_control_word::texture_address((texture_address + character_offset) / 8);
 
     parameter.append<ta_global_parameter::polygon_type_0>() =
       ta_global_parameter::polygon_type_0(parameter_control_word,
@@ -131,9 +132,9 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
       float y = strip_vertices[i].y;
       float z = strip_vertices[i].z;
 
-      x *= 32.f;
-      y *= 32.f;
-      x += 64.f + 32 * string_ix;
+      x *= 8.f;
+      y *= 8.f;
+      x += 64.f + 8 * string_ix;
       y += 240.f;
       z = 1.f / (z + 10.f);
 
@@ -189,7 +190,7 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
   auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
   auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
 
-  uint32_t offset = 8 * 8 * character_index;
+  uint32_t offset = ((8 * 8) / 2) * character_index;
 
   /*
   union {
