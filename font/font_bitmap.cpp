@@ -47,8 +47,7 @@ static inline void inflate_character(const uint32_t pitch,
     }
   }
 
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
-  auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
+  auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   const uint32_t texture_offset = texture_width * texture_height * character_index / 2;
   twiddle::texture2<4>(&texture[texture_offset / 4], // uint32_t *
@@ -57,14 +56,14 @@ static inline void inflate_character(const uint32_t pitch,
 		       texture_width * texture_height);
 }
 
-void inflate(const uint32_t pitch,
-             const uint32_t width,
-             const uint32_t height,
-             const uint32_t texture_width,
-             const uint32_t texture_height,
-             const uint8_t * src)
+uint32_t inflate(const uint32_t pitch,
+		 const uint32_t width,
+		 const uint32_t height,
+		 const uint32_t texture_width,
+		 const uint32_t texture_height,
+		 const uint8_t * src)
 {
-  for (uint8_t ix = 0x20; ix < 0x7f; ix++) {
+  for (uint8_t ix = 0x20; ix <= 0x7f; ix++) {
     inflate_character(pitch,
                       width,
                       height,
@@ -73,6 +72,7 @@ void inflate(const uint32_t pitch,
                       src,
                       ix);
   }
+  return ((0x7f - 0x20) + 1) * texture_width * texture_height / 2;
 }
 
 void palette_data()
@@ -108,25 +108,30 @@ void transform_string(ta_parameter_writer& parameter,
                       const int32_t position_x,
                       const int32_t position_y,
                       const char * s,
-                      const uint32_t len
+                      const int32_t len,
+		      const uint32_t list_type
                       )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | para_control::list_type::opaque
+                                        | list_type
                                         | obj_control::col_type::packed_color
                                         | obj_control::texture;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::always
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
-  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
+  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
                                       | tsp_instruction_word::dst_alpha_instr::zero
                                       | tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::texture_u_size::from_int(texture_width)
                                       | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
-  for (uint32_t string_ix = 0; string_ix < len; string_ix++) {
-    const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+  int32_t string_ix = 0;
+  while (true) {
+    if (len < 0) {
+      if (s[string_ix] == 0) break;
+    } else if (string_ix >= len) break;
+    const uint32_t texture_address = texture_memory_alloc::texture.start;
     const uint32_t glyph_address = texture_address + texture_width * texture_height * (s[string_ix] - ' ') / 2;
     const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 					| texture_control_word::scan_order::twiddled
@@ -154,7 +159,7 @@ void transform_string(ta_parameter_writer& parameter,
       y *= static_cast<float>(glyph_height * 1);
       x += static_cast<float>(position_x + glyph_width * string_ix);
       y += static_cast<float>(position_y);
-      z = 1.f / (z + 10.f);
+      z = 1.f;
 
       u *= static_cast<float>(glyph_width) / static_cast<float>(texture_width);
       v *= static_cast<float>(glyph_height) / static_cast<float>(texture_height);
@@ -167,6 +172,7 @@ void transform_string(ta_parameter_writer& parameter,
 					    0  // offset_color
 					    );
     }
+    string_ix++;
   }
 }
 

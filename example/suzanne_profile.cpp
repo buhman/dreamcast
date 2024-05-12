@@ -19,6 +19,7 @@
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
+#include "palette.hpp"
 
 #include "geometry/suzanne.hpp"
 #include "geometry/circle.hpp"
@@ -226,16 +227,12 @@ void transform2(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff220000);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
+  region_array2(640 / 32, // width
 		480 / 32, // height
 		opb_size
 		);
+
+  background_parameter(0xff220000);
 }
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
@@ -255,13 +252,15 @@ static inline void label_number(ta_parameter_writer& parameter,
                                 8,  16, // glyph
                                 16 + (8 * (max_label_len - len)), // position x
                                 16 * row,                         // position y
-                                label, len);
+                                label, len,
+				para_control::list_type::opaque);
   font_bitmap::transform_string(parameter,
                                 8,  16, // texture
                                 8,  16, // glyph
                                 16 + (8 * (max_label_len + 1)),   // position x
                                 16 * row,                         // position y
-                                buf, 8);
+                                buf, 8,
+				para_control::list_type::opaque);
 }
 
 void main()
@@ -282,7 +281,7 @@ void main()
                        8,  // texture_width
                        16, // texture_height
                        src);
-  font_bitmap::palette_data();
+  palette_data<3>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
@@ -309,7 +308,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   float theta = 0;
   vec3 lights[3] = {
@@ -387,15 +385,15 @@ void main()
     t_transfer_end = sh7091.TMU.TCNT0;
 
     t_render_start = sh7091.TMU.TCNT0;
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
     t_render_end = sh7091.TMU.TCNT0;
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree * 0.5;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }

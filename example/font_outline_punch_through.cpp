@@ -46,8 +46,6 @@ uint32_t transform(ta_parameter_writer& parameter,
                    const char * s, const uint32_t len,
                    const uint32_t y_offset)
 {
-  uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-
   uint32_t advance = 0; // in 26.6 fixed-point
 
   for (uint32_t string_ix = 0; string_ix < len; string_ix++) {
@@ -72,6 +70,7 @@ uint32_t transform(ta_parameter_writer& parameter,
 					| tsp_instruction_word::texture_u_size::from_int(texture_width)
 					| tsp_instruction_word::texture_v_size::from_int(texture_height);
 
+    const uint32_t texture_address = texture_memory_alloc::texture.start;
     const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 					| texture_control_word::scan_order::twiddled
 					| texture_control_word::texture_address(texture_address / 8);
@@ -125,8 +124,6 @@ uint32_t transform(ta_parameter_writer& parameter,
 uint32_t transform2(ta_parameter_writer& parameter,
                     const uint32_t texture_width, uint32_t texture_height)
 {
-  uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
-
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
 					| para_control::list_type::opaque
 					| obj_control::col_type::packed_color
@@ -141,6 +138,7 @@ uint32_t transform2(ta_parameter_writer& parameter,
 				      | tsp_instruction_word::texture_u_size::from_int(texture_width)
 				      | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
+  const uint32_t texture_address = texture_memory_alloc::texture.start;
   const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 				      | texture_control_word::scan_order::twiddled
 				      | texture_control_word::texture_address(texture_address / 8);
@@ -183,16 +181,11 @@ uint32_t transform2(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff0000ff);
-
-  region_array2(mem->region_array,
-                (offsetof (struct texture_memory_alloc, object_list)),
-                640 / 32, // width
+  region_array2(640 / 32, // width
                 480 / 32, // height
                 opb_size
                 );
+  background_parameter(0xff0000ff);
 }
 
 constexpr inline uint32_t b(uint32_t v, uint32_t n)
@@ -204,8 +197,7 @@ void inflate_font(const uint32_t * src,
                   const uint32_t stride,
                   const uint32_t curve_end_ix)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
-  auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   twiddle::texture3<4, 1>(texture, reinterpret_cast<const uint8_t *>(src),
                           stride,
@@ -264,7 +256,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   const char ana[18] = "A from ana i know";
   const char cabal[27] = "where is this secret cabal";
@@ -301,11 +292,11 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_punch_through_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     frame_ix++;

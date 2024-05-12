@@ -188,16 +188,18 @@ void transform_polygon(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::texture_u_size::from_int(128)
                                       | tsp_instruction_word::texture_v_size::from_int(128);
 
-  uint32_t texture_address0 = (offsetof (struct texture_memory_alloc, texture)) + 128 * 128 * 2 * 0;
-  uint32_t texture_address1 = (offsetof (struct texture_memory_alloc, texture)) + 128 * 128 * 2 * 1;
+  const uint32_t texture_address_0 = texture_memory_alloc::texture.start
+                                   + 128 * 128 * 2 * 0;
+  const uint32_t texture_address_1 = texture_memory_alloc::texture.start
+                                   + 128 * 128 * 2 * 1;
 
   const uint32_t texture_control_word_0 = texture_control_word::pixel_format::_565
 					| texture_control_word::scan_order::twiddled
-					| texture_control_word::texture_address(texture_address0 / 8);
+					| texture_control_word::texture_address(texture_address_0 / 8);
 
   const uint32_t texture_control_word_1 = texture_control_word::pixel_format::_565
 					| texture_control_word::scan_order::twiddled
-					| texture_control_word::texture_address(texture_address1 / 8);
+					| texture_control_word::texture_address(texture_address_1 / 8);
 
   parameter.append<ta_global_parameter::polygon_type_3>() =
     ta_global_parameter::polygon_type_3(parameter_control_word,
@@ -294,16 +296,11 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff220000);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
-		480 / 32, // height
-		opb_size
-		);
+  region_array2(640 / 32, // width
+                480 / 32, // height
+                opb_size
+                );
+  background_parameter(0xff220000);
 }
 
 void
@@ -311,7 +308,7 @@ load_texture(const uint8_t * src,
 	     const uint32_t size,
 	     const uint32_t ix)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   uint16_t temp[size / 3];
   for (uint32_t px = 0; px < size / 3; px++) {
@@ -322,7 +319,7 @@ load_texture(const uint8_t * src,
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
     temp[px] = rgb565;
   }
-  twiddle::texture(&mem->texture[(128 * 128 * 2 * ix) / 2], temp, 128, 128);
+  twiddle::texture(&texture[(128 * 128 * 2 * ix) / 2], temp, 128, 128);
 }
 
 void update_rot_pos(struct rot_pos& rot_pos)
@@ -387,7 +384,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   struct rot_pos rot_pos = { 0.f, 0.f, 0.f };
 
@@ -443,13 +439,13 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_modifier_volume_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }

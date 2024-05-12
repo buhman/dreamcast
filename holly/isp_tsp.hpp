@@ -59,8 +59,15 @@ namespace tsp_instruction_word {
     constexpr uint32_t inverse_dst_alpha = 7 << 26;
   }
 
-  constexpr uint32_t src_select = 1 << 25;
-  constexpr uint32_t dst_select = 1 << 24;
+  namespace src_select {
+    constexpr uint32_t primary_accumulation_buffer = 0 << 25;
+    constexpr uint32_t secondary_accumulation_buffer = 1 << 25;
+  }
+
+  namespace dst_select {
+    constexpr uint32_t primary_accumulation_buffer = 0 << 24;
+    constexpr uint32_t secondary_accumulation_buffer = 1 << 24;
+  }
 
   namespace fog_control {
     constexpr uint32_t look_up_table = 0b00 << 22;
@@ -177,6 +184,11 @@ namespace texture_control_word {
     constexpr uint32_t twiddled = 0 << 26;
     constexpr uint32_t non_twiddled = 1 << 26;
   }
+
+  constexpr uint32_t palette_selector(uint32_t a) {
+    return (a & 0x3f) << 21;
+  }
+
   constexpr uint32_t stride_select = 1 << 25;
 
   // in 8-byte units

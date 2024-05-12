@@ -180,14 +180,14 @@ void copy_macaw_texture()
 {
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];
     uint8_t g = src[px * 3 + 1];
     uint8_t b = src[px * 3 + 2];
 
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
-    mem->texture[px] = rgb565;
+    texture[px] = rgb565;
   }
 }
 
@@ -235,7 +235,7 @@ void main()
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
-  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
+  //uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
 
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
@@ -243,23 +243,18 @@ void main()
 
   core_init();
 
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   constexpr uint32_t texture_size = 256;
 
+  background_parameter(0xff220000);
   while (1) {
-    region_array2(mem->region_array,
-		  (offsetof (struct texture_memory_alloc, object_list)),
-		  texture_size / 32, // width
+    region_array2(texture_size / 32, // width
 		  texture_size / 32, // height
 		  opb_size
 		  );
 
-    background_parameter(mem->background, 0xffff00ff);
-
+    /*
     render(texture_size, texture_size,
 	   (offsetof (struct texture_memory_alloc, texture)),
 	   128,
@@ -270,11 +265,7 @@ void main()
 		      0, 0);
     core_wait_end_of_render_video();
 
-    background_parameter(mem->background, 0xff0000ff);
-
-    region_array2(mem->region_array,
-		  (offsetof (struct texture_memory_alloc, object_list)),
-		  640 / 32, // width
+    region_array2(640 / 32, // width
 		  480 / 32, // height
 		  opb_size
 		  );
@@ -288,12 +279,13 @@ void main()
 		      0x00096000, // framesize
 		      frame_ix, num_frames);
     core_wait_end_of_render_video();
+    */
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }

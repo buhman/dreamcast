@@ -1,6 +1,8 @@
 #include <cstdint>
 
 #include "isp_tsp.hpp"
+#include "texture_memory_alloc.hpp"
+#include "memorymap.hpp"
 
 struct vertex_parameter {
   float x;
@@ -18,9 +20,10 @@ struct isp_tsp_parameter {
 
 static_assert((sizeof (isp_tsp_parameter)) == (4 * 3 + 3) * 4);
 
-void background_parameter(volatile uint32_t * buf, uint32_t color)
+void background_parameter(const uint32_t color)
 {
-  volatile isp_tsp_parameter * parameter = reinterpret_cast<volatile isp_tsp_parameter *>(buf);
+  auto parameter = reinterpret_cast<volatile isp_tsp_parameter *>
+    (&texture_memory32[texture_memory_alloc::background.start / 4]);
 
   parameter->isp_tsp_instruction_word
     = isp_tsp_instruction_word::depth_compare_mode::always

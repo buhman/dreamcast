@@ -70,7 +70,7 @@ void character(const char c)
   // wait for transmit fifo to become empty
   while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
 
-  for (int i = 0; i < 10000; i++) {
+  for (int i = 0; i < 1000; i++) {
     asm volatile ("nop;");
   }
 

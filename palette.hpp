@@ -1,5 +1,7 @@
 #pragma once
 
+#include "holly/core_bits.hpp"
+
 constexpr inline uint16_t rgb565(uint8_t r, uint8_t g, uint8_t b)
 {
   return ((r >> 3) << 11) | ((g >> 2) << 5) | ((b >> 3) << 0);
@@ -47,4 +49,14 @@ void palette_data<2>()
 
   holly.PALETTE_RAM[0] = 0x0000;
   holly.PALETTE_RAM[1] = 0xffff;
+}
+
+template <>
+void palette_data<3>()
+{
+  holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::argb1555;
+
+  holly.PALETTE_RAM[0] = 0x0000;
+  holly.PALETTE_RAM[1] = 0xffff;
+  holly.PALETTE_RAM[2] = 0x8000;
 }

@@ -110,13 +110,9 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
 void init_texture_memory(const struct opb_size& opb_size, const struct video_output::framebuffer_resolution& framebuffer_resolution)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
+  background_parameter(0xff220000);
 
-  background_parameter(mem->background, 0xff220000);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		framebuffer_resolution.width  / 32, // width
+  region_array2(framebuffer_resolution.width  / 32, // width
 		framebuffer_resolution.height / 32, // height
 		opb_size
 		);
@@ -153,7 +149,6 @@ void main()
 
   float theta = 0;
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   while (true) {
     ta_polygon_converter_init(opb_size.total(),
@@ -164,14 +159,12 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
 
-    core_start_render((offsetof (struct texture_memory_alloc, framebuffer)),
-		      framebuffer_resolution.width, // frame_width
-		      0x00096000, // frame_size
-		      frame_ix, num_frames);;
+    core_start_render(framebuffer_resolution.width, // frame_width
+		      frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     if (cable_type != video_output::get_cable_type()) {
       cable_type = video_output::get_cable_type();
       framebuffer_resolution = video_output::set_mode_by_cable_type(cable_type);
@@ -182,6 +175,6 @@ void main()
 
     constexpr float half_degree = 0.01745329f / 2.f;
     theta += half_degree;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }

@@ -54,6 +54,15 @@ SECTIONS
     . = ALIGN(4);
   } > ldram
 
+  .text.vbr ALIGN(4) : SUBALIGN(4)
+  {
+    KEEP(*(.vbr.100))
+    . = ALIGN(0x300);
+    KEEP(*(.vbr.400))
+    . = ALIGN(0x200);
+    KEEP(*(.vbr.600))
+  } > p1ram
+
   INCLUDE "debug.lds"
 }
 __stack_reservation = 0x0000;

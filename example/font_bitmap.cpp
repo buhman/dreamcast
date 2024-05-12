@@ -30,7 +30,7 @@ struct vertex {
 
 /*
 // screen space coordinates
-const struct vertex quad_verticies[4] = {
+const struct vertex quad_vertices[4] = {
   { 0.f,  64.f,  0.01f, 0.f, 1.f  },
   { 0.f,  0.f,   0.01f, 0.f, 0.f  },
   { 64.f, 0.f,   0.01f, 1.f, 0.f  },
@@ -59,20 +59,20 @@ uint32_t transform(uint32_t * ta_parameter_buf)
   parameter.append<global_sprite>() = sprite;
 
   parameter.append<vertex_sprite_type_1>() =
-    vertex_sprite_type_1(quad_verticies[0].x,
-			 quad_verticies[0].y,
-			 quad_verticies[0].z,
-			 quad_verticies[1].x,
-			 quad_verticies[1].y,
-			 quad_verticies[1].z,
-			 quad_verticies[2].x,
-			 quad_verticies[2].y,
-			 quad_verticies[2].z,
-			 quad_verticies[3].x,
-			 quad_verticies[3].y,
-			 uv_16bit(quad_verticies[0].u, quad_verticies[0].v),
-			 uv_16bit(quad_verticies[1].u, quad_verticies[1].v),
-			 uv_16bit(quad_verticies[2].u, quad_verticies[2].v));
+    vertex_sprite_type_1(quad_vertices[0].x,
+			 quad_vertices[0].y,
+			 quad_vertices[0].z,
+			 quad_vertices[1].x,
+			 quad_vertices[1].y,
+			 quad_vertices[1].z,
+			 quad_vertices[2].x,
+			 quad_vertices[2].y,
+			 quad_vertices[2].z,
+			 quad_vertices[3].x,
+			 quad_vertices[3].y,
+			 uv_16bit(quad_vertices[0].u, quad_vertices[0].v),
+			 uv_16bit(quad_vertices[1].u, quad_vertices[1].v),
+			 uv_16bit(quad_vertices[2].u, quad_vertices[2].v));
   // curiously, there is no `dz` in vertex_sprite_type_1
   // curiously, there is no `du_dv` in vertex_sprite_type_1
 
@@ -111,7 +111,7 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
 					| tsp_instruction_word::texture_v_size::from_int(8);
 
     const uint32_t character_offset = ((8 * 8) / 2) * (s[string_ix] - ' ');
-    const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+    const uint32_t texture_address = texture_memory_alloc::texture.start;
     const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 					| texture_control_word::scan_order::twiddled
                                         | texture_control_word::texture_address((texture_address + character_offset) / 8);
@@ -157,16 +157,9 @@ uint32_t transform(uint32_t * ta_parameter_buf, const char * s, const uint32_t l
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
+  background_parameter(0xff0000ff);
 
-  background_parameter(mem->background, 0xff0000ff);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
-		480 / 32, // height
-		opb_size
-		);
+  region_array2(640 / 32, 480 / 32, opb_size);
 }
 
 inline void inflate_character(const uint8_t * src, const uint8_t c)
@@ -187,8 +180,7 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
     //serial::character('\n');
   }
 
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
-  auto texture = reinterpret_cast<volatile uint32_t *>(mem->texture);
+  auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   uint32_t offset = ((8 * 8) / 2) * character_index;
 
@@ -259,7 +251,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   const char ana[18] = "A from ana i know";
 
@@ -272,13 +263,13 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    frame_ix++;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }

@@ -168,16 +168,11 @@ void transform_modifier_volume(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff220000);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
-		480 / 32, // height
-		opb_size
-		);
+  region_array2(640 / 32, // width
+                480 / 32, // height
+                opb_size
+                );
+  background_parameter(0xff220000);
 }
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
@@ -211,7 +206,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   float theta = 0;
 
@@ -260,15 +254,15 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_modifier_volume_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     constexpr float half_degree = 0.01745329f / 2;
     theta += half_degree;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }

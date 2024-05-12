@@ -63,7 +63,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 					| tsp_instruction_word::texture_u_size::from_int(128)
 					| tsp_instruction_word::texture_v_size::from_int(128);
 
-    const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+    const uint32_t texture_address = texture_memory_alloc::texture.start;
     const uint32_t texture_control_word = texture_control_word::pixel_format::_565
 					| texture_control_word::scan_order::non_twiddled
 					| texture_control_word::texture_address(texture_address / 8);
@@ -111,8 +111,8 @@ uint32_t transform(uint32_t * ta_parameter_buf,
     x1 = x * __builtin_cosf(theta) - z * __builtin_sinf(theta);
     z  = x * __builtin_sinf(theta) + z * __builtin_cosf(theta);
     x  = x1;
-    x *= 256.f;
-    y *= 256.f;
+    x *= 640.f;
+    y *= 640.f;
     x += 320.f;
     y += 240.f;
     z = 1.f / (z + 10.f);
@@ -132,45 +132,38 @@ uint32_t transform(uint32_t * ta_parameter_buf,
   return parameter.offset;
 }
 
-void init_texture_memory(uint32_t render_passes)
+void init_texture_memory(const struct opb_size * opb_size, uint32_t render_passes)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff00ff00);
-
-  region_array_multipass(mem->region_array,
-			 (offsetof (struct texture_memory_alloc, object_list)),
-			 640 / 32, // width
+  region_array_multipass(640 / 32, // width
 			 480 / 32, // height
-			 render_passes // num_render_passes
+			 opb_size,
+			 render_passes
 			 );
+
+  background_parameter(0xff00ff00);
 }
 
 uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
 
-void main()
+void copy_macaw_texture()
 {
-  video_output::set_mode_vga();
-
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];
     uint8_t g = src[px * 3 + 1];
     uint8_t b = src[px * 3 + 2];
 
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
-    mem->texture[px] = rgb565;
+    texture[px] = rgb565;
   }
+}
 
-  holly.SOFTRESET = softreset::pipeline_soft_reset
-		  | softreset::ta_soft_reset;
-  holly.SOFTRESET = 0;
-
-  core_init();
-  constexpr uint32_t render_passes = 2;
-  init_texture_memory(render_passes);
+void main()
+{
+  video_output::set_mode_vga();
+  copy_macaw_texture();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
@@ -205,11 +198,18 @@ void main()
     }
   };
 
+  holly.SOFTRESET = softreset::pipeline_soft_reset
+		  | softreset::ta_soft_reset;
+  holly.SOFTRESET = 0;
+
+  core_init();
+  constexpr uint32_t render_passes = 2;
+  init_texture_memory(opb_size, render_passes);
+
   constexpr uint32_t tiles = (640 / 32) * (480 / 32);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
-  uint32_t ta_parameter_size[2];
+  uint32_t ta_parameter_size;
 
   while (true) {
     // first render pass
@@ -217,25 +217,25 @@ void main()
 			      ta_alloc[0],
 			      640 / 32,
 			      480 / 32);
-    ta_parameter_size[0] = transform(ta_parameter_buf, strip_vertices, strip_length, 0);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size[0]);
+    ta_parameter_size = transform(ta_parameter_buf, strip_vertices, strip_length, 0);
+    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
 
     // second render pass
     ta_polygon_converter_cont(opb_size[0].total() * tiles,
 			      ta_alloc[1]);
-    ta_parameter_size[1] = transform(ta_parameter_buf, strip_vertices, strip_length, 1);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size[1]);
+    ta_parameter_size = transform(ta_parameter_buf, strip_vertices, strip_length, 1);
+    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_translucent_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }

@@ -52,14 +52,15 @@ void core_init()
 }
 
 void core_start_render(uint32_t frame_address,
-		       uint32_t frame_width,      // in pixels
-		       uint32_t frame_size,       // in bytes
-		       uint32_t frame_ix, uint32_t num_frames)
+		       uint32_t frame_width      // in pixels
+		       )
 {
-  holly.REGION_BASE = (offsetof (struct texture_memory_alloc, region_array));
-  holly.PARAM_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
+  holly.REGION_BASE = texture_memory_alloc::region_array.start;
+  holly.PARAM_BASE = texture_memory_alloc::isp_tsp_parameters.start;
 
-  holly.ISP_BACKGND_T = isp_backgnd_t::tag_address((offsetof (struct texture_memory_alloc, background)) / 4)
+  constexpr int32_t background_offset = (texture_memory_alloc::background.start - texture_memory_alloc::isp_tsp_parameters.start);
+  static_assert(background_offset >= 0);
+  holly.ISP_BACKGND_T = isp_backgnd_t::tag_address(background_offset / 4)
                       | isp_backgnd_t::tag_offset(0)
                       | isp_backgnd_t::skip(1);
   holly.ISP_BACKGND_D = _i(1.f/100000.f);
@@ -68,18 +69,18 @@ void core_start_render(uint32_t frame_address,
   constexpr uint32_t bytes_per_pixel = 2;
   holly.FB_W_LINESTRIDE = (frame_width * bytes_per_pixel) / 8;
 
-  const uint32_t w_fb = (frame_ix & num_frames) * frame_size;
-  holly.FB_W_SOF1 = frame_address + w_fb;
+  holly.FB_W_SOF1 = frame_address;
 
   holly.STARTRENDER = 1;
 }
 
-void core_start_render(uint32_t frame_ix, uint32_t num_frames)
+constexpr uint32_t framebuffer_frame_size = 0x00096000 * 2;
+
+void core_start_render(uint32_t frame_ix)
 {
-  core_start_render((offsetof (struct texture_memory_alloc, framebuffer)),
-		    640,        // frame_width
-		    0x00096000, // frame_size
-		    frame_ix, num_frames);
+  core_start_render(texture_memory_alloc::framebuffer[frame_ix].start,
+		    640
+		    );
 }
 
 void core_wait_end_of_render_video()
@@ -94,8 +95,7 @@ void core_wait_end_of_render_video()
 		| istnrm::end_of_render_video;
 }
 
-void core_flip(uint32_t frame_ix, uint32_t num_frames)
+void core_flip(uint32_t frame_ix)
 {
-  uint32_t r_fb = (frame_ix & num_frames) * 0x00096000;
-  holly.FB_R_SOF1 = (offsetof (struct texture_memory_alloc, framebuffer)) + r_fb;
+  holly.FB_R_SOF1 = texture_memory_alloc::framebuffer[frame_ix].start;
 }

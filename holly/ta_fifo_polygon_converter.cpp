@@ -29,12 +29,11 @@ void ta_polygon_converter_init(uint32_t opb_total_size, // for one tile, for all
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
                       | ta_alloc;
 
-  holly.TA_ISP_BASE = (offsetof (struct texture_memory_alloc, isp_tsp_parameters));
-  holly.TA_ISP_LIMIT = (offsetof (struct texture_memory_alloc, object_list)); // the end of isp_tsp_parameters
-  holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list));
-  holly.TA_OL_LIMIT = (offsetof (struct texture_memory_alloc, _res0)); // the end of the object_list
-  holly.TA_NEXT_OPB_INIT = (offsetof (struct texture_memory_alloc, object_list))
-                         + ta_next_opb_offset;
+  holly.TA_ISP_BASE = texture_memory_alloc::isp_tsp_parameters.start;
+  holly.TA_ISP_LIMIT = texture_memory_alloc::isp_tsp_parameters.end; // the end of isp_tsp_parameters
+  holly.TA_OL_BASE = texture_memory_alloc::object_list.start;
+  holly.TA_OL_LIMIT = texture_memory_alloc::object_list.end; // the end of the object_list
+  holly.TA_NEXT_OPB_INIT = texture_memory_alloc::object_list.start + ta_next_opb_offset;
 
   holly.TA_LIST_INIT = ta_list_init::list_init;
 
@@ -47,8 +46,7 @@ void ta_polygon_converter_cont(uint32_t ol_base_offset,
 {
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
                       | ta_alloc;
-  holly.TA_OL_BASE = (offsetof (struct texture_memory_alloc, object_list))
-                   + ol_base_offset;
+  holly.TA_OL_BASE = texture_memory_alloc::object_list.start + ol_base_offset;
 
   holly.TA_LIST_CONT = ta_list_cont::list_cont;
 

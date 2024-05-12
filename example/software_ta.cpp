@@ -74,22 +74,20 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
+  auto object_list = &texture_memory32[texture_memory_alloc::object_list.start / 4];
+  auto isp_tsp_parameters = &texture_memory32[texture_memory_alloc::isp_tsp_parameters.start / 4];
 
   // zeroize
   for (uint32_t i = 0; i < 0x00100000 / 4; i++) {
-    mem->object_list[i] = 0xeeeeeeee;
-    mem->isp_tsp_parameters[i] = 0xeeeeeeee;
+    object_list[i] = 0xeeeeeeee;
+    isp_tsp_parameters[i] = 0xeeeeeeee;
   }
 
-  background_parameter(mem->background, 0xff222200);
-
-  region_array2(mem->region_array,
-                (offsetof (struct texture_memory_alloc, object_list)),
-                640 / 32, // width
+  region_array2(640 / 32, // width
                 480 / 32, // height
                 opb_size
                 );
+  background_parameter(0xff222200);
 }
 
 uint32_t _ta_parameter_buf[((32 * (32 + 2)) + 32) / 4];
@@ -102,12 +100,13 @@ static_assert((sizeof (union u32_u8)) == 4);
 
 void dump()
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
+  auto object_list = &texture_memory32[texture_memory_alloc::object_list.start / 4];
+  auto isp_tsp_parameters = &texture_memory32[texture_memory_alloc::isp_tsp_parameters.start / 4];
 
   constexpr uint32_t screen_ol_size = 8 * 4 * (640 / 32) * (480 / 32);
   for (uint32_t i = 0; i < (screen_ol_size + 0x100) / 4; i++) {
     union u32_u8 n;
-    n.u32 = mem->object_list[i];
+    n.u32 = object_list[i];
 
     if (((i * 4) & 0x1f) == 0)
       serial::character('\n');
@@ -123,7 +122,7 @@ void dump()
 
   for (uint32_t i = 0; i < (0x100) / 4; i++) {
     union u32_u8 n;
-    n.u32 = mem->isp_tsp_parameters[i];
+    n.u32 = isp_tsp_parameters[i];
 
     if (((i * 4) & 0x1f) == 0)
       serial::character('\n');
@@ -182,7 +181,6 @@ void main()
 
   float theta = 0;
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   bool hardware_ta = false;
 
@@ -192,6 +190,9 @@ void main()
     { 0.5f, -0.5f},
     { 0.5f,  0.5f},
   };
+
+  auto object_list = &texture_memory32[texture_memory_alloc::object_list.start / 4];
+  auto isp_tsp_parameters = &texture_memory32[texture_memory_alloc::isp_tsp_parameters.start / 4];
 
   while (true) {
     if ((frame_ix & 255) == 0) {
@@ -210,7 +211,6 @@ void main()
     qq.c = rotate(q.c, theta);
     qq.d = rotate(q.d, theta);
 
-    auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
     if (hardware_ta) {
       ta_polygon_converter_init(opb_size.total(),
                                 ta_alloc,
@@ -220,19 +220,19 @@ void main()
       ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
       ta_wait_opaque_list();
     } else {
-      software_ta::object_pointer_blocks<8>(mem->object_list, qq);
-      software_ta::isp_tsp_parameters(mem->isp_tsp_parameters, qq);
+      software_ta::object_pointer_blocks<8>(object_list, qq);
+      software_ta::isp_tsp_parameters(isp_tsp_parameters, qq);
     }
-    software_ta::opb_checkerboard_pattern<8>(mem->object_list);
+    software_ta::opb_checkerboard_pattern<8>(object_list);
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
     theta += half_degree;
   }
 }

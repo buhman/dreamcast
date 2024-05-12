@@ -11,4 +11,4 @@ extern volatile uint32_t ta_fifo_texture_memory[0x800000] __asm("ta_fifo_texture
 extern volatile uint32_t ta_fifo_polygon_converter_mirror[0x800000] __asm("ta_fifo_polygon_converter_mirror");
 extern volatile uint32_t ta_fifo_yuv_converter_mirror[0x800000] __asm("ta_fifo_yuv_converter_mirror");
 extern volatile uint32_t ta_fifo_texture_memory_mirror[0x800000] __asm("ta_fifo_texture_memory_mirror");
-extern volatile uint32_t store_queue[0x4000000] __asm("store_queue");
+extern uint32_t store_queue[0x4000000] __asm("store_queue");

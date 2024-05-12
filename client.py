@@ -4,7 +4,8 @@ import sys
 import time
 
 #dest = 0xac21_0000
-dest = 0xac02_0000
+#dest = 0xac02_0000
+dest = 0xac01_0000
 
 ret = []
 
@@ -100,13 +101,53 @@ def do(ser, b):
     print()
     console(ser)
 
-def console(ser):
-    while True:
-        b = ser.read(1)
-        if b:
-            sys.stderr.buffer.write(b)
-            sys.stderr.flush()
+seen_length = 16
 
+def compare_str(s, seen, seen_ix):
+    assert len(s) <= seen_length, s
+    start = seen_length + (seen_ix - len(s))
+    for i, c in enumerate(s):
+        if c != seen[(start + i) % seen_length]:
+            return False
+    return True
+
+framebuffer_mode = False
+framebuffer = []
+
+def console(ser):
+    global framebuffer_mode
+    global framebuffer
+
+    seen = [0] * seen_length
+    seen_ix = 0
+    while True:
+        b = ser.read(ser.in_waiting)
+        if b == b'':
+            continue
+        for c in b:
+            seen[seen_ix % seen_length] = c
+            seen_ix += 1
+
+            if framebuffer_mode:
+                framebuffer.append(c)
+                if len(framebuffer) % 1000 == 0:
+                    print(len(framebuffer), (640 * 480 * 2), file=sys.stderr)
+                    sys.stderr.flush()
+            else:
+                sys.stderr.buffer.write(bytes([c]))
+                sys.stderr.flush()
+
+            if compare_str(b"<<FRAMEBUFFER>>", seen, seen_ix):
+                sys.stderr.write("\nMATCH\n")
+                sys.stderr.flush()
+                framebuffer_mode = True
+                framebuffer = []
+            if compare_str(b"<</FRAMEBUFFER>>", seen, seen_ix):
+                framebuffer_mode = False
+                sys.stderr.write("<</FRAMEBUFFER>>\n")
+                sys.stderr.flush()
+                with open('framebuffer.bin', 'wb') as f:
+                    f.write(bytes(framebuffer[:-16]))
 
 with open(sys.argv[1], 'rb') as f:
     b = f.read()

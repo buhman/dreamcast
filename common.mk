@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -Og
+OPT ?= -O2
 GENERATED ?=
 
 AARCH = --isa=sh4 --little
@@ -79,9 +79,7 @@ sine.pcm: common.mk
 		/1ST_READ.BIN=./$< \
 		/=./COPYRIGH.TXT \
 		/=./ABSTRACT.TXT \
-		/=./BIBLIOGR.TXT \
-		/DUNE.PCM=./dune.pcm \
-		/REIGN.PCM=./reign.pcm
+		/=./BIBLIOGR.TXT
 
 %.cdi: %.iso
 	./cdi4dc $< $@ >/dev/null

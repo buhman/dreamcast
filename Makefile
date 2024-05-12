@@ -12,5 +12,6 @@ geometry/%.hpp: geometry/%.obj
 	mv $@.tmp $@
 
 include example/example.mk
+include pokemon/pokemon.mk
 
 .PHONY: phony

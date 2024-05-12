@@ -6,14 +6,12 @@
 
 namespace font_bitmap {
 
-void inflate(const uint32_t pitch,
-             const uint32_t width,
-             const uint32_t height,
-             const uint32_t texture_width,
-             const uint32_t texture_height,
-             const uint8_t * src);
-
-void palette_data();
+uint32_t inflate(const uint32_t pitch,
+		 const uint32_t width,
+		 const uint32_t height,
+		 const uint32_t texture_width,
+		 const uint32_t texture_height,
+		 const uint8_t * src);
 
 void transform_string(ta_parameter_writer& parameter,
                       const uint32_t texture_width,
@@ -23,7 +21,8 @@ void transform_string(ta_parameter_writer& parameter,
                       const int32_t position_x,
                       const int32_t position_y,
                       const char * s,
-                      const uint32_t len
+                      const int32_t len,
+		      const uint32_t list_type
                       );
 
 }

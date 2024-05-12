@@ -60,7 +60,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
                                       | tsp_instruction_word::texture_u_size::from_int(128)
                                       | tsp_instruction_word::texture_v_size::from_int(128);
 
-  const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+  const uint32_t texture_address = texture_memory_alloc::texture.start;
   const uint32_t texture_control_word = texture_control_word::pixel_format::_565
                                       | texture_control_word::scan_order::twiddled
                                       | texture_control_word::texture_address(texture_address / 8);
@@ -107,23 +107,18 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff00ff00);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
-		480 / 32, // height
-		opb_size
-		);
+  region_array2(640 / 32, // width
+                480 / 32, // height
+                opb_size
+                );
+  background_parameter(0xff220000);
 }
 
 void init_macaw_texture()
 {
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   uint16_t temp[size / 3];
   for (uint32_t px = 0; px < size / 3; px++) {
@@ -134,7 +129,7 @@ void init_macaw_texture()
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
     temp[px] = rgb565;
   }
-  twiddle::texture(mem->texture, temp, 128, 128);
+  twiddle::texture(texture, temp, 128, 128);
 }
 
 uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
@@ -169,7 +164,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
 
   while (true) {
     ta_polygon_converter_init(opb_size.total(),
@@ -180,14 +174,14 @@ void main()
     ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
     ta_wait_opaque_list();
 
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree;
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }

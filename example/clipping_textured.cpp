@@ -137,7 +137,7 @@ void transform(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::texture_u_size::from_int(128)
                                       | tsp_instruction_word::texture_v_size::from_int(128);
 
-  const uint32_t texture_address = (offsetof (struct texture_memory_alloc, texture));
+  const uint32_t texture_address = texture_memory_alloc::texture.start;
   const uint32_t texture_control_word = texture_control_word::pixel_format::_565
                                       | texture_control_word::scan_order::twiddled
                                       | texture_control_word::texture_address(texture_address / 8);
@@ -220,23 +220,18 @@ void transform(ta_parameter_writer& parameter,
 
 void init_texture_memory(const struct opb_size& opb_size)
 {
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory32);
-
-  background_parameter(mem->background, 0xff220000);
-
-  region_array2(mem->region_array,
-	        (offsetof (struct texture_memory_alloc, object_list)),
-		640 / 32, // width
-		480 / 32, // height
-		opb_size
-		);
+  region_array2(640 / 32, // width
+                480 / 32, // height
+                opb_size
+                );
+  background_parameter(0xff220000);
 }
 
 void init_macaw_texture()
 {
   auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
   auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
-  auto mem = reinterpret_cast<volatile texture_memory_alloc *>(texture_memory64);
+  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   uint16_t temp[size / 3];
   for (uint32_t px = 0; px < size / 3; px++) {
@@ -247,7 +242,7 @@ void init_macaw_texture()
     uint16_t rgb565 = ((r / 8) << 11) | ((g / 4) << 5) | ((b / 8) << 0);
     temp[px] = rgb565;
   }
-  twiddle::texture(mem->texture, temp, 128, 128);
+  twiddle::texture(texture, temp, 128, 128);
 }
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
@@ -285,7 +280,6 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
-  constexpr uint32_t num_frames = 1;
   float theta = 0;
   float x_pos = 0;
   float y_pos = 0;
@@ -328,13 +322,13 @@ void main()
     parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
     ta_polygon_converter_transfer(ta_parameter_buf, parameter.offset);
     ta_wait_opaque_list();
-    core_start_render(frame_ix, num_frames);
+    core_start_render(frame_ix);
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
-    core_flip(frame_ix, num_frames);
+    core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    frame_ix += 1;
+    frame_ix = (frame_ix + 1) & 1;;
   }
 }
