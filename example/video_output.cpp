@@ -175,6 +175,6 @@ void main()
 
     constexpr float half_degree = 0.01745329f / 2.f;
     theta += half_degree;
-    frame_ix = (frame_ix + 1) & 1;;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }

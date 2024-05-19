@@ -301,6 +301,6 @@ void main()
     while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree;
-    frame_ix = (frame_ix + 1) & 1;;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }

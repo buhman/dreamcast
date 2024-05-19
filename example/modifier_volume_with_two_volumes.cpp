@@ -446,6 +446,6 @@ void main()
     core_flip(frame_ix);
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    frame_ix = (frame_ix + 1) & 1;;
+    frame_ix = (frame_ix + 1) & 1;
   }
 }
