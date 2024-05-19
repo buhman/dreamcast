@@ -16,13 +16,13 @@ SECTIONS
     *(.text)
   } > p1ram
 
-  .data ALIGN(4) : SUBALIGN(4)
+  .data ALIGN(4) :
   {
     *(.data)
     *(.data.*)
   } > p1ram
 
-  .rodata ALIGN(4) : SUBALIGN(4)
+  .rodata ALIGN(4) :
   {
     *(.rodata)
     *(.rodata.*)
