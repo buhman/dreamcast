@@ -109,8 +109,10 @@ def render_format(format):
             yield f"uint8_t {field_name};"
         elif len(subfields) == 2:
             yield f"uint16_t {field_name};"
+        elif len(subfields) == 6:
+            yield f"uint8_t {field_name}[6];"
         else:
-            assert False, len(subfields)
+            assert False, (len(subfields), field_name)
 
     yield "};"
     assert format.size % 4 == 0, format.size

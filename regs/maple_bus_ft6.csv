@@ -1,0 +1,15 @@
+"data_transfer",7,6,5,4,3,2,1,0
+"modifier_key","S2","Right_Alt","Right_Shift","Right_Control","Left_GUI","Left_Alt","Left_Shift","Left_Control"
+"led_state","Shift","Power","Kana","reserved0","reserved1","Scroll_Lock","Caps_Lock","Num_Lock"
+"scan_code_array",,,,,,,,
+"scan_code_array",,,,,,,,
+"scan_code_array",,,,,,,,
+"scan_code_array",,,,,,,,
+"scan_code_array",,,,,,,,
+"scan_code_array",,,,,,,,
+,,,,,,,,
+"set_condition",7,6,5,4,3,2,1,0
+"led_setting",,,,,,,,
+"w1_reserved",,,,,,,,
+"w2_reserved",,,,,,,,
+"w3_reserved",,,,,,,,
