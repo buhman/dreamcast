@@ -47,6 +47,15 @@ maple/maple_bus_commands.hpp: regs/maple_bus_commands.csv regs/gen/maple_bus_com
 maple/maple_bus_bits.hpp: regs/maple_bus_bits.csv regs/gen/core_bits.py
 	python regs/gen/core_bits.py $< > $@
 
+maple/maple_bus_ft0.hpp: regs/maple_bus_ft0.csv regs/gen/maple_data_format.py
+	python regs/gen/maple_data_format.py $< > $@
+
+maple/maple_bus_ft6.hpp: regs/maple_bus_ft6.csv regs/gen/maple_data_format.py
+	python regs/gen/maple_data_format.py $< > $@
+
+maple/maple_bus_ft8.hpp: regs/maple_bus_ft8.csv regs/gen/maple_data_format.py
+	python regs/gen/maple_data_format.py $< > $@
+
 # AICA
 
 aica/aica_channel.hpp: regs/aica_channel_data.csv regs/gen/aica.py
