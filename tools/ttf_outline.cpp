@@ -18,10 +18,11 @@ std::endian _target_endian;
 constexpr uint32_t max_texture_dim = 1024;
 constexpr uint32_t max_texture_size = max_texture_dim * max_texture_dim;
 
-uint32_t byteswap(const uint32_t n)
+template< class T >
+constexpr T byteswap(const T n)
 {
   if (std::endian::native != _target_endian) {
-    return std::byteswap(n);
+    return std::byteswap<T>(n);
   } else {
     return n;
   }
@@ -128,15 +129,15 @@ load_outline_char(const FT_Face face,
   }
 
   glyph_bitmap& bitmap = glyph->bitmap;
-  bitmap.x = byteswap(rect.x);
-  bitmap.y = byteswap(rect.y);
-  bitmap.width = byteswap(rect.width);
-  bitmap.height = byteswap(rect.height);
+  bitmap.x = byteswap<uint16_t>(rect.x);
+  bitmap.y = byteswap<uint16_t>(rect.y);
+  bitmap.width = byteswap<uint16_t>(rect.width);
+  bitmap.height = byteswap<uint16_t>(rect.height);
 
   glyph_metrics& metrics = glyph->metrics;
-  metrics.horiBearingX = byteswap(face->glyph->metrics.horiBearingX);
-  metrics.horiBearingY = byteswap(face->glyph->metrics.horiBearingY);
-  metrics.horiAdvance = byteswap(face->glyph->metrics.horiAdvance);
+  metrics.horiBearingX = byteswap<int32_t>(face->glyph->metrics.horiBearingX);
+  metrics.horiBearingY = byteswap<int32_t>(face->glyph->metrics.horiBearingY);
+  metrics.horiAdvance = byteswap<int32_t>(face->glyph->metrics.horiAdvance);
 
   return 0;
 }
@@ -286,14 +287,15 @@ int main(int argc, char *argv[])
   }
 
   font font;
-  font.first_char_code = byteswap(start);
-  font.glyph_count = byteswap(num_glyphs);
-  font.glyph_height = byteswap(face->size->metrics.height);
-  font.texture_stride = byteswap(texture_stride);
-  font.texture_width = byteswap(window_curve_ix.window.width);
-  font.texture_height = byteswap(window_curve_ix.window.height);
-  font.texture_size = byteswap(texture_size);
-  font.max_z_curve_ix = byteswap(window_curve_ix.max_z_curve_ix);
+  font.first_char_code = byteswap<uint32_t>(start);
+  font.last_char_code = byteswap<uint32_t>(end);
+  font.glyph_height = byteswap<int32_t>(face->size->metrics.height);
+  font.glyph_count = byteswap<uint16_t>(num_glyphs);
+  font.texture_stride = byteswap<uint16_t>(texture_stride);
+  font.texture_width = byteswap<uint16_t>(window_curve_ix.window.width);
+  font.texture_height = byteswap<uint16_t>(window_curve_ix.window.height);
+  font.texture_size = byteswap<uint32_t>(texture_size);
+  font.max_z_curve_ix = byteswap<uint32_t>(window_curve_ix.max_z_curve_ix);
 
   std::cerr << "start: 0x" << std::hex << start << '\n';
   std::cerr << "end: 0x"   << std::hex << end   << '\n';

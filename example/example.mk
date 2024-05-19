@@ -481,3 +481,15 @@ LFSR_OBJ = \
 
 example/lfsr.elf: LDSCRIPT = $(LIB)/main.lds
 example/lfsr.elf: $(START_OBJ) $(LFSR_OBJ)
+
+TA_TRANSFER_PROFILE_OBJ = \
+	example/ta_transfer_profile.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o
+
+example/ta_transfer_profile.elf: LDSCRIPT = $(LIB)/main.lds
+example/ta_transfer_profile.elf: $(START_OBJ) $(TA_TRANSFER_PROFILE_OBJ)
