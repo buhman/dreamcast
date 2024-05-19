@@ -14,12 +14,12 @@ namespace ta_vertex_parameter {
     uint32_t base_color;
     uint32_t _res2;
 
-    polygon_type_0(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const uint32_t base_color
-                   )
+    constexpr polygon_type_0(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const uint32_t base_color
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -55,15 +55,15 @@ namespace ta_vertex_parameter {
     float base_color_g;
     float base_color_b;
 
-    polygon_type_1(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const float base_color_alpha,
-                   const float base_color_r,
-                   const float base_color_g,
-                   const float base_color_b
-                   )
+    constexpr polygon_type_1(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float base_color_alpha,
+                             const float base_color_r,
+                             const float base_color_g,
+                             const float base_color_b
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -99,12 +99,12 @@ namespace ta_vertex_parameter {
     float base_intensity;
     uint32_t _res2;
 
-    polygon_type_2(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const float base_intensity
-                   )
+    constexpr polygon_type_2(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float base_intensity
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -140,15 +140,15 @@ namespace ta_vertex_parameter {
     uint32_t base_color;
     uint32_t offset_color;
 
-    polygon_type_3(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const float u,
-                   const float v,
-                   const uint32_t base_color,
-                   const uint32_t offset_color
-                   )
+    constexpr polygon_type_3(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float u,
+                             const float v,
+                             const uint32_t base_color,
+                             const uint32_t offset_color
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -184,14 +184,14 @@ namespace ta_vertex_parameter {
     uint32_t base_color;
     uint32_t offset_color;
 
-    polygon_type_4(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const uint32_t u_v,
-                   const uint32_t base_color,
-                   const uint32_t offset_color
-                   )
+    constexpr polygon_type_4(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const uint32_t u_v,
+                             const uint32_t base_color,
+                             const uint32_t offset_color
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -235,21 +235,21 @@ namespace ta_vertex_parameter {
     float offset_color_g;
     float offset_color_b;
 
-    polygon_type_5(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const float u,
-                   const float v,
-                   const float base_color_alpha,
-                   const float base_color_r,
-                   const float base_color_g,
-                   const float base_color_b,
-                   const float offset_color_alpha,
-                   const float offset_color_r,
-                   const float offset_color_g,
-                   const float offset_color_b
-                   )
+    constexpr polygon_type_5(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float u,
+                             const float v,
+                             const float base_color_alpha,
+                             const float base_color_r,
+                             const float base_color_g,
+                             const float base_color_b,
+                             const float offset_color_alpha,
+                             const float offset_color_r,
+                             const float offset_color_g,
+                             const float offset_color_b
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -309,20 +309,20 @@ namespace ta_vertex_parameter {
     float offset_color_g;
     float offset_color_b;
 
-    polygon_type_6(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const uint32_t u_v,
-                   const float base_color_alpha,
-                   const float base_color_r,
-                   const float base_color_g,
-                   const float base_color_b,
-                   const float offset_color_alpha,
-                   const float offset_color_r,
-                   const float offset_color_g,
-                   const float offset_color_b
-                   )
+    constexpr polygon_type_6(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const uint32_t u_v,
+                             const float base_color_alpha,
+                             const float base_color_r,
+                             const float base_color_g,
+                             const float base_color_b,
+                             const float offset_color_alpha,
+                             const float offset_color_r,
+                             const float offset_color_g,
+                             const float offset_color_b
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -374,15 +374,15 @@ namespace ta_vertex_parameter {
     float base_intensity;
     float offset_intensity;
 
-    polygon_type_7(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const float u,
-                   const float v,
-                   const float base_intensity,
-                   const float offset_intensity
-                   )
+    constexpr polygon_type_7(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const float u,
+                             const float v,
+                             const float base_intensity,
+                             const float offset_intensity
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -418,14 +418,14 @@ namespace ta_vertex_parameter {
     float base_intensity;
     float offset_intensity;
 
-    polygon_type_8(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const uint32_t u_v,
-                   const float base_intensity,
-                   const float offset_intensity
-                   )
+    constexpr polygon_type_8(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const uint32_t u_v,
+                             const float base_intensity,
+                             const float offset_intensity
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -461,13 +461,13 @@ namespace ta_vertex_parameter {
     uint32_t _res0;
     uint32_t _res1;
 
-    polygon_type_9(const uint32_t parameter_control_word,
-                   const float x,
-                   const float y,
-                   const float z,
-                   const uint32_t base_color_0,
-                   const uint32_t base_color_1
-                   )
+    constexpr polygon_type_9(const uint32_t parameter_control_word,
+                             const float x,
+                             const float y,
+                             const float z,
+                             const uint32_t base_color_0,
+                             const uint32_t base_color_1
+                             )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -503,13 +503,13 @@ namespace ta_vertex_parameter {
     uint32_t _res0;
     uint32_t _res1;
 
-    polygon_type_10(const uint32_t parameter_control_word,
-                    const float x,
-                    const float y,
-                    const float z,
-                    const uint32_t base_intensity_0,
-                    const uint32_t base_intensity_1
-                    )
+    constexpr polygon_type_10(const uint32_t parameter_control_word,
+                              const float x,
+                              const float y,
+                              const float z,
+                              const uint32_t base_intensity_0,
+                              const uint32_t base_intensity_1
+                              )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -553,19 +553,19 @@ namespace ta_vertex_parameter {
     uint32_t _res2;
     uint32_t _res3;
 
-    polygon_type_11(const uint32_t parameter_control_word,
-                    const float x,
-                    const float y,
-                    const float z,
-                    const float u_0,
-                    const float v_0,
-                    const uint32_t base_color_0,
-                    const uint32_t offset_color_0,
-                    const float u_1,
-                    const float v_1,
-                    const uint32_t base_color_1,
-                    const uint32_t offset_color_1
-                    )
+    constexpr polygon_type_11(const uint32_t parameter_control_word,
+                              const float x,
+                              const float y,
+                              const float z,
+                              const float u_0,
+                              const float v_0,
+                              const uint32_t base_color_0,
+                              const uint32_t offset_color_0,
+                              const float u_1,
+                              const float v_1,
+                              const uint32_t base_color_1,
+                              const uint32_t offset_color_1
+                              )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -625,17 +625,17 @@ namespace ta_vertex_parameter {
     uint32_t _res4;
     uint32_t _res5;
 
-    polygon_type_12(const uint32_t parameter_control_word,
-                    const float x,
-                    const float y,
-                    const float z,
-                    const uint32_t u_v_0,
-                    const uint32_t base_color_0,
-                    const uint32_t offset_color_0,
-                    const uint32_t u_v_1,
-                    const uint32_t base_color_1,
-                    const uint32_t offset_color_1
-                    )
+    constexpr polygon_type_12(const uint32_t parameter_control_word,
+                              const float x,
+                              const float y,
+                              const float z,
+                              const uint32_t u_v_0,
+                              const uint32_t base_color_0,
+                              const uint32_t offset_color_0,
+                              const uint32_t u_v_1,
+                              const uint32_t base_color_1,
+                              const uint32_t offset_color_1
+                              )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -695,19 +695,19 @@ namespace ta_vertex_parameter {
     uint32_t _res2;
     uint32_t _res3;
 
-    polygon_type_13(const uint32_t parameter_control_word,
-                    const float x,
-                    const float y,
-                    const float z,
-                    const float u_0,
-                    const float v_0,
-                    const uint32_t base_intensity_0,
-                    const float offset_intensity_0,
-                    const float u_1,
-                    const float v_1,
-                    const uint32_t base_intensity_1,
-                    const float offset_intensity_1
-                    )
+    constexpr polygon_type_13(const uint32_t parameter_control_word,
+                              const float x,
+                              const float y,
+                              const float z,
+                              const float u_0,
+                              const float v_0,
+                              const uint32_t base_intensity_0,
+                              const float offset_intensity_0,
+                              const float u_1,
+                              const float v_1,
+                              const uint32_t base_intensity_1,
+                              const float offset_intensity_1
+                              )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -767,17 +767,17 @@ namespace ta_vertex_parameter {
     uint32_t _res4;
     uint32_t _res5;
 
-    polygon_type_14(const uint32_t parameter_control_word,
-                    const float x,
-                    const float y,
-                    const float z,
-                    const uint32_t u_v_0,
-                    const uint32_t base_intensity_0,
-                    const float offset_intensity_0,
-                    const uint32_t u_v_1,
-                    const uint32_t base_intensity_1,
-                    const float offset_intensity_1
-                    )
+    constexpr polygon_type_14(const uint32_t parameter_control_word,
+                              const float x,
+                              const float y,
+                              const float z,
+                              const uint32_t u_v_0,
+                              const uint32_t base_intensity_0,
+                              const float offset_intensity_0,
+                              const uint32_t u_v_1,
+                              const uint32_t base_intensity_1,
+                              const float offset_intensity_1
+                              )
       : parameter_control_word(parameter_control_word)
       , x(x)
       , y(y)
@@ -837,19 +837,19 @@ namespace ta_vertex_parameter {
     uint32_t _res2;
     uint32_t _res3;
 
-    sprite_type_0(const uint32_t parameter_control_word,
-                  const float a_x,
-                  const float a_y,
-                  const float a_z,
-                  const float b_x,
-                  const float b_y,
-                  const float b_z,
-                  const float c_x,
-                  const float c_y,
-                  const float c_z,
-                  const float d_x,
-                  const float d_y
-                  )
+    constexpr sprite_type_0(const uint32_t parameter_control_word,
+                            const float a_x,
+                            const float a_y,
+                            const float a_z,
+                            const float b_x,
+                            const float b_y,
+                            const float b_z,
+                            const float c_x,
+                            const float c_y,
+                            const float c_z,
+                            const float d_x,
+                            const float d_y
+                            )
       : parameter_control_word(parameter_control_word)
       , a_x(a_x)
       , a_y(a_y)
@@ -909,22 +909,22 @@ namespace ta_vertex_parameter {
     uint32_t b_u_b_v;
     uint32_t c_u_c_v;
 
-    sprite_type_1(const uint32_t parameter_control_word,
-                  const float a_x,
-                  const float a_y,
-                  const float a_z,
-                  const float b_x,
-                  const float b_y,
-                  const float b_z,
-                  const float c_x,
-                  const float c_y,
-                  const float c_z,
-                  const float d_x,
-                  const float d_y,
-                  const uint32_t a_u_a_v,
-                  const uint32_t b_u_b_v,
-                  const uint32_t c_u_c_v
-                  )
+    constexpr sprite_type_1(const uint32_t parameter_control_word,
+                            const float a_x,
+                            const float a_y,
+                            const float a_z,
+                            const float b_x,
+                            const float b_y,
+                            const float b_z,
+                            const float c_x,
+                            const float c_y,
+                            const float c_z,
+                            const float d_x,
+                            const float d_y,
+                            const uint32_t a_u_a_v,
+                            const uint32_t b_u_b_v,
+                            const uint32_t c_u_c_v
+                            )
       : parameter_control_word(parameter_control_word)
       , a_x(a_x)
       , a_y(a_y)
@@ -984,17 +984,17 @@ namespace ta_vertex_parameter {
     uint32_t _res4;
     uint32_t _res5;
 
-    modifier_volume(const uint32_t parameter_control_word,
-                    const float a_x,
-                    const float a_y,
-                    const float a_z,
-                    const float b_x,
-                    const float b_y,
-                    const float b_z,
-                    const float c_x,
-                    const float c_y,
-                    const float c_z
-                    )
+    constexpr modifier_volume(const uint32_t parameter_control_word,
+                              const float a_x,
+                              const float a_y,
+                              const float a_z,
+                              const float b_x,
+                              const float b_y,
+                              const float b_z,
+                              const float c_x,
+                              const float c_y,
+                              const float c_z
+                              )
       : parameter_control_word(parameter_control_word)
       , a_x(a_x)
       , a_y(a_y)

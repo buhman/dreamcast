@@ -94,7 +94,7 @@ def parse(rows, expected_offset, expected_sizes):
     return declarations
 
 def render_initializer(declaration, get_type):
-    initializer = f"{declaration.name}("
+    initializer = f"constexpr {declaration.name}("
     padding = " " * len(initializer)
     def start(i):
         if i == 0:

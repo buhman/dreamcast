@@ -14,8 +14,8 @@ namespace ta_global_parameter {
     uint32_t _res5;
     uint32_t _res6;
 
-    end_of_list(const uint32_t parameter_control_word
-                )
+    constexpr end_of_list(const uint32_t parameter_control_word
+                          )
       : parameter_control_word(parameter_control_word)
       , _res0(0)
       , _res1(0)
@@ -51,12 +51,12 @@ namespace ta_global_parameter {
     uint32_t user_clip_x_max;
     uint32_t user_clip_y_max;
 
-    user_tile_clip(const uint32_t parameter_control_word,
-                   const uint32_t user_clip_x_min,
-                   const uint32_t user_clip_y_min,
-                   const uint32_t user_clip_x_max,
-                   const uint32_t user_clip_y_max
-                   )
+    constexpr user_tile_clip(const uint32_t parameter_control_word,
+                             const uint32_t user_clip_x_min,
+                             const uint32_t user_clip_y_min,
+                             const uint32_t user_clip_x_max,
+                             const uint32_t user_clip_y_max
+                             )
       : parameter_control_word(parameter_control_word)
       , _res0(0)
       , _res1(0)
@@ -92,13 +92,13 @@ namespace ta_global_parameter {
     uint32_t bounding_box_x_max;
     uint32_t bounding_box_y_max;
 
-    object_list_set(const uint32_t parameter_control_word,
-                    const uint32_t object_pointer,
-                    const uint32_t bounding_box_x_min,
-                    const uint32_t bounding_box_y_min,
-                    const uint32_t bounding_box_x_max,
-                    const uint32_t bounding_box_y_max
-                    )
+    constexpr object_list_set(const uint32_t parameter_control_word,
+                              const uint32_t object_pointer,
+                              const uint32_t bounding_box_x_min,
+                              const uint32_t bounding_box_y_min,
+                              const uint32_t bounding_box_x_max,
+                              const uint32_t bounding_box_y_max
+                              )
       : parameter_control_word(parameter_control_word)
       , object_pointer(object_pointer)
       , _res0(0)
@@ -134,13 +134,13 @@ namespace ta_global_parameter {
     uint32_t data_size_for_sort_dma;
     uint32_t next_address_for_sort_dma;
 
-    polygon_type_0(const uint32_t parameter_control_word,
-                   const uint32_t isp_tsp_instruction_word,
-                   const uint32_t tsp_instruction_word,
-                   const uint32_t texture_control_word,
-                   const uint32_t data_size_for_sort_dma,
-                   const uint32_t next_address_for_sort_dma
-                   )
+    constexpr polygon_type_0(const uint32_t parameter_control_word,
+                             const uint32_t isp_tsp_instruction_word,
+                             const uint32_t tsp_instruction_word,
+                             const uint32_t texture_control_word,
+                             const uint32_t data_size_for_sort_dma,
+                             const uint32_t next_address_for_sort_dma
+                             )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word(tsp_instruction_word)
@@ -176,15 +176,15 @@ namespace ta_global_parameter {
     float face_color_g;
     float face_color_b;
 
-    polygon_type_1(const uint32_t parameter_control_word,
-                   const uint32_t isp_tsp_instruction_word,
-                   const uint32_t tsp_instruction_word,
-                   const uint32_t texture_control_word,
-                   const float face_color_alpha,
-                   const float face_color_r,
-                   const float face_color_g,
-                   const float face_color_b
-                   )
+    constexpr polygon_type_1(const uint32_t parameter_control_word,
+                             const uint32_t isp_tsp_instruction_word,
+                             const uint32_t tsp_instruction_word,
+                             const uint32_t texture_control_word,
+                             const float face_color_alpha,
+                             const float face_color_r,
+                             const float face_color_g,
+                             const float face_color_b
+                             )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word(tsp_instruction_word)
@@ -228,21 +228,21 @@ namespace ta_global_parameter {
     float face_offset_color_g;
     float face_offset_color_b;
 
-    polygon_type_2(const uint32_t parameter_control_word,
-                   const uint32_t isp_tsp_instruction_word,
-                   const uint32_t tsp_instruction_word,
-                   const uint32_t texture_control_word,
-                   const uint32_t data_size_for_sort_dma,
-                   const uint32_t next_address_for_sort_dma,
-                   const float face_color_alpha,
-                   const float face_color_r,
-                   const float face_color_g,
-                   const float face_color_b,
-                   const float face_offset_color_alpha,
-                   const float face_offset_color_r,
-                   const float face_offset_color_g,
-                   const float face_offset_color_b
-                   )
+    constexpr polygon_type_2(const uint32_t parameter_control_word,
+                             const uint32_t isp_tsp_instruction_word,
+                             const uint32_t tsp_instruction_word,
+                             const uint32_t texture_control_word,
+                             const uint32_t data_size_for_sort_dma,
+                             const uint32_t next_address_for_sort_dma,
+                             const float face_color_alpha,
+                             const float face_color_r,
+                             const float face_color_g,
+                             const float face_color_b,
+                             const float face_offset_color_alpha,
+                             const float face_offset_color_r,
+                             const float face_offset_color_g,
+                             const float face_offset_color_b
+                             )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word(tsp_instruction_word)
@@ -294,15 +294,15 @@ namespace ta_global_parameter {
     uint32_t data_size_for_sort_dma;
     uint32_t next_address_for_sort_dma;
 
-    polygon_type_3(const uint32_t parameter_control_word,
-                   const uint32_t isp_tsp_instruction_word,
-                   const uint32_t tsp_instruction_word_0,
-                   const uint32_t texture_control_word_0,
-                   const uint32_t tsp_instruction_word_1,
-                   const uint32_t texture_control_word_1,
-                   const uint32_t data_size_for_sort_dma,
-                   const uint32_t next_address_for_sort_dma
-                   )
+    constexpr polygon_type_3(const uint32_t parameter_control_word,
+                             const uint32_t isp_tsp_instruction_word,
+                             const uint32_t tsp_instruction_word_0,
+                             const uint32_t texture_control_word_0,
+                             const uint32_t tsp_instruction_word_1,
+                             const uint32_t texture_control_word_1,
+                             const uint32_t data_size_for_sort_dma,
+                             const uint32_t next_address_for_sort_dma
+                             )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word_0(tsp_instruction_word_0)
@@ -346,23 +346,23 @@ namespace ta_global_parameter {
     float face_color_g_1;
     float face_color_b_1;
 
-    polygon_type_4(const uint32_t parameter_control_word,
-                   const uint32_t isp_tsp_instruction_word,
-                   const uint32_t tsp_instruction_word_0,
-                   const uint32_t texture_control_word_0,
-                   const uint32_t tsp_instruction_word_1,
-                   const uint32_t texture_control_word_1,
-                   const uint32_t data_size_for_sort_dma,
-                   const uint32_t next_address_for_sort_dma,
-                   const float face_color_alpha_0,
-                   const float face_color_r_0,
-                   const float face_color_g_0,
-                   const float face_color_b_0,
-                   const float face_color_alpha_1,
-                   const float face_color_r_1,
-                   const float face_color_g_1,
-                   const float face_color_b_1
-                   )
+    constexpr polygon_type_4(const uint32_t parameter_control_word,
+                             const uint32_t isp_tsp_instruction_word,
+                             const uint32_t tsp_instruction_word_0,
+                             const uint32_t texture_control_word_0,
+                             const uint32_t tsp_instruction_word_1,
+                             const uint32_t texture_control_word_1,
+                             const uint32_t data_size_for_sort_dma,
+                             const uint32_t next_address_for_sort_dma,
+                             const float face_color_alpha_0,
+                             const float face_color_r_0,
+                             const float face_color_g_0,
+                             const float face_color_b_0,
+                             const float face_color_alpha_1,
+                             const float face_color_r_1,
+                             const float face_color_g_1,
+                             const float face_color_b_1
+                             )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word_0(tsp_instruction_word_0)
@@ -414,15 +414,15 @@ namespace ta_global_parameter {
     uint32_t data_size_for_sort_dma;
     uint32_t next_address_for_sort_dma;
 
-    sprite(const uint32_t parameter_control_word,
-           const uint32_t isp_tsp_instruction_word,
-           const uint32_t tsp_instruction_word,
-           const uint32_t texture_control_word,
-           const uint32_t base_color,
-           const uint32_t offset_color,
-           const uint32_t data_size_for_sort_dma,
-           const uint32_t next_address_for_sort_dma
-           )
+    constexpr sprite(const uint32_t parameter_control_word,
+                     const uint32_t isp_tsp_instruction_word,
+                     const uint32_t tsp_instruction_word,
+                     const uint32_t texture_control_word,
+                     const uint32_t base_color,
+                     const uint32_t offset_color,
+                     const uint32_t data_size_for_sort_dma,
+                     const uint32_t next_address_for_sort_dma
+                     )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , tsp_instruction_word(tsp_instruction_word)
@@ -458,9 +458,9 @@ namespace ta_global_parameter {
     uint32_t _res4;
     uint32_t _res5;
 
-    modifier_volume(const uint32_t parameter_control_word,
-                    const uint32_t isp_tsp_instruction_word
-                    )
+    constexpr modifier_volume(const uint32_t parameter_control_word,
+                              const uint32_t isp_tsp_instruction_word
+                              )
       : parameter_control_word(parameter_control_word)
       , isp_tsp_instruction_word(isp_tsp_instruction_word)
       , _res0(0)

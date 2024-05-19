@@ -54,7 +54,7 @@ void ta_polygon_converter_cont(uint32_t ol_base_offset,
   (void)_dummy_read;
 }
 
-void ta_polygon_converter_transfer(volatile uint32_t * buf, uint32_t size)
+void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t size)
 {
   /* wait for previous transfer to complete (if any) */
   //while ((system.C2DST & C2DST__STATUS) != 0);  /* 1 == transfer is in progress */
