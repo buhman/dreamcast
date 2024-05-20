@@ -1,3 +1,4 @@
+#pragma once
 namespace ft6 {
   namespace data_transfer {
     namespace modifier_key {

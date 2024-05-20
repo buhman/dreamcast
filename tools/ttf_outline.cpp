@@ -289,7 +289,8 @@ int main(int argc, char *argv[])
   font font;
   font.first_char_code = byteswap<uint32_t>(start);
   font.last_char_code = byteswap<uint32_t>(end);
-  font.glyph_height = byteswap<int32_t>(face->size->metrics.height);
+  font.face_metrics.height = byteswap<int32_t>(face->size->metrics.height);
+  font.face_metrics.max_advance = byteswap<int32_t>(face->size->metrics.max_advance);
   font.glyph_count = byteswap<uint16_t>(num_glyphs);
   font.texture_stride = byteswap<uint16_t>(texture_stride);
   font.texture_width = byteswap<uint16_t>(window_curve_ix.window.width);

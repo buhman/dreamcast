@@ -1,6 +1,9 @@
 TEXT_EDITOR_OBJ = \
 	text_editor/text_editor.o \
 	text_editor/gap_buffer.o \
+	text_editor/render.o \
+	text_editor/keyboard.o \
+	text_editor/transform.o \
 	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \

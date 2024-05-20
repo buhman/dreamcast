@@ -1,6 +1,6 @@
 #include "gap_buffer.hpp"
 
-#include "sh7091/serial.hpp"
+#include "minmax.hpp"
 /*
            2   3     4   5   6   7
        s   e
@@ -17,7 +17,6 @@ void line_init_from_buf(struct gap_buffer& gb,
   gb.line.length = 0;
 
   for (int32_t i = 0; i < gb.gap_start; i++) {
-    serial::integer<uint32_t>(i);
     if (gb.buf[i] == '\n') {
       gb.line.offsets[gb.line.length++] = i;
     }
@@ -134,16 +133,6 @@ int32_t gap_column_number(struct gap_buffer& gb)
   if (gb.line.gap > 0)
     line_start = gb.line.offsets[gb.line.gap - 1] + 1;
   return gb.gap_start - line_start;
-}
-
-constexpr inline int32_t min(int32_t a, int32_t b)
-{
-  return (a < b) ? a : b;
-}
-
-constexpr inline int32_t max(int32_t a, int32_t b)
-{
-  return (a > b) ? a : b;
 }
 
 void gap_cursor_pos_line(struct gap_buffer& gb, int32_t delta)

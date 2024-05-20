@@ -120,6 +120,8 @@ def render_format(format):
     yield "}"
 
 def render_formats(name, formats):
+    yield "#pragma once"
+
     yield f"namespace {name} {{"
     for format in formats:
         yield from render_format(format)

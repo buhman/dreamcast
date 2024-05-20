@@ -54,8 +54,8 @@ uint32_t transform(uint32_t * ta_parameter_buf)
                                 tsp_instruction_word,
                                 texture_control_word,
                                 base_color,
-                                0, // offset_color
-                                0, // data_size_for_sort_dma
+                                0,  // offset_color
+                                0,  // data_size_for_sort_dma
                                 0); // next_address_for_sort_dma
   parameter.append<ta_vertex_parameter::sprite_type_0>() =
     ta_vertex_parameter::sprite_type_0(para_control::para_type::vertex_parameter,

@@ -1,3 +1,4 @@
+#pragma once
 namespace ft8 {
   namespace data_transfer {
     namespace vset {
