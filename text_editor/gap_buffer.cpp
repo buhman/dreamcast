@@ -25,9 +25,7 @@ void line_init_from_buf(struct gap_buffer& gb,
 
   gb.line.gap = gb.line.length;
 
-  serial::string("gbgapend\n");
   for (int32_t i = gb.gap_end; i < gb.size; i++) {
-    serial::integer<uint32_t>(i);
     if (gb.buf[i] == '\n') {
       gb.line.offsets[gb.line.length++] = i;
     }
@@ -77,6 +75,13 @@ void gap_append(struct gap_buffer& gb, char_type c)
 void gap_pop(struct gap_buffer& gb)
 {
   gb.gap_start--;
+  if (gb.buf[gb.gap_start] == '\n') {
+    for (int32_t i = gb.line.gap; i < gb.line.length; i++) {
+      gb.line.offsets[i - 1] = gb.line.offsets[i];
+    }
+    gb.line.gap -= 1;
+    gb.line.length -= 1;
+  }
 }
 
 /*
@@ -113,4 +118,53 @@ void gap_cursor_pos(struct gap_buffer& gb, int32_t delta)
       }
     }
   }
+}
+
+void gap_cursor_pos_abs(struct gap_buffer& gb, int32_t pos)
+{
+  if (pos > gb.gap_start) {
+    pos -= (gb.gap_end - gb.gap_start);
+  }
+  gap_cursor_pos(gb, pos - gb.gap_start);
+}
+
+int32_t gap_column_number(struct gap_buffer& gb)
+{
+  int32_t line_start = 0;
+  if (gb.line.gap > 0)
+    line_start = gb.line.offsets[gb.line.gap - 1] + 1;
+  return gb.gap_start - line_start;
+}
+
+constexpr inline int32_t min(int32_t a, int32_t b)
+{
+  return (a < b) ? a : b;
+}
+
+constexpr inline int32_t max(int32_t a, int32_t b)
+{
+  return (a > b) ? a : b;
+}
+
+void gap_cursor_pos_line(struct gap_buffer& gb, int32_t delta)
+{
+  if (delta > 0) {
+    int32_t max_pos_delta = gb.line.length - gb.line.gap;
+    delta = min(max_pos_delta, delta);
+  } else {
+    int32_t min_pos_delta = (-gb.line.gap) - 1;
+    delta = max(min_pos_delta, delta);
+  }
+  if (delta == 0)
+    return;
+  int32_t column = gap_column_number(gb);
+  int32_t offset_ix = (gb.line.gap - 1) + delta;
+  int32_t buf_ix = 0;
+  if (offset_ix >= 0)
+    buf_ix = gb.line.offsets[offset_ix] + 1;
+  while (buf_ix < gb.size && column > 0 && gb.buf[buf_ix] != '\n') {
+    buf_ix += 1;
+    column -= 1;
+  }
+  gap_cursor_pos_abs(gb, buf_ix);
 }

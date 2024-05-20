@@ -42,7 +42,7 @@ namespace ft6 {
     constexpr uint32_t _8_asterisk = 0x25;
     constexpr uint32_t _9_parenleft = 0x26;
     constexpr uint32_t _0_parenright = 0x27;
-    constexpr uint32_t return = 0x28;
+    constexpr uint32_t _return = 0x28;
     constexpr uint32_t esc = 0x29;
     constexpr uint32_t backspace = 0x2a;
     constexpr uint32_t tab = 0x2b;
@@ -78,13 +78,13 @@ namespace ft6 {
     constexpr uint32_t insert = 0x49;
     constexpr uint32_t home = 0x4a;
     constexpr uint32_t page_up = 0x4b;
-    constexpr uint32_t delete = 0x4c;
+    constexpr uint32_t _delete = 0x4c;
     constexpr uint32_t end = 0x4d;
     constexpr uint32_t page_down = 0x4e;
-    constexpr uint32_t left = 0x4f;
-    constexpr uint32_t right = 0x50;
-    constexpr uint32_t down = 0x51;
-    constexpr uint32_t up = 0x52;
+    constexpr uint32_t right_arrow = 0x4f;
+    constexpr uint32_t left_arrow = 0x50;
+    constexpr uint32_t down_arrow = 0x51;
+    constexpr uint32_t up_arrow = 0x52;
   }
 }
 

@@ -32,3 +32,5 @@ void gap_resize(struct gap_buffer& gb);
 void gap_append(struct gap_buffer& gb, char_type c);
 void gap_pop(struct gap_buffer& gb);
 void gap_cursor_pos(struct gap_buffer& gb, int32_t delta);
+int32_t gap_column_number(struct gap_buffer& gb);
+void gap_cursor_pos_line(struct gap_buffer& gb, int32_t delta);
