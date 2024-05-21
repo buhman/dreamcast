@@ -145,28 +145,28 @@ static inline void _dma_start(const uint32_t * command_buf)
   maple_if.MDST = mdst::start_status::start;
 }
 
-void dma_start(const uint32_t * command_buf,
-               const uint32_t command_size,
-               const uint32_t * receive_buf,
-               const uint32_t receive_size
+void dma_start(const uint32_t * send_buf,
+               const uint32_t send_size,
+               const uint32_t * recv_buf,
+               const uint32_t recv_size
                )
 {
   // write back operand cache blocks for command buffer prior to starting DMA
-  for (uint32_t i = 0; i < align_32byte(command_size) / 32; i++) {
+  for (uint32_t i = 0; i < align_32byte(send_size) / 32; i++) {
     asm volatile ("ocbwb @%0"
                   :                                                              // output
-                  : "r" (reinterpret_cast<uint32_t>(&command_buf[(32 * i) / 4])) // input
+                  : "r" (reinterpret_cast<uint32_t>(&send_buf[(32 * i) / 4])) // input
                   );
   }
 
   // start maple DMA
-  _dma_start(command_buf);
+  _dma_start(send_buf);
 
-  // purge operand cache block for receive buffer, prior to returning to the caller
-  for (uint32_t i = 0; i < align_32byte(receive_size) / 32; i++) {
+  // purge operand cache block for recv buffer, prior to returning to the caller
+  for (uint32_t i = 0; i < align_32byte(recv_size) / 32; i++) {
     asm volatile ("ocbp @%0"
                   :                                                              // output
-                  : "r" (reinterpret_cast<uint32_t>(&receive_buf[(32 * i) / 4])) // input
+                  : "r" (reinterpret_cast<uint32_t>(&recv_buf[(32 * i) / 4])) // input
                   );
   }
 

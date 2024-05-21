@@ -3,36 +3,35 @@
 #include "maple/maple_bus_ft6_key_scan_codes.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_bits.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_host_command_writer.hpp"
 
 #include "sh7091/serial.hpp"
 
 #include "keyboard.hpp"
 
-void keyboard_do_get_condition(uint32_t * command_buf,
-			       uint32_t * receive_buf,
-			       ft6::data_transfer::data_format& data)
+void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
 {
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
   using command_type = get_condition;
   using response_type = data_transfer<ft6::data_transfer::data_format>;
 
-  get_condition::data_fields data_fields = {
-    .function_type = std::byteswap(function_type::keyboard)
-  };
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::keyboard);
 
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf, data_fields);
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
-
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != response_type::command_code) {
       continue;
     }
-    auto& data_fields = bus_data.data_fields;
     if ((data_fields.function_type & std::byteswap(function_type::keyboard)) == 0) {
       continue;
     }

@@ -44,8 +44,6 @@ void inflate_font(const uint32_t * src,
                           curve_end_ix);
 }
 
-uint32_t _command_buf[(1024 + 32) / 4];
-uint32_t _receive_buf[(1024 + 32) / 4];
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
 
 struct editor_state {
@@ -100,9 +98,6 @@ void main()
 
   uint32_t frame_ix = 0;
 
-  uint32_t * command_buf = align_32byte(_command_buf);
-  uint32_t * receive_buf = align_32byte(_receive_buf);
-
   struct editor_state state = { 0 };
   gap_init_from_buf(state.gb, buf, buf_size, 0);
   line_init_from_buf(state.gb, offsets, offsets_size);
@@ -111,7 +106,7 @@ void main()
   ft6::data_transfer::data_format keyboards[2] = { 0 };
 
   while (true) {
-    keyboard_do_get_condition(command_buf, receive_buf, keyboards[frame_ix & 1]);
+    keyboard_do_get_condition(keyboards[frame_ix & 1]);
     keyboard_debug(keyboards, frame_ix);
     keyboard_update(keyboards, frame_ix, state.gb);
 

@@ -27,6 +27,8 @@ void do_get_condition()
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
 
+  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::controller);
+
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
 
