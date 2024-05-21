@@ -51,14 +51,14 @@ void do_get_condition(uint32_t * command_buf,
 
   const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
                                                                                         data_fields);
-  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  using host_response_type = struct maple::host_response<response_type::data_fields>;
   auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
   maple::dma_start(command_buf, command_size,
                    receive_buf, maple::sizeof_command(host_response));
 
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
+  using host_response_type = struct maple::host_response<response_type::data_fields>;
   for (uint8_t port = 0; port < 4; port++) {
-    auto response = reinterpret_cast<command_response_type *>(receive_buf);
+    auto response = reinterpret_cast<host_response_type *>(receive_buf);
     auto& bus_data = response[port].bus_data;
     if (bus_data.command_code != response_type::command_code) {
       return;

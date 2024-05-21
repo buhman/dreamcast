@@ -15,6 +15,7 @@
 
 namespace maple {
 
+/*
 void init_host_command(uint32_t * command_buf, uint32_t * receive_buf,
                        uint32_t destination_port,
                        uint8_t destination_ap, uint8_t command_code, uint8_t data_size,
@@ -104,6 +105,7 @@ uint32_t init_block_write(uint32_t * command_buf, uint32_t * receive_buf,
   return (reinterpret_cast<uint32_t>(&host_command[1]) - reinterpret_cast<uint32_t>(&host_command[0]))
     + data_size;
 }
+*/
 
 static inline void _dma_start(const uint32_t * command_buf)
 {

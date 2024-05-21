@@ -47,16 +47,17 @@ void do_lm_request(uint8_t port, uint8_t lm)
   maple::init_host_command(command_buf, receive_buf,
 			   destination_port,
 			   destination_ap, get_media_info::command_code, (sizeof (struct get_media_info::data_fields)),
-			   true);
+			   true); // end_flag
 
-  using host_command_type = struct maple::host_command<get_media_info::data_fields>;
+  using command_type = get_media_info;
+  using host_command_type = struct maple::host_command<command_type::data_fields>;
   auto host_command = reinterpret_cast<host_command_type *>(command_buf);
   auto& fields = host_command->bus_data.data_fields;
   fields.function_type = std::byteswap(function_type::vibration);
   fields.pt = std::byteswap(1 << 24);
 
   using response_type = data_transfer<ft8::data_transfer::data_format>;
-  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  using host_response_type = struct maple::host_response<response_type::data_fields>;
   auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
 
   serial::string("dma start\n");
@@ -118,7 +119,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
     fields.write_in_data.freq = 0x27;
     fields.write_in_data.inc = 0x00;
 
-    using host_response_type = struct maple::command_response<device_reply::data_fields>;
+    using host_response_type = struct maple::host_response<device_reply::data_fields>;
     auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
     maple::dma_start(command_buf, maple::sizeof_command(host_command),
                      receive_buf, maple::sizeof_command(host_response));
@@ -154,11 +155,11 @@ void do_device_request()
 {
   using command_type = device_request;
   using response_type = device_status;
-  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  using host_response_type = struct maple::host_response<response_type::data_fields>;
   auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
   const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
   maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+                   receive_buf, maple::sizeof_command(host_response) * 4);
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -193,5 +194,6 @@ void main()
       while (spg_status::vsync(holly.SPG_STATUS));
     }
     do_device_request();
+    break;
   };
 }

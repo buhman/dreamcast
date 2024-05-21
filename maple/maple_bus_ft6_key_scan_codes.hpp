@@ -1,7 +1,9 @@
+#pragma once
+
 #include <cstdint>
 
 namespace ft6 {
-  namespace scan_codes {
+  namespace scan_code {
     constexpr uint32_t no_operation = 0x0;
     constexpr uint32_t rollover_error = 0x1;
     constexpr uint32_t post_fail = 0x2;
@@ -52,7 +54,7 @@ namespace ft6 {
     constexpr uint32_t bracketleft_braceleft = 0x2f;
     constexpr uint32_t bracketright_braceright = 0x30;
     constexpr uint32_t backslash_bar = 0x31;
-    constexpr uint32_t _unknown_ = 0x32;
+    constexpr uint32_t iso_numbersign_tilde = 0x32;
     constexpr uint32_t semicolon_colon = 0x33;
     constexpr uint32_t apostrophe_quotedbl = 0x34;
     constexpr uint32_t grave_asciitilde = 0x35;
@@ -85,6 +87,71 @@ namespace ft6 {
     constexpr uint32_t left_arrow = 0x50;
     constexpr uint32_t down_arrow = 0x51;
     constexpr uint32_t up_arrow = 0x52;
+  }
+}
+namespace ft6 {
+  namespace scan_code {
+    constexpr uint32_t last_printable = 0x38;
+
+    const uint8_t code_point[last_printable + 1][2] = {
+      [scan_code::no_operation] = { 0, 0 },
+      [scan_code::rollover_error] = { 0, 0 },
+      [scan_code::post_fail] = { 0, 0 },
+      [scan_code::undefined_error] = { 0, 0 },
+      [scan_code::a_A] = { 'a', 'A' },
+      [scan_code::b_B] = { 'b', 'B' },
+      [scan_code::c_C] = { 'c', 'C' },
+      [scan_code::d_D] = { 'd', 'D' },
+      [scan_code::e_E] = { 'e', 'E' },
+      [scan_code::f_F] = { 'f', 'F' },
+      [scan_code::g_G] = { 'g', 'G' },
+      [scan_code::h_H] = { 'h', 'H' },
+      [scan_code::i_I] = { 'i', 'I' },
+      [scan_code::j_J] = { 'j', 'J' },
+      [scan_code::k_K] = { 'k', 'K' },
+      [scan_code::l_L] = { 'l', 'L' },
+      [scan_code::m_M] = { 'm', 'M' },
+      [scan_code::n_N] = { 'n', 'N' },
+      [scan_code::o_O] = { 'o', 'O' },
+      [scan_code::p_P] = { 'p', 'P' },
+      [scan_code::q_Q] = { 'q', 'Q' },
+      [scan_code::r_R] = { 'r', 'R' },
+      [scan_code::s_S] = { 's', 'S' },
+      [scan_code::t_T] = { 't', 'T' },
+      [scan_code::u_U] = { 'u', 'U' },
+      [scan_code::v_V] = { 'v', 'V' },
+      [scan_code::w_W] = { 'w', 'W' },
+      [scan_code::x_X] = { 'x', 'X' },
+      [scan_code::y_Y] = { 'y', 'Y' },
+      [scan_code::z_Z] = { 'z', 'Z' },
+      [scan_code::_1_exclam] = { '1', '!' },
+      [scan_code::_2_at] = { '2', '@' },
+      [scan_code::_3_numbersign] = { '3', '#' },
+      [scan_code::_4_dollar] = { '4', '$' },
+      [scan_code::_5_percent] = { '5', '%' },
+      [scan_code::_6_asciicircum] = { '6', '^' },
+      [scan_code::_7_ampersand] = { '7', '&' },
+      [scan_code::_8_asterisk] = { '8', '*' },
+      [scan_code::_9_parenleft] = { '9', '(' },
+      [scan_code::_0_parenright] = { '0', ')' },
+      [scan_code::_return] = { 0, 0 },
+      [scan_code::esc] = { 0, 0 },
+      [scan_code::backspace] = { 0, 0 },
+      [scan_code::tab] = { 0, 0 },
+      [scan_code::spacebar] = { 0, 0 },
+      [scan_code::minus_underscore] = { '-', '_' },
+      [scan_code::equal_plus] = { '=', '+' },
+      [scan_code::bracketleft_braceleft] = { '[', '{' },
+      [scan_code::bracketright_braceright] = { ']', '}' },
+      [scan_code::backslash_bar] = { '\\', '|' },
+      [scan_code::iso_numbersign_tilde] = { '#', '~' },
+      [scan_code::semicolon_colon] = { ';', ':' },
+      [scan_code::apostrophe_quotedbl] = { '\'', '"' },
+      [scan_code::grave_asciitilde] = { '\'', '~' },
+      [scan_code::comma_less] = { ',', '<' },
+      [scan_code::period_greater] = { '.', '>' },
+      [scan_code::slash_question] = { '/', '?' },
+    };
   }
 }
 

@@ -22,7 +22,7 @@ static_assert((sizeof (host_command<uint8_t[0]>)) == 12);
 static_assert((sizeof (host_command<uint8_t[0]>[4])) == 48);
 
 template <typename T>
-struct command_response {
+struct host_response {
   struct bus_data {
     uint8_t command_code;
     uint8_t destination_ap;
@@ -32,7 +32,7 @@ struct command_response {
   } bus_data;
   uint8_t _pad[align_32byte((sizeof (bus_data))) - (sizeof (bus_data))];
 };
-static_assert((sizeof (command_response<uint8_t[0]>)) == align_32byte((sizeof (command_response<uint8_t[0]>))));
+static_assert((sizeof (host_response<uint8_t[0]>)) == align_32byte((sizeof (host_response<uint8_t[0]>))));
 
 void init_host_command(uint32_t * buf, uint32_t * receive_buf,
                        uint32_t destination_port,

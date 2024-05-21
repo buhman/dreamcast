@@ -42,12 +42,12 @@ void main()
   uint32_t * receive_buf = align_32byte(_receive_buf);
 
   const uint32_t command_size = maple::init_block_write(command_buf, receive_buf,
-                                                        host_instruction::port_select::a,
-                                                        ap::de::expansion_device | ap::port_select::a | ap::lm_bus::_0,
+                                                        host_instruction::port_select::b,
+                                                        ap::de::expansion_device | ap::port_select::b | ap::lm_bus::_0,
                                                         wink_buf,
                                                         wink_size);
   using response_type = device_reply;
-  using host_response_type = struct maple::command_response<response_type::data_fields>;
+  using host_response_type = struct maple::host_response<response_type::data_fields>;
   auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
   maple::dma_start(command_buf, command_size,
                    receive_buf, maple::sizeof_command(host_response));
@@ -56,6 +56,4 @@ void main()
   serial::integer<uint8_t>(host_response->bus_data.destination_ap);
   serial::integer<uint8_t>(host_response->bus_data.source_ap);
   serial::integer<uint8_t>(host_response->bus_data.data_size);
-
-  while(1);
 }

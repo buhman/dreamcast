@@ -80,13 +80,13 @@ void main()
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
                               | ta_alloc_ctrl::tm_opb::no_list
-    //| ta_alloc_ctrl::t_opb::_16x4byte
+                              | ta_alloc_ctrl::t_opb::_16x4byte
                               | ta_alloc_ctrl::om_opb::no_list
                               | ta_alloc_ctrl::o_opb::_16x4byte;
 
   constexpr struct opb_size opb_size = { .opaque = 16 * 4
                                        , .opaque_modifier = 0
-				       //, .translucent = 16 * 4
+				       , .translucent = 16 * 4
                                        , .translucent_modifier = 0
                                        , .punch_through = 0
                                        };

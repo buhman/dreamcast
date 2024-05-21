@@ -18,7 +18,7 @@ void main()
 
   uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
 
-  constexpr uint32_t host_response_size = (sizeof (maple::command_response<response_type::data_fields>));
+  constexpr uint32_t host_response_size = (sizeof (maple::host_response<response_type::data_fields>));
 
   maple::dma_start(command_buf, command_size,
                    receive_buf, host_response_size);

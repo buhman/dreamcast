@@ -1,3 +1,5 @@
+#pragma once
+
 #include "string.hpp"
 
 namespace serial {

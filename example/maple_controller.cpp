@@ -5,114 +5,162 @@
 #include "holly/core_bits.hpp"
 #include "holly/holly.hpp"
 #include "maple/maple.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_port.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
+#include "maple/maple_host_command_writer.hpp"
 #include "sh7091/serial.hpp"
 
-uint32_t _command_buf[(1024 + 32) / 4];
-uint32_t _receive_buf[(1024 + 32) / 4];
+#include "systembus.hpp"
 
-static uint32_t * command_buf;
-static uint32_t * receive_buf;
-
-void do_get_condition(uint32_t port)
+void do_get_condition()
 {
-  uint32_t destination_port;
-  uint32_t destination_ap;
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
-  switch (port) {
-  case 0:
-    destination_port = host_instruction::port_select::a;
-    destination_ap = ap::de::device | ap::port_select::a;
-    break;
-  case 1:
-    destination_port = host_instruction::port_select::b;
-    destination_ap = ap::de::device | ap::port_select::b;
-    break;
-  case 2:
-    destination_port = host_instruction::port_select::c;
-    destination_ap = ap::de::device | ap::port_select::c;
-    break;
-  case 3:
-    destination_port = host_instruction::port_select::d;
-    destination_ap = ap::de::device | ap::port_select::d;
-    break;
-  default:
-    return;
-  }
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  const uint32_t command_size = maple::init_get_condition(command_buf, receive_buf,
-                                                          destination_port,
-                                                          destination_ap,
-                                                          std::byteswap(function_type::controller));
-
+  using command_type = get_condition;
   using response_type = data_transfer<ft0::data_transfer::data_format>;
-  using command_response_type = struct maple::command_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<command_response_type *>(receive_buf);
 
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
+
+  for (uint8_t port = 0; port < 4; port++) {
+    auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
+
+    if (bus_data.command_code != response_type::command_code) {
+      //serial::string("device did not reply to get_condition: ");
+      //serial::integer<uint8_t>(port);
+    } else if ((data_fields.function_type & std::byteswap(function_type::controller)) != 0) {
+      bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
+      if (a == 0) {
+	serial::string("port ");
+	serial::integer<uint8_t>(port);
+	serial::string("  `a` press ");
+	serial::integer<uint8_t>(a);
+      }
+    }
+  }
+}
+
+void do_lm_request(uint8_t port, uint8_t lm)
+{
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  uint32_t host_port_select = host_instruction_port_select(port);
+  uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
+
+  using command_type = device_request;
+  using response_type = device_status;
+
+  auto [host_command, host_response]
+    = writer.append_command<command_type, response_type>(host_port_select,
+							 destination_ap,
+							 true); // end_flag
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 
   auto& bus_data = host_response->bus_data;
-  if (bus_data.command_code != response_type::command_code) {
-    return;
-  }
   auto& data_fields = bus_data.data_fields;
-  if ((data_fields.function_type & std::byteswap(function_type::controller)) == 0) {
-    return;
+  if (bus_data.command_code != device_status::command_code) {
+    serial::string("lm did not reply: ");
+    serial::integer<uint8_t>(port, ' ');
+    serial::integer<uint8_t>(lm);
+  } else {
+    serial::string("    lm: ");
+    serial::integer<uint8_t>(lm);
+    serial::string("      ft:    ");
+    serial::integer<uint32_t>(std::byteswap(data_fields.device_id.ft));
+    serial::string("      fd[0]: ");
+    serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[0]));
+    serial::string("      fd[1]: ");
+    serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[1]));
+    serial::string("      fd[2]: ");
+    serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[2]));
+    serial::string("      source_ap.lm_bus: ");
+    serial::integer<uint8_t>(bus_data.source_ap & ap::lm_bus::bit_mask);
   }
+}
 
-  bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
-  if (a == 0) {
-    serial::string("port ");
-    serial::integer<uint8_t>(port);
-    serial::string("  `a` press ");
-    serial::integer<uint8_t>(a);
-  }
+void do_lm_requests(uint8_t port, uint8_t lm)
+{
+  if (lm & ap::lm_bus::_0)
+    do_lm_request(port, lm & ap::lm_bus::_0);
+  if (lm & ap::lm_bus::_1)
+    do_lm_request(port, lm & ap::lm_bus::_1);
+  if (lm & ap::lm_bus::_2)
+    do_lm_request(port, lm & ap::lm_bus::_2);
+  if (lm & ap::lm_bus::_3)
+    do_lm_request(port, lm & ap::lm_bus::_3);
+  if (lm & ap::lm_bus::_4)
+    do_lm_request(port, lm & ap::lm_bus::_4);
 }
 
 void do_device_request()
 {
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
   using command_type = device_request;
   using response_type = device_status;
 
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  using host_response_type = struct maple::command_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
 
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
-    auto& data_fields = host_response[port].bus_data.data_fields;
+    auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != device_status::command_code) {
-      // the controller is disconnected
+      serial::string("port: ");
+      serial::integer<uint8_t>(port);
+      serial::string("  disconnected\n");
     } else {
-      if ((data_fields.device_id.ft & std::byteswap(function_type::controller)) != 0) {
-	//serial::string("is controller: ");
-	//serial::integer<uint8_t>(port);
-	do_get_condition(port);
-      }
+      serial::string("port: ");
+      serial::integer<uint8_t>(port);
+      serial::string("  ft:    ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.ft));
+      serial::string("  fd[0]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[0]));
+      serial::string("  fd[1]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[1]));
+      serial::string("  fd[2]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[2]));
+      serial::string("  source_ap.lm_bus: ");
+      serial::integer<uint8_t>(bus_data.source_ap & ap::lm_bus::bit_mask);
+
+      do_lm_requests(port,
+		     bus_data.source_ap & ap::lm_bus::bit_mask);
     }
   }
 }
 
 void main()
 {
-  command_buf = align_32byte(_command_buf);
-  command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
-  receive_buf = align_32byte(_receive_buf);
-
   // flycast needs this in HLE mode, or else it won't start the vcount
   // counter.
   video_output::set_mode_vga();
 
+  do_device_request();
+
   while (1) {
     while (!spg_status::vsync(holly.SPG_STATUS));
     while (spg_status::vsync(holly.SPG_STATUS));
-    do_device_request();
+
+    do_get_condition();
   };
 }
