@@ -137,7 +137,7 @@ struct block_read {
     uint32_t function_type;
     uint8_t pt;
     uint8_t phase;
-    uint16_t block_no;
+    uint16_t block_number;
   };
 
 };
@@ -152,7 +152,7 @@ struct block_write {
     uint32_t function_type;
     uint8_t pt;
     uint8_t phase;
-    uint16_t block_no;
+    uint16_t block_number;
     T written_data;
   };
 
@@ -167,7 +167,7 @@ struct get_last_error {
     uint32_t function_type;
     uint8_t pt;
     uint8_t phase;
-    uint16_t block_no;
+    uint16_t block_number;
   };
 
 };

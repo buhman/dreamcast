@@ -101,6 +101,19 @@ void hexlify(const uint8_t n)
   character(num_buf[1]);
 }
 
+void hexlify(const uint8_t * s, uint32_t len)
+{
+  for (uint32_t i = 0; i < len; i++) {
+    hexlify(s[i]);
+  }
+  character('\n');
+}
+
+void hexlify(const uint32_t * s, uint32_t len)
+{
+  hexlify(reinterpret_cast<const uint8_t *>(s), len);
+}
+
 template <typename T, typename conv_type>
 void integer(const T n, const char end, const uint32_t length)
 {

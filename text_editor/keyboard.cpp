@@ -32,7 +32,7 @@ void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
     if (bus_data.command_code != response_type::command_code) {
       continue;
     }
-    if ((data_fields.function_type & std::byteswap(function_type::keyboard)) == 0) {
+    if ((std::byteswap(data_fields.function_type) & function_type::keyboard) == 0) {
       continue;
     }
 

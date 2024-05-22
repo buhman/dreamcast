@@ -50,6 +50,9 @@ maple/maple_bus_bits.hpp: regs/maple_bus_bits.csv regs/gen/core_bits.py
 maple/maple_bus_ft0.hpp: regs/maple_bus_ft0.csv regs/gen/maple_data_format.py
 	python regs/gen/maple_data_format.py $< > $@
 
+maple/maple_bus_ft1.hpp: regs/maple_bus_ft1.csv regs/gen/maple_data_format.py
+	python regs/gen/maple_data_format.py $< > $@
+
 maple/maple_bus_ft6.hpp: regs/maple_bus_ft6.csv regs/gen/maple_data_format.py
 	python regs/gen/maple_data_format.py $< > $@
 

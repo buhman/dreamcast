@@ -39,7 +39,7 @@ void do_get_condition()
     if (bus_data.command_code != response_type::command_code) {
       //serial::string("device did not reply to get_condition: ");
       //serial::integer<uint8_t>(port);
-    } else if ((data_fields.function_type & std::byteswap(function_type::controller)) != 0) {
+    } else if ((std::byteswap(data_fields.function_type) & function_type::controller) != 0) {
       bool a = ft0::data_transfer::digital_button::a(data_fields.data.digital_button);
       if (a == 0) {
 	serial::string("port ");

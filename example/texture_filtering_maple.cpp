@@ -258,7 +258,7 @@ void do_get_condition(uint32_t * command_buf,
       return;
     }
     auto& data_fields = bus_data.data_fields;
-    if ((data_fields.function_type & std::byteswap(function_type::controller)) == 0) {
+    if ((std::byteswap(data_fields.function_type) & function_type::controller) == 0) {
       return;
     }
 

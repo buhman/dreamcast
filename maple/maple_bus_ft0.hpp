@@ -1,4 +1,5 @@
 #pragma once
+
 namespace ft0 {
   namespace data_transfer {
     namespace digital_button {

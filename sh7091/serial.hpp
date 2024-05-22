@@ -14,6 +14,10 @@ void string(const uint8_t * s, uint32_t len);
 
 void hexlify(const uint8_t n);
 
+void hexlify(const uint8_t * s, uint32_t len);
+
+void hexlify(const uint32_t * s, uint32_t len);
+
 using hex = string::hex_type;
 using dec = string::dec_type;
 
