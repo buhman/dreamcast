@@ -290,7 +290,8 @@ MAPLE_STORAGE_OBJ = \
 	example/maple_storage.o \
 	holly/video_output.o \
 	sh7091/serial.o \
-	maple/maple.o
+	maple/maple.o \
+	$(LIBGCC)
 
 example/maple_storage.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_storage.elf: $(START_OBJ) $(MAPLE_STORAGE_OBJ)

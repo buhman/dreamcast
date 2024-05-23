@@ -1,0 +1,403 @@
+      ft:    0x0000000e
+      fd[0]: 0x7e7e3f40 timer
+      fd[1]: 0x00051000 lcd
+      fd[2]: 0x000f4100 storage
+
+storage:
+  pt:  0x00 → 1 partition
+  bb:  0x0f → (0x0f + 1) * 32 = 512 bytes per block
+  wa:  0x4  → 1 block = 4 accesses, 128 bytes per access
+  ra:  0x1  → 1 block = 1 accesss,  512 bytes per access
+  rm:  0 → fixed
+  crc: 0 → CRC not needed
+  fd:  0 → reserved
+
+---- block ff (system area)
+
+format information: 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55 55
+volume label:       01 8f af ff ff 00 00 00 00 00 00 00 00 00 00 00 
+                    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+date and time:      19 98 11 26 01 37 59 03
+reserved:           00 00 00 00 00 00 00 00
+total size:                        ff 00
+partition number:                  00 00
+system area block number:          ff 00
+fat area block number:             fe 00
+number of fat area blocks:         01 00
+file information block number:     fd 00
+number of file information blocks: 0d 00
+volume icon:                       74
+reserved:                          00 
+save area block number:            c8 00
+number of save area blocks:        1f 00
+reserved:                          00 00 80 00
+
+00 00 00 00 00 00 00 00
+
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+
+----- block fe (fat area)
+
+00: fc ff
+01: fc ff
+02: fc ff
+03: fc ff
+04: fc ff
+05: fc ff
+06: fc ff
+07: fc ff 
+08: fc ff
+09: fc ff
+0a: fc ff
+0b: fc ff
+0c: fc ff
+0d: fc ff
+0e: fc ff
+0f: fc ff 
+10: fc ff
+11: fc ff
+12: fc ff
+13: fc ff
+14: fc ff
+15: fc ff
+16: fc ff
+17: fc ff 
+18: fc ff
+19: fc ff
+1a: fc ff
+1b: fc ff
+1c: fc ff
+1d: fc ff
+1e: fc ff
+1f: fc ff 
+20: fc ff
+21: fc ff
+22: fc ff
+23: fc ff
+24: fc ff
+25: fc ff
+26: fc ff
+27: fc ff 
+28: fc ff
+29: fc ff
+2a: fc ff
+2b: fc ff
+2c: fc ff
+2d: fc ff
+2e: fc ff
+2f: fc ff 
+30: fc ff
+31: fc ff
+32: fc ff
+33: fc ff
+34: fc ff
+35: fc ff
+36: fc ff
+37: fc ff 
+38: fc ff
+39: fc ff
+3a: fc ff
+3b: fc ff
+3c: fc ff
+3d: fc ff
+3e: fc ff
+3f: fc ff 
+40: fc ff
+41: fc ff
+42: fc ff
+43: fc ff
+44: fc ff
+45: fc ff
+46: fc ff
+47: fc ff 
+48: fc ff
+49: fc ff
+4a: fc ff
+4b: fc ff
+4c: fc ff
+4d: fc ff
+4e: fc ff
+4f: fc ff 
+50: fc ff
+51: fc ff
+52: fc ff
+53: fc ff
+54: fc ff
+55: fc ff
+56: fc ff
+57: fc ff 
+58: fc ff
+59: fc ff
+5a: fc ff
+5b: fc ff
+5c: fc ff
+5d: fa ff
+5e: 5d 00
+5f: 5e 00 
+60: fa ff
+61: 60 00
+62: 61 00
+63: 62 00
+64: 63 00
+65: 64 00
+66: 65 00
+67: 66 00 
+68: 67 00
+69: 68 00
+6a: 69 00
+6b: 6a 00
+6c: 6b 00
+6d: fa ff
+6e: 6d 00
+6f: fa ff 
+70: 6f 00
+71: 70 00
+72: 71 00
+73: 72 00
+74: 73 00
+75: 74 00
+76: 75 00
+77: 76 00 
+78: 77 00
+79: 78 00
+7a: 79 00
+7b: 7a 00
+7c: 7b 00
+7d: 7c 00
+7e: 7d 00
+7f: 7e 00 
+80: 7f 00
+81: 80 00
+82: 81 00
+83: 82 00
+84: 83 00
+85: 84 00
+86: 85 00
+87: 86 00 
+88: 87 00
+89: 88 00
+8a: 89 00
+8b: 8a 00
+8c: 8b 00
+8d: 8c 00
+8e: 8d 00
+8f: 8e 00 
+90: fa ff
+91: 90 00
+92: 91 00
+93: 92 00
+94: fa ff
+95: 94 00
+96: 95 00
+97: 96 00 
+98: 97 00
+99: 98 00
+9a: 99 00
+9b: 9a 00
+9c: 9b 00
+9d: 9c 00
+9e: 9d 00
+9f: 9e 00 
+a0: 9f 00
+a1: a0 00
+a2: a1 00
+a3: a2 00
+a4: a3 00
+a5: a4 00
+a6: a5 00
+a7: fa ff 
+a8: a7 00
+a9: a8 00
+aa: a9 00
+ab: aa 00
+ac: ab 00
+ad: ac 00
+ae: ad 00
+af: ae 00 
+b0: af 00
+b1: b0 00
+b2: b1 00
+b3: b2 00
+b4: b3 00
+b5: b4 00
+b6: b5 00
+b7: b6 00 
+b8: b7 00
+b9: fa ff
+ba: b9 00
+bb: ba 00
+bc: bb 00
+bd: fa ff
+be: bd 00
+bf: be 00 
+c0: bf 00
+c1: c0 00
+c2: c1 00
+c3: fa ff
+c4: c3 00
+c5: fa ff
+c6: c5 00
+c7: c6 00 
+c8: fc ff
+c9: fc ff
+ca: fc ff
+cb: fc ff
+cc: fc ff
+cd: fc ff
+ce: fc ff
+cf: fc ff 
+d0: fc ff
+d1: fc ff
+d2: fc ff
+d3: fc ff
+d4: fc ff
+d5: fc ff
+d6: fc ff
+d7: fc ff 
+d8: fc ff
+d9: fc ff
+da: fc ff
+db: fc ff
+dc: fc ff
+dd: fc ff
+de: fc ff
+df: fc ff 
+e0: fc ff
+e1: fc ff
+e2: fc ff
+e3: fc ff
+e4: fc ff
+e5: fc ff
+e6: fc ff
+e7: fc ff 
+e8: fc ff
+e9: fc ff
+ea: fc ff
+eb: fc ff
+ec: fc ff
+ed: fc ff
+ee: fc ff
+ef: fc ff 
+f0: fc ff
+f1: fa ff
+f2: f1 00
+f3: f2 00
+f4: f3 00
+f5: f4 00
+f6: f5 00
+f7: f6 00 
+f8: f7 00
+f9: f8 00
+fa: f9 00
+fb: fa 00
+fc: fb 00
+fd: fc 00
+fe: fa ff
+ff: fa ff 
+
+----- block fd (file information)
+
+status:     33
+copy:       00
+start fat:  c7 00
+file name:  47 41 55 4e 54 4c 45 54 2e 30 30 31 "GAUNTLET.001"
+date:       19 98 11 26 00 10 12 03
+block size: 03 00
+header:     00 00
+reserved:   00 00 00 00
+
+status:     33
+copy:       00
+start fat:  c4 00
+file name:  45 43 43 4f 44 4f 54 46 2e 5a 41 43 "ECCODOTF.ZAC"
+date:       19 98 11 26 00 15 17 03
+block size: 02 00
+header:     00 00
+reserved:   00 00 00 00
+
+status:     33
+copy:       00
+start fat:  c2 00
+file name:  45 43 43 4f 44 4f 54 46 2e 5f 5f 5f "ECCODOTF.___"
+date:       19 98 11 26 00 12 35 03
+block size: 06 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  bc 00
+file name:  53 48 45 4e 4d 55 45 32 5f 53 59 53 "SHENMUE2_SYS"
+date:       19 98 11 27 07 41 15 04
+block size: 04 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  b8 00
+file name:  53 48 45 4e 4d 55 45 32 5f 30 30 31 "SHENMUE2_001"
+date:       19 98 11 27 07 41 16 04
+block size: 12 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  a6 00
+file name:  54 4f 4d 42 43 48 52 4e 2e 30 30 30 "TOMBCHRN.000"
+date:       20 23 09 30 18 29 06 00
+block size: 13 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  93 00
+file name:  54 4f 4d 42 43 48 52 4e 2e 53 59 53 "TOMBCHRN.SYS"
+date:       20 23 09 30 18 29 06 00
+block size: 04 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  8f 00
+file name:  54 4f 4d 42 52 41 49 44 2e 30 30 30 "TOMBRAID.000"
+date:       20 23 09 30 22 09 06 00
+block size: 21 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  6e 00
+file name:  54 4f 4d 42 52 41 49 44 2e 53 59 53 "TOMBRAID.SYS"
+date:       20 23 09 30 22 09 06 00
+block size: 02 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       00
+start fat:  6c 00
+file name:  4c 45 4d 41 4e 53 32 34 2e 4f 50 54 "LEMANS24.OPT"
+date:       20 23 10 11 19 30 14 02
+block size: 0d 00
+header:     00 00
+reserved:   00 00 00 00 
+
+status:     33
+copy:       ff
+start fat:  5f 00
+file name:  43 48 55 5f 43 48 55 5f 5f 52 43 54 "CHU_CHU__RCT"
+date:       20 23 10 11 16 59 43 02
+block size: 03 00
+header:     00 00
+reserved:   00 00 00 00 
+
+

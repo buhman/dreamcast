@@ -24,9 +24,9 @@
 "reserved_for_execution_file",,,,,,,,
 "reserved_for_execution_file",,,,,,,,
 ,,,,,,,,
-"block_read_data_transfer<n>",7,6,5,4,3,2,1,0
+"block_read_data_transfer",7,6,5,4,3,2,1,0
 "pt",,,,,,,,
 "phase",,,,,,,,
 "block_number",,,,,,,,
 "block_number",,,,,,,,
-"block_data<n>",,,,,,,,
+"block_data<0>",,,,,,,,

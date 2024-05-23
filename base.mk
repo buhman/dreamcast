@@ -7,6 +7,7 @@ CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-array-bounds
 #CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds=
 CFLAGS += -Wno-error=maybe-uninitialized
+CFLAGS += -Wno-error=unused-but-set-variable
 
 CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 

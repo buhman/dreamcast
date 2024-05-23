@@ -35,6 +35,14 @@ def parse_bits(bits: list[str]):
                   position=min(indicies),
                   )
 
+def parse_format_name(name):
+    if '<' in name:
+        head, middle, tail = re.split('[<>]', name)
+        assert tail == "", name
+        return head, middle
+    else:
+        return name, None
+
 def parse_data_format(ix, rows):
     if ix >= len(rows):
         return None
@@ -61,7 +69,9 @@ def parse_data_format(ix, rows):
         assert len(bits) in {0, 8}, bits
         fields[field_name].append(Field(field_name,
                                         list(parse_bits(bits))))
-        size += 1
+        _, variable = parse_format_name(field_name)
+        if not variable:
+            size += 1
         if field_name not in field_order:
             field_order.append(field_name)
 
@@ -81,17 +91,8 @@ def parse(rows):
     assert len(formats) > 0
     return formats
 
-def parse_format_name(name):
-    if '<' in name:
-        head, middle, tail = re.split('[<>]', name)
-        assert tail == "", name
-        return head, middle
-    else:
-        return name, None
-
 def render_format(format):
-    format_name, variable = parse_format_name(format.name)
-    yield f"namespace {format_name} {{"
+    yield f"namespace {format.name} {{"
     for field_name in format.field_order:
         subfields = format.fields[field_name]
         if not any(field.bits != [] for field in subfields):
@@ -110,8 +111,6 @@ def render_format(format):
         yield "}"
         yield ""
 
-    if variable is not None:
-        yield f"template <int {variable}>"
     yield f"struct data_format {{"
 
     for _field_name in format.field_order:
@@ -133,13 +132,8 @@ def render_format(format):
             assert False, (len(subfields), field_name)
 
     yield "};"
-    format_name, variable = parse_format_name(format.name)
-    if variable is not None:
-        yield f"static_assert((sizeof (struct data_format<0>)) % 4 == 0);"
-        yield f"static_assert((sizeof (struct data_format<0>)) == {format.size - 1});"
-    else:
-        yield f"static_assert((sizeof (struct data_format)) % 4 == 0);"
-        yield f"static_assert((sizeof (struct data_format)) == {format.size});"
+    yield f"static_assert((sizeof (struct data_format)) % 4 == 0);"
+    yield f"static_assert((sizeof (struct data_format)) == {format.size});"
     yield "}"
 
 def render_formats(name, formats):

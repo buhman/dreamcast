@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+namespace maple {
+
 struct device_id {
   uint32_t ft;
   uint32_t fd[3];
@@ -276,3 +278,4 @@ struct ar_error {
 
 static_assert((sizeof (struct ar_error::data_fields)) == 4);
 
+}

@@ -20,15 +20,14 @@ namespace ft1 {
   }
 
   namespace block_read_data_transfer {
-    template <int n>
     struct data_format {
       uint8_t pt;
       uint8_t phase;
       uint16_t block_number;
-      uint8_t block_data[n];
+      uint8_t block_data[0];
     };
-    static_assert((sizeof (struct data_format<0>)) % 4 == 0);
-    static_assert((sizeof (struct data_format<0>)) == 4);
+    static_assert((sizeof (struct data_format)) % 4 == 0);
+    static_assert((sizeof (struct data_format)) == 4);
   }
 
 }
