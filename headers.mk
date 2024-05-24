@@ -62,6 +62,9 @@ maple/maple_bus_ft6_key_scan_codes.hpp: regs/maple_bus_ft6_key_scan_codes.csv re
 maple/maple_bus_ft8.hpp: regs/maple_bus_ft8.csv regs/gen/maple_data_format.py
 	python regs/gen/maple_data_format.py $< > $@
 
+maple/maple_bus_ft9.hpp: regs/maple_bus_ft9.csv regs/gen/maple_data_format.py
+	python regs/gen/maple_data_format.py $< > $@
+
 # AICA
 
 aica/aica_channel.hpp: regs/aica_channel_data.csv regs/gen/aica.py

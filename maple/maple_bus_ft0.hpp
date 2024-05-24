@@ -62,6 +62,7 @@ namespace ft0 {
       uint8_t analog_axis_5;
       uint8_t analog_axis_6;
     };
+    static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 8);
   }
 

@@ -1,4 +1,5 @@
 #pragma once
+
 namespace ft6 {
   namespace data_transfer {
     namespace modifier_key {
@@ -60,6 +61,7 @@ namespace ft6 {
       uint8_t led_state;
       uint8_t scan_code_array[6];
     };
+    static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 8);
   }
 
@@ -70,6 +72,7 @@ namespace ft6 {
       uint8_t w2_reserved;
       uint8_t w3_reserved;
     };
+    static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 4);
   }
 

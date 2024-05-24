@@ -28,6 +28,8 @@ def parse_bits(bits: list[str]):
     bit_order = [7, 6, 5, 4, 3, 2, 1, 0]
     by_name = defaultdict(list)
     for bit_ix, bit in zip(bit_order, bits):
+        if bit == '':
+            continue
         by_name[bit].append(bit_ix)
     for name, indicies in by_name.items():
         yield Bit(name=name,
@@ -65,8 +67,8 @@ def parse_data_format(ix, rows):
         ix += 1
         excess_bits = [b for b in _bits[8:] if b != ""]
         assert excess_bits == []
-        bits = [b for b in _bits[:8] if b != ""]
-        assert len(bits) in {0, 8}, bits
+        bits = [b for b in _bits[:8]]
+        assert len(bits) == 8, bits
         fields[field_name].append(Field(field_name,
                                         list(parse_bits(bits))))
         _, variable = parse_format_name(field_name)
@@ -126,6 +128,9 @@ def render_format(format):
             yield f"uint16_t {field_name};"
         elif len(subfields) in {3, 6}:
             yield f"uint8_t {field_name}[{len(subfields)}];"
+        elif len(subfields) == 16:
+            # bleh: hacky
+            yield f"uint16_t {field_name}[8];"
         elif len(subfields) == 4:
             yield f"uint32_t {field_name};"
         else:

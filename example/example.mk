@@ -329,6 +329,19 @@ MAPLE_ANALOG_OBJ = \
 example/maple_analog.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_analog.elf: $(START_OBJ) $(MAPLE_ANALOG_OBJ)
 
+MAPLE_MOUSE_OBJ = \
+	example/maple_mouse.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o \
+	maple/maple.o
+
+example/maple_mouse.elf: LDSCRIPT = $(LIB)/main.lds
+example/maple_mouse.elf: $(START_OBJ) $(MAPLE_MOUSE_OBJ)
+
 SERIAL_TRANSFER_OBJ = \
 	example/serial_transfer.o \
 	sh7091/serial.o \

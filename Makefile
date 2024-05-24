@@ -18,6 +18,7 @@ build-fonts:
 
 include example/example.mk
 include text_editor/text_editor.mk
+include snake/snake.mk
 include pokemon/pokemon.mk
 
 .PHONY: phony

@@ -1,4 +1,5 @@
 #pragma once
+
 namespace ft8 {
   namespace data_transfer {
     namespace vset {
@@ -33,6 +34,7 @@ namespace ft8 {
       uint8_t fm0;
       uint8_t fm1;
     };
+    static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 4);
   }
 
@@ -43,6 +45,7 @@ namespace ft8 {
       uint8_t freq;
       uint8_t inc;
     };
+    static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 4);
   }
 

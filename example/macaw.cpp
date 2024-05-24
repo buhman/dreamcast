@@ -30,10 +30,10 @@ struct vertex {
 
 const struct vertex strip_vertices[4] = {
   // [ position       ]  [ uv coordinates       ]  [color   ]
-  { -0.5f,   0.5f,  0.f, 0.f        , 127.f/128.f, 0x00000000}, // the first two base colors in a
-  { -0.5f,  -0.5f,  0.f, 0.f        , 0.f        , 0x00000000}, // non-Gouraud triangle strip are ignored
-  {  0.5f,   0.5f,  0.f, 127.f/128.f, 127.f/128.f, 0x00000000},
-  {  0.5f,  -0.5f,  0.f, 127.f/128.f, 0.f        , 0x00000000},
+  { -0.5f,   0.5f,  0.f, 0.f, 1.f, 0x00000000}, // the first two base colors in a
+  { -0.5f,  -0.5f,  0.f, 0.f, 0.f, 0x00000000}, // non-Gouraud triangle strip are ignored
+  {  0.5f,   0.5f,  0.f, 1.f, 1.f, 0x00000000},
+  {  0.5f,  -0.5f,  0.f, 1.f, 0.f, 0x00000000},
 };
 constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct vertex));
 

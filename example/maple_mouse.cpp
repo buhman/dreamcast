@@ -17,6 +17,7 @@
 #include "holly/background.hpp"
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
+#include "sh7091/serial.hpp"
 
 #include "geometry/border.hpp"
 #include "geometry/circle.hpp"
@@ -27,8 +28,9 @@
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
+#include "maple/maple_bus_ft9.hpp"
 
-static ft0::data_transfer::data_format data[4];
+static ft9::data_transfer::data_format data;
 
 void do_get_condition()
 {
@@ -36,14 +38,14 @@ void do_get_condition()
   uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
   using command_type = maple::get_condition;
-  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
+  using response_type = maple::data_transfer<ft9::data_transfer::data_format>;
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
 
-  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::controller);
+  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::pointing);
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
@@ -51,15 +53,19 @@ void do_get_condition()
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
     if (bus_data.command_code != response_type::command_code) {
-      return;
-    }
-    auto& data_fields = bus_data.data_fields;
-    if ((std::byteswap(data_fields.function_type) & function_type::controller) == 0) {
-      return;
+      continue;
     }
 
-    data[port].analog_axis_3 = data_fields.data.analog_axis_3;
-    data[port].analog_axis_4 = data_fields.data.analog_axis_4;
+    auto& data_fields = bus_data.data_fields;
+    if ((std::byteswap(data_fields.function_type) & function_type::pointing) == 0) {
+      continue;
+    }
+
+    for (uint32_t i = 0; i < 8; i++) {
+      data.analog_coordinate_axis[i] = data_fields.data.analog_coordinate_axis[i];
+    }
+
+    break;
   }
 }
 
@@ -179,6 +185,9 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
+  float x_pos = 0.0f;
+  float y_pos = 0.0f;
+  float z_pos = 0.0f;
 
   while (1) {
     do_get_condition();
@@ -188,8 +197,9 @@ void main()
 			      640 / 32,
 			      480 / 32);
 
-    float x_pos = static_cast<float>(data[0].analog_axis_3 - 0x80) * (0.5 / 127);
-    float y_pos = static_cast<float>(data[0].analog_axis_4 - 0x80) * (0.5 / 127);
+    x_pos += static_cast<float>(data.analog_coordinate_axis[0] - 0x200) * 0.0015;
+    y_pos += static_cast<float>(data.analog_coordinate_axis[1] - 0x200) * 0.0015;
+    z_pos += static_cast<float>(data.analog_coordinate_axis[2] - 0x200) * 0.015;
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     for (uint32_t i = 0; i < border::num_faces; i++) {
@@ -208,6 +218,16 @@ void main()
 		circle::faces[i],
 		{0.0, 1.0, 1.0, 1.0}, // color
 		{x_pos, y_pos, 0.0}, // position
+		0.05f // scale
+		);
+    }
+
+    for (uint32_t i = 0; i < circle::num_faces; i++) {
+      transform(parameter,
+		circle::vertices,
+		circle::faces[i],
+		{0.0, 1.0, 1.0, 0.0}, // color
+		{1.0, z_pos, 0.0}, // position
 		0.05f // scale
 		);
     }
