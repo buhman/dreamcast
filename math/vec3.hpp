@@ -160,7 +160,7 @@ inline constexpr vec<3, U> functor1(U (&func) (T const& x), vec<3, T> const& v)
 }
 
 template <typename T>
-inline constexpr T length(vec<3, T> const& v)
+inline constexpr T magnitude(vec<3, T> const& v)
 {
   return sqrt(dot(v, v));
 }

@@ -134,6 +134,12 @@ inline constexpr T dot(vec<2, T> const& v1, vec<2, T> const& v2)
 }
 
 template <typename T>
+inline constexpr T cross(vec<2, T> const& v1, vec<2, T> const& v2)
+{
+  return v1.x * v2.y - v2.x * v1.y;
+}
+
+template <typename T>
 inline constexpr vec<2, T> functor1(T (&func) (T const& x), vec<2, T> const& v)
 {
   return vec<2, T>(func(v.x), func(v.y));
@@ -146,7 +152,7 @@ inline constexpr vec<2, U> functor1(U (&func) (T const& x), vec<2, T> const& v)
 }
 
 template <typename T>
-inline constexpr T length(vec<2, T> const& v)
+inline constexpr T magnitude(vec<2, T> const& v)
 {
   return sqrt(dot(v, v));
 }

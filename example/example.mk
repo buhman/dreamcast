@@ -516,3 +516,29 @@ TA_TRANSFER_PROFILE_OBJ = \
 
 example/ta_transfer_profile.elf: LDSCRIPT = $(LIB)/main.lds
 example/ta_transfer_profile.elf: $(START_OBJ) $(TA_TRANSFER_PROFILE_OBJ)
+
+VQ_OBJ = \
+	example/vq.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o
+
+example/vq.elf: LDSCRIPT = $(LIB)/main.lds
+example/vq.elf: $(START_OBJ) $(VQ_OBJ)
+
+SIERPINSKI_OBJ = \
+	example/sierpinski.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	wolf2.data.o \
+	wolf2.data.pal.o \
+	strawberry.data.o \
+	strawberry.data.pal.o
+
+example/sierpinski.elf: LDSCRIPT = $(LIB)/main.lds
+example/sierpinski.elf: $(START_OBJ) $(SIERPINSKI_OBJ)

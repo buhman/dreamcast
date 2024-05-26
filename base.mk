@@ -8,6 +8,7 @@ CFLAGS += -Wno-array-bounds
 #CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds=
 CFLAGS += -Wno-error=maybe-uninitialized
 CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-error=unused-variable
 
 CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 
@@ -50,6 +51,9 @@ endef
 	$(BUILD_BINARY_O)
 
 %.data.o: %.data
+	$(BUILD_BINARY_O)
+
+%.data.pal.o: %.data.pal
 	$(BUILD_BINARY_O)
 
 %.o: %.s

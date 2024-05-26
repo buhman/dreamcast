@@ -185,8 +185,12 @@ namespace texture_control_word {
     constexpr uint32_t non_twiddled = 1 << 26;
   }
 
-  constexpr uint32_t palette_selector(uint32_t a) {
+  constexpr uint32_t palette_selector4(uint32_t a) {
     return (a & 0x3f) << 21;
+  }
+
+  constexpr uint32_t palette_selector8(uint32_t a) {
+    return (a & 0x3) << 25;
   }
 
   constexpr uint32_t stride_select = 1 << 25;
