@@ -17,6 +17,7 @@ build-fonts:
 	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/terminus/ter-u20n.otb ter_u20n.data
 
 include example/example.mk
+include chess/chess.mk
 include text_editor/text_editor.mk
 include snake/snake.mk
 include pokemon/pokemon.mk

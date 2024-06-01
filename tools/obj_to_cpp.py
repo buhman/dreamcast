@@ -26,6 +26,10 @@ class TextureCoordinate:
     v: float
 
 @dataclass
+class VertexIx:
+    vertex: int
+
+@dataclass
 class VertexNormal:
     vertex: int
     normal: int
@@ -37,7 +41,8 @@ class VertexTextureNormal:
     normal: int
 
 Face = Union[tuple[VertexTextureNormal, VertexTextureNormal, VertexTextureNormal],
-             tuple[VertexNormal, VertexNormal, VertexNormal]]
+             tuple[VertexNormal, VertexNormal, VertexNormal],
+             tuple[VertexIx, VertexIx, VertexIx]]
 
 name = None
 
@@ -76,18 +81,21 @@ def parse_face(line):
     assert h == 'f'
     assert len(tri) == 3
     def parse_ixs(ixs):
-        ix = ixs.split('/')
-        assert len(ix) == 3
-        vertex_ix, uv_ix, normal_ix = [
-            maybe_int(iix, offset=-1)
-            for iix in ix
-        ]
-        assert vertex_ix is not None
-        assert normal_ix is not None
-        if uv_ix is None:
-            return VertexNormal(vertex_ix, normal_ix)
+        if '/' in ixs:
+            ix = ixs.split('/')
+            assert len(ix) == 3
+            vertex_ix, uv_ix, normal_ix = [
+                maybe_int(iix, offset=-1)
+                for iix in ix
+            ]
+            assert vertex_ix is not None
+            assert normal_ix is not None
+            if uv_ix is None:
+                return VertexNormal(vertex_ix, normal_ix)
+            else:
+                return VertexTextureNormal(vertex_ix, uv_ix, normal_ix)
         else:
-            return VertexTextureNormal(vertex_ix, uv_ix, normal_ix)
+            return VertexIx(int(ixs))
 
     return tuple(map(parse_ixs, tri))
 
@@ -130,7 +138,9 @@ def generate_texture_coordinates(texture_coordinates):
     yield ""
 
 def face_type_str(face_type):
-    if face_type is VertexNormal:
+    if face_type is VertexIx:
+        return "face_v"
+    elif face_type is VertexNormal:
         return "face_vn"
     elif face_type is VertexTextureNormal:
         return "face_vtn"
@@ -139,10 +149,12 @@ def face_type_str(face_type):
 
 def generate_faces(faces, face_type):
     def face_coords(vtn):
-        if face_type is VertexNormal:
-            return [vtn.vertex, vtn.normal]
+        if face_type is VertexIx:
+            return [vtn.vertex - 1]
+        elif face_type is VertexNormal:
+            return [vtn.vertex - 1, vtn.normal - 1]
         elif face_type is VertexTextureNormal:
-            return [vtn.vertex, vtn.texture, vtn.normal]
+            return [vtn.vertex - 1, vtn.texture - 1, vtn.normal - 1]
         else:
             assert False, face_type
     max_ix = max(
@@ -169,14 +181,15 @@ def generate_namespace(vertices, texture_coordinates, normals, faces, face_type)
     assert name is not None
     yield "#pragma once"
     yield ""
-    yield '#include "geometry.hpp"'
+    yield '#include "geometry/geometry.hpp"'
     yield ""
     yield f"namespace {name} {{"
 
     yield from generate_vertices(vertices)
     if texture_coordinates != []:
         yield from generate_texture_coordinates(texture_coordinates)
-    yield from generate_normals(normals)
+    if normals != []:
+        yield from generate_normals(normals)
     yield from generate_faces(faces, face_type)
 
     yield "}"

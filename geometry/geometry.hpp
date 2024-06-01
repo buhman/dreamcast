@@ -24,6 +24,10 @@ struct vertex__normal {
   uint16_t normal;
 };
 
+struct vertex {
+  uint16_t vertex;
+};
+
 struct position__color {
   vec3 position;
   vec3 color;
@@ -32,3 +36,5 @@ struct position__color {
 using face_vtn = vertex__texture__normal[3];
 
 using face_vn = vertex__normal[3];
+
+using face_v = vertex[3];
