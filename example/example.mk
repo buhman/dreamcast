@@ -542,3 +542,14 @@ SIERPINSKI_OBJ = \
 
 example/sierpinski.elf: LDSCRIPT = $(LIB)/main.lds
 example/sierpinski.elf: $(START_OBJ) $(SIERPINSKI_OBJ)
+
+TETRAHEDRON_OBJ = \
+	example/tetrahedron.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o
+
+example/tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
+example/tetrahedron.elf: $(START_OBJ) $(TETRAHEDRON_OBJ)
