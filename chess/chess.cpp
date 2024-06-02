@@ -2,6 +2,7 @@
 
 #include "chess.hpp"
 #include "sh7091/serial.hpp"
+
 namespace chess {
 
 xy position_to_xy(int8_t position)
@@ -281,7 +282,7 @@ static void board_init(game_state& game_state)
 
 void game_init(game_state& game_state)
 {
-  game_state.turn = -1; // white
+  game_state.turn = 1; // white
   game_state.en_passant_target = -1;
   game_state.halfmove_number = 0;
   game_state.fullmove_number = 0;
@@ -452,6 +453,14 @@ void clear_annotations(game_state& game_state)
   game_state.interaction.annotation_list.length = 0;
 }
 
+void delete_annotation(annotation_list& annotation_list, int i)
+{
+  annotation_list.length -= 1;
+  for (int j = i; j < annotation_list.length; j++) {
+    annotation_list.annotation[j] = annotation_list.annotation[j + 1];
+  }
+}
+
 void annotate_position(game_state& game_state, int8_t x, int8_t y)
 {
   int8_t position = xy_to_position(x, y);
@@ -459,6 +468,7 @@ void annotate_position(game_state& game_state, int8_t x, int8_t y)
 
   for (int i = 0; i < annotation_list.length; i++) {
     if (annotation_list.annotation[i].from_position == position) {
+      delete_annotation(annotation_list, i);
       return;
     }
   }

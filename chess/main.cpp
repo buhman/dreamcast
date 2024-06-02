@@ -34,16 +34,23 @@ void cursor_update(struct render::cursor_state& cursor_state, uint32_t frame_ix)
       continue;
     auto& cursor = cursor_state.cur[cursor_ix];
 
+    float invert = port_ix % 2 == 0 ? 1.f : -1.f;
+
     auto& port = input::state.port[port_ix];
     if (port.function_type & function_type::controller) {
       auto& bus_data = port.host_response_data_transfer_ft0->bus_data;
       auto& data_fields = bus_data.data_fields;
       if (std::byteswap(data_fields.function_type) & function_type::controller) {
 	auto& data = data_fields.data;
-	cursor.x += static_cast<float>(data.analog_coordinate_axis[2] - 0x80) *  0.0035;
-	cursor.y += static_cast<float>(data.analog_coordinate_axis[3] - 0x80) * -0.0035;
+	cursor.x += static_cast<float>(data.analog_coordinate_axis[2] - 0x80) *  0.0015 * invert;
+	cursor.y += static_cast<float>(data.analog_coordinate_axis[3] - 0x80) * -0.0015 * invert;
 	cursor.button[frame_ix].a = ft0::data_transfer::digital_button::a(data.digital_button) == 0;
 	cursor.button[frame_ix].b = ft0::data_transfer::digital_button::b(data.digital_button) == 0;
+	bool start = ft0::data_transfer::digital_button::start(data.digital_button) == 0;
+	if (start) {
+	  cursor.x = 3.5f;
+	  cursor.y = 3.5f;
+	}
       }
     }
     if (port.function_type & function_type::pointing) {
@@ -51,12 +58,22 @@ void cursor_update(struct render::cursor_state& cursor_state, uint32_t frame_ix)
       auto& data_fields = bus_data.data_fields;
       if (std::byteswap(data_fields.function_type) & function_type::pointing) {
 	auto& data = data_fields.data;
-	cursor.x += static_cast<float>(data.analog_coordinate_axis[0] - 0x200) *  0.0035;
-	cursor.y += static_cast<float>(data.analog_coordinate_axis[1] - 0x200) * -0.0035;
+	cursor.x += static_cast<float>(data.analog_coordinate_axis[0] - 0x200) *  0.0065 * invert;
+	cursor.y += static_cast<float>(data.analog_coordinate_axis[1] - 0x200) * -0.0065 * invert;
 	cursor.button[frame_ix].a = ft9::data_transfer::digital_button::a(data.digital_button) == 0;
 	cursor.button[frame_ix].b = ft9::data_transfer::digital_button::b(data.digital_button) == 0;
+	bool w = ft9::data_transfer::digital_button::w(data.digital_button) == 0;
+	if (w) {
+	  cursor.x = 3.5f;
+	  cursor.y = 3.5f;
+	}
       }
     }
+
+    if (cursor.x < -1.0f) cursor.x = -1.0f;
+    if (cursor.x >  8.0f) cursor.x =  8.0f;
+    if (cursor.y < -0.5f) cursor.y = -0.5f;
+    if (cursor.y >  7.5f) cursor.y =  7.5f;
   }
 }
 
@@ -100,7 +117,7 @@ void main()
 
   core_init();
   region_array2(640 / 32, 480 / 32, opb_size);
-  background_parameter(0xff0000ff);
+  background_parameter(0xff223311);
 
   chess::game_state game_state;
   chess::game_init(game_state);
@@ -116,12 +133,21 @@ void main()
   vt.piece_rotation = 0.f;
   vt.board_rotation = 0.f;
 
+  auto piece_rotation_animator = render::animator<float>(0.f);
+
   struct render::cursor_state cursor_state = render::cursor_state();
+
+  constexpr float pi = 3.141592653589793f;
 
   while (true) {
     input::state_update(send_buf, recv_buf);
     cursor_update(cursor_state, frame_ix);
     cursor_events(game_state, cursor_state, frame_ix);
+
+    float target = game_state.turn == 1 ? 0.f : pi;
+    piece_rotation_animator.set_target(target, 60);
+    //vt.board_rotation = piece_rotation_animator.interpolate();
+    //vt.piece_rotation = piece_rotation_animator.interpolate();
 
     ta_polygon_converter_init(opb_size.total(),
                               ta_alloc,

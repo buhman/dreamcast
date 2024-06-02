@@ -11,6 +11,38 @@ struct view_transform {
   float board_rotation;
 };
 
+template <typename T>
+struct animator {
+  T start;
+  T end;
+  int steps;
+  int step;
+
+  constexpr animator(T initial)
+    : start(initial), end(initial), steps(0), step(0)
+  { }
+
+  void set_target(T target_value, int target_steps)
+  {
+    if (target_value != end) {
+      start = interpolate();
+      end = target_value;
+      steps = target_steps;
+      step = 0;
+    }
+  }
+
+  T interpolate()
+  {
+    if (step == steps)
+      return end;
+
+    T value = start + ((end - start) * step) / steps;
+    step += 1;
+    return value;
+  }
+};
+
 struct button {
   bool a;
   bool b;
@@ -22,7 +54,7 @@ struct cursor {
   struct button button[2];
 
   constexpr cursor()
-    : x(4.f), y(4.f)
+    : x(3.5f), y(3.5f)
   {
     button[0] = {false, false};
     button[1] = {false, false};

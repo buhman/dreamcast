@@ -15,8 +15,8 @@ namespace ft9 {
       constexpr uint32_t u() { return 0b1 << 4; }
       constexpr uint32_t u(uint32_t reg) { return (reg >> 4) & 0b1; }
 
-      constexpr uint32_t s() { return 0b1 << 3; }
-      constexpr uint32_t s(uint32_t reg) { return (reg >> 3) & 0b1; }
+      constexpr uint32_t w() { return 0b1 << 3; }
+      constexpr uint32_t w(uint32_t reg) { return (reg >> 3) & 0b1; }
 
       constexpr uint32_t a() { return 0b1 << 2; }
       constexpr uint32_t a(uint32_t reg) { return (reg >> 2) & 0b1; }

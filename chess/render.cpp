@@ -282,8 +282,8 @@ void draw_pieces(const view_transform vt,
 
 uint32_t cursor_colors[4] = {
   0xffff00ff,
+  0xff0000ff,
   0xff00ff00,
-  0xffffff00,
   0xffff0000,
 };
 
