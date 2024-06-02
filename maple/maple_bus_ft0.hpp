@@ -55,12 +55,7 @@ namespace ft0 {
 
     struct data_format {
       uint16_t digital_button;
-      uint8_t analog_axis_1;
-      uint8_t analog_axis_2;
-      uint8_t analog_axis_3;
-      uint8_t analog_axis_4;
-      uint8_t analog_axis_5;
-      uint8_t analog_axis_6;
+      uint8_t analog_coordinate_axis[6];
     };
     static_assert((sizeof (struct data_format)) % 4 == 0);
     static_assert((sizeof (struct data_format)) == 8);

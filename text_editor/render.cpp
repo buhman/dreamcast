@@ -3,6 +3,8 @@
 #include "transform.hpp"
 
 #include "holly/ta_global_parameter.hpp"
+#include "holly/ta_fifo_polygon_converter.hpp"
+#include "sh7091/serial.hpp"
 
 static inline uint32_t get_font_ix(const struct font * font,
 				   char_type c)
@@ -115,7 +117,19 @@ void render(ta_parameter_writer& parameter,
 
   parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
+  ta_polygon_converter_transfer(parameter.buf, parameter.offset);
+  ta_wait_opaque_list();
+
+  parameter.offset = 0;
+
+  /*
   render_cursor(parameter, cursor, window);
 
   parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+
+  ta_polygon_converter_transfer(parameter.buf, parameter.offset);
+  serial::string("wait tl\n");
+  ta_wait_translucent_list();
+  serial::string("done tl\n");
+  */
 }

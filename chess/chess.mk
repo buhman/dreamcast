@@ -21,7 +21,7 @@ CHESS_GEOMETRY = \
 	chess/rook.hpp \
 	chess/square.hpp \
 	chess/circle.hpp \
-	chess/cursor.hpp
+	chess/pointer.hpp
 
 chess/render.o: chess/render.cpp $(CHESS_GEOMETRY)
 

@@ -286,6 +286,8 @@ void game_init(game_state& game_state)
   game_state.halfmove_number = 0;
   game_state.fullmove_number = 0;
   game_state.interaction.selected_position = -1;
+  game_state.interaction.last_move.from_position = -1;
+  game_state.interaction.last_move.to_position = -1;
   board_init(game_state);
 }
 
@@ -411,6 +413,8 @@ void do_move(game_state& game_state, int8_t from_position, move_t& move)
   destination.piece_list_offset = origin.piece_list_offset;
   origin.type = piece_type::empty;
   game_state.piece_list.piece[origin.piece_list_offset] = &destination;
+  game_state.interaction.last_move.from_position = from_position;
+  game_state.interaction.last_move.to_position = move.to_position;
 
   game_state.turn = -game_state.turn;
 }
@@ -441,6 +445,25 @@ void select_position(game_state& game_state, int8_t x, int8_t y)
 
   game_state.interaction.selected_position = -1;
   game_state.interaction.moves.length = 0;
+}
+
+void clear_annotations(game_state& game_state)
+{
+  game_state.interaction.annotation_list.length = 0;
+}
+
+void annotate_position(game_state& game_state, int8_t x, int8_t y)
+{
+  int8_t position = xy_to_position(x, y);
+  auto& annotation_list = game_state.interaction.annotation_list;
+
+  for (int i = 0; i < annotation_list.length; i++) {
+    if (annotation_list.annotation[i].from_position == position) {
+      return;
+    }
+  }
+
+  annotation_list.annotation[annotation_list.length++].from_position = position;
 }
 
 }

@@ -1,5 +1,5 @@
 "data_transfer",7,6,5,4,3,2,1,0
-"button","r","l","d","u","s","a","b","c"
+"digital_button","r","l","d","u","s","a","b","c"
 "option",,,,,,,"batt","wire"
 "analog_coordinate_overflow",,,,,,,,
 "reserved",,,,,,,,

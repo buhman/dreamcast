@@ -9,30 +9,75 @@
 
 #include "keyboard.hpp"
 
-void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
+void do_device_request()
 {
   uint32_t send_buf[1024] __attribute__((aligned(32)));
   uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  using command_type = get_condition;
-  using response_type = data_transfer<ft6::data_transfer::data_format>;
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
+
+  for (uint8_t port = 0; port < 1; port++) {
+    auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
+    if (bus_data.command_code != response_type::command_code) {
+      serial::string("port: ");
+      serial::integer<uint8_t>(port);
+      serial::string("  disconnected\n");
+    } else {
+      serial::string("port: ");
+      serial::integer<uint8_t>(port);
+      serial::string("  ft:    ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.ft));
+      serial::string("  fd[0]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[0]));
+      serial::string("  fd[1]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[1]));
+      serial::string("  fd[2]: ");
+      serial::integer<uint32_t>(std::byteswap(data_fields.device_id.fd[2]));
+      serial::string("  source_ap.lm_bus: ");
+      serial::integer<uint8_t>(bus_data.source_ap & ap::lm_bus::bit_mask);
+    }
+  }
+}
+
+void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
+{
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft6::data_transfer::data_format>;
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
   host_command->bus_data.data_fields.function_type = std::byteswap(function_type::keyboard);
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
 
-  for (uint8_t port = 0; port < 4; port++) {
+  for (uint8_t port = 0; port < 1; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
+    //serial::integer(port, ' ');
+    //serial::integer(bus_data.command_code);
     if (bus_data.command_code != response_type::command_code) {
+      do_device_request();
       continue;
     }
     if ((std::byteswap(data_fields.function_type) & function_type::keyboard) == 0) {
+      serial::integer(std::byteswap(data_fields.function_type));
       continue;
     }
 
@@ -61,9 +106,9 @@ void keyboard_debug(ft6::data_transfer::data_format * keyboards, uint32_t frame_
   }
   if (difference) {
     for (int i = 0; i < 6; i++) {
-      serial::integer<uint8_t>(keyboards[this_frame].scan_code_array[i], ' ');
+      //serial::integer<uint8_t>(keyboards[this_frame].scan_code_array[i], ' ');
     }
-    serial::string("\n");
+    //serial::string("\n");
   }
 }
 
@@ -97,10 +142,14 @@ void keyboard_update(ft6::data_transfer::data_format * keyboards, uint32_t frame
 	bool shifted = is_shifted(keyboards[this_frame].modifier_key);
 	char_type code_point = ft6::scan_code::code_point[scan_code][shifted];
 	if (code_point != 0) {
-	  gap_append(gb, code_point);
+	  serial::character(code_point);
+	  serial::character('\n');
+	  //gap_append(gb, code_point);
 	  continue;
 	}
       }
+      serial::integer(scan_code);
+      continue;
       switch (scan_code) {
 	case ft6::scan_code::_return:   gap_append(gb, '\n'); break;
 	case ft6::scan_code::backspace: gap_pop(gb);          break;

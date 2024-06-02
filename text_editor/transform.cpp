@@ -100,7 +100,7 @@ void transform_glyph(ta_parameter_writer& parameter,
   const uint32_t texture_address = texture_memory_alloc::texture.start;
   const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 				      | texture_control_word::scan_order::twiddled
-                                      | texture_control_word::palette_selector(0)
+                                      | texture_control_word::palette_selector4(0)
 				      | texture_control_word::texture_address(texture_address / 8);
 
   parameter.append<ta_global_parameter::sprite>() =

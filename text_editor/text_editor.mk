@@ -11,7 +11,8 @@ TEXT_EDITOR_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	maple/maple.o \
 	sh7091/serial.o \
-	ter_u20n.data.o
+	ter_u20n.data.o \
+	$(LIBGCC)
 
 text_editor/text_editor.elf: LDSCRIPT = $(LIB)/main.lds
 text_editor/text_editor.elf: $(START_OBJ) $(TEXT_EDITOR_OBJ)

@@ -2,7 +2,7 @@
 
 namespace ft9 {
   namespace data_transfer {
-    namespace button {
+    namespace digital_button {
       constexpr uint32_t r() { return 0b1 << 7; }
       constexpr uint32_t r(uint32_t reg) { return (reg >> 7) & 0b1; }
 
@@ -39,7 +39,7 @@ namespace ft9 {
     }
 
     struct data_format {
-      uint8_t button;
+      uint8_t digital_button;
       uint8_t option;
       uint8_t analog_coordinate_overflow;
       uint8_t reserved;

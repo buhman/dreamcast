@@ -57,9 +57,30 @@ struct moves_list {
   int8_t length;
 };
 
+enum struct annotation_type : int8_t {
+  highlight,
+  arrow,
+};
+
+struct annotation {
+  annotation_type type;
+  int8_t from_position;
+  int8_t to_position;
+};
+
+struct annotation_list {
+  struct annotation annotation[127];
+  int8_t length;
+};
+
 struct interaction_state {
+  struct {
+    int8_t from_position;
+    int8_t to_position;
+  } last_move;
   int8_t selected_position;
   struct moves_list moves;
+  struct annotation_list annotation_list;
 };
 
 struct game_state {
@@ -74,9 +95,11 @@ struct game_state {
 
 xy position_to_xy(int8_t position);
 int8_t xy_to_position(int8_t x, int8_t y);
-void game_init(game_state& game_state);
-void select_position(game_state& game_state, int8_t x, int8_t y);
 int8_t piece_list_to_position(const chess::board_state& board_state,
 			      chess::piece * piece);
+void game_init(game_state& game_state);
+void select_position(game_state& game_state, int8_t x, int8_t y);
+void annotate_position(game_state& game_state, int8_t x, int8_t y);
+void clear_annotations(game_state& game_state);
 
 }
