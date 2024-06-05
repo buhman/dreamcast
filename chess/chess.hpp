@@ -14,6 +14,13 @@ constexpr int8_t queen = 5;
 constexpr int8_t king = 6;
 };
 
+constexpr int8_t promotion_types[4] = {
+  piece_type::knight,
+  piece_type::bishop,
+  piece_type::rook,
+  piece_type::queen,
+};
+
 namespace movement_state {
 constexpr int8_t not_moved = 0;
 constexpr int8_t moved = 1;
@@ -45,6 +52,7 @@ enum struct move_type : int8_t {
   castle_long,
   pawn_double_advance,
   pawn_en_passant_capture,
+  pawn_promote,
 };
 
 struct move_t {
@@ -81,6 +89,7 @@ struct interaction_state {
   int8_t selected_position;
   struct moves_list moves;
   struct annotation_list annotation_list;
+  int8_t promotion_ix[2];
 };
 
 struct game_state {

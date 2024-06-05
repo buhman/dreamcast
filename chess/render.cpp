@@ -190,7 +190,7 @@ void draw_moves(const view_transform vt,
 }
 
 void draw_piece(const view_transform vt,
-		int8_t type, int8_t x, int8_t y)
+		int8_t type, float x, float y)
 {
   bool white = type > 0;
   uint32_t color = white ? 0xffdddddd : 0xff444444;
@@ -337,8 +337,50 @@ void draw_interaction(const view_transform vt,
     render::draw_illumination(vt, interaction.last_move.to_position, yellow_highlight);
 }
 
-void render(const chess::game_state& game_state,
-	    const view_transform vt,
+void draw_promotion_selection(const view_transform vt,
+			      const chess::game_state& game_state)
+{
+  constexpr uint32_t yellow_highlight = 0x7fffff33;
+
+  draw_model(vt,
+	     square::vertices,
+	     square::faces,
+	     square::num_faces,
+	     yellow_highlight,
+	     8.5f, game_state.interaction.promotion_ix[0],
+	     illumination_z,
+	     1.0f,  // scale
+	     0.0f,  // rotation
+	     true,  // always
+	     true); // alpha
+
+  for (int i = 0; i < 4; i++) {
+    draw_piece(vt,
+	       chess::promotion_types[i],
+	       8.5f, i);
+  }
+
+  draw_model(vt,
+	     square::vertices,
+	     square::faces,
+	     square::num_faces,
+	     yellow_highlight,
+	     -1.5f, 7 - game_state.interaction.promotion_ix[1],
+	     illumination_z,
+	     1.0f,  // scale
+	     0.0f,  // rotation
+	     true,  // always
+	     true); // alpha
+
+  for (int i = 0; i < 4; i++) {
+    draw_piece(vt,
+	       -chess::promotion_types[i],
+	       -1.5f, 7 - i);
+  }
+}
+
+void render(const view_transform vt,
+	    const chess::game_state& game_state,
 	    const cursor_state cursor_state)
 {
   render::draw_board(vt);
@@ -347,6 +389,8 @@ void render(const chess::game_state& game_state,
   render::draw_annotation(vt, game_state.interaction.annotation_list);
 
   render::draw_pieces(vt, game_state);
+  render::draw_promotion_selection(vt, game_state);
+
   render::draw_moves(vt, game_state.interaction.moves);
   for (int i = 0; i < cursor_state::num_cursors; i++) {
     auto& cursor = cursor_state.cur[i];

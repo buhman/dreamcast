@@ -46,6 +46,8 @@ struct animator {
 struct button {
   bool a;
   bool b;
+  bool x;
+  bool y;
 };
 
 struct cursor {
@@ -78,8 +80,8 @@ struct cursor_state {
   }
 };
 
-void render(const chess::game_state& game_state,
-	    const view_transform vt,
+void render(const view_transform vt,
+	    const chess::game_state& game_state,
 	    const cursor_state cursor_state);
 
 }

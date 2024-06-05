@@ -82,6 +82,9 @@ move_t * moves_pawn(game_state& game_state, int8_t origin, move_t * moves)
       if (other.type == 0) {
 	int8_t to_position = xy_to_position(x, y);
 	if (!speculative_check(game_state, origin, to_position, self.type)) {
+	  if (y == 0 || y == 7) {
+	    type = move_type::pawn_promote;
+	  }
 	  *moves++ = {type, to_position};
 	}
       } else {
@@ -289,6 +292,8 @@ void game_init(game_state& game_state)
   game_state.interaction.selected_position = -1;
   game_state.interaction.last_move.from_position = -1;
   game_state.interaction.last_move.to_position = -1;
+  game_state.interaction.promotion_ix[0] = 0;
+  game_state.interaction.promotion_ix[1] = 0;
   board_init(game_state);
 }
 
@@ -406,6 +411,15 @@ void do_move(game_state& game_state, int8_t from_position, move_t& move)
       piece_list_delete(game_state.piece_list, en_passant_piece.piece_list_offset);
     }
     break;
+  case move_type::pawn_promote:
+    {
+      serial::string("move pawn promote\n");
+      if (origin.type > 0)
+	origin.type = promotion_types[game_state.interaction.promotion_ix[0]];
+      else
+	origin.type = -promotion_types[game_state.interaction.promotion_ix[1]];
+    }
+    break;
   default: break;
   }
 
@@ -416,8 +430,6 @@ void do_move(game_state& game_state, int8_t from_position, move_t& move)
   game_state.piece_list.piece[origin.piece_list_offset] = &destination;
   game_state.interaction.last_move.from_position = from_position;
   game_state.interaction.last_move.to_position = move.to_position;
-
-  game_state.turn = -game_state.turn;
 }
 
 void select_position(game_state& game_state, int8_t x, int8_t y)
@@ -439,6 +451,7 @@ void select_position(game_state& game_state, int8_t x, int8_t y)
 	do_move(game_state,
 		game_state.interaction.selected_position, // from
 		game_state.interaction.moves.moves[moves_ix]); // to
+	game_state.turn = -game_state.turn;
 	// fall through to deselect
       }
     }

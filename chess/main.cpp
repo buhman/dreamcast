@@ -46,6 +46,8 @@ void cursor_update(struct render::cursor_state& cursor_state, uint32_t frame_ix)
 	cursor.y += static_cast<float>(data.analog_coordinate_axis[3] - 0x80) * -0.0015 * invert;
 	cursor.button[frame_ix].a = ft0::data_transfer::digital_button::a(data.digital_button) == 0;
 	cursor.button[frame_ix].b = ft0::data_transfer::digital_button::b(data.digital_button) == 0;
+	cursor.button[frame_ix].x = ft0::data_transfer::digital_button::x(data.digital_button) == 0;
+	cursor.button[frame_ix].y = ft0::data_transfer::digital_button::y(data.digital_button) == 0;
 	bool start = ft0::data_transfer::digital_button::start(data.digital_button) == 0;
 	if (start) {
 	  cursor.x = 3.5f;
@@ -70,11 +72,24 @@ void cursor_update(struct render::cursor_state& cursor_state, uint32_t frame_ix)
       }
     }
 
-    if (cursor.x < -1.0f) cursor.x = -1.0f;
-    if (cursor.x >  8.0f) cursor.x =  8.0f;
+    if (cursor.x < -2.0f) cursor.x = -2.0f;
+    if (cursor.x >  9.0f) cursor.x =  9.0f;
     if (cursor.y < -0.5f) cursor.y = -0.5f;
     if (cursor.y >  7.5f) cursor.y =  7.5f;
   }
+}
+
+static bool piece_rotation = false;
+static bool board_rotation = false;
+
+void promotion_select(chess::game_state& game_state,
+		      int side,
+		      int promotion_ix)
+{
+  if (promotion_ix < 0 || promotion_ix >= 4) {
+    return;
+  }
+  game_state.interaction.promotion_ix[side] = promotion_ix;
 }
 
 void cursor_events(chess::game_state& game_state, struct render::cursor_state& cursor_state, uint32_t frame_ix)
@@ -82,14 +97,30 @@ void cursor_events(chess::game_state& game_state, struct render::cursor_state& c
   for (int cursor_ix = 0; cursor_ix < render::cursor_state::num_cursors; cursor_ix++) {
     auto& cursor = cursor_state.cur[cursor_ix];
     const uint32_t last_frame = (frame_ix + 1) & 1;
-    const int8_t x = cursor.x + 0.5f;
+    const float x = cursor.x + 0.5f;
     const int8_t y = cursor.y + 0.5f;
     if (cursor.button[last_frame].a != cursor.button[frame_ix].a && cursor.button[frame_ix].a) {
       chess::clear_annotations(game_state);
-      chess::select_position(game_state, x, y);
+      if (x > 8.5) {
+	serial::string("white side\n");
+	int8_t promotion_ix = y;
+	promotion_select(game_state, 0, promotion_ix);
+      } else if (x < -0.5) {
+	serial::string("black side\n");
+	int8_t promotion_ix = 7 - y;
+	promotion_select(game_state, 1, promotion_ix);
+      } else {
+	chess::select_position(game_state, x, y);
+      }
     }
     if (cursor.button[last_frame].b != cursor.button[frame_ix].b && cursor.button[frame_ix].b) {
       chess::annotate_position(game_state, x, y);
+    }
+    if (cursor.button[last_frame].x != cursor.button[frame_ix].x && cursor.button[frame_ix].x) {
+      piece_rotation = !piece_rotation;
+    }
+    if (cursor.button[last_frame].y != cursor.button[frame_ix].y && cursor.button[frame_ix].y) {
+      board_rotation = !board_rotation;
     }
   }
 }
@@ -134,27 +165,31 @@ void main()
   vt.board_rotation = 0.f;
 
   auto piece_rotation_animator = render::animator<float>(0.f);
+  auto board_rotation_animator = render::animator<float>(0.f);
 
   struct render::cursor_state cursor_state = render::cursor_state();
 
   constexpr float pi = 3.141592653589793f;
+  piece_rotation = false;
+  board_rotation = false;
 
   while (true) {
     input::state_update(send_buf, recv_buf);
     cursor_update(cursor_state, frame_ix);
     cursor_events(game_state, cursor_state, frame_ix);
 
-    float target = game_state.turn == 1 ? 0.f : pi;
-    piece_rotation_animator.set_target(target, 60);
-    //vt.board_rotation = piece_rotation_animator.interpolate();
-    //vt.piece_rotation = piece_rotation_animator.interpolate();
+    //float target = game_state.turn == 1 ? 0.f : pi;
+    piece_rotation_animator.set_target(piece_rotation ? pi : 0.f, 60);
+    board_rotation_animator.set_target(board_rotation ? pi : 0.f, 60);
+    vt.board_rotation = board_rotation_animator.interpolate();
+    vt.piece_rotation = piece_rotation_animator.interpolate();
 
     ta_polygon_converter_init(opb_size.total(),
                               ta_alloc,
                               640 / 32,
                               480 / 32);
 
-    render::render(game_state, vt, cursor_state);
+    render::render(vt, game_state, cursor_state);
 
     *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
