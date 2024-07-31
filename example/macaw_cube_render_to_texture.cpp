@@ -235,7 +235,7 @@ void main()
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
-  //uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
+  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
 
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
@@ -245,41 +245,41 @@ void main()
 
   uint32_t frame_ix = 0;
 
-  constexpr uint32_t texture_size = 256;
+  constexpr uint32_t texture_buffer_size = 256;
 
-  background_parameter(0xff220000);
   while (1) {
-    region_array2(texture_size / 32, // width
-		  texture_size / 32, // height
+    background_parameter(0xff2288aa);
+    region_array2(texture_buffer_size / 32, // width
+		  texture_buffer_size / 32, // height
 		  opb_size
 		  );
 
-    /*
-    render(texture_size, texture_size,
-	   (offsetof (struct texture_memory_alloc, texture)),
+    constexpr uint32_t macaw = texture_memory_alloc::texture.start;
+    constexpr uint32_t texture_buffer = texture_memory_alloc::texture.start + 128 * 128 * 2;
+
+    render(texture_buffer_size, texture_buffer_size,
+	   macaw,
 	   128,
 	   ta_parameter_buf);
-    core_start_render(0x1000000 | (offsetof (struct texture_memory_alloc, texturebuffer)), // 64-bit area
-		      texture_size, // linestride
-		      0,   // framesize (dontcare)
-		      0, 0);
+    core_start_render(0x100'0000 | texture_buffer, // 64-bit area
+		      texture_buffer_size // frame_width
+                      );
     core_wait_end_of_render_video();
 
+    background_parameter(0xff220000);
     region_array2(640 / 32, // width
 		  480 / 32, // height
 		  opb_size
 		  );
 
     render(640, 480,
-	   (offsetof (struct texture_memory_alloc, texturebuffer)),
-	   texture_size,
+	   texture_buffer,
+	   texture_buffer_size,
 	   ta_parameter_buf);
-    core_start_render(0x0000000 + (offsetof (struct texture_memory_alloc, framebuffer)),  // 32-bit area
-		      640,        // linestride
-		      0x00096000, // framesize
-		      frame_ix, num_frames);
+    core_start_render(texture_memory_alloc::framebuffer[frame_ix].start,  // 32-bit area
+		      640 // frame_width
+                      );
     core_wait_end_of_render_video();
-    */
 
     while (!spg_status::vsync(holly.SPG_STATUS));
     core_flip(frame_ix);
