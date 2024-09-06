@@ -70,14 +70,11 @@ void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
   for (uint8_t port = 0; port < 1; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
-    //serial::integer(port, ' ');
-    //serial::integer(bus_data.command_code);
     if (bus_data.command_code != response_type::command_code) {
       do_device_request();
       continue;
     }
     if ((std::byteswap(data_fields.function_type) & function_type::keyboard) == 0) {
-      serial::integer(std::byteswap(data_fields.function_type));
       continue;
     }
 
@@ -142,14 +139,10 @@ void keyboard_update(ft6::data_transfer::data_format * keyboards, uint32_t frame
 	bool shifted = is_shifted(keyboards[this_frame].modifier_key);
 	char_type code_point = ft6::scan_code::code_point[scan_code][shifted];
 	if (code_point != 0) {
-	  serial::character(code_point);
-	  serial::character('\n');
-	  //gap_append(gb, code_point);
+	  gap_append(gb, code_point);
 	  continue;
 	}
       }
-      serial::integer(scan_code);
-      continue;
       switch (scan_code) {
 	case ft6::scan_code::_return:   gap_append(gb, '\n'); break;
 	case ft6::scan_code::backspace: gap_pop(gb);          break;

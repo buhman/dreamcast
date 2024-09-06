@@ -122,14 +122,10 @@ void render(ta_parameter_writer& parameter,
 
   parameter.offset = 0;
 
-  /*
   render_cursor(parameter, cursor, window);
 
   parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
   ta_polygon_converter_transfer(parameter.buf, parameter.offset);
-  serial::string("wait tl\n");
   ta_wait_translucent_list();
-  serial::string("done tl\n");
-  */
 }
