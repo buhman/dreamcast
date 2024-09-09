@@ -41,6 +41,39 @@ void ta_polygon_converter_init(uint32_t opb_total_size, // for one tile, for all
   (void)_dummy_read;
 }
 
+void ta_polygon_converter_init2(uint32_t isp_tsp_parameters_start,
+				uint32_t isp_tsp_parameters_end,
+				uint32_t object_list_start,
+				uint32_t object_list_end,
+				uint32_t opb_total_size, // for one tile, for all render passes
+				uint32_t ta_alloc,
+				uint32_t tile_width,   // in tile units (e.g: (640 / 32))
+				uint32_t tile_height)  // in tile units (e.g: (480 / 32))
+{
+  // opb_size is the total size of all OPBs for all passes
+  const uint32_t ta_next_opb_offset = opb_total_size * tile_width * tile_height;
+
+  holly.SOFTRESET = softreset::ta_soft_reset;
+  holly.SOFTRESET = 0;
+
+  holly.TA_GLOB_TILE_CLIP = ta_glob_tile_clip::tile_y_num(tile_height - 1)
+                          | ta_glob_tile_clip::tile_x_num(tile_width  - 1);
+
+  holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
+                      | ta_alloc;
+
+  holly.TA_ISP_BASE = isp_tsp_parameters_start;
+  holly.TA_ISP_LIMIT = isp_tsp_parameters_end; // the end of isp_tsp_parameters
+  holly.TA_OL_BASE = object_list_start;
+  holly.TA_OL_LIMIT = object_list_end; // the end of the object_list
+  holly.TA_NEXT_OPB_INIT = object_list_start + ta_next_opb_offset;
+
+  holly.TA_LIST_INIT = ta_list_init::list_init;
+
+  uint32_t _dummy_read = holly.TA_LIST_INIT;
+  (void)_dummy_read;
+}
+
 void ta_polygon_converter_cont(uint32_t ol_base_offset,
 			       uint32_t ta_alloc)
 {

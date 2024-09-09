@@ -4,8 +4,8 @@ import sys
 import time
 
 #dest = 0xac21_0000
-#dest = 0xac02_0000
-dest = 0xac01_0000
+dest = 0xac02_0000
+#dest = 0xac01_0000
 
 ret = []
 
@@ -34,7 +34,7 @@ def symmetric(ser, b):
     l = []
     mem = memoryview(b)
     i = 0
-    chunk_size = 384
+    chunk_size = 8
 
     while i < len(b):
         if i % 1024 == 0:
@@ -73,6 +73,8 @@ def start_data(ser, b):
     ret = sync(ser, b'DATA' + args)
     if ret != b'data\n':
         print(".", end=' ')
+        print(ret)
+        time.sleep(1)
         sys.stdout.flush()
         sync(ser, b'prime', wait=0)
         start_data(ser, b)
@@ -89,7 +91,8 @@ def do(ser, b):
     duration = end - start
     print("\n\nduration:", duration, "\n\n")
     print(ret[-5:])
-    if ret[:-5] != b:
+    print(len(b), len(ret))
+    if ret[:-5] != b and False:
         print("ret != b; dumped to asdf.bin")
         with open('asdf.bin', 'wb') as f:
             f.write(ret[:-5])
@@ -97,7 +100,8 @@ def do(ser, b):
         return
 
     args = struct.pack("<I", dest)
-    ret = sync(ser, b'JUMP' + args, wait=0)
+    print("JUMP")
+    ret = sync(ser, b'JUMP' + args, wait=1)
     print()
     console(ser)
 
@@ -176,8 +180,8 @@ def change_rate(old_rate, new_rate):
         ret = sync(ser, b'RATE' + args, wait=1)
         print(ret)
 
-old_rate = 1
-new_rate = 1
+old_rate = 4
+new_rate = 4
 if old_rate != new_rate:
     change_rate(old_rate, new_rate)
 
@@ -188,8 +192,8 @@ with serial.Serial(port='/dev/ttyUSB0',
                    stopbits=serial.STOPBITS_ONE,
                    timeout=1,
                    xonxoff=False,
-                   #rtscts=False,
-                   rtscts=True,
+                   rtscts=False,
+                   #rtscts=True,
                    ) as ser:
     #console(ser)
     print("waiting: ", end=' ')

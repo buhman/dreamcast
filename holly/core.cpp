@@ -74,13 +74,36 @@ void core_start_render(uint32_t frame_address,
   holly.STARTRENDER = 1;
 }
 
-constexpr uint32_t framebuffer_frame_size = 0x00096000 * 2;
-
 void core_start_render(uint32_t frame_ix)
 {
   core_start_render(texture_memory_alloc::framebuffer[frame_ix].start,
 		    640
 		    );
+}
+
+void core_start_render2(uint32_t region_array_start,
+			uint32_t isp_tsp_parameters_start,
+			uint32_t background_start,
+			uint32_t frame_address,
+			uint32_t frame_width      // in pixels
+			)
+{
+  holly.REGION_BASE = region_array_start;
+  holly.PARAM_BASE = isp_tsp_parameters_start;
+
+  uint32_t background_offset = background_start - isp_tsp_parameters_start;
+  holly.ISP_BACKGND_T = isp_backgnd_t::tag_address(background_offset / 4)
+                      | isp_backgnd_t::tag_offset(0)
+                      | isp_backgnd_t::skip(1);
+  holly.ISP_BACKGND_D = _i(1.f/100000.f);
+
+  holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+  constexpr uint32_t bytes_per_pixel = 2;
+  holly.FB_W_LINESTRIDE = (frame_width * bytes_per_pixel) / 8;
+
+  holly.FB_W_SOF1 = frame_address;
+
+  holly.STARTRENDER = 1;
 }
 
 void core_wait_end_of_render_video()

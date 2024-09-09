@@ -538,7 +538,8 @@ SIERPINSKI_OBJ = \
 	wolf2.data.o \
 	wolf2.data.pal.o \
 	strawberry.data.o \
-	strawberry.data.pal.o
+	strawberry.data.pal.o \
+	$(LIBGCC)
 
 example/sierpinski.elf: LDSCRIPT = $(LIB)/main.lds
 example/sierpinski.elf: $(START_OBJ) $(SIERPINSKI_OBJ)
@@ -553,3 +554,30 @@ TETRAHEDRON_OBJ = \
 
 example/tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
 example/tetrahedron.elf: $(START_OBJ) $(TETRAHEDRON_OBJ)
+
+CUBE_TEXTURED_OBJ = \
+	example/cube_textured.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	texture/cube/wn.data.o \
+	texture/cube/wn.data.pal.o
+
+example/cube_textured.elf: LDSCRIPT = $(LIB)/main.lds
+example/cube_textured.elf: $(START_OBJ) $(CUBE_TEXTURED_OBJ)
+
+CUBE_VQ_OBJ = \
+	example/cube_vq.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	texture/panda/panda.vq.o
+
+example/cube_vq.elf: LDSCRIPT = $(LIB)/alt.lds
+example/cube_vq.elf: $(START_OBJ) $(CUBE_VQ_OBJ)
