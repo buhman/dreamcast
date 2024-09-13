@@ -162,7 +162,7 @@ int main(int argc, char * argv[])
   }
 
   if (argc < 3) {
-    printf("argc < 3\n");
+    printf("%s [in_file.ppm] [out_file.vq | out_file.ppm]\n", argv[0]);
     return -1;
   }
 
@@ -199,9 +199,9 @@ int main(int argc, char * argv[])
   double codebook[codebook_length][12];
 
   int rgb_size = ppm.width * ppm.height * 3;
-  double min_error = 0; //std::numeric_limits<double>::infinity();
+  double min_error = std::numeric_limits<double>::infinity();
 
-  for (int i = 0; i < 2; i++) {
+  for (int i = 0; i < 10; i++) {
     double new_codebook[codebook_length][12];
     // find locally-optimal codebook
     k_means_cluster<12>(&random_state,
@@ -218,7 +218,7 @@ int main(int argc, char * argv[])
     double error = total_rgb_error(rgb, ppm.data, rgb_size);
     if (i % 100 == 0)
       printf("%d %.0f\n", i, min_error);
-    if (error > min_error) {
+    if (error < min_error) {
       for (int i = 0; i < codebook_length; i++) {
 	set_vector<12>(codebook[i], new_codebook[i]);
       }

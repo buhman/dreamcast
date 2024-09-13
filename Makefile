@@ -11,11 +11,23 @@ geometry/%.hpp: geometry/%.obj
 	PYTHONPATH=regs/gen python tools/obj_to_cpp.py $< > $@.tmp
 	mv $@.tmp $@
 
-%.data.h:
+%.data.h: %.data
 	$(BUILD_BINARY_H)
 
-%.data.pal.h:
+%.data.pal.h: %.data.pal
 	$(BUILD_BINARY_H)
+
+%.alpha.h: %.alpha
+	$(BUILD_BINARY_H)
+
+%.alpha.o: %.alpha
+	$(BUILD_BINARY_O)
+
+%.alpha.pal.h: %.alpha.pal
+	$(BUILD_BINARY_H)
+
+%.alpha.pal.o: %.alpha.pal
+	$(BUILD_BINARY_O)
 
 %.vq.h: %.vq
 	$(BUILD_BINARY_H)

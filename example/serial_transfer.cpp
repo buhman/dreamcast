@@ -10,7 +10,7 @@ void main() __attribute__((section(".text.main")));
 
 void main()
 {
-  serial::init(1);
+  serial::init(12);
   load_init();
 
   while (1) {

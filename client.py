@@ -34,7 +34,7 @@ def symmetric(ser, b):
     l = []
     mem = memoryview(b)
     i = 0
-    chunk_size = 8
+    chunk_size = 128
 
     while i < len(b):
         if i % 1024 == 0:

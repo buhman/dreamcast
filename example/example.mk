@@ -608,3 +608,19 @@ SHEIK_OBJ = \
 
 example/sheik.elf: LDSCRIPT = $(LIB)/alt.lds
 example/sheik.elf: $(START_OBJ) $(SHEIK_OBJ)
+
+SHEIK_VQ_OBJ = \
+	example/sheik_vq.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/sheik/sheik_00.alpha.o \
+	model/sheik/sheik_00.alpha.pal.o \
+	model/sheik/sheik_00.vq.o \
+	model/sheik/xc_eye01.data.o
+
+example/sheik_vq.elf: LDSCRIPT = $(LIB)/alt.lds
+example/sheik_vq.elf: $(START_OBJ) $(SHEIK_VQ_OBJ)
