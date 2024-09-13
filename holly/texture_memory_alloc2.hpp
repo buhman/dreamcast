@@ -49,11 +49,11 @@ constexpr start_end background[2] = {
 constexpr start_end object_list[2] = {
   { // bus A
     .start = 0x10'0000,
-    .end   = 0x20'0000 - 0x10,
+    .end   = 0x20'0000 - 0x20,
   },
   { // bus B
     .start = 0x50'0000,
-    .end   = 0x60'0000 - 0x10,
+    .end   = 0x60'0000 - 0x20,
   }
 };
 constexpr start_end framebuffer[2] = {

@@ -581,3 +581,17 @@ CUBE_VQ_OBJ = \
 
 example/cube_vq.elf: LDSCRIPT = $(LIB)/alt.lds
 example/cube_vq.elf: $(START_OBJ) $(CUBE_VQ_OBJ)
+
+SHEIK_OBJ = \
+	example/sheik.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/sheik/sheik_00.data.o \
+	model/sheik/xc_eye01.data.o
+
+example/sheik.elf: LDSCRIPT = $(LIB)/alt.lds
+example/sheik.elf: $(START_OBJ) $(SHEIK_OBJ)
