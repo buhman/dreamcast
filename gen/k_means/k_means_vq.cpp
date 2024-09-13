@@ -7,6 +7,7 @@
 #include <cinttypes>
 #include <cerrno>
 #include <bit>
+#include <sys/resource.h>
 
 #include "k_means_cluster.cpp"
 #include "ppm.h"
@@ -144,6 +145,22 @@ uint64_t color_convert(double vector[12])
 
 int main(int argc, char * argv[])
 {
+  // set 300MB stack size limit
+  const rlim_t stack_size = 300 * 1024 * 1024;
+  struct rlimit rl;
+  int res;
+  res = getrlimit(RLIMIT_STACK, &rl);
+  if (res < 0) {
+    perror("getrlimit RLIMIT_STACK");
+    return -1;
+  }
+  rl.rlim_cur = stack_size;
+  res = setrlimit(RLIMIT_STACK, &rl);
+  if (res < 0) {
+    perror("setrlimit RLIMIT_STACK");
+    return -1;
+  }
+
   if (argc < 3) {
     printf("argc < 3\n");
     return -1;
