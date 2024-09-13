@@ -1,0 +1,3 @@
+ ground      | CTS  | RTS    | TX    | RX  | ground
+ uninsulated | blue | yellow | green | red | black
+             | D2   |  D3    | D1    | D0  |
