@@ -4,6 +4,7 @@
 #include "systembus_bits.hpp"
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
+#include "sh7091/serial.hpp"
 
 #include "core_bits.hpp"
 #include "ta_bits.hpp"
@@ -139,7 +140,12 @@ void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t
 
 void ta_wait_opaque_list()
 {
-  while ((system.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0);
+  while ((system.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0) {
+    if (system.ISTERR) {
+      serial::string("ta ");
+      serial::integer<uint32_t>(system.ISTERR);
+    }
+  };
 
   system.ISTNRM = istnrm::end_of_transferring_opaque_list;
 }
