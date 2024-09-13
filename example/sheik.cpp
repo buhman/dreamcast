@@ -31,7 +31,7 @@
 void transfer_scene(float theta)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | para_control::list_type::opaque
+                                        | para_control::list_type::translucent
                                         | obj_control::col_type::intensity_mode_1
                                         | obj_control::texture
                                         | obj_control::gouraud;
@@ -44,8 +44,8 @@ void transfer_scene(float theta)
     struct object * object = sheik_model.object[j];
     struct material_descriptor * mat = &material[object->material];
 
-    const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
-					| tsp_instruction_word::dst_alpha_instr::zero
+    const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
+					| tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
 					| tsp_instruction_word::fog_control::no_fog
 					| tsp_instruction_word::texture_shading_instruction::modulate
 					| tsp_instruction_word::texture_u_size::from_int(mat->pixel.width)
@@ -166,16 +166,16 @@ void main()
   serial::init(4);
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
-			      | ta_alloc_ctrl::t_opb::no_list
+			      | ta_alloc_ctrl::t_opb::_32x4byte
 			      | ta_alloc_ctrl::om_opb::no_list
-                              | ta_alloc_ctrl::o_opb::_32x4byte;
+                              | ta_alloc_ctrl::o_opb::no_list;
 
   constexpr int render_passes = 1;
   constexpr struct opb_size opb_size[render_passes] = {
     {
-      .opaque = 32 * 4,
+      .opaque = 0,
       .opaque_modifier = 0,
-      .translucent = 0,
+      .translucent = 32 * 4,
       .translucent_modifier = 0,
       .punch_through = 0
     }
@@ -240,10 +240,7 @@ void main()
     if (core >= 0) {
       // core = 1 ; core = 0
       // ta = 0   ; ta = 1
-      ta_wait_opaque_list();
-  system.ISTNRM = istnrm::end_of_render_tsp
-		| istnrm::end_of_render_isp
-		| istnrm::end_of_render_video;
+      ta_wait_translucent_list();
 
       core_start_render2(texture_memory_alloc::region_array[core].start,
 			 texture_memory_alloc::isp_tsp_parameters[core].start,
@@ -255,7 +252,6 @@ void main()
 
     // core = -1 ; core = 1 ; core = 0
     // ta = 0    ; ta = 0   ; ta = 1
-  system.ISTNRM = istnrm::end_of_transferring_opaque_list;
     ta_polygon_converter_init2(texture_memory_alloc::isp_tsp_parameters[ta].start,
 			       texture_memory_alloc::isp_tsp_parameters[ta].end,
 			       texture_memory_alloc::object_list[ta].start,
