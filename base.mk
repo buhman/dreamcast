@@ -2,7 +2,7 @@ DEBUG = -g -gdwarf-4
 
 AFLAGS += --fatal-warnings
 
-CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib -fno-builtin -finline-stringops
+CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib -fno-builtin
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-array-bounds
 #CFLAGS += -Wno-error=narrowing -Wno-error=unused-variable -Wno-error=array-bounds=
