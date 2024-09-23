@@ -1,8 +1,8 @@
 OUTPUT_FORMAT("elf32-littlearm", "elf32-littlearm", "elf32-littlearm")
 MEMORY
 {
-  ram     : ORIGIN = 0x00000000, LENGTH = 0x1f0000
-  buffers : ORIGIN = 0x001f0000, LENGTH = 0x10000
+  ram     : ORIGIN = 0x00000000, LENGTH = 0x100000
+  buffers : ORIGIN = 0x00100000, LENGTH = 0x100000
 }
 SECTIONS
 {

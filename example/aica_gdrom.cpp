@@ -19,6 +19,7 @@ extern void * _binary_start __asm("_binary_example_arm_sh4_interrupt_bin_start")
 extern void * _binary_size __asm("_binary_example_arm_sh4_interrupt_bin_size");
 
 constexpr uint32_t mcipd__sh4_interrupt = (1 << 5);
+constexpr uint32_t miceb__sh4_interrupt = (1 << 5);
 constexpr uint32_t scipd__arm_interrupt = (1 << 5);
 
 constexpr uint32_t sectors_per_chunk = 16;
@@ -64,7 +65,7 @@ void aica_init(uint32_t& chunk_index, const uint32_t * src_chunk)
     }
   }
 
-  chunk = reinterpret_cast<decltype (chunk)>(&aica_wave_memory[0x001f0000 / 4]);
+  chunk = reinterpret_cast<decltype (chunk)>(&aica_wave_memory[0x00100000 / 4]);
 
   serial::integer<uint32_t>(reinterpret_cast<uint32_t>(&(*chunk)[0][0]));
   serial::integer<uint32_t>(reinterpret_cast<uint32_t>(&(*chunk)[1][0]));
@@ -83,9 +84,8 @@ void aica_init(uint32_t& chunk_index, const uint32_t * src_chunk)
 
 void aica_step(uint32_t& chunk_index, const uint32_t * src_chunk)
 {
-  aica_wait_read();
   { // wait for interrupt from arm
-    while ((aica_sound.common.MCIPD() & mcipd__sh4_interrupt) == 0) { aica_wait_read(); };
+    while ((system.ISTEXT & (1 << 1)) == 0);
     aica_wait_write(); aica_sound.common.mcire = mcipd__sh4_interrupt;
   }
 
@@ -371,6 +371,8 @@ void main()
   next_segment(extent, segment_index);
 
   aica_init(chunk_index, &gdrom_buf[0]);
+
+  aica_sound.common.MCIEB(miceb__sh4_interrupt);
 
   //serial::string("aica wave memory:\n");
   //while (aica_wave_memory[0] == 0xeaffffff) { aica_wait_read(); };
