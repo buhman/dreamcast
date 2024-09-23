@@ -82,11 +82,11 @@ out_filename = sys.argv[2]
 
 with open(in_filename, 'rb') as f:
     buf = f.read()
-#pvrt = parse_pvrt_header(buf)
-#canvas = decode_vq_indices(pvrt.codebook, pvrt.indices, pvrt.width, pvrt.height)
-canvas = decode_vq_indices(buf[:256 * 4 * 2], buf[256*4*2:], 128, 64)
-
-#palimage = Image.new('RGB', (pvrt.width, pvrt.height))
-palimage = Image.new('RGB', (128, 64))
+pvrt = parse_pvrt_header(buf)
+canvas = decode_vq_indices(pvrt.codebook, pvrt.indices, pvrt.width, pvrt.height)
+#canvas = decode_vq_indices(buf[:256 * 4 * 2], buf[256*4*2:], 256, 256)
+print(pvrt.texture_data_size, pvrt.texture_type, pvrt.width, pvrt.height)
+palimage = Image.new('RGB', (pvrt.width, pvrt.height))
+#palimage = Image.new('RGB', (256, 256))
 palimage.putdata(canvas)
 palimage.save(out_filename)
