@@ -39,13 +39,13 @@ void main()
   aica_sound.channel[0].LPCTL(1);
   aica_sound.channel[0].PCMS(0);
   aica_sound.channel[0].LSA(0);
-  aica_sound.channel[0].LEA((chunk_size / 2) * 2);
+  aica_sound.channel[0].LEA((chunk_size / 2) * 2 - 1);
   aica_sound.channel[0].D2R(0x0);
   aica_sound.channel[0].D1R(0x0);
   aica_sound.channel[0].RR(0x1f);
   aica_sound.channel[0].AR(0x1f);
 
-  aica_sound.channel[0].OCT(-1);
+  aica_sound.channel[0].OCT(0);
   aica_sound.channel[0].FNS(0x0);
   aica_sound.channel[0].DISDL(0xf);
   aica_sound.channel[0].DIPAN(0x0);
@@ -72,49 +72,26 @@ void main()
   dram[0] = reinterpret_cast<uint32_t>(&chunk[0][0]);
   dram[1] = reinterpret_cast<uint32_t>(&chunk[1][0]);
 
-  request_chunk();
-
   aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[0][0]));
-  aica_sound.channel[0].KYONEX(1);
 
-  //constexpr uint32_t scipd__arm_interrupt = (1 << 5);
-  //constexpr uint32_t timer_a_interrupt = (1 << 6);
-
-  uint8_t next_chunk = 1;
-
+  int started = 0;
   while (1) {
     // detect buffer underrun
-    /*
-    if (!(aica_sound.common.SCIPD() & scipd__arm_interrupt)) {
-      //aica_sound.channel[0].KYONB(0);
-      aica_sound.channel[0].KYONEX(1);
-      while (!(aica_sound.common.SCIPD() & scipd__arm_interrupt));
-      aica_sound.channel[0].KYONB(1);
-      aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[next_chunk][0]));
-      aica_sound.channel[0].KYONEX(1);
-      aica_sound.channel[0].SA(reinterpret_cast<const uint32_t>(&chunk[0][0]));
-    }
-    aica_sound.common.scire = scipd__arm_interrupt;
-    */
-
-    next_chunk = !next_chunk;
-    request_chunk();
 
     uint32_t sample = 0;
-    constexpr uint32_t samples_per_sample = 2;
+    constexpr uint32_t samples_per_sample = 1;
     constexpr uint32_t target = chunk_size / 2 * samples_per_sample;
     constexpr uint32_t scire__sample_interval = (1 << 10);
     constexpr uint32_t scipd__sample_interval = (1 << 10);
     while (sample < target) {
-      //aica_sound.common.tactl_tima = aica::tactl_tima::TACTL(tactl)
-      //                           | aica::tactl_tima::TIMA(tima);
-
-      //while (!(aica_sound.common.SCIPD() & timer_a_interrupt));
-      //aica_sound.common.scire = timer_a_interrupt;
       while (!(aica_sound.common.SCIPD() & scipd__sample_interval));
       aica_sound.common.scire = scire__sample_interval;
-
       sample++;
+    }
+
+    request_chunk();
+    if (!started) {
+      aica_sound.channel[0].KYONEX(1);
     }
   }
 }

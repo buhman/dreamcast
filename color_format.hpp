@@ -4,6 +4,11 @@
 
 namespace color_format {
 
+uint32_t argb8888(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
+{
+  return (a << 24) | (r << 16) | (g << 8) | (b << 0);
+}
+
 uint16_t argb4444(uint8_t a, uint8_t r, uint8_t g, uint8_t b)
 {
   int a4 = (a >> 4) & 15;
