@@ -14,7 +14,8 @@
 void core_init()
 {
   holly.ISP_FEED_CFG   = isp_feed_cfg::cache_size_for_translucency(0x200)
-                       | isp_feed_cfg::punch_through_chunk_size(0x040);
+                       | isp_feed_cfg::punch_through_chunk_size(0x040)
+                       ;
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
                        | fpu_shad_scale::scale_factor_for_shadows(127);
