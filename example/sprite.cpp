@@ -70,7 +70,7 @@ uint32_t transform(uint32_t * ta_parameter_buf)
 				       quad_vertices[2].z,
 				       quad_vertices[3].x,
 				       quad_vertices[3].y);
-  // curiously, there is no quad_veritices[3].z in vertex_sprite_type_0
+  // curiously, there is no quad_vertices[3].z in vertex_sprite_type_0
 
   parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 

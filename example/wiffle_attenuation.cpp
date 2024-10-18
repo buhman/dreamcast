@@ -91,7 +91,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[0] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-	float distance = length(lights[0] - point);
+	float distance = magnitude(lights[0] - point);
 	float attenuation = 1.0 / (1.0f
 				   + 0.07f * distance
 				   + 0.007f * (distance * distance));
@@ -103,7 +103,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[1] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-	float distance = length(lights[1] - point);
+	float distance = magnitude(lights[1] - point);
 	float attenuation = 1.0 / (1.0f
 				   + 0.07f * distance
 				   + 0.007f * (distance * distance));
@@ -115,7 +115,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[2] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-	float distance = length(lights[2] - point);
+	float distance = magnitude(lights[2] - point);
 	float attenuation = 1.0 / (1.0f
 				   + 0.07f * distance
 				   + 0.007f * (distance * distance));
