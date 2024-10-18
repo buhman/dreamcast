@@ -310,11 +310,16 @@ void do_lm_request(uint8_t port, uint8_t lm)
 							   destination_ap,
 							   true); // end_flag
 
+    serial::string("lm command send_offset ");
+    serial::integer<uint32_t>(writer.send_offset);
+    serial::hexlify(send_buf, writer.send_offset);
+
     maple::dma_start(send_buf, writer.send_offset,
 		     recv_buf, writer.recv_offset);
 
     auto& bus_data = host_response->bus_data;
     auto& data_fields = bus_data.data_fields;
+    serial::hexlify(recv_buf, writer.recv_offset);
     if (bus_data.command_code != response_type::command_code) {
       serial::string("lm did not reply: ");
       serial::integer<uint8_t>(port, ' ');
@@ -581,9 +586,9 @@ void do_device_request()
 
 void main()
 {
-  // flycast needs this in HLE mode, or else it won't start the vcount
-  // counter.
-  video_output::set_mode_vga();
+  serial::init(4);
 
   do_device_request();
+
+  while (1);
 }
