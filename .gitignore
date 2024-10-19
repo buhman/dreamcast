@@ -13,6 +13,7 @@ __pycache__
 scramble
 cdi4dc
 tools/ttf_outline
+tools/ttf_bitmap
 k_means_vq
 *.blend1
 *.scramble
