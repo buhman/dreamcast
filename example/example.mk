@@ -31,7 +31,7 @@ MACAW_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
 	sh7091/serial.o \
-	macaw.data.o
+	texture/macaw/macaw.data.o
 
 example/macaw.elf: LDSCRIPT = $(LIB)/main.lds
 example/macaw.elf: $(START_OBJ) $(MACAW_OBJ)
@@ -150,7 +150,8 @@ WIFFLE_ATTENUATION_OBJ = \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
-	holly/ta_fifo_polygon_converter.o
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o
 
 example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
@@ -308,6 +309,17 @@ MAPLE_WINK_OBJ = \
 example/maple_wink.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_wink.elf: $(START_OBJ) $(MAPLE_WINK_OBJ)
 
+MAPLE_FONT_OBJ = \
+	example/maple_font.o \
+	holly/video_output.o \
+	rgb.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	font/portfolio_6x8/portfolio_6x8.data.o
+
+example/maple_font.elf: LDSCRIPT = $(LIB)/main.lds
+example/maple_font.elf: $(START_OBJ) $(MAPLE_FONT_OBJ)
+
 MAPLE_VIBRATOR_OBJ = \
 	example/maple_vibrator.o \
 	holly/video_output.o \
@@ -346,10 +358,19 @@ example/maple_mouse.elf: $(START_OBJ) $(MAPLE_MOUSE_OBJ)
 SERIAL_TRANSFER_OBJ = \
 	example/serial_transfer.o \
 	sh7091/serial.o \
-	serial_load.o
+	serial_load.o \
+	maple/maple.o \
+	font/portfolio_6x8/portfolio_6x8.data.o
 
 example/serial_transfer.elf: LDSCRIPT = $(LIB)/loader.lds
 example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)
+
+SERIAL_DMA_OBJ = \
+	example/serial_dma.o \
+	sh7091/serial.o
+
+example/serial_dma.elf: LDSCRIPT = $(LIB)/main.lds
+example/serial_dma.elf: $(START_OBJ) $(SERIAL_DMA_OBJ)
 
 INTERRUPT_OBJ = \
 	example/interrupt.o \
@@ -565,7 +586,8 @@ TETRAHEDRON_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	holly/video_output.o
+	holly/video_output.o \
+	sh7091/serial.o
 
 example/tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
 example/tetrahedron.elf: $(START_OBJ) $(TETRAHEDRON_OBJ)
@@ -594,7 +616,7 @@ CUBE_VQ_OBJ = \
 	sh7091/serial.o \
 	texture/panda/panda.vq.o
 
-example/cube_vq.elf: LDSCRIPT = $(LIB)/alt.lds
+example/cube_vq.elf: LDSCRIPT = $(LIB)/main.lds
 example/cube_vq.elf: $(START_OBJ) $(CUBE_VQ_OBJ)
 
 CUBE_VQ_RECTANGULAR_OBJ = \
@@ -607,7 +629,7 @@ CUBE_VQ_RECTANGULAR_OBJ = \
 	sh7091/serial.o \
 	texture/panda/panda_rectangular.vq.o
 
-example/cube_vq_rectangular.elf: LDSCRIPT = $(LIB)/alt.lds
+example/cube_vq_rectangular.elf: LDSCRIPT = $(LIB)/main.lds
 example/cube_vq_rectangular.elf: $(START_OBJ) $(CUBE_VQ_RECTANGULAR_OBJ)
 
 SHEIK_OBJ = \
@@ -621,7 +643,7 @@ SHEIK_OBJ = \
 	model/sheik/sheik_00.data.o \
 	model/sheik/xc_eye01.data.o
 
-example/sheik.elf: LDSCRIPT = $(LIB)/alt.lds
+example/sheik.elf: LDSCRIPT = $(LIB)/main.lds
 example/sheik.elf: $(START_OBJ) $(SHEIK_OBJ)
 
 SHEIK_VQ_OBJ = \
@@ -637,5 +659,5 @@ SHEIK_VQ_OBJ = \
 	model/sheik/sheik_00.vq.o \
 	model/sheik/xc_eye01.data.o
 
-example/sheik_vq.elf: LDSCRIPT = $(LIB)/alt.lds
+example/sheik_vq.elf: LDSCRIPT = $(LIB)/main.lds
 example/sheik_vq.elf: $(START_OBJ) $(SHEIK_VQ_OBJ)

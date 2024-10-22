@@ -6,6 +6,7 @@
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_port.hpp"
+#include "maple/maple_display.hpp"
 #include "align.hpp"
 #include "sh7091/serial.hpp"
 
@@ -13,60 +14,8 @@
 
 extern uint32_t _binary_font_portfolio_6x8 __asm("_binary_font_portfolio_6x8_portfolio_6x8_data_start");
 
-namespace vmu_display {
-constexpr int32_t width = 48;
-constexpr int32_t height = 32;
-constexpr int32_t pixels_per_byte = 8;
-constexpr int32_t framebuffer_size = width * height / pixels_per_byte;
-}
-
-uint32_t vmu_framebuffer[vmu_display::framebuffer_size / 4];
-
-static inline void render_glyph(uint8_t * dst, const uint8_t * src, uint8_t c, int x, int y)
+void make_vmu_framebuffer(maple::display::font_renderer& renderer)
 {
-  int y_ix = 186 - (y * 6 * 8);
-  for (int i = 0; i < 8; i++) {
-    switch (x) {
-    case 0:
-      dst[y_ix - i * 6 + 5] = src[(c - ' ') * 8 + i];
-      break;
-    case 1:
-      dst[y_ix - i * 6 + 5] |= (src[(c - ' ') * 8 + i] & 0b11) << 6;
-      dst[y_ix - i * 6 + 4] = src[(c - ' ') * 8 + i] >> 2; // 0b1111
-      break;
-    case 2:
-      dst[y_ix - i * 6 + 4] |= (src[(c - ' ') * 8 + i] & 0b1111) << 4;
-      dst[y_ix - i * 6 + 3] = src[(c - ' ') * 8 + i] >> 4; // 0b11
-      break;
-    case 3:
-      dst[y_ix - i * 6 + 3] |= src[(c - ' ') * 8 + i] << 2;
-      break;
-    case 4:
-      dst[y_ix - i * 6 + 2] = src[(c - ' ') * 8 + i];
-      break;
-    case 5:
-      dst[y_ix - i * 6 + 2] |= (src[(c - ' ') * 8 + i] & 0b11) << 6;
-      dst[y_ix - i * 6 + 1] = src[(c - ' ') * 8 + i] >> 2; // 0b1111
-      break;
-    case 6:
-      dst[y_ix - i * 6 + 1] |= (src[(c - ' ') * 8 + i] & 0b1111) << 4;
-      dst[y_ix - i * 6 + 0] = src[(c - ' ') * 8 + i] >> 4; // 0b11
-      break;
-    case 7:
-      dst[y_ix - i * 6 + 0] |= src[(c - ' ') * 8 + i] << 2;
-      break;
-    }
-  }
-}
-
-void make_vmu_framebuffer(uint32_t * buf)
-{
-  const uint8_t * src = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
-  uint8_t * dst = reinterpret_cast<uint8_t *>(buf);
-
-  for (int i = 0; i < vmu_display::framebuffer_size; i++) {
-    dst[i] = 0;
-  }
   const char * s =
     " very   "
     " funneh "
@@ -75,7 +24,7 @@ void make_vmu_framebuffer(uint32_t * buf)
   for (int i = 0; i < 8 * 4; i++) {
     int x = i % 8;
     int y = i / 8;
-    render_glyph(dst, src, s[i], x, y);
+    renderer.glyph(s[i], x, y);
   }
 }
 
@@ -88,6 +37,8 @@ inline void copy(T * dst, const T * src, const int32_t n) noexcept
     n_t--;
   }
 }
+
+static uint8_t * framebuffer;
 
 void send_vmu_framebuffer(uint8_t port, uint8_t lm)
 {
@@ -106,7 +57,7 @@ void send_vmu_framebuffer(uint8_t port, uint8_t lm)
     = writer.append_command<command_type, response_type>(host_port_select,
 							 destination_ap,
 							 true,      // end_flag
-							 vmu_display::framebuffer_size, // send_trailing
+							 maple::display::vmu::framebuffer_size, // send_trailing
 							 0          // recv_trailing
 							 );
   auto& data_fields = host_command->bus_data.data_fields;
@@ -115,7 +66,9 @@ void send_vmu_framebuffer(uint8_t port, uint8_t lm)
   data_fields.phase = 0;
   data_fields.block_number = std::byteswap<uint16_t>(0x0000);
 
-  copy<uint8_t>(data_fields.written_data, reinterpret_cast<uint8_t *>(vmu_framebuffer), vmu_display::framebuffer_size);
+  copy<uint8_t>(data_fields.written_data,
+		reinterpret_cast<uint8_t *>(framebuffer),
+		maple::display::vmu::framebuffer_size);
 
   maple::dma_start(send_buf, writer.send_offset,
 		   recv_buf, writer.recv_offset);
@@ -235,7 +188,10 @@ void main()
 {
   serial::init(4);
 
-  make_vmu_framebuffer(vmu_framebuffer);
+  const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
+  auto renderer = maple::display::font_renderer(font);
+  make_vmu_framebuffer(renderer);
+  framebuffer = renderer.fb;
 
   do_device_request();
 

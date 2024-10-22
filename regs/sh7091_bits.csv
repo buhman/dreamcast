@@ -291,3 +291,5 @@
 "SCIF","SCSPTR2","SPB2IO","1","spb2dt_is_output_to_txd2","1",,
 "SCIF","SCSPTR2","SPB2DT","0","input_output_data_is_low_level","0",,
 "SCIF","SCSPTR2","SPB2DT","0","input_output_data_is_high_level","1",,
+,,,,,,,
+"SCIF","SCLSR2","ORER","0","overrun_error_occured","1",,

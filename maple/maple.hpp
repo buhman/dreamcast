@@ -34,6 +34,10 @@ struct host_response {
 };
 static_assert((sizeof (host_response<uint8_t[0]>)) == align_32byte((sizeof (host_response<uint8_t[0]>))));
 
+void dma_wait_complete();
+
+bool dma_poll_complete();
+
 void dma_start(uint32_t const * const command_buf,
                const uint32_t command_size,
                uint32_t const * const receive_buf,

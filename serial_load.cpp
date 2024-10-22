@@ -1,33 +1,13 @@
 #include <cstdint>
 
-#include "sh7091/sh7091.hpp"
-#include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
-#include "holly/holly.hpp"
+#include "serial_load.hpp"
 
-enum load_command {
-  CMD_NONE,
-  CMD_DATA, // DATA 0000 0000 {data}
-  CMD_JUMP, // JUMP 0000
-  CMD_RATE, // RATE 0000
-};
+namespace serial_load {
 
-struct load_state {
-  union {
-    uint8_t buf[12];
-    struct {
-      uint8_t cmd[4];
-      uint32_t addr1;
-      uint32_t addr2;
-    };
-  };
-  uint32_t len;
-  enum load_command command;
-};
+struct state state;
 
-static struct load_state state;
-
-void move(void *dst, const void *src, size_t n)
+static void move(void *dst, const void *src, uint32_t n)
 {
   uint8_t * d = reinterpret_cast<uint8_t *>(dst);
   const uint8_t * s = reinterpret_cast<const uint8_t *>(src);
@@ -40,22 +20,13 @@ void move(void *dst, const void *src, size_t n)
   }
 }
 
-void load_init()
+void init()
 {
   state.len = 0;
   state.command = CMD_NONE;
 }
 
-void debug(const char * s)
-{
-  char c;
-  while ((sh7091.SCIF.SCFSR2 & scif::scfsr2::tdfe::bit_mask) == 0);
-  while ((c = *s++)) {
-    sh7091.SCIF.SCFTDR2 = (uint8_t)c;
-  }
-}
-
-void jump_to_func(const uint32_t addr)
+static void jump_to_func(const uint32_t addr)
 {
   serial::string("jump to: ");
   serial::integer<uint32_t>(addr);
@@ -73,7 +44,7 @@ void jump_to_func(const uint32_t addr)
   // restore our stack
 }
 
-void load_recv(uint8_t c)
+void recv(uint8_t c)
 {
   while (1) {
     switch (state.command) {
@@ -87,7 +58,7 @@ void load_recv(uint8_t c)
 	  if (state.len < 12) {
 	    return;
 	  } else {
-	    debug("data\n");
+	    serial::string("data");
 	    state.command = CMD_DATA;
 	    return;
 	  }
@@ -98,7 +69,7 @@ void load_recv(uint8_t c)
 	  if (state.len < 8) {
 	    return;
 	  } else {
-	    debug("jump\n");
+	    serial::string("jump");
 	    state.command = CMD_JUMP;
 	  }
 	} else if (state.buf[0] == 'R' &&
@@ -108,7 +79,7 @@ void load_recv(uint8_t c)
 	  if (state.len < 8) {
 	    return;
 	  } else {
-	    debug("rate\n");
+	    serial::string("rate");
 	    state.command = CMD_RATE;
 	  }
 	} else {
@@ -124,7 +95,7 @@ void load_recv(uint8_t c)
 	uint32_t * size = &state.addr1;
 	uint8_t * dest = reinterpret_cast<uint8_t *>(state.addr2);
 	if (*size > 0) {
-	  sh7091.SCIF.SCFTDR2 = c;
+	  serial::character(c);
 
 	  // write c to dest
 	  *dest = c;
@@ -135,7 +106,7 @@ void load_recv(uint8_t c)
 	if (*size == 0) {
 	  state.len = 0;
 	  state.command = CMD_NONE;
-	  debug("next\n");
+	  serial::string("next");
 	}
 	return;
 	break;
@@ -144,21 +115,17 @@ void load_recv(uint8_t c)
       // jump
       state.len = 0;
       state.command = CMD_NONE;
-      debug("prejump\n");
-      holly.VO_BORDER_COL = (31 << 11);
       jump_to_func(state.addr1);
-      holly.VO_BORDER_COL = (63 << 5) | (31 << 0);
-      debug("postjump\n");
       return;
       break;
     case CMD_RATE:
       state.len = 0;
       state.command = CMD_NONE;
-      debug("prerate\n");
       serial::init(state.addr1 & 0xff);
-      debug("postrate\n");
       return;
       break;
     }
   }
+}
+
 }

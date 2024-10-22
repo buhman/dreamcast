@@ -2,10 +2,12 @@ import serial
 import struct
 import sys
 import time
+import fcntl
+import os
 
 #dest = 0xac21_0000
-dest = 0xac02_0000
-#dest = 0xac01_0000
+#dest = 0xac02_0000
+dest = 0xac01_0000
 
 ret = []
 
@@ -71,7 +73,7 @@ def start_data(ser, b):
     size = len(b)
     args = struct.pack("<II", size, dest)
     ret = sync(ser, b'DATA' + args)
-    if ret != b'data\n':
+    if ret != b'data\n' and ret != b'\ndata\n' and ret != b'\x00data\n':
         print(".", end=' ')
         print(ret)
         time.sleep(1)
@@ -100,9 +102,9 @@ def do(ser, b):
         return
 
     args = struct.pack("<I", dest)
-    print("JUMP")
-    ret = sync(ser, b'JUMP' + args, wait=1)
-    print()
+    ret = sync(ser, b'JUMP' + args, wait=0)
+    print("JUMP", ret)
+    print("console:")
     console(ser)
 
 seen_length = 16
@@ -122,9 +124,19 @@ def console(ser):
     global framebuffer_mode
     global framebuffer
 
+    fd = fcntl.fcntl(sys.stdin, fcntl.F_GETFL)
+    fcntl.fcntl(sys.stdin, fcntl.F_SETFL, fd | os.O_NONBLOCK)
+
     seen = [0] * seen_length
     seen_ix = 0
     while True:
+        while True:
+            c = sys.stdin.read(1)
+            if not c:
+                break
+            print("write", repr(c))
+            ser.write(c.encode('utf-8'))
+
         b = ser.read(ser.in_waiting)
         if b == b'':
             continue
@@ -195,6 +207,11 @@ with serial.Serial(port='/dev/ttyUSB0',
                    rtscts=False,
                    #rtscts=True,
                    ) as ser:
+    ser.read(ser.in_waiting)
+    ser.read(ser.in_waiting)
+    ser.reset_input_buffer()
+    ser.reset_output_buffer()
+    ser.read(ser.in_waiting)
     #console(ser)
     print("waiting: ", end=' ')
     sys.stdout.flush()

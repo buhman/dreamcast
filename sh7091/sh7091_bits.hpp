@@ -817,4 +817,12 @@ namespace scif {
     }
   }
 
+  namespace sclsr2 {
+    namespace orer {
+      constexpr uint32_t overrun_error_occured = 1 << 0;
+
+      constexpr uint32_t bit_mask = 0x1 << 0;
+    }
+  }
+
 }

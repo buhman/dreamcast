@@ -145,6 +145,22 @@ static inline void _dma_start(const uint32_t * command_buf)
   maple_if.MDST = mdst::start_status::start;
 }
 
+void dma_wait_complete()
+{
+  // wait for maple DMA completion
+  while ((system.ISTNRM & istnrm::end_of_dma_maple_dma) == 0);
+  system.ISTNRM = istnrm::end_of_dma_maple_dma;
+}
+
+bool dma_poll_complete()
+{
+  bool complete = (system.ISTNRM & istnrm::end_of_dma_maple_dma) != 0;
+  if (complete) {
+    system.ISTNRM = istnrm::end_of_dma_maple_dma;
+  }
+  return complete;
+}
+
 void dma_start(const uint32_t * send_buf,
                const uint32_t send_size,
                const uint32_t * recv_buf,
@@ -169,10 +185,6 @@ void dma_start(const uint32_t * send_buf,
                   : "r" (reinterpret_cast<uint32_t>(&recv_buf[(32 * i) / 4])) // input
                   );
   }
-
-  // wait for maple DMA completion
-  while ((system.ISTNRM & istnrm::end_of_dma_maple_dma) == 0);
-  system.ISTNRM = istnrm::end_of_dma_maple_dma;
 }
 
   // wait for completion

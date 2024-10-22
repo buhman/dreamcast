@@ -37,7 +37,8 @@ void init(uint8_t bit_rate)
 
   sh7091.SCIF.SCFCR2 = scfcr2::rtrg::trigger_on_1_byte
 		     | scfcr2::ttrg::trigger_on_8_bytes
-		     | scfcr2::mce::modem_signals_enabled;
+		     //| scfcr2::mce::modem_signals_enabled
+		     ;
 
   sh7091.SCIF.SCSMR2 = scsmr2::chr::_8_bit_data
 		     | scsmr2::pe::parity_disabled
@@ -67,12 +68,10 @@ void init(uint8_t bit_rate)
 void character(const char c)
 {
   using namespace scif;
-  // wait for transmit fifo to become empty
+  // wait for transmit fifo to become partially empty
   while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
 
-  for (int i = 0; i < 1000; i++) {
-    asm volatile ("nop;");
-  }
+  sh7091.SCIF.SCFSR2 = static_cast<uint16_t>(~scfsr2::tdfe::bit_mask);
 
   sh7091.SCIF.SCFTDR2 = static_cast<uint8_t>(c);
 }
@@ -105,6 +104,7 @@ void hexlify(const uint8_t * s, uint32_t len)
 {
   for (uint32_t i = 0; i < len; i++) {
     hexlify(s[i]);
+    character(' ');
   }
   character('\n');
 }
