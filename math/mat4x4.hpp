@@ -1,6 +1,7 @@
 #pragma once
 
 #include <utility>
+#include "vec4.hpp"
 
 template <int R, int C, typename T>
 struct mat;

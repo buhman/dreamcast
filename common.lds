@@ -34,7 +34,7 @@ SECTIONS
     KEEP(*(.ctors.*))
   } > p1ram
 
-  .bss ALIGN(4) (NOLOAD) : SUBALIGN(4)
+  .bss ALIGN(4) (NOLOAD) :
   {
     *(.bss)
     *(.bss.*)

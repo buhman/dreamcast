@@ -206,14 +206,17 @@ void * memset(void * dest, int c, size_t n)
   return dest;
 }
 
-static fft::complex comp[samples_per_line * 2];
+static fft::complex comp[samples_per_line * 8];
 
-void render_column(int col, int x, const uint32_t * buf)
+int render_column(int col, int x, const uint32_t * buf)
 {
   uint32_t offset = texture_memory_alloc::texture.start + 0;
   auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[offset / 4]);
 
-  const int16_t * src = &((int16_t *)(buf))[col * samples_per_line * 2];
+  const int16_t * src = &((int16_t *)(buf))[col * samples_per_line / 2];
+  if ((src) >= (int16_t*)&buf[(chunk_size - samples_per_line * 2)/4])
+    return 0; // FIXME: this is a hack
+
   fft::int16_to_complex(src, samples_per_line * 2, comp);
   fft::fft(comp, samples_per_line * 2);
   for (int32_t y = 0; y < samples_per_line; y++) {
@@ -229,24 +232,27 @@ void render_column(int col, int x, const uint32_t * buf)
     value |= v << shift;
     texture[ix / 4] = value;
   }
+
+  return 1;
 }
 
 void render();
 void texture_init();
 
-void aica_step(uint32_t& chunk_index, const uint32_t gdrom_buf[2][chunk_size / 4])
+void aica_step(uint32_t& chunk_index, const uint32_t gdrom_buf[2][chunk_size / 4 * 2])
 {
   { // wait for interrupt from arm
     int col = 0;
     while ((system.ISTEXT & (1 << 1)) == 0) {
       if (step_time >= 0) {
 	int32_t dt = step_start - (int32_t)sh7091.TMU.TCNT0;
-	if (step_time * col / lines_per_chunk < dt) {
-	  render_column(col, __x, gdrom_buf[!chunk_index]);
-	  render();
-	  col += 1;
-	  __x += 1;
+	if (step_time * col / (lines_per_chunk * 4) < dt) {
+	  int inc = render_column(col, __x, gdrom_buf[!chunk_index]);
+	  col += inc;
+	  __x += inc;
 	  __x %= samples_per_line;
+	  if (col % 2)
+	    render();
 	}
       }
     };
@@ -362,14 +368,9 @@ uint32_t gdrom_cd_read2(uint16_t * buf,
     length += byte_count;
     gdrom_read_data(buf, byte_count);
 
-    serial::string("status: ");
-    serial::integer<uint8_t>(gdrom_if.status);
-
     while ((gdrom::status::bsy(gdrom_if.status)) != 0); // wait for drive to become not-busy
   }
 
-  serial::string("length: ");
-  serial::integer<uint32_t>(length);
   return length;
 }
 
@@ -466,7 +467,7 @@ struct extent gdrom_find_file()
     serial::string(dr->file_identifier, dr->length_of_file_identifier);
     serial::character('\n');
 
-    const char filename[] = "ELEC.PCM;1";
+    const char filename[] = "RIDDLE.PCM;1";
     bool equal = str_equal(dr->file_identifier, dr->length_of_file_identifier,
                            filename, (sizeof (filename)) - 1);
 
@@ -603,7 +604,9 @@ void render()
 
 void main()
 {
-  serial::init(4);
+  memset(&comp, 0, (sizeof (comp)));
+
+  serial::init(0);
 
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
@@ -646,7 +649,7 @@ void main()
 
   gdrom_unlock();
   const auto extent = gdrom_find_file();
-  uint32_t gdrom_buf[2][chunk_size / 4];
+  uint32_t gdrom_buf[2][(chunk_size / 4) * 2] = {0};
   gdrom_read_chunk(gdrom_buf[chunk_index], extent.location + segment_index, sectors_per_chunk);
   next_segment(extent, segment_index);
 

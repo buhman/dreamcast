@@ -14,6 +14,7 @@ scramble
 cdi4dc
 tools/ttf_outline
 tools/ttf_bitmap
+tools/ftdi_transfer
 k_means_vq
 *.blend1
 *.scramble

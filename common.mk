@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O2
+OPT ?= -Og
 GENERATED ?=
 
 AARCH = --isa=sh4 --little
@@ -80,13 +80,13 @@ sine.pcm: common.mk
 		/=./COPYRIGH.TXT \
 		/=./ABSTRACT.TXT \
 		/=./BIBLIOGR.TXT \
-		/=./REIGN.PCM \
-		/=./PILLAR.PCM \
-		/=./RIDDLE.PCM \
-		/=./PRELUDE.PCM \
-		/=./CLOCKTOW.PCM \
-		/=./ELEC.PCM \
-		/=./ECCLESIA.PCM
+		/=./pcm/REIGN.PCM \
+		/=./pcm/PILLAR.PCM \
+		/=./pcm/RIDDLE.PCM \
+		/=./pcm/PRELUDE.PCM \
+		/=./pcm/CLOCKTOW.PCM \
+		/=./pcm/ELEC.PCM \
+		/=./pcm/ECCLESIA.PCM
 
 %.cdi: %.iso
 	./cdi4dc $< $@ >/dev/null
