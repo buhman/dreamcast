@@ -42,11 +42,13 @@ SECTIONS
   .text.sg_ini :
   {
     KEEP(*(.text.*sg_ini))
+    . = ORIGIN(sg_ini) + LENGTH(sg_ini);
   } > sg_ini
 
   .text.aip :
   {
     KEEP(*(.text.*aip))
+    . = ORIGIN(aip) + LENGTH(aip);
   } > aip
 
   /DISCARD/ :
@@ -56,4 +58,6 @@ SECTIONS
     *(.bss)
     *(.comment)
   }
+
+  INCLUDE "debug.lds"
 }

@@ -21,16 +21,16 @@ IP_OBJ = \
 	systemid.o \
 	toc.o \
 	sg/sg_sec.o \
-	sg/sg_arejp.o \
-	sg/sg_areus.o \
-	sg/sg_areec.o \
-	sg/sg_are00.o \
-	sg/sg_are01.o \
-	sg/sg_are02.o \
-	sg/sg_are03.o \
-	sg/sg_are04.o \
-	sg/sg_ini.o \
-	sg/aip.o
+	sg_arejp.o \
+	sg_areus.o \
+	sg_areec.o \
+	sg_are00.o \
+	sg_are01.o \
+	sg_are02.o \
+	sg_are03.o \
+	sg_are04.o \
+	sg_ini.o \
+	aip.o
 
 %.o: %.obj
 	$(OBJCOPY) -g \

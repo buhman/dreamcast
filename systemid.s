@@ -34,12 +34,12 @@
 
 	.section .text.systemid
 
-	.ascii "SEGA SEGAKATANA " /* H/W identifier */
-	.ascii "SEGA ENTERPRISES" /* H/W Vendor ID */
-	.ascii "39F1 "            /* Media ID */
+	.ascii "SEGA SEGAKATANA " /* 0x00 H/W identifier */
+	.ascii "SEGA ENTERPRISES" /* 0x10 H/W Vendor ID */
+	.ascii "39F1 "            /* 0x20 Media ID */
 	.ascii      "GD-ROM1/1  " /* Media information */
-	.ascii "JUE     "         /* Compatible Area Symbol */
-	.ascii         "C000810	" /* Compatible peripherals */
+	.ascii "JUE     "         /* 0x30 Compatible Area Symbol */
+	.ascii         "C000810 " /* Compatible peripherals */
 	.ascii "HDR-0900  "       /* Product number */
 	.ascii           "V0.000" /* Version number */
 	.ascii "19980901"         /* Release date */
