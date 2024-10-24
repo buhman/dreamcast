@@ -517,7 +517,7 @@ label_22e0:
 	add	#4,r1
 	mov.l	@r1,r3
 	add	r3,r2
-	mov.l	label_2338,r0	! a05f74f4
+	mov.l	label_2338,r0	/* a05f74f4 SB_GDSTARD */
 	mov.l	@r0,r3
 	cmp/eq	r3,r2
 	bt	label_2320
@@ -539,7 +539,7 @@ label_2330:
 label_2334:
 	.long	0x8ce01010
 label_2338:
-	.long	0xa05f74f4
+	.long	0xa05f74f4	/* SB_GDSTARD */
 label_233c:
 	.long	0x000000a8
 
