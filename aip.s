@@ -77,7 +77,7 @@ label_6a:
 label_6c:
 	.long	0xa0000000
 label_70:
-	.long	0xac00e0d0
+	.long	0xac00e0d0	/* label_d0 */
 label_74:
 	.long	0xac00fc00
 label_78:
@@ -117,7 +117,7 @@ label_b2:
 	nop
 
 label_b8:
-	.long	0xac00e004
+	.long	0xac00e004	/* label_b4 */
 label_bc:
 	.long	0x8c00f400
 label_c0:

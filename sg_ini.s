@@ -407,7 +407,9 @@ label_2288:
 label_228a:
 	.word 0x0006	/* r3 */
 label_228c:
-	.long 0xff000038
+	.long 0xff000038 /* QACR0 ←
+			    QACR1 ←
+			*/
 
 label_2290:
 	.word 0x0001
@@ -434,7 +436,7 @@ label_22a6:
 	.word 0x0018     /* r3 → bsrf label_21bc */
 label_22a8:
 	.long 0xff000024 /* r2
-			    ?? ← 0x00000020 */
+			    EXPEVT ← 0x00000020 */
 label_22ac:
 	.long 0x00000020 /* r1 */
 
