@@ -1,8 +1,3 @@
-#include <cstdint>
-
-#include "core_bits.hpp"
-#include "video_output.hpp"
-
 namespace video_output {
   const struct mode vga = {
     .fb_r_ctrl      = fb_r_ctrl::vclk_div::pclk_vclk_1

@@ -119,13 +119,6 @@ def render_namespace(modes, max_len):
     yield from render_modes(modes, max_len)
     yield "}"
 
-def render_header():
-    yield "#include <cstdint>"
-    yield ""
-    yield '#include "core_bits.hpp"'
-    yield '#include "video_output.hpp"'
-    yield ""
-
 def max_length(regs):
     max_length = 0
     for register, *_ in regs:
@@ -142,6 +135,5 @@ if __name__ == "__main__":
     modes = transpose_by_name(format_names, regs)
     max_length = max_length(regs)
     render, out = renderer()
-    render(render_header())
     render(render_namespace(modes, max_length))
     sys.stdout.write(out.getvalue())

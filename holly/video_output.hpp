@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "core_bits.hpp"
+
 namespace video_output {
 
 struct mode {

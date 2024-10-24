@@ -9,7 +9,6 @@
 
 #include "video_output.hpp"
 #include "video_output_mode.inc"
-#include "video_output.hpp"
 
 namespace video_output {
 
