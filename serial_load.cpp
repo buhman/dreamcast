@@ -23,11 +23,13 @@ static void move(void *dst, const void *src, uint32_t n)
   }
 }
 
-void init()
+void init(uint32_t speed)
 {
   state.len = 0;
   state.fsm_state = fsm_state::idle;
+  state.speed = speed & 0xff;
   sh7091.DMAC.CHCR1 = 0;
+  serial::init(state.speed);
 }
 
 void jump_to_func(const uint32_t addr)
@@ -35,15 +37,16 @@ void jump_to_func(const uint32_t addr)
   serial::string("jump to: ");
   serial::integer<uint32_t>(addr);
   // save our stack
-  asm volatile ("ldc r15, gbr; "
-		"mov #0, r15; "
+  asm volatile ("mov.l r14,@-r15; "
+		"ldc r15, gbr; "
 		"jsr @%0; "
-		"nop; "
+		"mov #0, r15; "
 		"stc gbr, r15; "
+		"mov.l @r15+,r14; "
                 :
                 : "r"(addr) /* input */
 	        /* clobbered register */
-                : "r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","macl","mach","gbr","pr"
+                : "r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","r13","macl","mach","gbr","pr"
                 );
   // restore our stack
 }
@@ -55,6 +58,15 @@ static inline void prestart_write()
   serial::recv_dma(dest - 1, size + 1);
   state.write_crc.value = 0xffffffff;
   state.write_crc.offset = dest;
+}
+
+static inline void prestart_read()
+{
+  uint32_t src = state.buf.arg[0];
+  uint32_t size = state.buf.arg[1];
+  serial::send_dma(src, size);
+  state.read_crc.value = 0xffffffff;
+  state.read_crc.offset = src;
 }
 
 struct state_arglen_reply command_list[] = {
@@ -82,6 +94,8 @@ void recv(uint8_t c)
 	    state.len = 0;
 	    union command_reply reply = command_reply(sar.reply, state.buf.arg[0], state.buf.arg[1]);
 	    serial::string(reply.u8, 16);
+
+	    if (state.buf.cmd == command::read) prestart_read();
 	    return;
 	  } else {
 	    /*
@@ -115,8 +129,8 @@ void tick()
       uint32_t dar1 = sh7091.DMAC.DAR1;
       if (dar1 > state.write_crc.offset) {
 	uint32_t len = dar1 - state.write_crc.offset;
-	const uint8_t * dest = reinterpret_cast<const uint8_t *>(state.write_crc.offset);
-	state.write_crc.value = crc32_update(state.write_crc.value, dest, len);
+	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.write_crc.offset);
+	state.write_crc.value = crc32_update(state.write_crc.value, buf, len);
 	state.write_crc.offset += len;
       }
       if (chcr1 & dmac::chcr::te::transfers_completed) {
@@ -132,6 +146,27 @@ void tick()
     }
     break;
   case fsm_state::read:
+    {
+      uint32_t chcr1 = sh7091.DMAC.CHCR1;
+      uint32_t sar1 = sh7091.DMAC.SAR1;
+      if (sar1 > state.read_crc.offset) {
+	uint32_t len = sar1 - state.read_crc.offset;
+	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.read_crc.offset);
+	state.read_crc.value = crc32_update(state.read_crc.value, buf, len);
+	state.read_crc.offset += len;
+      }
+
+      if (chcr1 & dmac::chcr::te::transfers_completed) {
+	state.read_crc.value ^= 0xffffffff;
+	union command_reply reply = read_crc_reply(state.read_crc.value);
+	serial::string(reply.u8, 16);
+
+	sh7091.DMAC.CHCR1 = 0;
+
+	// transition to next state
+	//state.fsm_state = fsm_state::idle;
+      }
+    }
     break;
   case fsm_state::jump:
     {
@@ -144,6 +179,11 @@ void tick()
       const uint32_t dest = state.buf.arg[0];
       jump_to_func(dest);
 
+      // cautiously re-initialize serial; it is possible the called
+      // function modified serial state
+      serial::init(state.speed);
+      sh7091.DMAC.CHCR1 = 0;
+
       // transition to next state
       state.fsm_state = fsm_state::idle;
     }
@@ -151,7 +191,8 @@ void tick()
   case fsm_state::speed:
     {
       const uint32_t speed = state.buf.arg[0];
-      serial::init(speed & 0xff);
+      state.speed = speed & 0xff;
+      serial::init(state.speed);
 
       // transition to next state
       state.fsm_state = fsm_state::idle;

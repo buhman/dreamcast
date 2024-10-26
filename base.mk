@@ -9,6 +9,7 @@ CFLAGS += -Wno-array-bounds
 CFLAGS += -Wno-error=maybe-uninitialized
 CFLAGS += -Wno-error=unused-but-set-variable
 CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=unused-function
 
 CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-statics
 

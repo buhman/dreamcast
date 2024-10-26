@@ -173,7 +173,7 @@ void recv_device_status(struct maple_display_poll_state &state)
     if (bus_data.command_code != maple::device_status::command_code) {
       state.port[port].ap__lm = 0;
     } else {
-      auto& data_fields = bus_data.data_fields;
+      //auto& data_fields = bus_data.data_fields;
 
       uint8_t lm = bus_data.source_ap & ap::lm_bus::bit_mask;
       state.port[port].ap__lm = lm;
@@ -298,6 +298,14 @@ void render_write_state(char * dst)
   render_u32(serial_load::state.write_crc.value, &dst[24]);
 }
 
+void render_read_state(char * dst)
+{
+  render_line("read", &dst[0]);
+  render_u32(sh7091.DMAC.DMATCR1, &dst[8]);
+  render_u32(sh7091.DMAC.SAR1, &dst[16]);
+  render_u32(serial_load::state.read_crc.value, &dst[24]);
+}
+
 void render_fsm_state(char * dst)
 {
   using namespace serial_load;
@@ -309,8 +317,7 @@ void render_fsm_state(char * dst)
     render_write_state(dst);
     break;
   case fsm_state::read:
-    render_line("read", &dst[0]);
-    render_clear(&dst[8], 24);
+    render_read_state(dst);
     break;
   case fsm_state::jump:
     render_line("jump", &dst[0]);
@@ -355,7 +362,8 @@ void main() __attribute__((section(".text.main")));
 
 void main()
 {
-  serial::init(0);
+  constexpr uint32_t serial_speed = 0;
+  serial_load::init(serial_speed);
 
   struct maple_display_poll_state state = {0};
   const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
@@ -364,16 +372,10 @@ void main()
   auto renderer1 = maple::display::font_renderer(font);
   framebuffer[1] = renderer1.fb;
 
-  state.want_start = 1;
-  serial_load::init();
-
   // reset serial status
   sh7091.SCIF.SCFSR2 = 0;
   // reset line status
   sh7091.SCIF.SCLSR2 = 0;
-
-  uint32_t last_scfsr2 = -1;
-  uint32_t last_sclsr2 = -1;
 
   serial::string("ready\n");
 
@@ -393,7 +395,7 @@ void main()
       error_counter.brk += 1;
       error_counter.er += (scfsr2 & scfsr2::er::bit_mask) != 0;
       sh7091.SCIF.SCFSR2 = scfsr2 & ~(scfsr2::brk::bit_mask | scfsr2::er::bit_mask);
-      serial_load::init();
+      serial_load::init(serial_load::state.speed);
       serial::reset_txrx();
     } else if (scfsr2 & scfsr2::er::bit_mask) {
       // clear framing error
@@ -418,11 +420,7 @@ void main()
     serial_load::tick();
     render(renderer0, renderer1);
 
-    //if (sclsr2 != last_sclsr2 || scfsr2 != last_scfsr2) {
-      state.want_start = 1;
-    //}
-    last_scfsr2 = scfsr2;
-    last_sclsr2 = sclsr2;
+    state.want_start = 1;
     handle_maple(state);
   }
 }

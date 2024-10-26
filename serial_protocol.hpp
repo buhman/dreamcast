@@ -39,12 +39,14 @@ namespace reply {
   constexpr uint32_t jump = gen_cmd("jump");
   constexpr uint32_t speed = gen_cmd("sped");
   constexpr uint32_t write_crc = gen_cmd("crcW");
+  constexpr uint32_t read_crc = gen_cmd("crcR");
 
   static_assert(write == 0x8c661aaa);
   static_assert(read  == 0x512f23b5);
   static_assert(jump  == 0x06cb1b4a);
   static_assert(speed == 0x8705dd86);
   static_assert(write_crc == 0x1cced074);
+  static_assert(read_crc == 0xb9ce82f4);
 }
 
 union command_reply {
@@ -119,6 +121,11 @@ constexpr union command_reply speed_reply(uint32_t speed)
 constexpr union command_reply write_crc_reply(uint32_t crc)
 {
   return command_reply(reply::write_crc, crc, 0);
+}
+
+constexpr union command_reply read_crc_reply(uint32_t crc)
+{
+  return command_reply(reply::read_crc, crc, 0);
 }
 
 }

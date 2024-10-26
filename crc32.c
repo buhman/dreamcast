@@ -72,11 +72,11 @@ const uint32_t crc32_table[256] = {
 };
 
 uint32_t
-crc32_update(uint32_t crc, const uint8_t * data, uint32_t len)
+crc32_update(uint32_t crc, const uint8_t * buf, uint32_t len)
 {
   while (len > 0) {
-    crc = crc32_table[*data ^ ((crc >> 24) & 0xff)] ^ (crc << 8);
-    data++;
+    crc = crc32_table[*buf ^ ((crc >> 24) & 0xff)] ^ (crc << 8);
+    buf++;
     len--;
   }
 

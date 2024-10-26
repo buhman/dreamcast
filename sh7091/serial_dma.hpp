@@ -78,7 +78,7 @@ static void recv_dma(uint32_t destination_address, uint32_t length)
   // DE  channel enable
   sh7091.DMAC.CHCR1 = chcr::dm::destination_address_incremented
                     | chcr::sm::source_address_fixed
-                    | chcr::rs::resource_select(0b1011) /* SCIF */
+                    | chcr::rs::resource_select(0b1011) /* SCFRDR2 → external address space */
                     | chcr::tm::cycle_steal_mode /* transmit mode */
                     | chcr::ts::_8_bit           /* transfer size */
                   //| chcr::ie::interrupt_request_generated
@@ -87,6 +87,25 @@ static void recv_dma(uint32_t destination_address, uint32_t length)
   sh7091.DMAC.DMAOR = dmaor::ddt::on_demand_data_transfer_mode       /* on-demand data transfer mode */
                     | dmaor::pr::ch2_ch0_ch1_ch3                     /* priority mode; CH2 > CH0 > CH1 > CH3 */
                     | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
+}
+
+static void send_dma(uint32_t source_address, uint32_t length)
+{
+  using namespace dmac;
+
+  sh7091.DMAC.CHCR1 = 0;
+
+  sh7091.DMAC.SAR1 = source_address;
+  sh7091.DMAC.DAR1 = reinterpret_cast<uint32_t>(&sh7091.SCIF.SCFTDR2);
+  sh7091.DMAC.DMATCR1 = length & 0x00ff'ffff;
+
+  sh7091.DMAC.CHCR1 = chcr::dm::destination_address_fixed
+                    | chcr::sm::source_address_incremented
+                    | chcr::rs::resource_select(0b1010) /* external address space → SCFTDR2 */
+                    | chcr::tm::cycle_steal_mode /* transmit mode */
+                    | chcr::ts::_8_bit           /* transfer size */
+                  //| chcr::ie::interrupt_request_generated
+                    | chcr::de::channel_operation_enabled;
 }
 
 }

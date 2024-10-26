@@ -6,7 +6,7 @@
 
 namespace serial_load {
 
-void init();
+void init(uint32_t speed);
 void recv(uint8_t c);
 void tick();
 
@@ -35,6 +35,7 @@ struct state {
   enum fsm_state fsm_state;
   struct incremental_crc write_crc;
   struct incremental_crc read_crc;
+  uint32_t speed;
 };
 
 extern struct state state;

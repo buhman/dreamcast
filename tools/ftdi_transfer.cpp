@@ -176,7 +176,7 @@ double timespec_difference(struct timespec const * const a, struct timespec cons
 void dump_command_reply(union serial_load::command_reply& cr)
 {
   for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)) / (sizeof (uint32_t)); i++) {
-    fprintf(stderr, "  %08x\n", cr.u32[i]);
+    fprintf(stderr, "  %08x\n", serial_load::le_bswap(cr.u32[i]));
   }
 }
 
@@ -192,15 +192,23 @@ int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_l
     return -1;
   }
 
-  for (uint32_t i = 0; i < (sizeof (reply)) / (sizeof (uint32_t)); i++) {
-    reply.u32[i] = le_bswap(reply.u32[i]);
-  }
-
   uint32_t crc = crc32(&reply.u8[0], 12);
   if (crc != reply.crc) {
-    fprintf(stderr, "crc mismatch; remote crc: %08x; local crc: %08x\n", reply.crc, crc);
+    fprintf(stderr, "reply crc mismatch; remote crc: %08x; local crc: %08x\n", reply.crc, crc);
     dump_command_reply(reply);
-    return -1;
+
+    /*
+    uint8_t buf[16] = {0};
+    long length = read_with_timeout(ftdi, reply.u8, 16);
+    if (length > 0) {
+      fprintf(stderr, "trailing data:\n");
+      for (int i = 0; i < length; i++) {
+	fprintf(stderr, "%02x ", buf[i]);
+      }
+      fprintf(stderr, "\n");
+    }
+    */
+    return -2;
   }
 
   if (reply.cmd != expected_cmd) {
@@ -208,12 +216,14 @@ int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_l
     dump_command_reply(reply);
     return -1;
   }
+  dump_command_reply(reply);
 
   return 0;
 }
 
 int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t size)
 {
+  fprintf(stderr, "do_write\n");
   int res;
 
   const uint32_t dest = 0xac010000;
@@ -223,7 +233,7 @@ int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t siz
   union serial_load::command_reply reply;
   res = read_reply(ftdi, serial_load::reply::write, reply);
   if (res != 0) {
-    return -1;
+    return -2;
   }
   fprintf(stderr, "remote: dest: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
   if (reply.arg[0] != dest || reply.arg[1] != size) {
@@ -255,6 +265,7 @@ int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t siz
 
 int do_jump(struct ftdi_context * ftdi)
 {
+  fprintf(stderr, "do_jump\n");
   int res;
 
   const uint32_t dest = 0xac010000;
@@ -266,7 +277,7 @@ int do_jump(struct ftdi_context * ftdi)
   union serial_load::command_reply reply;
   res = read_reply(ftdi, serial_load::reply::jump, reply);
   if (res != 0) {
-    return -1;
+    return -2;
   }
   fprintf(stderr, "remote: jump: %08x\n", reply.arg[0]);
   if (reply.arg[0] != dest || reply.arg[1] != 0) {
@@ -276,47 +287,91 @@ int do_jump(struct ftdi_context * ftdi)
   return 0;
 }
 
-int main(int argc, char * argv[])
+int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
 {
-  if (argc < 2) {
-    fprintf(stderr, "argc\n");
-    return EXIT_FAILURE;
-  }
-
-  FILE * file = fopen(argv[1], "r");
+  FILE * file = fopen(filename, "r");
   if (file == NULL) {
     fprintf(stderr, "fopen\n");
-    return EXIT_FAILURE;
+    return -1;
   }
 
   int ret;
   ret = fseek(file, 0L, SEEK_END);
   if (ret < 0) {
-    fprintf(stderr, "seek(SEEK_END)");
-    return EXIT_FAILURE;
+    fprintf(stderr, "fseek(SEEK_END)");
+    return -1;
   }
 
   long off = ftell(file);
 
   ret = fseek(file, 0L, SEEK_SET);
   if (ret < 0) {
-    fprintf(stderr, "seek(SEEK_SET)");
-    return EXIT_FAILURE;
+    fprintf(stderr, "fseek(SEEK_SET)");
+    return -1;
   }
 
-  fprintf(stderr, "%s off %ld\n", argv[1], off);
-  //uint8_t buf[off];
-  uint8_t * buf = (uint8_t *)malloc(off);
-  ssize_t size = fread(buf, 1, off, file);
-  if (size < 0) {
-    fprintf(stderr, "read");
-    return EXIT_FAILURE;
+  fprintf(stderr, "%s size %ld\n", filename, off);
+  *buf = (uint8_t *)malloc(off);
+  ssize_t fread_size = fread(*buf, 1, off, file);
+  if (fread_size < 0) {
+    fprintf(stderr, "fread");
+    return -1;
   }
-  printf("%02x\n", buf[0]);
 
   ret = fclose(file);
   if (ret < 0) {
-    fprintf(stderr, "close");
+    fprintf(stderr, "fclose");
+    return -1;
+  }
+
+  *size = off;
+
+  return 0;
+}
+
+int do_read(struct ftdi_context * ftdi)
+{
+  fprintf(stderr, "do_read\n");
+
+  int res;
+
+  const uint32_t src = 0xac010000;
+  const uint32_t size = 51584;
+  union serial_load::command_reply command = serial_load::read_command(src, size);
+  res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
+  assert(res == (sizeof (command)));
+  union serial_load::command_reply reply;
+  res = read_reply(ftdi, serial_load::reply::read, reply);
+  if (res != 0) {
+    return -2;
+  }
+  fprintf(stderr, "remote: src: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
+  if (reply.arg[0] != src || reply.arg[1] != size) {
+    return -1;
+  }
+
+  uint32_t * buf = (uint32_t *)malloc(size);
+  res = ftdi_read_data(ftdi, (uint8_t *)buf, size);
+  assert(res >= 0);
+  assert((uint32_t)res == size);
+
+  uint32_t buf_crc = crc32((uint8_t*)buf, size);
+
+  union serial_load::command_reply crc_reply;
+  res = read_reply(ftdi, serial_load::reply::read_crc, crc_reply);
+  if (res != 0) {
+    return -1;
+  }
+  fprintf(stderr, "remote crc: %08x; local crc %08x\n", crc_reply.arg[0], buf_crc);
+
+
+  return 0;
+}
+
+int main(int argc, char * argv[])
+{
+  if (argc < 2) {
+    fprintf(stderr, "argc\n");
     return EXIT_FAILURE;
   }
 
@@ -336,15 +391,23 @@ int main(int argc, char * argv[])
 
   int return_code = EXIT_SUCCESS;
 
+  uint8_t * buf;
+  uint32_t size;
+  res = read_file(argv[1], &buf, &size);
+  if (res < 0) {
+    return EXIT_FAILURE;
+  }
+
   struct timespec start;
   struct timespec end;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
   assert(res >= 0);
-  int do_write_ret = do_write(ftdi, buf, off);
+  int do_write_ret = do_write(ftdi, buf, size);
   res = clock_gettime(CLOCK_MONOTONIC, &end);
   assert(res >= 0);
   fprintf(stderr, "do_write time: %.03f\n", timespec_difference(&end, &start));
   if (do_write_ret == 0) {
+    //do_read(ftdi);
     do_jump(ftdi);
   } else {
     return_code = EXIT_FAILURE;

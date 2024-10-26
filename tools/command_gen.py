@@ -25,6 +25,7 @@ replies = [
     "jump",
     "sped",
     "crcW",
+    "crcR",
 ]
 
 for c in commands:

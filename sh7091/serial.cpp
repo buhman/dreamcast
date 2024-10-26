@@ -19,7 +19,7 @@ static inline void init_wait()
   sh7091.TMU.TSTR |= tmu::tstr::str1::counter_start;
 
   uint32_t start = sh7091.TMU.TCNT1;
-  while ((start - sh7091.TMU.TCNT1) < 1);
+  while ((start - sh7091.TMU.TCNT1) < 20);
 
   sh7091.TMU.TSTR &= (~tmu::tstr::str1::counter_start) & 0xff; // stop TCNT1
 }
@@ -48,11 +48,6 @@ void init(uint8_t bit_rate)
   sh7091.SCIF.SCFCR2 = scfcr2::tfrst::reset_operation_enabled
                      | scfcr2::rfrst::reset_operation_enabled;
 
-  sh7091.SCIF.SCFCR2 = scfcr2::rtrg::trigger_on_1_byte
-		     | scfcr2::ttrg::trigger_on_8_bytes
-		     //| scfcr2::mce::modem_signals_enabled
-		     ;
-
   sh7091.SCIF.SCSMR2 = scsmr2::chr::_8_bit_data
 		     | scsmr2::pe::parity_disabled
 		     | scsmr2::stop::_1_stop_bit
@@ -72,6 +67,11 @@ void init(uint8_t bit_rate)
   // wait 1 bit interval
   init_wait();
 
+  sh7091.SCIF.SCFCR2 = scfcr2::rtrg::trigger_on_1_byte
+		     | scfcr2::ttrg::trigger_on_8_bytes
+		     //| scfcr2::mce::modem_signals_enabled
+		     ;
+
   sh7091.SCIF.SCSCR2 = scscr2::te::transmission_enabled
                      | scscr2::re::reception_enabled;
 
@@ -84,7 +84,7 @@ void character(const char c)
   // wait for transmit fifo to become partially empty
   while ((sh7091.SCIF.SCFSR2 & scfsr2::tdfe::bit_mask) == 0);
 
-  sh7091.SCIF.SCFSR2 = static_cast<uint16_t>(~scfsr2::tdfe::bit_mask);
+  sh7091.SCIF.SCFSR2 &= ~scfsr2::tdfe::bit_mask;
 
   sh7091.SCIF.SCFTDR2 = static_cast<uint8_t>(c);
 }

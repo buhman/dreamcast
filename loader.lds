@@ -3,7 +3,7 @@ MEMORY
 {
   p1ram : ORIGIN = 0xac005000, LENGTH = 0x0000
   p2ram : ORIGIN = 0xac010000, LENGTH = 0xff0000
-  ldram : ORIGIN = 0xacffe000, LENGTH = 0x2000
+  ldram : ORIGIN = 0xacffd000, LENGTH = 0x3000
 }
 SECTIONS
 {
