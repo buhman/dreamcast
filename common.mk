@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -Og
+OPT ?= -O2
 GENERATED ?=
 
 AARCH = --isa=sh4 --little
@@ -17,6 +17,11 @@ OBJARCH = -O elf32-shl -B sh4
 
 TARGET = sh4-none-elf-
 
+START_OBJ = \
+	start.o \
+	runtime.o \
+	sh7091/cache.o
+
 IP_OBJ = \
 	systemid.o \
 	toc.o \
@@ -29,8 +34,15 @@ IP_OBJ = \
 	sg_are02.o \
 	sg_are03.o \
 	sg_are04.o \
-	sg_ini.o \
-	aip.o
+	$(START_OBJ) \
+	example/serial_transfer.o \
+	sh7091/serial.o \
+	serial_load.o \
+	maple/maple.o \
+	font/portfolio_6x8/portfolio_6x8.data.o \
+	crc32.o
+#sg_ini.o \
+#aip.o
 
 %.o: %.obj
 	$(OBJCOPY) -g \
@@ -39,11 +51,6 @@ IP_OBJ = \
 
 ip.elf: $(IP_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
-
-START_OBJ = \
-	start.o \
-	runtime.o \
-	sh7091/cache.o
 
 include base.mk
 

@@ -16,6 +16,8 @@
 #include "holly/background.hpp"
 #include "holly/region_array.hpp"
 
+#include "sh7091/serial.hpp"
+
 struct vertex {
   float x;
   float y;
@@ -86,15 +88,15 @@ void init_texture_memory(const struct opb_size& opb_size)
   background_parameter(0xff220000);
 }
 
-uint32_t _ta_parameter_buf[((32 + 64 + 32) + 32) / 4];
-
 void main()
 {
+  serial::init(4);
+  serial::string("main\n");
   video_output::set_mode_vga();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
-  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
+  uint32_t ta_parameter_buf[32 + 64 + 32 / 4] __attribute__((aligned(32)));
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
@@ -117,6 +119,8 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
+
+  serial::string("while true\n");
 
   while (true) {
     ta_polygon_converter_init(opb_size.total(),

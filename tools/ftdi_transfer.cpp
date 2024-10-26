@@ -9,23 +9,26 @@
 #include <ftdi.h>
 #include <libusb.h>
 
+#include "crc32.h"
+#include "serial_protocol.hpp"
+
 extern int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
 				      unsigned short *value, unsigned short *index);
 
 int dreamcast_rates[] = {
-  1562500,
-  781250,
-  520833,
-  390625,
-  312500,
-  260416,
-  223214,
-  195312,
-  173611,
-  156250,
-  142045,
-  130208,
-  120192
+  1562500, // 0
+  781250,  // 1
+  520833,  // 2
+  390625,  // 3
+  312500,  // 4
+  260416,  // 5
+  223214,  // 6
+  195312,  // 7
+  173611,  // 8
+  156250,  // 9
+  142045,  // 10
+  130208,  // 11
+  120192   // 12
 };
 
 int init_ftdi_context(struct ftdi_context * ftdi)
@@ -63,9 +66,9 @@ int init_ftdi_context(struct ftdi_context * ftdi)
   }
   ftdi_list_free(&devlist);
 
+  /*
   unsigned short value;
   unsigned short index;
-
   for (unsigned int i = 0; i < (sizeof (dreamcast_rates)) / (sizeof (dreamcast_rates[0])); i++) {
     int baud = convert_baudrate_UT_export(dreamcast_rates[i], ftdi, &value, &index);
     float baudf = baud;
@@ -73,15 +76,21 @@ int init_ftdi_context(struct ftdi_context * ftdi)
     float error = (baudf > ratef) ? ratef / baudf : baudf / ratef;
     fprintf(stdout, "%d: best: %d, error: %f\n", dreamcast_rates[i], baud, (1.f - error) * 100.f);
   }
+  */
 
-  res = ftdi_set_baudrate(ftdi, 1562500);
-  //res = ftdi_set_baudrate(ftdi, 312500);
+  res = ftdi_set_baudrate(ftdi, dreamcast_rates[0]);
   if (res < 0) {
     fprintf(stderr, "ftdi_set_baudrate\n");
     return -1;
   }
 
-  res = ftdi_set_line_property(ftdi, 8, STOP_BIT_1, NONE);
+  res = ftdi_set_line_property2(ftdi, BITS_8, STOP_BIT_1, NONE, BREAK_ON);
+  if (res < 0) {
+    fprintf(stderr, "ftdi_set_line_property\n");
+    return -1;
+  }
+
+  res = ftdi_set_line_property2(ftdi, BITS_8, STOP_BIT_1, NONE, BREAK_OFF);
   if (res < 0) {
     fprintf(stderr, "ftdi_set_line_property\n");
     return -1;
@@ -117,15 +126,7 @@ union data_command {
   };
   uint8_t data[4 * 3];
 };
-static_assert((sizeof (union data_command)) == 4 * 3);
-
-uint32_t bswap(const uint32_t n)
-{
-  if (__BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__)
-    return n;
-  else
-    return __builtin_bswap32(n);
-}
+static_assert((sizeof (union data_command)) == 12);
 
 long read_with_timeout(struct ftdi_context * ftdi, uint8_t * read_buf, const long expect_length)
 {
@@ -167,79 +168,110 @@ long max(long a, long b)
   return a > b ? a : b;
 }
 
-void symmetric(struct ftdi_context * ftdi, const uint8_t * tx_buf, const long size)
-{
-  int res;
-  uint8_t rx_buf[size];
-  long tx_offset = 0;
-  long rx_offset = 0;
-
-  while (tx_offset < size) {
-    long txrx_diff = tx_offset - rx_offset;
-    long tx_length = max(min(min(chunk_size, size - tx_offset), chunk_size - txrx_diff), 0);
-
-    if (tx_length > 0) {
-      res = ftdi_write_data(ftdi, &tx_buf[tx_offset], tx_length);
-      assert(res >= 0);
-      tx_offset += res;
-    }
-
-    res = ftdi_read_data(ftdi, &rx_buf[rx_offset], size - rx_offset);
-    assert(res >= 0);
-    rx_offset += res;
-  }
-
-  for (int i = 0; i < size; i++) {
-    if (tx_buf[i] != rx_buf[i]) {
-      fprintf(stderr, "mismatch at %d\n", i);
-      return;
-    }
-  }
-  fprintf(stderr, "equal\n");
-}
-
 double timespec_difference(struct timespec const * const a, struct timespec const * const b)
 {
   return (double)(a->tv_sec - b->tv_sec) + (double)(a->tv_nsec - b->tv_nsec) / 1'000'000'000.0;
 }
 
-int transfer(struct ftdi_context * ftdi, const uint8_t * buf, const long size)
+void dump_command_reply(union serial_load::command_reply& cr)
+{
+  for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)) / (sizeof (uint32_t)); i++) {
+    fprintf(stderr, "  %08x\n", cr.u32[i]);
+  }
+}
+
+int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_load::command_reply& reply)
+{
+  using namespace serial_load;
+
+  constexpr long read_length = (sizeof (union serial_load::command_reply));
+
+  long length = read_with_timeout(ftdi, reply.u8, read_length);
+  if (length != read_length) {
+    fprintf(stderr, "short read; want %ld bytes; received: %ld\n", read_length, length);
+    return -1;
+  }
+
+  for (uint32_t i = 0; i < (sizeof (reply)) / (sizeof (uint32_t)); i++) {
+    reply.u32[i] = le_bswap(reply.u32[i]);
+  }
+
+  uint32_t crc = crc32(&reply.u8[0], 12);
+  if (crc != reply.crc) {
+    fprintf(stderr, "crc mismatch; remote crc: %08x; local crc: %08x\n", reply.crc, crc);
+    dump_command_reply(reply);
+    return -1;
+  }
+
+  if (reply.cmd != expected_cmd) {
+    fprintf(stderr, "invalid reply; remote cmd %08x; expected cmd: %08x\n", reply.cmd, expected_cmd);
+    dump_command_reply(reply);
+    return -1;
+  }
+
+  return 0;
+}
+
+int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t size)
 {
   int res;
 
-  union data_command command = {
-    .command = {'D', 'A', 'T', 'A'},
-    .size = bswap(size),
-    .dest = bswap(0xac010000),
-  };
-
-  res = ftdi_write_data(ftdi, command.data, (sizeof (union data_command)));
-  assert(res >= 0);
-
-  const char * expect = "data\n";
-  const long expect_length = 5;
-  uint8_t read_buf[expect_length + 1];
-  read_buf[expect_length] = 0;
-  long read_length = read_with_timeout(ftdi, read_buf, expect_length);
-  if (read_length != expect_length) {
-    fprintf(stderr, "want %ld bytes; received: %ld\n", expect_length, read_length);
-    return -1;
-  }
-  res = memcmp(read_buf, expect, expect_length);
+  const uint32_t dest = 0xac010000;
+  union serial_load::command_reply command = serial_load::write_command(dest, size);
+  res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
+  assert(res == (sizeof (command)));
+  union serial_load::command_reply reply;
+  res = read_reply(ftdi, serial_load::reply::write, reply);
   if (res != 0) {
-    fprintf(stderr, "expect `%s`; received: `%s`\n", expect, read_buf);
     return -1;
   }
-
-  fprintf(stderr, "OK\n");
+  fprintf(stderr, "remote: dest: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
+  if (reply.arg[0] != dest || reply.arg[1] != size) {
+    return -1;
+  }
 
   struct timespec start;
   struct timespec end;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
-  symmetric(ftdi, buf, size);
+  assert(res == 0);
+  res = ftdi_write_data(ftdi, buf, size);
+  assert(res >= 0);
+  assert((uint32_t)res == size);
   res = clock_gettime(CLOCK_MONOTONIC, &end);
+  assert(res == 0);
   fprintf(stderr, "symmetric time: %.03f\n", timespec_difference(&end, &start));
 
+  uint32_t buf_crc = crc32(buf, size);
+
+  union serial_load::command_reply crc_reply;
+  res = read_reply(ftdi, serial_load::reply::write_crc, crc_reply);
+  if (res != 0) {
+    return -1;
+  }
+  fprintf(stderr, "remote crc: %08x; local crc %08x\n", crc_reply.arg[0], buf_crc);
+
+  return 0;
+}
+
+int do_jump(struct ftdi_context * ftdi)
+{
+  int res;
+
+  const uint32_t dest = 0xac010000;
+
+  union serial_load::command_reply command = serial_load::jump_command(dest);
+  res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
+  assert(res == (sizeof (command)));
+
+  union serial_load::command_reply reply;
+  res = read_reply(ftdi, serial_load::reply::jump, reply);
+  if (res != 0) {
+    return -1;
+  }
+  fprintf(stderr, "remote: jump: %08x\n", reply.arg[0]);
+  if (reply.arg[0] != dest || reply.arg[1] != 0) {
+    return -1;
+  }
 
   return 0;
 }
@@ -273,12 +305,14 @@ int main(int argc, char * argv[])
   }
 
   fprintf(stderr, "%s off %ld\n", argv[1], off);
-  uint8_t buf[off];
+  //uint8_t buf[off];
+  uint8_t * buf = (uint8_t *)malloc(off);
   ssize_t size = fread(buf, 1, off, file);
   if (size < 0) {
     fprintf(stderr, "read");
     return EXIT_FAILURE;
   }
+  printf("%02x\n", buf[0]);
 
   ret = fclose(file);
   if (ret < 0) {
@@ -300,13 +334,25 @@ int main(int argc, char * argv[])
     return EXIT_FAILURE;
   }
 
+  int return_code = EXIT_SUCCESS;
+
   struct timespec start;
   struct timespec end;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
-  int transfer_ret = transfer(ftdi, buf, off);
+  assert(res >= 0);
+  int do_write_ret = do_write(ftdi, buf, off);
   res = clock_gettime(CLOCK_MONOTONIC, &end);
+  assert(res >= 0);
+  fprintf(stderr, "do_write time: %.03f\n", timespec_difference(&end, &start));
+  if (do_write_ret == 0) {
+    do_jump(ftdi);
+  } else {
+    return_code = EXIT_FAILURE;
+  }
 
-  fprintf(stderr, "time: %.03f\n", timespec_difference(&end, &start));
+  res = clock_gettime(CLOCK_MONOTONIC, &end);
+  assert(res >= 0);
+  fprintf(stderr, "total time: %.03f\n", timespec_difference(&end, &start));
 
-  return transfer_ret;
+  return return_code;
 }

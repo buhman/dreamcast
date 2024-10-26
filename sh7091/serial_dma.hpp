@@ -1,5 +1,6 @@
 #pragma once
 
+#include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
 
 /*
@@ -42,7 +43,7 @@
 
 namespace serial {
 
-static void recv_dma(void * destination_address, uint32_t length)
+static void recv_dma(uint32_t destination_address, uint32_t length)
 {
   using namespace dmac;
   /* Initial settings (SAR, DAR, DMATCR, CHCR, DMAOR) */
@@ -53,13 +54,10 @@ static void recv_dma(void * destination_address, uint32_t length)
   // SAR1 = SCFRDR2
   // DAR1 = (address)
   // DMATCR1 = (transfer count, 24 bit)
-  sh7091.DMAC.CHCR3 = 0;
-  sh7091.DMAC.CHCR2 = 0;
   sh7091.DMAC.CHCR1 = 0;
-  sh7091.DMAC.CHCR0 = 0;
 
   sh7091.DMAC.SAR1 = reinterpret_cast<uint32_t>(&sh7091.SCIF.SCFRDR2);
-  sh7091.DMAC.DAR1 = reinterpret_cast<uint32_t>(destination_address);
+  sh7091.DMAC.DAR1 = destination_address;
   sh7091.DMAC.DMATCR1 = length & 0x00ff'ffff;
 
   // SSA (only used for PCMCIA)

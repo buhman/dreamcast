@@ -14,6 +14,8 @@
 
 #include "serial_load.hpp"
 
+#include "crc32.h"
+
 extern uint32_t _binary_font_portfolio_6x8 __asm("_binary_font_portfolio_6x8_portfolio_6x8_data_start");
 
 template <typename T>
@@ -26,10 +28,20 @@ inline void copy(T * dst, const T * src, const int32_t n) noexcept
   }
 }
 
-static uint8_t * framebuffer;
+static uint8_t * framebuffer[2];
+static char textbuffer[2][4 * 8];
 
 static uint32_t send_buf[1024 / 4] __attribute__((aligned(32)));
 static uint32_t recv_buf[1024 / 4] __attribute__((aligned(32)));
+
+struct serial_error_counter {
+  uint32_t brk;
+  uint32_t er;
+  uint32_t dr;
+  uint32_t orer;
+};
+
+struct serial_error_counter error_counter;
 
 enum struct step {
   IDLE = 0,
@@ -67,9 +79,13 @@ void send_vmu_framebuffer(maple::host_command_writer& writer, uint8_t port, uint
   data_fields.phase = 0;
   data_fields.block_number = std::byteswap<uint16_t>(0x0000);
 
-  copy<uint8_t>(data_fields.written_data,
-		reinterpret_cast<uint8_t *>(framebuffer),
-		maple::display::vmu::framebuffer_size);
+  uint8_t * fb;
+  if (lm == ap::lm_bus::_0)
+    fb = framebuffer[0 ^ (port & 1)];
+  else
+    fb = framebuffer[1 ^ (port & 1)];
+
+  copy<uint8_t>(data_fields.written_data, fb, maple::display::vmu::framebuffer_size);
 }
 
 void recv_extension_device_status(struct maple_display_poll_state &state)
@@ -213,7 +229,7 @@ void handle_maple(struct maple_display_poll_state& state)
   }
 }
 
-void render_glyphs(maple::display::font_renderer& renderer, char * s)
+void render_glyphs(maple::display::font_renderer& renderer, const char * s)
 {
   for (int i = 0; i < 8 * 4; i++) {
     int x = i % 8;
@@ -222,23 +238,117 @@ void render_glyphs(maple::display::font_renderer& renderer, char * s)
   }
 }
 
-void render_serial_state(maple::display::font_renderer& renderer, char * s, const char * msg)
+void render_str(const char * src, char * dst)
+{
+  int i = 0;
+  char c;
+  while ((c = src[i]) != 0) {
+    dst[i] = c;
+    i++;
+  }
+}
+
+void render_line(const char * src, char * dst, int src_len = 8)
 {
   bool end = false;
   for (int i = 0; i < 8; i++) {
-    if (end || msg[i] == 0) {
-      s[0 + i] = ' ';
+    if (end || src[i] == 0 || i >= src_len) {
+      dst[i] = ' ';
       end = true;
     } else {
-      s[0 + i] = msg[i];
+      dst[i] = src[i];
     }
   }
+}
+
+void render_clear(char * dst, int len)
+{
+  for (int i = 0; i < len; i++)
+    dst[i] = ' ';
+}
+
+void render_u32(uint32_t src, char * dst)
+{
   char num_buf[8];
-  string::hex(num_buf, 8, sh7091.SCIF.SCFSR2);
-  for (int i = 0; i < 8; i++) s[8 + i] = num_buf[i];
-  string::hex(num_buf, 8, sh7091.SCIF.SCFDR2);
-  for (int i = 0; i < 8; i++) s[16 + i] = num_buf[i];
-  render_glyphs(renderer, s);
+  string::hex(num_buf, 8, src);
+  for (int i = 0; i < 8; i++) dst[i] = num_buf[i];
+}
+
+void render_u8(uint32_t src, char * dst)
+{
+  char num_buf[2];
+  string::hex(num_buf, 2, src);
+  for (int i = 0; i < 2; i++) dst[i] = num_buf[i];
+}
+
+void render_idle_state(char * dst)
+{
+  render_line("idle", &dst[0]);
+  render_u32(serial_load::state.buf.u32[0], &dst[8]);
+  render_u32(serial_load::state.buf.u32[1], &dst[16]);
+  render_u8(serial_load::state.len, &dst[24]);
+  render_clear(&dst[26], 6);
+}
+
+void render_write_state(char * dst)
+{
+  render_line("write", &dst[0]);
+  render_u32(sh7091.DMAC.DMATCR1, &dst[8]);
+  render_u32(sh7091.DMAC.DAR1, &dst[16]);
+  render_u32(serial_load::state.write_crc.value, &dst[24]);
+}
+
+void render_fsm_state(char * dst)
+{
+  using namespace serial_load;
+  switch (state.fsm_state) {
+  case fsm_state::idle:
+    render_idle_state(dst);
+    break;
+  case fsm_state::write:
+    render_write_state(dst);
+    break;
+  case fsm_state::read:
+    render_line("read", &dst[0]);
+    render_clear(&dst[8], 24);
+    break;
+  case fsm_state::jump:
+    render_line("jump", &dst[0]);
+    render_clear(&dst[8], 24);
+    break;
+  case fsm_state::speed:
+    render_line("speed", &dst[0]);
+    render_clear(&dst[8], 24);
+    break;
+  default:
+    render_line("invalid", &dst[0]);
+    render_clear(&dst[8], 24);
+    break;
+  }
+}
+
+void render_error_counter_state(char * dst)
+{
+  render_str("br", &dst[0]);
+  render_u8(error_counter.brk, &dst[2]);
+  render_str("er", &dst[4]);
+  render_u8(error_counter.er, &dst[6]);
+  render_str("dr", &dst[8]);
+  render_u8(error_counter.dr, &dst[10]);
+  render_str("oe", &dst[12]);
+  render_u8(error_counter.orer, &dst[14]);
+
+  render_u32(sh7091.SCIF.SCFSR2, &dst[16]);
+  render_u32(sh7091.SCIF.SCLSR2, &dst[24]);
+}
+
+void render(maple::display::font_renderer& renderer0,
+	    maple::display::font_renderer& renderer1)
+{
+  render_fsm_state(textbuffer[0]);
+  render_error_counter_state(textbuffer[1]);
+  render_glyphs(renderer0, textbuffer[0]);
+  render_glyphs(renderer1, textbuffer[1]);
 }
 
 void main() __attribute__((section(".text.main")));
@@ -249,16 +359,12 @@ void main()
 
   struct maple_display_poll_state state = {0};
   const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
-  auto renderer = maple::display::font_renderer(font);
-  framebuffer = renderer.fb;
-  char s[33] =
-    "1562500 "  // 0
-    "        "  // 8
-    "        "  // 16
-    "        "; // 24
-  render_glyphs(renderer, s);
-  state.want_start = 1;
+  auto renderer0 = maple::display::font_renderer(font);
+  framebuffer[0] = renderer0.fb;
+  auto renderer1 = maple::display::font_renderer(font);
+  framebuffer[1] = renderer1.fb;
 
+  state.want_start = 1;
   serial_load::init();
 
   // reset serial status
@@ -266,35 +372,57 @@ void main()
   // reset line status
   sh7091.SCIF.SCLSR2 = 0;
 
+  uint32_t last_scfsr2 = -1;
+  uint32_t last_sclsr2 = -1;
+
   serial::string("ready\n");
+
+  error_counter.brk = 0;
+  error_counter.er = 0;
+  error_counter.dr = 0;
+  error_counter.orer = 0;
 
   while (1) {
     using namespace scif;
 
     const uint16_t scfsr2 = sh7091.SCIF.SCFSR2;
+    const uint16_t sclsr2 = sh7091.SCIF.SCLSR2;
+
     if (scfsr2 & scfsr2::brk::bit_mask) {
-      render_serial_state(renderer, s, "brk");
       // clear framing error and break
+      error_counter.brk += 1;
+      error_counter.er += (scfsr2 & scfsr2::er::bit_mask) != 0;
+      sh7091.SCIF.SCFSR2 = scfsr2 & ~(scfsr2::brk::bit_mask | scfsr2::er::bit_mask);
+      serial_load::init();
+      serial::reset_txrx();
     } else if (scfsr2 & scfsr2::er::bit_mask) {
-      render_serial_state(renderer, s, "er");
+      // clear framing error
+      error_counter.er += 1;
+      sh7091.SCIF.SCFSR2 = scfsr2 & ~scfsr2::er::bit_mask;
     } else if (scfsr2 & scfsr2::dr::bit_mask) {
-      render_serial_state(renderer, s, "dr");
-    } else if (sh7091.SCIF.SCLSR2 & sclsr2::orer::bit_mask) {
-      render_serial_state(renderer, s, "orer");
+      error_counter.dr += 1;
+      sh7091.SCIF.SCFSR2 = scfsr2 & ~scfsr2::dr::bit_mask;
+    } else if (sclsr2 & sclsr2::orer::bit_mask) {
+      error_counter.orer += 1;
+      sh7091.SCIF.SCLSR2 = scfsr2 & ~sclsr2::orer::bit_mask;
     } else if (scfsr2 & scfsr2::rdf::bit_mask) {
-      render_serial_state(renderer, s, "rdf");
-      const uint8_t c = sh7091.SCIF.SCFRDR2;
-      serial_load::recv(c);
-    } else {
-      render_serial_state(renderer, s, "idle");
+      if (serial_load::state.fsm_state == serial_load::fsm_state::idle) {
+	while (sh7091.SCIF.SCFSR2 & scfsr2::rdf::bit_mask) {
+	  const uint8_t c = sh7091.SCIF.SCFRDR2;
+	  serial_load::recv(c);
+	  sh7091.SCIF.SCFSR2 = scfsr2 & ~scfsr2::rdf::bit_mask;
+	}
+      }
     }
-    state.want_start = 1;
 
+    serial_load::tick();
+    render(renderer0, renderer1);
+
+    //if (sclsr2 != last_sclsr2 || scfsr2 != last_scfsr2) {
+      state.want_start = 1;
+    //}
+    last_scfsr2 = scfsr2;
+    last_sclsr2 = sclsr2;
     handle_maple(state);
-
-    uint16_t error_bits = scfsr2::er::bit_mask | scfsr2::brk::bit_mask;
-    if (sh7091.SCIF.SCFSR2 & error_bits) {
-      sh7091.SCIF.SCFSR2 = ~error_bits;
-    }
   }
 }

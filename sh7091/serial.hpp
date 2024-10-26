@@ -4,6 +4,8 @@
 
 namespace serial {
 
+void reset_txrx();
+
 void init(uint8_t bit_rate);
 
 void character(const char c);

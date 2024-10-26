@@ -142,8 +142,8 @@ void ta_wait_opaque_list()
 {
   while ((system.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0) {
     if (system.ISTERR) {
-      serial::string("ta ISTERR: ");
-      serial::integer<uint32_t>(system.ISTERR);
+      //serial::string("ta ISTERR: ");
+      //serial::integer<uint32_t>(system.ISTERR);
     }
   };
 

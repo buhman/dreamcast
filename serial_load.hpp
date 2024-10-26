@@ -1,28 +1,40 @@
 #pragma once
 
+#include <cstdint>
+
+#include "serial_protocol.hpp"
+
 namespace serial_load {
 
 void init();
 void recv(uint8_t c);
+void tick();
 
-enum command {
-  CMD_NONE,
-  CMD_DATA, // DATA 0000 0000 {data}
-  CMD_JUMP, // JUMP 0000
-  CMD_RATE, // RATE 0000
+enum struct fsm_state {
+  idle,
+  write,
+  read,
+  jump,
+  speed,
+};
+
+struct state_arglen_reply {
+  uint32_t command;
+  uint32_t reply;
+  enum fsm_state fsm_state;
+};
+
+struct incremental_crc {
+  uint32_t value;
+  uint32_t offset;
 };
 
 struct state {
-  union {
-    uint8_t buf[12];
-    struct {
-      uint8_t cmd[4];
-      uint32_t addr1;
-      uint32_t addr2;
-    };
-  };
+  union command_reply buf;
   uint32_t len;
-  enum command command;
+  enum fsm_state fsm_state;
+  struct incremental_crc write_crc;
+  struct incremental_crc read_crc;
 };
 
 extern struct state state;

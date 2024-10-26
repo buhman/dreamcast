@@ -360,7 +360,8 @@ SERIAL_TRANSFER_OBJ = \
 	sh7091/serial.o \
 	serial_load.o \
 	maple/maple.o \
-	font/portfolio_6x8/portfolio_6x8.data.o
+	font/portfolio_6x8/portfolio_6x8.data.o \
+	crc32.o
 
 example/serial_transfer.elf: LDSCRIPT = $(LIB)/loader.lds
 example/serial_transfer.elf: $(START_OBJ) $(SERIAL_TRANSFER_OBJ)

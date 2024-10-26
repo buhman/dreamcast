@@ -1,6 +1,3 @@
-/* reserve bytes for serial program loader */
-__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - __stack_reservation;
-
 __text_link_start = ADDR(.text);
 __text_link_end = ADDR(.text) + SIZEOF(.text);
 __text_load_start = LOADADDR(.text);

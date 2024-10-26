@@ -68,6 +68,8 @@ SECTIONS
 
   INCLUDE "debug.lds"
 }
-__stack_reservation = 0x0;
+
 INCLUDE "symbols.lds"
 INCLUDE "addresses.lds"
+
+__stack_end = 0x8c008000;

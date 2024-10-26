@@ -2,12 +2,14 @@ OUTPUT_FORMAT("elf32-shl", "elf32-shl", "elf32-shl")
 
 MEMORY
 {
-  systemid (arx) : ORIGIN = 0x8c008000, LENGTH = 0x100
-  toc      (arx) : ORIGIN = 0x8c008100, LENGTH = 0x200
-  sg_sec   (arx) : ORIGIN = 0x8c008300, LENGTH = 0x3400
-  sg_are   (arx) : ORIGIN = 0x8c00b700, LENGTH = 0x100
-  sg_ini   (arx) : ORIGIN = 0x8c00b800, LENGTH = 0x2800
-  aip      (arx) : ORIGIN = 0x8c00e000, LENGTH = 0x2000
+  systemid : ORIGIN = 0x8c008000, LENGTH = 0x100
+  toc      : ORIGIN = 0x8c008100, LENGTH = 0x200
+  sg_sec   : ORIGIN = 0x8c008300, LENGTH = 0x3400
+  sg_are   : ORIGIN = 0x8c00b700, LENGTH = 0x100
+  sg_ini   : ORIGIN = 0x8c00b800, LENGTH = 0x4800
+/*  sg_ini   : ORIGIN = 0x8c00b800, LENGTH = 0x2800 */
+/*  aip      : ORIGIN = 0x8c00e000, LENGTH = 0x2000 */
+  p1ram    : ORIGIN = 0x8c010000, LENGTH = 0xff0000
 }
 
 SECTIONS
@@ -42,14 +44,22 @@ SECTIONS
   .text.sg_ini :
   {
     KEEP(*(.text.*sg_ini))
+    KEEP(*(.text.start))
+    *(.text.startup.*)
+    *(.text*)
+    *(.rodata*)
+    *(.bss*)
+    *(.data*)
     . = ORIGIN(sg_ini) + LENGTH(sg_ini);
   } > sg_ini
 
+/*
   .text.aip :
   {
     KEEP(*(.text.*aip))
     . = ORIGIN(aip) + LENGTH(aip);
   } > aip
+  */
 
   /DISCARD/ :
   {
@@ -61,3 +71,29 @@ SECTIONS
 
   INCLUDE "debug.lds"
 }
+__stack_reservation = 0x1000;
+__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - __stack_reservation;
+
+__text_link_start = 0;
+__text_link_end = 0;
+__text_load_start = 0;
+
+__data_link_start = 0;
+__data_link_end = 0;
+__data_load_start = 0;
+
+__rodata_link_start = 0;
+__rodata_link_end = 0;
+__rodata_load_start = 0;
+
+__ctors_link_start = 0;
+__ctors_link_end = 0;
+
+__bss_link_start = 0;
+__bss_link_end = 0;
+
+__vbr_link_start = 0;
+__vbr_link_end = 0;
+__vbr_load_end = 0;
+
+INCLUDE "addresses.lds"

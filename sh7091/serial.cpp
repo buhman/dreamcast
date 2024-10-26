@@ -24,6 +24,19 @@ static inline void init_wait()
   sh7091.TMU.TSTR &= (~tmu::tstr::str1::counter_start) & 0xff; // stop TCNT1
 }
 
+void reset_txrx()
+{
+  using namespace scif;
+
+  sh7091.SCIF.SCFCR2 |= ( scfcr2::tfrst::reset_operation_enabled
+			| scfcr2::rfrst::reset_operation_enabled
+			);
+
+  sh7091.SCIF.SCFCR2 &= ~( scfcr2::tfrst::reset_operation_enabled
+			 | scfcr2::rfrst::reset_operation_enabled
+			 );
+}
+
 void init(uint8_t bit_rate)
 {
   using namespace scif;

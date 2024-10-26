@@ -160,6 +160,7 @@ void main()
   init_texture_memory(opb_size);
 
   uint32_t frame_ix = 0;
+  uint32_t frame = 0;
 
   while (true) {
     ta_polygon_converter_init(opb_size.total(),
@@ -179,5 +180,9 @@ void main()
 
     theta += half_degree;
     frame_ix = (frame_ix + 1) & 1;
+    frame += 1;
+
+    if (frame > 10)
+      break;
   }
 }

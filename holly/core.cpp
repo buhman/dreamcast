@@ -116,8 +116,8 @@ void core_wait_end_of_render_video()
   */
   while ((system.ISTNRM & istnrm::end_of_render_tsp) == 0) {
     if (system.ISTERR) {
-      serial::string("core ");
-      serial::integer<uint32_t>(system.ISTERR);
+      //serial::string("core ");
+      //serial::integer<uint32_t>(system.ISTERR);
       holly.SOFTRESET = softreset::pipeline_soft_reset;
       holly.SOFTRESET = 0;
       break;

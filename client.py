@@ -36,9 +36,10 @@ def symmetric(ser, b):
     l = []
     mem = memoryview(b)
     i = 0
-    chunk_size = 128
 
     while i < len(b):
+        chunk_size = 128
+
         if i % 1024 == 0:
             print(i, end=' ')
             sys.stdout.flush()
@@ -49,6 +50,7 @@ def symmetric(ser, b):
             if len(l) + chunk_size >= i:
                 break
 
+        time.sleep(1000 / 1000000)
         chunk_size = min(chunk_size, len(b) - i)
         assert chunk_size > 0, chunk_size
         ser.write(mem[i:i+chunk_size])
@@ -73,12 +75,12 @@ def start_data(ser, b):
     size = len(b)
     args = struct.pack("<II", size, dest)
     ret = sync(ser, b'DATA' + args)
-    if ret != b'data\n' and ret != b'\ndata\n' and ret != b'\x00data\n':
+    if ret != b'data' and ret != b'data\n' and ret != b'\ndata\n' and ret != b'\x00data\n':
         print(".", end=' ')
         print(ret)
-        time.sleep(1)
+        time.sleep(10)
         sys.stdout.flush()
-        sync(ser, b'prime', wait=0)
+        sync(ser, b'prime')
         start_data(ser, b)
         return
     print("\nDATA")
@@ -104,7 +106,6 @@ def do(ser, b):
     args = struct.pack("<I", dest)
     ret = sync(ser, b'JUMP' + args, wait=0)
     print("JUMP", ret)
-    print("console:")
     console(ser)
 
 seen_length = 16
@@ -121,6 +122,7 @@ framebuffer_mode = False
 framebuffer = []
 
 def console(ser):
+    print("console:")
     global framebuffer_mode
     global framebuffer
 

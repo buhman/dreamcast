@@ -1,7 +1,10 @@
 #include <cstdint>
 
 #include "sh7091/serial.hpp"
+#include "sh7091/serial_dma.hpp"
+
 #include "serial_load.hpp"
+#include "crc32.h"
 
 namespace serial_load {
 
@@ -23,10 +26,11 @@ static void move(void *dst, const void *src, uint32_t n)
 void init()
 {
   state.len = 0;
-  state.command = CMD_NONE;
+  state.fsm_state = fsm_state::idle;
+  sh7091.DMAC.CHCR1 = 0;
 }
 
-static void jump_to_func(const uint32_t addr)
+void jump_to_func(const uint32_t addr)
 {
   serial::string("jump to: ");
   serial::integer<uint32_t>(addr);
@@ -44,87 +48,117 @@ static void jump_to_func(const uint32_t addr)
   // restore our stack
 }
 
+static inline void prestart_write()
+{
+  uint32_t dest = state.buf.arg[0];
+  uint32_t size = state.buf.arg[1];
+  serial::recv_dma(dest - 1, size + 1);
+  state.write_crc.value = 0xffffffff;
+  state.write_crc.offset = dest;
+}
+
+struct state_arglen_reply command_list[] = {
+  {command::write, reply::write, fsm_state::write},
+  {command::read , reply::read , fsm_state::read },
+  {command::jump , reply::jump , fsm_state::jump },
+  {command::speed, reply::speed, fsm_state::speed},
+};
+constexpr uint32_t command_list_length = (sizeof (command_list)) / (sizeof (command_list[0]));
+
 void recv(uint8_t c)
 {
-  while (1) {
-    switch (state.command) {
-    case CMD_NONE:
-      state.buf[state.len++] = c;
-      if (state.len >= 4) {
-	if (state.buf[0] == 'D' &&
-	    state.buf[1] == 'A' &&
-	    state.buf[2] == 'T' &&
-	    state.buf[3] == 'A') {
-	  if (state.len < 12) {
+  state.buf.u8[state.len++] = c;
+  switch (state.fsm_state) {
+  case fsm_state::idle:
+    if (state.len == 16) {
+      for (uint32_t i = 0; i < command_list_length; i++) {
+	struct state_arglen_reply& sar = command_list[i];
+	if (state.buf.cmd == sar.command) {
+	  uint32_t crc = crc32(&state.buf.u8[0], 12);
+	  if (crc == state.buf.crc) {
+	    // valid command, do the transition
+	    if (state.buf.cmd == command::write) prestart_write();
+	    state.fsm_state = sar.fsm_state;
+	    state.len = 0;
+	    union command_reply reply = command_reply(sar.reply, state.buf.arg[0], state.buf.arg[1]);
+	    serial::string(reply.u8, 16);
 	    return;
 	  } else {
-	    serial::string("data");
-	    state.command = CMD_DATA;
+	    /*
+	    union command_reply reply = crc_error_reply(crc);
+	    serial::string(reply.u8, 16);
+	    state.len = 0;
 	    return;
+	    */
 	  }
-	} else if (state.buf[0] == 'J' &&
-		   state.buf[1] == 'U' &&
-		   state.buf[2] == 'M' &&
-		   state.buf[3] == 'P') {
-	  if (state.len < 8) {
-	    return;
-	  } else {
-	    serial::string("jump");
-	    state.command = CMD_JUMP;
-	  }
-	} else if (state.buf[0] == 'R' &&
-		   state.buf[1] == 'A' &&
-		   state.buf[2] == 'T' &&
-		   state.buf[3] == 'E') {
-	  if (state.len < 8) {
-	    return;
-	  } else {
-	    serial::string("rate");
-	    state.command = CMD_RATE;
-	  }
-	} else {
-	  move(&state.buf[0], &state.buf[1], state.len - 1);
-	  state.len -= 1;
 	}
-      } else {
-	return;
       }
-      break;
-    case CMD_DATA:
-      {
-	uint32_t * size = &state.addr1;
-	uint8_t * dest = reinterpret_cast<uint8_t *>(state.addr2);
-	if (*size > 0) {
-	  serial::character(c);
-
-	  // write c to dest
-	  *dest = c;
-	  state.addr2++;
-
-	  (*size)--;
-	}
-	if (*size == 0) {
-	  state.len = 0;
-	  state.command = CMD_NONE;
-	  serial::string("next");
-	}
-	return;
-	break;
-      }
-    case CMD_JUMP:
-      // jump
-      state.len = 0;
-      state.command = CMD_NONE;
-      jump_to_func(state.addr1);
-      return;
-      break;
-    case CMD_RATE:
-      state.len = 0;
-      state.command = CMD_NONE;
-      serial::init(state.addr1 & 0xff);
-      return;
+      // invalid command
+      move(&state.buf.u8[0], &state.buf.u8[1], state.len - 1);
+      state.len -= 1;
       break;
     }
+  default:
+    break;
+  }
+}
+
+void tick()
+{
+  switch (state.fsm_state) {
+  case fsm_state::idle:
+    break;
+  case fsm_state::write:
+    {
+      // read chcr1 before dar1 to avoid race
+      uint32_t chcr1 = sh7091.DMAC.CHCR1;
+      uint32_t dar1 = sh7091.DMAC.DAR1;
+      if (dar1 > state.write_crc.offset) {
+	uint32_t len = dar1 - state.write_crc.offset;
+	const uint8_t * dest = reinterpret_cast<const uint8_t *>(state.write_crc.offset);
+	state.write_crc.value = crc32_update(state.write_crc.value, dest, len);
+	state.write_crc.offset += len;
+      }
+      if (chcr1 & dmac::chcr::te::transfers_completed) {
+	state.write_crc.value ^= 0xffffffff;
+	union command_reply reply = write_crc_reply(state.write_crc.value);
+	serial::string(reply.u8, 16);
+
+	sh7091.DMAC.CHCR1 = 0;
+
+	// transition to next state
+	state.fsm_state = fsm_state::idle;
+      }
+    }
+    break;
+  case fsm_state::read:
+    break;
+  case fsm_state::jump:
+    {
+      using namespace scif;
+      // wait for serial transmission to end
+      constexpr uint32_t transmission_end = scfsr2::tend::bit_mask | scfsr2::tdfe::bit_mask;
+      if ((sh7091.SCIF.SCFSR2 & transmission_end) != transmission_end)
+	return;
+
+      const uint32_t dest = state.buf.arg[0];
+      jump_to_func(dest);
+
+      // transition to next state
+      state.fsm_state = fsm_state::idle;
+    }
+    break;
+  case fsm_state::speed:
+    {
+      const uint32_t speed = state.buf.arg[0];
+      serial::init(speed & 0xff);
+
+      // transition to next state
+      state.fsm_state = fsm_state::idle;
+    }
+    break;
+  default:
+    break;
   }
 }
 
