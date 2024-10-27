@@ -368,6 +368,22 @@ int do_read(struct ftdi_context * ftdi)
   return 0;
 }
 
+void console(struct ftdi_context * ftdi)
+{
+  int res;
+
+  ftdi->usb_read_timeout = 1;
+
+  uint8_t read_buf[ftdi->readbuffer_chunksize];
+
+  while (1) {
+    res = ftdi_read_data(ftdi, read_buf, ftdi->readbuffer_chunksize);
+    if (res > 0) {
+      fwrite(read_buf, 1, res, stderr);
+    }
+  }
+}
+
 int main(int argc, char * argv[])
 {
   if (argc < 2) {
@@ -409,6 +425,7 @@ int main(int argc, char * argv[])
   if (do_write_ret == 0) {
     //do_read(ftdi);
     do_jump(ftdi);
+    console(ftdi);
   } else {
     return_code = EXIT_FAILURE;
   }
