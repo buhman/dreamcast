@@ -18,7 +18,7 @@
 #include "holly/region_array.hpp"
 #include "twiddle.hpp"
 
-#include "sperrypc_8x8.hpp"
+#include "font/sperrypc/sperrypc_8x8.data.h"
 
 struct vertex {
   float x;
@@ -184,21 +184,15 @@ inline void inflate_character(const uint8_t * src, const uint8_t c)
 
   uint32_t offset = ((8 * 8) / 2) * character_index;
 
-  /*
   union {
     uint8_t  u8[8 * 8];
     uint32_t u32[8 * 8 / 4];
   } temp2;
 
-  twiddle::texure_4bpp(temp2.u8, temp, 8, 8);
+  twiddle::texture_4bpp(temp2.u8, temp, 8, 8);
   for (uint32_t i = 0; i < 8 * 8 / 4; i++) {
     texture[(offset / 4) + i] = temp2.u32[i];
   }
-  */
-
-  twiddle::texture2<4>(&texture[offset / 4], temp,
-		       8,
-		       8 * 8);
 }
 
 void inflate_font(const uint8_t * src)
@@ -222,7 +216,7 @@ void main()
 {
   video_output::set_mode_vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_sperrypc_8x8_data_start);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_font_sperrypc_sperrypc_8x8_data_start);
   inflate_font(src);
   palette_data();
 

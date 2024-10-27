@@ -20,7 +20,7 @@
 #include "palette.hpp"
 
 #include "font/font.hpp"
-#include "dejavusansmono.hpp"
+#include "font/dejavusansmono/dejavusansmono.data.h"
 
 struct vertex {
   float x;

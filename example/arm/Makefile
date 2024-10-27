@@ -7,7 +7,8 @@ GENERATED ?=
 
 AARCH = -march=armv4 -mlittle-endian
 
-CARCH = -mno-thumb-interwork -march=armv4 -mtune=arm7di -mlittle-endian
+CARCH = -mno-thumb-interwork -march=armv4 -mlittle-endian
+#-mtune=arm7di
 CFLAGS += -I$(dir $(MAKEFILE_PATH))/../..
 
 CXXFLAGS += -std=c++2a

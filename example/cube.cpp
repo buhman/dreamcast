@@ -91,7 +91,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[0] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.x += 0.35 * n_dot_l / (length(n) * length(l));
+        color.x += 0.35 * n_dot_l / (magnitude(n) * magnitude(l));
       }
     }
 
@@ -99,7 +99,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[1] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.y += 0.35 * n_dot_l / (length(n) * length(l));
+        color.y += 0.35 * n_dot_l / (magnitude(n) * magnitude(l));
       }
     }
 

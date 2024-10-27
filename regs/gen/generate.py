@@ -10,10 +10,14 @@ def should_autonewline(line):
 def _render(out, lines):
     indent = " "
     level = 0
+    namespace = 0
     for l in lines:
         if l and (l[0] == "}" or l[0] == ")"):
             level -= 2
-            assert level >= 0, out.getvalue()
+            if level < 0:
+                assert namespace >= 0
+                namespace -= 1
+                level = 0
 
         if len(l) == 0:
             out.write("\n")
@@ -21,7 +25,10 @@ def _render(out, lines):
             out.write(indent * level + l + "\n")
 
         if l and (l[-1] == "{" or l[-1] == "("):
-            level += 2
+            if l.startswith("namespace"):
+                namespace += 1
+            else:
+                level += 2
 
         if level == 0 and l and l[-1] == ";":
             if should_autonewline(l):

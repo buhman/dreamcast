@@ -159,11 +159,20 @@ def headers():
     yield ""
     yield "#include <cstdint>"
     yield ""
+
+def namespace():
+    yield "namespace maple {"
+    yield ""
     yield "struct device_id {"
     yield "uint32_t ft;"
     yield "uint32_t fd[3];"
     yield "};"
     yield "static_assert((sizeof (struct device_id)) == 16);"
+    yield ""
+    for namespace, data_fields in process(rows):
+        yield from command_namespace(namespace, data_fields)
+    yield ""
+    yield "}"
 
 input_file = sys.argv[1]
 rows = read_input(input_file)
@@ -171,6 +180,5 @@ process = new_aggregator()
 
 render, out = renderer()
 render(headers())
-for namespace, data_fields in process(rows):
-    render(command_namespace(namespace, data_fields))
+render(namespace())
 sys.stdout.write(out.getvalue())

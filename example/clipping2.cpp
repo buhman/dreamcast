@@ -25,33 +25,34 @@
 #include "math/geometry.hpp"
 
 #include "maple/maple.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
 
 #include "sh7091/serial.hpp"
 
-uint32_t _command_buf[(1024 + 32) / 4];
-uint32_t _receive_buf[(1024 + 32) / 4];
-
 static ft0::data_transfer::data_format data[4];
 
-void do_get_condition(uint32_t * command_buf,
-		      uint32_t * receive_buf)
+uint32_t send_buf[1024] __attribute__((aligned(32)));
+uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
+void do_get_condition()
 {
-  using command_type = get_condition;
-  using response_type = data_transfer<ft0::data_transfer::data_format>;
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  get_condition::data_fields data_fields = {
-    .function_type = std::byteswap(function_type::controller)
-  };
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
 
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf, data_fields);
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  for (int port = 0; port < 4; port++) {
+    auto& data_fields = host_command[port].bus_data.data_fields;
+    data_fields.function_type = std::byteswap(function_type::controller);
+  }
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -63,10 +64,10 @@ void do_get_condition(uint32_t * command_buf,
       return;
     }
 
-    data[port].analog_axis_1 = data_fields.data.analog_axis_1;
-    data[port].analog_axis_2 = data_fields.data.analog_axis_2;
-    data[port].analog_axis_3 = data_fields.data.analog_axis_3;
-    data[port].analog_axis_4 = data_fields.data.analog_axis_4;
+    for (int i = 0; i < 6; i++) {
+      data[port].analog_coordinate_axis[i]
+        = data_fields.data.analog_coordinate_axis[i];
+    }
   }
 }
 
@@ -209,9 +210,6 @@ uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
 
 void main()
 {
-  uint32_t * command_buf = align_32byte(_command_buf);
-  uint32_t * receive_buf = align_32byte(_receive_buf);
-
   video_output::set_mode_vga();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
@@ -244,22 +242,22 @@ void main()
   float y_pos = 0;
 
   while (1) {
-    do_get_condition(command_buf, receive_buf);
+    do_get_condition();
 
     ta_polygon_converter_init(opb_size.total(),
 			      ta_alloc,
 			      640 / 32,
 			      480 / 32);
 
-    const float l_ = static_cast<float>(data[0].analog_axis_1) * (1.f / 255.f);
-    const float r_ = static_cast<float>(data[0].analog_axis_2) * (1.f / 255.f);
+    const float l_ = static_cast<float>(data[0].analog_coordinate_axis[0]) * (1.f / 255.f);
+    const float r_ = static_cast<float>(data[0].analog_coordinate_axis[1]) * (1.f / 255.f);
     const float t_ = ((l_ > r_) ? l_ : -r_) * 3.14f / 2.f;
 
     if (t_ > theta) theta += (0.04f * ((t_ - theta) * (t_ - theta)));
     else            theta -= (0.04f * ((t_ - theta) * (t_ - theta)));
 
-    const float x_ = static_cast<float>(data[0].analog_axis_3 - 0x80) / 127.f;
-    const float y_ = static_cast<float>(data[0].analog_axis_4 - 0x80) / 127.f;
+    const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
+    const float y_ = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) / 127.f;
     if (x_ > x_pos) x_pos += (0.02f * ((x_ - x_pos) * (x_ - x_pos)));
     else            x_pos -= (0.02f * ((x_ - x_pos) * (x_ - x_pos)));
     if (y_ > y_pos) y_pos += (0.02f * ((y_ - y_pos) * (y_ - y_pos)));

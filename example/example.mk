@@ -55,7 +55,7 @@ FONT_BITMAP_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	sperrypc_8x8.data.o
+	font/sperrypc/sperrypc_8x8.data.o
 
 example/font_bitmap.elf: LDSCRIPT = $(LIB)/main.lds
 example/font_bitmap.elf: $(START_OBJ) $(FONT_BITMAP_OBJ)
@@ -264,7 +264,7 @@ CLIPPING_TEXTURED_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	maple/maple.o \
 	sh7091/serial.o \
-	macaw.data.o \
+	texture/macaw/macaw.data.o \
 	$(LIBGCC)
 
 example/clipping_textured.elf: LDSCRIPT = $(LIB)/main.lds
@@ -380,25 +380,6 @@ INTERRUPT_OBJ = \
 
 example/interrupt.elf: LDSCRIPT = $(LIB)/main.lds
 example/interrupt.elf: $(START_OBJ) $(INTERRUPT_OBJ)
-
-DUMP_OBJECT_LIST_OBJ = \
-	example/dump_object_list.o \
-	holly/video_output.o \
-	holly/core.o \
-	holly/region_array.o \
-	holly/background.o \
-	holly/ta_fifo_polygon_converter.o \
-	sh7091/serial.o
-
-example/dump_object_list.elf: LDSCRIPT = $(LIB)/main.lds
-example/dump_object_list.elf: $(START_OBJ) $(DUMP_OBJECT_LIST_OBJ)
-
-DUMP_RAM_OBJ = \
-	example/dump_ram.o \
-	sh7091/serial.o
-
-example/dump_ram.elf: LDSCRIPT = $(LIB)/main.lds
-example/dump_ram.elf: $(START_OBJ) $(DUMP_RAM_OBJ)
 
 SOFTWARE_TA_OBJ = \
 	example/software_ta.o \

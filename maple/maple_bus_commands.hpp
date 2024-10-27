@@ -10,6 +10,7 @@ struct device_id {
 };
 
 static_assert((sizeof (struct device_id)) == 16);
+
 struct device_request {
   static constexpr uint32_t command_code = 0x1;
 
@@ -277,5 +278,6 @@ struct ar_error {
 };
 
 static_assert((sizeof (struct ar_error::data_fields)) == 4);
+
 
 }
