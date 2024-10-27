@@ -5,14 +5,14 @@
 #include "holly/core_bits.hpp"
 #include "holly/holly.hpp"
 #include "maple/maple.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft8.hpp"
 #include "sh7091/serial.hpp"
 
-static uint32_t * command_buf;
-static uint32_t * receive_buf;
+uint32_t send_buf[1024] __attribute__((aligned(32)));
+uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
 void do_lm_request(uint8_t port, uint8_t lm)
 {
@@ -44,39 +44,38 @@ void do_lm_request(uint8_t port, uint8_t lm)
     get media info
    */
 
-  maple::init_host_command(command_buf, receive_buf,
-			   destination_port,
-			   destination_ap, get_media_info::command_code, (sizeof (struct get_media_info::data_fields)),
-			   true); // end_flag
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  using command_type = get_media_info;
-  using host_command_type = struct maple::host_command<command_type::data_fields>;
-  auto host_command = reinterpret_cast<host_command_type *>(command_buf);
-  auto& fields = host_command->bus_data.data_fields;
-  fields.function_type = std::byteswap(function_type::vibration);
-  fields.pt = std::byteswap(1 << 24);
+  using command_type = maple::get_media_info;
+  using response_type = maple::data_transfer<ft8::data_transfer::data_format>;
 
-  using response_type = data_transfer<ft8::data_transfer::data_format>;
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  auto [host_command, host_response]
+    = writer.append_command<command_type, response_type>(destination_port,
+							 destination_ap,
+							 true,      // end_flag
+							 0, // send_trailing
+							 0  // recv_trailing
+							 );
+  auto& data_fields = host_command->bus_data.data_fields;
+  data_fields.function_type = std::byteswap(function_type::vibration);
+  data_fields.pt = std::byteswap(1 << 24);
 
   serial::string("dma start\n");
-  maple::dma_start(command_buf, maple::sizeof_command(host_command),
-                   receive_buf, maple::sizeof_command(host_response));
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
   maple::dma_wait_complete();
 
   auto& bus_data = host_response->bus_data;
+
   if (bus_data.command_code != response_type::command_code) {
     serial::string("lm did not reply to vibration get_media_info: ");
     serial::integer<uint8_t>(lm);
     return;
-  }
-  serial::string("lm replied to vibration get_media_info: ");
-  serial::integer<uint8_t>(lm);
+  } else {
+    auto& data_fields = bus_data.data_fields;
+    serial::string("lm replied to vibration get_media_info: ");
+    serial::integer<uint8_t>(lm);
 
-  auto& data_fields = bus_data.data_fields;
-
-  {
     using namespace ft8::data_transfer::vset;
     serial::string("vn: ");
     serial::integer<uint8_t>(vn(data_fields.data.vset));
@@ -104,31 +103,32 @@ void do_lm_request(uint8_t port, uint8_t lm)
      set condition
    */
   {
-    using command_type = set_condition<ft8::set_condition::data_format>;
+    using command_type = maple::set_condition<ft8::set_condition::data_format>;
+    using response_type = maple::device_reply;
 
-    maple::init_host_command(command_buf, receive_buf,
-			     destination_port,
-			     destination_ap, command_type::command_code, (sizeof (command_type::data_fields)),
-			     true);
+    auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-    using host_command_type = struct maple::host_command<command_type::data_fields>;
-    auto host_command = reinterpret_cast<host_command_type *>(command_buf);
-    auto& fields = host_command->bus_data.data_fields;
-    fields.function_type = std::byteswap(function_type::vibration);
-    fields.write_in_data.ctrl = 0x11;
-    fields.write_in_data.pow = 0x70;
-    fields.write_in_data.freq = 0x27;
-    fields.write_in_data.inc = 0x00;
+    auto [host_command, host_response]
+      = writer.append_command<command_type, response_type>(destination_port,
+							   destination_ap,
+							   true,      // end_flag
+							   0, // send_trailing
+							   0  // recv_trailing
+							   );
+    auto& data_fields = host_command->bus_data.data_fields;
+    data_fields.function_type = std::byteswap(function_type::vibration);
+    data_fields.write_in_data.ctrl = 0x11;
+    data_fields.write_in_data.pow = 0x70;
+    data_fields.write_in_data.freq = 0x27;
+    data_fields.write_in_data.inc = 0x00;
 
-    using host_response_type = struct maple::host_response<device_reply::data_fields>;
-    auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
-    maple::dma_start(command_buf, maple::sizeof_command(host_command),
-                     receive_buf, maple::sizeof_command(host_response));
+    maple::dma_start(send_buf, writer.send_offset,
+		     recv_buf, writer.recv_offset);
     maple::dma_wait_complete();
 
     auto& bus_data = host_response->bus_data;
 
-    if (bus_data.command_code != device_reply::command_code) {
+    if (bus_data.command_code != maple::device_reply::command_code) {
       serial::string("lm did not reply to vibration set_condition: ");
       serial::integer<uint8_t>(lm);
     } else {
@@ -155,48 +155,47 @@ void do_lm_requests(uint8_t port, uint8_t lm)
 
 void do_device_request()
 {
-  using command_type = device_request;
-  using response_type = device_status;
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response) * 4);
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
   maple::dma_wait_complete();
+
+  uint8_t port__ap[4];
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
-    if (bus_data.command_code != device_status::command_code) {
+
+    port__ap[port] = 0;
+
+    if (bus_data.command_code != maple::device_status::command_code) {
       // the controller is disconnected
     } else {
       if ((data_fields.device_id.ft & std::byteswap(function_type::controller)) != 0) {
 	serial::string("controller: ");
 	serial::integer<uint8_t>(port);
 	//serial::integer<uint8_t>(bus_data.source_ap & ap::lm_bus::bit_mask);
-	do_lm_requests(port, bus_data.source_ap & ap::lm_bus::bit_mask);
+	port__ap[port] = bus_data.source_ap & ap::lm_bus::bit_mask;
       }
     }
   }
-}
 
-uint32_t _command_buf[(1024 + 32) / 4];
-uint32_t _receive_buf[(1024 + 32) / 4];
+  for (uint8_t port = 0; port < 4; port++) {
+    if (port__ap[port] != 0)
+      do_lm_requests(port, port__ap[port]);
+  }
+}
 
 void main()
 {
-  command_buf = align_32byte(_command_buf);
-  command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
-  receive_buf = align_32byte(_receive_buf);
+  serial::init(0);
 
-  video_output::set_mode_vga();
-
-  while (1) {
-    for (int i = 0; i < 120; i++) {
-      while (!spg_status::vsync(holly.SPG_STATUS));
-      while (spg_status::vsync(holly.SPG_STATUS));
-    }
-    do_device_request();
-    break;
-  };
+  do_device_request();
 }
