@@ -52,6 +52,7 @@ void do_get_condition(uint32_t * command_buf,
 
   maple::dma_start(command_buf, command_size,
                    receive_buf, maple::sizeof_command(host_response));
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

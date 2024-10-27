@@ -43,10 +43,46 @@ MACAW_TWIDDLE_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	macaw.data.o
+	texture/macaw/macaw.data.o
 
 example/macaw_twiddle.elf: LDSCRIPT = $(LIB)/main.lds
 example/macaw_twiddle.elf: $(START_OBJ) $(MACAW_TWIDDLE_OBJ)
+
+MACAW_CUBE_OBJ = \
+	example/macaw_cube.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/macaw/macaw.data.o
+
+example/macaw_cube.elf: LDSCRIPT = $(LIB)/main.lds
+example/macaw_cube.elf: $(START_OBJ) $(MACAW_CUBE_OBJ)
+
+MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
+	example/macaw_cube_render_to_texture.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/macaw/macaw.data.o
+
+example/macaw_cube_render_to_texture.elf: LDSCRIPT = $(LIB)/main.lds
+example/macaw_cube_render_to_texture.elf: $(START_OBJ) $(MACAW_CUBE_RENDER_TO_TEXTURE_OBJ)
+
+MACAW_MULTIPASS_OBJ = \
+	example/macaw_multipass.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/macaw/macaw.data.o
+
+example/macaw_multipass.elf: LDSCRIPT = $(LIB)/main.lds
+example/macaw_multipass.elf: $(START_OBJ) $(MACAW_MULTIPASS_OBJ)
 
 FONT_BITMAP_OBJ = \
 	example/font_bitmap.o \
@@ -67,7 +103,7 @@ FONT_OUTLINE_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	dejavusansmono.data.o
+	font/dejavusansmono/dejavusansmono.data.o
 
 example/font_outline.elf: LDSCRIPT = $(LIB)/main.lds
 example/font_outline.elf: $(START_OBJ) $(FONT_OUTLINE_OBJ)
@@ -79,22 +115,10 @@ FONT_OUTLINE_PUNCH_THROUGH_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	dejavusansmono_mono.data.o
+	font/dejavusansmono/dejavusansmono_mono.data.o
 
 example/font_outline_punch_through.elf: LDSCRIPT = $(LIB)/main.lds
 example/font_outline_punch_through.elf: $(START_OBJ) $(FONT_OUTLINE_PUNCH_THROUGH_OBJ)
-
-MACAW_MULTIPASS_OBJ = \
-	example/macaw_multipass.o \
-	holly/video_output.o \
-	holly/core.o \
-	holly/region_array.o \
-	holly/background.o \
-	holly/ta_fifo_polygon_converter.o \
-	macaw.data.o
-
-example/macaw_multipass.elf: LDSCRIPT = $(LIB)/main.lds
-example/macaw_multipass.elf: $(START_OBJ) $(MACAW_MULTIPASS_OBJ)
 
 TRANSLUCENCY_OBJ = \
 	example/translucency.o \
@@ -103,7 +127,7 @@ TRANSLUCENCY_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	macaw.data.o
+	texture/macaw/macaw.data.o
 
 example/translucency.elf: LDSCRIPT = $(LIB)/main.lds
 example/translucency.elf: $(START_OBJ) $(TRANSLUCENCY_OBJ)
@@ -174,8 +198,8 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	wolf.data.o \
-	macaw.data.o \
+	texture/wolf/wolf.data.o \
+	texture/macaw/macaw.data.o \
 	maple/maple.o \
 	$(LIBGCC)
 
@@ -204,30 +228,6 @@ VIEWING_SYSTEM_OBJ = \
 
 example/viewing_system.elf: LDSCRIPT = $(LIB)/main.lds
 example/viewing_system.elf: $(START_OBJ) $(VIEWING_SYSTEM_OBJ)
-
-MACAW_CUBE_OBJ = \
-	example/macaw_cube.o \
-	holly/video_output.o \
-	holly/core.o \
-	holly/region_array.o \
-	holly/background.o \
-	holly/ta_fifo_polygon_converter.o \
-	macaw.data.o
-
-example/macaw_cube.elf: LDSCRIPT = $(LIB)/main.lds
-example/macaw_cube.elf: $(START_OBJ) $(MACAW_CUBE_OBJ)
-
-MACAW_CUBE_RENDER_TO_TEXTURE_OBJ = \
-	example/macaw_cube_render_to_texture.o \
-	holly/video_output.o \
-	holly/core.o \
-	holly/region_array.o \
-	holly/background.o \
-	holly/ta_fifo_polygon_converter.o \
-	macaw.data.o
-
-example/macaw_cube_render_to_texture.elf: LDSCRIPT = $(LIB)/main.lds
-example/macaw_cube_render_to_texture.elf: $(START_OBJ) $(MACAW_CUBE_RENDER_TO_TEXTURE_OBJ)
 
 CLIPPING_OBJ = \
 	example/clipping.o \

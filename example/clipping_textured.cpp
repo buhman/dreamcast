@@ -55,6 +55,7 @@ void do_get_condition()
   }
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

@@ -7,7 +7,7 @@
 
 void main()
 {
-  serial::init(4);
+  serial::init(0);
 
   uint32_t send_buf[1024] __attribute__((aligned(32)));
   uint32_t recv_buf[1024] __attribute__((aligned(32)));
@@ -22,6 +22,7 @@ void main()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

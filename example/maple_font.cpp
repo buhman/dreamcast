@@ -72,6 +72,7 @@ void send_vmu_framebuffer(uint8_t port, uint8_t lm)
 
   maple::dma_start(send_buf, writer.send_offset,
 		   recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   serial::integer<uint8_t>(host_response->bus_data.command_code);
   serial::integer<uint8_t>(host_response->bus_data.destination_ap);
@@ -99,6 +100,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   auto& bus_data = host_response->bus_data;
   auto& data_fields = bus_data.data_fields;
@@ -156,6 +158,7 @@ void do_device_request()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

@@ -63,6 +63,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
   serial::string("dma start\n");
   maple::dma_start(command_buf, maple::sizeof_command(host_command),
                    receive_buf, maple::sizeof_command(host_response));
+  maple::dma_wait_complete();
 
   auto& bus_data = host_response->bus_data;
   if (bus_data.command_code != response_type::command_code) {
@@ -123,6 +124,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
     auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
     maple::dma_start(command_buf, maple::sizeof_command(host_command),
                      receive_buf, maple::sizeof_command(host_response));
+    maple::dma_wait_complete();
 
     auto& bus_data = host_response->bus_data;
 
@@ -160,6 +162,7 @@ void do_device_request()
   const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf);
   maple::dma_start(command_buf, command_size,
                    receive_buf, maple::sizeof_command(host_response) * 4);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

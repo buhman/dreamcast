@@ -30,15 +30,15 @@
 
 static ft0::data_transfer::data_format data[4];
 
+uint32_t send_buf[1024] __attribute__((aligned(32)));
+uint32_t recv_buf[1024] __attribute__((aligned(32)));
+
 void do_get_condition()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
   using command_type = maple::get_condition;
   using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
-
-  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
@@ -47,6 +47,7 @@ void do_get_condition()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -58,8 +59,8 @@ void do_get_condition()
       return;
     }
 
-    data[port].analog_axis_3 = data_fields.data.analog_axis_3;
-    data[port].analog_axis_4 = data_fields.data.analog_axis_4;
+    data[port].analog_coordinate_axis[2] = data_fields.data.analog_coordinate_axis[2];
+    data[port].analog_coordinate_axis[3] = data_fields.data.analog_coordinate_axis[3];
   }
 }
 
@@ -188,8 +189,8 @@ void main()
 			      640 / 32,
 			      480 / 32);
 
-    float x_pos = static_cast<float>(data[0].analog_axis_3 - 0x80) * (0.5 / 127);
-    float y_pos = static_cast<float>(data[0].analog_axis_4 - 0x80) * (0.5 / 127);
+    float x_pos = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) * (0.5 / 127);
+    float y_pos = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) * (0.5 / 127);
 
     auto parameter = ta_parameter_writer(ta_parameter_buf);
     for (uint32_t i = 0; i < border::num_faces; i++) {

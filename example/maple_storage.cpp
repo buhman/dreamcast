@@ -146,6 +146,7 @@ bool do_block_read(storage_state& state, uint16_t block_number, uint8_t * dest)
 
   maple::dma_start(state.send_buf, writer.send_offset,
 		   state.recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint32_t phase = 0; phase < state.device_status.read_accesses; phase++) {
     auto& bus_data = host_responses[phase]->bus_data;
@@ -227,6 +228,7 @@ bool do_block_write(storage_state& state, uint16_t block_number, uint8_t * src)
 
   maple::dma_start(state.send_buf, writer.send_offset,
 		   state.recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   serial::string("block write status: ");
   serial::integer(host_response->bus_data.command_code);
@@ -316,6 +318,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
 
     maple::dma_start(send_buf, writer.send_offset,
 		     recv_buf, writer.recv_offset);
+    maple::dma_wait_complete();
 
     auto& bus_data = host_response->bus_data;
     auto& data_fields = bus_data.data_fields;
@@ -361,6 +364,7 @@ void do_lm_request(uint8_t port, uint8_t lm)
 
     maple::dma_start(send_buf, writer.send_offset,
 		     recv_buf, writer.recv_offset);
+    maple::dma_wait_complete();
 
     auto& bus_data = host_response->bus_data;
     auto& data_fields = bus_data.data_fields;
@@ -556,6 +560,7 @@ void do_device_request()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;

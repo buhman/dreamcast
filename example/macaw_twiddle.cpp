@@ -18,7 +18,7 @@
 #include "memorymap.hpp"
 #include "twiddle.hpp"
 
-#include "macaw.hpp"
+#include "texture/macaw/macaw.data.h"
 
 struct vertex {
   float x;
@@ -116,8 +116,8 @@ void init_texture_memory(const struct opb_size& opb_size)
 
 void init_macaw_texture()
 {
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
-  auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_texture_macaw_macaw_data_start);
+  auto size  = reinterpret_cast<const uint32_t>(&_binary_texture_macaw_macaw_data_size);
   auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
   uint16_t temp[size / 3];

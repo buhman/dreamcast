@@ -21,8 +21,8 @@ void do_get_condition()
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  using command_type = get_condition;
-  using response_type = data_transfer<ft0::data_transfer::data_format>;
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
@@ -31,6 +31,7 @@ void do_get_condition()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -61,8 +62,8 @@ void do_lm_request(uint8_t port, uint8_t lm)
   uint32_t host_port_select = host_instruction_port_select(port);
   uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
 
-  using command_type = device_request;
-  using response_type = device_status;
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
 
   auto [host_command, host_response]
     = writer.append_command<command_type, response_type>(host_port_select,
@@ -71,10 +72,11 @@ void do_lm_request(uint8_t port, uint8_t lm)
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   auto& bus_data = host_response->bus_data;
   auto& data_fields = bus_data.data_fields;
-  if (bus_data.command_code != device_status::command_code) {
+  if (bus_data.command_code != maple::device_status::command_code) {
     serial::string("lm did not reply: ");
     serial::integer<uint8_t>(port, ' ');
     serial::integer<uint8_t>(lm);
@@ -115,19 +117,20 @@ void do_device_request()
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  using command_type = device_request;
-  using response_type = device_status;
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
-    if (bus_data.command_code != device_status::command_code) {
+    if (bus_data.command_code != maple::device_status::command_code) {
       serial::string("port: ");
       serial::integer<uint8_t>(port);
       serial::string("  disconnected\n");
@@ -153,6 +156,7 @@ void do_device_request()
 
 void main()
 {
+  serial::init(0);
   // flycast needs this in HLE mode, or else it won't start the vcount
   // counter.
   video_output::set_mode_vga();

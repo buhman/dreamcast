@@ -17,7 +17,7 @@
 #include "holly/video_output.hpp"
 #include "memorymap.hpp"
 
-#include "macaw.hpp"
+#include "texture/macaw/macaw.data.h"
 
 struct vertex {
   float x;
@@ -134,11 +134,12 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
 void init_texture_memory(const struct opb_size * opb_size, uint32_t render_passes)
 {
-  region_array_multipass(640 / 32, // width
-			 480 / 32, // height
+  region_array_multipass(640 / 32, // tile_width
+			 480 / 32, // tile_height
 			 opb_size,
-			 render_passes
-			 );
+			 render_passes,
+			 texture_memory_alloc::region_array.start,
+			 texture_memory_alloc::object_list.start);
 
   background_parameter(0xff00ff00);
 }
@@ -147,8 +148,8 @@ uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
 
 void copy_macaw_texture()
 {
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
-  auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_texture_macaw_macaw_data_start);
+  auto size  = reinterpret_cast<const uint32_t>(&_binary_texture_macaw_macaw_data_size);
   auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];

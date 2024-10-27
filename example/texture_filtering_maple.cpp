@@ -249,6 +249,7 @@ void do_get_condition(uint32_t * command_buf,
 
   maple::dma_start(command_buf, command_size,
                    receive_buf, maple::sizeof_command(host_response));
+  maple::dma_wait_complete();
 
   buttons.reset();
 

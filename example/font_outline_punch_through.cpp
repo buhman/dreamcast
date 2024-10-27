@@ -20,7 +20,7 @@
 #include "palette.hpp"
 
 #include "font/font.hpp"
-#include "dejavusansmono_mono.hpp"
+#include "font/dejavusansmono/dejavusansmono_mono.data.h"
 
 struct vertex {
   float x;
@@ -71,7 +71,7 @@ uint32_t transform(ta_parameter_writer& parameter,
                                         | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
     const uint32_t texture_address = texture_memory_alloc::texture.start;
-    const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+    const uint32_t texture_control_word = texture_control_word::pixel_format::_8bpp_palette
                                         | texture_control_word::scan_order::twiddled
                                         | texture_control_word::texture_address(texture_address / 8);
 
@@ -139,7 +139,7 @@ uint32_t transform2(ta_parameter_writer& parameter,
                                       | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
   const uint32_t texture_address = texture_memory_alloc::texture.start;
-  const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_8bpp_palette
                                       | texture_control_word::scan_order::twiddled
                                       | texture_control_word::texture_address(texture_address / 8);
 
@@ -188,15 +188,39 @@ void init_texture_memory(const struct opb_size& opb_size)
   background_parameter(0xff0000ff);
 }
 
-void inflate_font(const uint32_t * src,
-                  const uint32_t stride,
-                  const uint32_t curve_end_ix)
+void inflate_font(const uint8_t * src,
+                  const uint32_t width,
+                  const uint32_t height)
 {
-  auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
+  auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
-  twiddle::texture3<4, 1>(texture, reinterpret_cast<const uint8_t *>(src),
-                          stride,
-                          curve_end_ix);
+  const uint32_t bits_per_pixel = 1;
+  const uint32_t pixels_per_byte = 8;
+  const uint32_t stride = width / pixels_per_byte;
+  const uint32_t mask = (1 << bits_per_pixel) - 1;
+
+  const uint32_t size = width * height;
+
+  uint8_t temp1[size];
+  for (uint32_t y = 0; y < height; y++) {
+    for (uint32_t x = 0; x < width; x++) {
+      const uint32_t texture_ix = y * stride + x / pixels_per_byte;
+      const uint32_t texture_ix_mod = x % pixels_per_byte;
+      const uint32_t value = (src[texture_ix] >> (bits_per_pixel * texture_ix_mod)) & mask;
+      temp1[y * width + x] = value;
+    }
+  }
+
+  uint8_t temp[size] __attribute__((aligned(4)));
+
+  twiddle::texture(temp,
+		   temp1,
+		   width,
+		   height);
+
+  for (uint32_t i = 0; i < size / 4; i++) {
+    texture[i] = reinterpret_cast<uint32_t *>(temp)[i];
+  }
 }
 
 uint32_t _ta_parameter_buf[((32 * 10 * 17) + 32) / 4];
@@ -205,9 +229,9 @@ void main()
 {
   video_output::set_mode_vga();
 
-  auto font = reinterpret_cast<const struct font *>(&_binary_dejavusansmono_mono_data_start);
+  auto font = reinterpret_cast<const struct font *>(&_binary_font_dejavusansmono_dejavusansmono_mono_data_start);
   auto glyphs = reinterpret_cast<const struct glyph *>(&font[1]);
-  auto texture = reinterpret_cast<const uint32_t *>(&glyphs[font->glyph_count]);
+  auto texture = reinterpret_cast<const uint8_t *>(&glyphs[font->glyph_count]);
 
   /*
   serial::integer<uint32_t>(font->first_char_code);
@@ -222,8 +246,8 @@ void main()
   */
 
   inflate_font(texture,
-               font->texture_stride,
-               font->max_z_curve_ix);
+               font->texture_width,
+	       font->texture_height);
   palette_data<2>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
@@ -274,14 +298,14 @@ void main()
               font->first_char_code,
               glyphs,
               ana, 17,
-              font->glyph_height * 0);
+              font->face_metrics.height * 0);
 
     transform(parameter,
               font->texture_width, font->texture_height,
               font->first_char_code,
               glyphs,
               cabal, 26,
-              font->glyph_height * 1);
+              font->face_metrics.height * 1);
 
     parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 

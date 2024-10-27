@@ -205,7 +205,7 @@ void transform_model(ta_parameter_writer& parameter,
       c.g += color.g * 0.1;
       c.b += color.b * 0.1;
       if (n_dot_l > 0) {
-	float intensity = n_dot_l / (length(n) * length(l));
+	float intensity = n_dot_l / (magnitude(n) * magnitude(l));
         c.r += color.r * intensity * lighting_weight;
         c.g += color.g * intensity * lighting_weight;
         c.b += color.b * intensity * lighting_weight;
