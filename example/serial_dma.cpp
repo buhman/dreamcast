@@ -29,7 +29,7 @@ int main()
   serial::string("wait\n");
 
   while (true) {
-    serial::recv_dma(&bufi[0], 4);
+    serial::recv_dma(reinterpret_cast<uint32_t>(bufi), 4);
 
     while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0) {
     };

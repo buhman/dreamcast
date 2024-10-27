@@ -19,7 +19,7 @@
 
 #include "sh7091/serial.hpp"
 
-#include "macaw.hpp"
+#include "texture/macaw/macaw.data.h"
 #include "software_ta.hpp"
 
 uint32_t transform(uint32_t * ta_parameter_buf,

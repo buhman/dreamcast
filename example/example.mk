@@ -163,7 +163,7 @@ SUZANNE_PROFILE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	font/font_bitmap.o \
 	sh7091/serial.o \
-	verite_8x16.data.o
+	font/verite_8x16/verite_8x16.data.o
 
 example/suzanne_profile.elf: LDSCRIPT = $(LIB)/main.lds
 example/suzanne_profile.elf: $(START_OBJ) $(SUZANNE_PROFILE_OBJ)
@@ -304,7 +304,7 @@ MAPLE_WINK_OBJ = \
 	rgb.o \
 	sh7091/serial.o \
 	maple/maple.o \
-	wink.data.o
+	texture/wink/wink.data.o
 
 example/maple_wink.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_wink.elf: $(START_OBJ) $(MAPLE_WINK_OBJ)
@@ -473,17 +473,17 @@ TEXTURE_FILTERING_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
-	bbb1.data.o \
-	bbb2.data.o \
-	bbb4.data.o \
-	bbb8.data.o \
-	bbb16.data.o \
-	bbb32.data.o \
-	bbb64.data.o \
-	bbb128.data.o \
-	bbb256.data.o \
-	bbb512.data.o \
-	bbb1024.data.o
+	texture/bbb/bbb1.data.o \
+	texture/bbb/bbb2.data.o \
+	texture/bbb/bbb4.data.o \
+	texture/bbb/bbb8.data.o \
+	texture/bbb/bbb16.data.o \
+	texture/bbb/bbb32.data.o \
+	texture/bbb/bbb64.data.o \
+	texture/bbb/bbb128.data.o \
+	texture/bbb/bbb256.data.o \
+	texture/bbb/bbb512.data.o \
+	texture/bbb/bbb1024.data.o
 
 example/texture_filtering.elf: LDSCRIPT = $(LIB)/main.lds
 example/texture_filtering.elf: $(START_OBJ) $(TEXTURE_FILTERING_OBJ)
@@ -495,21 +495,21 @@ TEXTURE_FILTERING_MAPLE_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
-	bbb1.data.o \
-	bbb2.data.o \
-	bbb4.data.o \
-	bbb8.data.o \
-	bbb16.data.o \
-	bbb32.data.o \
-	bbb64.data.o \
-	bbb128.data.o \
-	bbb256.data.o \
-	bbb512.data.o \
-	bbb1024.data.o \
+	texture/bbb/bbb1.data.o \
+	texture/bbb/bbb2.data.o \
+	texture/bbb/bbb4.data.o \
+	texture/bbb/bbb8.data.o \
+	texture/bbb/bbb16.data.o \
+	texture/bbb/bbb32.data.o \
+	texture/bbb/bbb64.data.o \
+	texture/bbb/bbb128.data.o \
+	texture/bbb/bbb256.data.o \
+	texture/bbb/bbb512.data.o \
+	texture/bbb/bbb1024.data.o \
 	maple/maple.o \
 	sh7091/serial.o \
 	font/font_bitmap.o \
-	verite_8x16.data.o
+	font/verite_8x16/verite_8x16.data.o
 
 example/texture_filtering_maple.elf: LDSCRIPT = $(LIB)/main.lds
 example/texture_filtering_maple.elf: $(START_OBJ) $(TEXTURE_FILTERING_MAPLE_OBJ)
@@ -553,10 +553,10 @@ SIERPINSKI_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
-	wolf2.data.o \
-	wolf2.data.pal.o \
-	strawberry.data.o \
-	strawberry.data.pal.o \
+	texture/wolf2/wolf2.data.o \
+	texture/wolf2/wolf2.data.pal.o \
+	texture/strawberry/strawberry.data.o \
+	texture/strawberry/strawberry.data.pal.o \
 	$(LIBGCC)
 
 example/sierpinski.elf: LDSCRIPT = $(LIB)/main.lds

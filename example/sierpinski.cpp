@@ -16,9 +16,10 @@
 #include "sh7091/store_queue.hpp"
 
 #include "math/vec2.hpp"
-#include "wolf2.hpp"
-#include "strawberry.hpp"
-
+#include "texture/wolf2/wolf2.data.h"
+#include "texture/strawberry/strawberry.data.h"
+#include "texture/wolf2/wolf2.data.pal.h"
+#include "texture/strawberry/strawberry.data.pal.h"
 /*
             a
 
@@ -267,14 +268,14 @@ void copy_textures_palettes()
 {
   auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
-  auto wolf_src = reinterpret_cast<const uint8_t *>(&_binary_wolf2_data_start);
-  auto wolf_pal_src = reinterpret_cast<const uint8_t *>(&_binary_wolf2_data_pal_start);
+  auto wolf_src = reinterpret_cast<const uint8_t *>(&_binary_texture_wolf2_wolf2_data_start);
+  auto wolf_pal_src = reinterpret_cast<const uint8_t *>(&_binary_texture_wolf2_wolf2_data_pal_start);
   auto wolf_texture = &texture[1024 * 1024 / 4 * 1];
   copy_texture(wolf_src, wolf_texture);
   copy_palette(wolf_pal_src, 1);
 
-  auto strawberry_src = reinterpret_cast<const uint8_t *>(&_binary_strawberry_data_start);
-  auto strawberry_pal_src = reinterpret_cast<const uint8_t *>(&_binary_strawberry_data_pal_start);
+  auto strawberry_src = reinterpret_cast<const uint8_t *>(&_binary_texture_strawberry_strawberry_data_start);
+  auto strawberry_pal_src = reinterpret_cast<const uint8_t *>(&_binary_texture_strawberry_strawberry_data_pal_start);
   auto strawberry_texture = &texture[1024 * 1024 / 4 * 0];
   copy_texture(strawberry_src, strawberry_texture);
   copy_palette(strawberry_pal_src, 0);

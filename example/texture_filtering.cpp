@@ -20,7 +20,18 @@
 
 #include "sh7091/serial.hpp"
 
-#include "bbb.hpp"
+#include "texture/bbb/bbb1024.data.h"
+#include "texture/bbb/bbb128.data.h"
+#include "texture/bbb/bbb16.data.h"
+#include "texture/bbb/bbb1.data.h"
+#include "texture/bbb/bbb256.data.h"
+#include "texture/bbb/bbb2.data.h"
+#include "texture/bbb/bbb32.data.h"
+#include "texture/bbb/bbb4.data.h"
+#include "texture/bbb/bbb512.data.h"
+#include "texture/bbb/bbb64.data.h"
+#include "texture/bbb/bbb8.data.h"
+#include "texture/bbb/bbb.data.h"
 
 struct vertex {
   float x;
@@ -253,17 +264,17 @@ void init_texture_memory(const struct opb_size& opb_size)
 }
 
 uint8_t const * const mips[] = {
-  reinterpret_cast<uint8_t *>(&_binary_bbb1_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb2_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb4_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb8_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb16_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb32_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb64_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb128_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb256_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb512_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb1024_data_start)
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb1_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb2_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb4_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb8_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb16_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb32_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb64_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb128_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb256_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb512_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb1024_data_start)
 };
 
 void _copy_bbb_texture(uint32_t dst_offset, uint8_t const * const src, uint32_t mip)

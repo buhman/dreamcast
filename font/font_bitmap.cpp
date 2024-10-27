@@ -49,11 +49,17 @@ static inline void inflate_character(const uint32_t pitch,
 
   auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
+  uint8_t temp2[texture_width * texture_height / 2];
+
   const uint32_t texture_offset = texture_width * texture_height * character_index / 2;
-  twiddle::texture2<4>(&texture[texture_offset / 4], // uint32_t *
-                       temp,
-		       texture_width,
-		       texture_width * texture_height);
+  twiddle::texture_4bpp(temp2,
+			temp,
+			texture_width,
+			texture_height);
+
+  for (uint32_t i = 0; i < texture_width * texture_height / (2 * 4); i++) {
+    texture[texture_offset / 4 + i] = reinterpret_cast<uint32_t *>(temp2)[i];
+  }
 }
 
 uint32_t inflate(const uint32_t pitch,

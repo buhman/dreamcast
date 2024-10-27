@@ -1,0 +1,5 @@
+#pragma once
+#include <cstdint>
+extern uint32_t _binary_texture_strawberry_strawberry_data_pal_start __asm("_binary_texture_strawberry_strawberry_data_pal_start");
+extern uint32_t _binary_texture_strawberry_strawberry_data_pal_end __asm("_binary_texture_strawberry_strawberry_data_pal_end");
+extern uint32_t _binary_texture_strawberry_strawberry_data_pal_size __asm("_binary_texture_strawberry_strawberry_data_pal_size");

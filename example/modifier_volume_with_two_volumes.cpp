@@ -24,34 +24,34 @@
 #include "math/vec4.hpp"
 
 #include "maple/maple.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
 
-#include "macaw.hpp"
-#include "wolf.hpp"
+#include "texture/macaw/macaw.data.h"
+#include "texture/wolf/wolf.data.h"
 #include "twiddle.hpp"
 
 static ft0::data_transfer::data_format data[4];
 
-void do_get_condition(uint32_t * command_buf,
-		      uint32_t * receive_buf)
+void do_get_condition()
 {
-  using command_type = get_condition;
-  using response_type = data_transfer<ft0::data_transfer::data_format>;
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
-  get_condition::data_fields data_fields = {
-    .function_type = std::byteswap(function_type::controller)
-  };
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
-                                                                                                data_fields);
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
 
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::controller);
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
   maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 4; port++) {
@@ -64,10 +64,10 @@ void do_get_condition(uint32_t * command_buf,
       return;
     }
 
-    data[port].analog_axis_1 = data_fields.data.analog_axis_1;
-    data[port].analog_axis_2 = data_fields.data.analog_axis_2;
-    data[port].analog_axis_3 = data_fields.data.analog_axis_3;
-    data[port].analog_axis_4 = data_fields.data.analog_axis_4;
+    data[port].analog_coordinate_axis[0] = data_fields.data.analog_coordinate_axis[0];
+    data[port].analog_coordinate_axis[1] = data_fields.data.analog_coordinate_axis[1];
+    data[port].analog_coordinate_axis[2] = data_fields.data.analog_coordinate_axis[2];
+    data[port].analog_coordinate_axis[3] = data_fields.data.analog_coordinate_axis[3];
   }
 }
 
@@ -325,11 +325,11 @@ load_texture(const uint8_t * src,
 
 void update_rot_pos(struct rot_pos& rot_pos)
 {
-  const float l_pos = static_cast<float>(data[0].analog_axis_1) * (1.f / 255.f);
-  const float r_pos = static_cast<float>(data[0].analog_axis_2) * (1.f / 255.f);
+  const float l_pos = static_cast<float>(data[0].analog_coordinate_axis[0]) * (1.f / 255.f);
+  const float r_pos = static_cast<float>(data[0].analog_coordinate_axis[1]) * (1.f / 255.f);
 
-  const float x_pos = static_cast<float>(data[0].analog_axis_3 - 0x80) * (0.5f / 127.f);
-  const float y_pos = static_cast<float>(data[0].analog_axis_4 - 0x80) * (0.5f / 127.f);
+  const float x_pos = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) * (0.5f / 127.f);
+  const float y_pos = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) * (0.5f / 127.f);
 
   const float rotation = (l_pos > r_pos) ? (l_pos) : (-r_pos);
 
@@ -341,18 +341,16 @@ void update_rot_pos(struct rot_pos& rot_pos)
 }
 
 uint32_t _ta_parameter_buf[((32 * 8192) + 32) / 4];
-uint32_t _command_buf[(1024 + 32) / 4];
-uint32_t _receive_buf[(1024 + 32) / 4];
 
 void main()
 {
   video_output::set_mode_vga();
 
-  auto src0 = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
-  auto size0 = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
+  auto src0 = reinterpret_cast<const uint8_t *>(&_binary_texture_macaw_macaw_data_start);
+  auto size0 = reinterpret_cast<const uint32_t>(&_binary_texture_macaw_macaw_data_size);
 
-  auto src1 = reinterpret_cast<const uint8_t *>(&_binary_wolf_data_start);
-  auto size1 = reinterpret_cast<const uint32_t>(&_binary_wolf_data_size);
+  auto src1 = reinterpret_cast<const uint8_t *>(&_binary_texture_wolf_wolf_data_start);
+  auto size1 = reinterpret_cast<const uint32_t>(&_binary_texture_wolf_wolf_data_size);
 
   load_texture(src0, size0, 0);
   load_texture(src1, size1, 1);
@@ -360,8 +358,6 @@ void main()
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
   // This is mandatory for ch2-dma to the ta fifo polygon converter.
   uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
-  uint32_t * command_buf = align_32byte(_command_buf);
-  uint32_t * receive_buf = align_32byte(_receive_buf);
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
@@ -389,7 +385,7 @@ void main()
   struct rot_pos rot_pos = { 0.f, 0.f, 0.f };
 
   while (true) {
-    do_get_condition(command_buf, receive_buf);
+    do_get_condition();
 
     update_rot_pos(rot_pos);
 

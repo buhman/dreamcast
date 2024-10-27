@@ -21,17 +21,28 @@
 #include "palette.hpp"
 
 #include "maple/maple.hpp"
-#include "maple/maple_impl.hpp"
+#include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_bus_bits.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_ft0.hpp"
 
 #include "font/font_bitmap.hpp"
-#include "verite_8x16.hpp"
+#include "font/verite_8x16/verite_8x16.data.h"
 
 #include "sh7091/serial.hpp"
 
-#include "bbb.hpp"
+#include "texture/bbb/bbb1024.data.h"
+#include "texture/bbb/bbb128.data.h"
+#include "texture/bbb/bbb16.data.h"
+#include "texture/bbb/bbb1.data.h"
+#include "texture/bbb/bbb256.data.h"
+#include "texture/bbb/bbb2.data.h"
+#include "texture/bbb/bbb32.data.h"
+#include "texture/bbb/bbb4.data.h"
+#include "texture/bbb/bbb512.data.h"
+#include "texture/bbb/bbb64.data.h"
+#include "texture/bbb/bbb8.data.h"
+#include "texture/bbb/bbb.data.h"
 
 struct vertex {
   float x;
@@ -166,17 +177,17 @@ void append_trilinear_pass_b(ta_parameter_writer& parameter, uint32_t texture_co
 }
 
 uint8_t const * const mips[] = {
-  reinterpret_cast<uint8_t *>(&_binary_bbb1_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb2_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb4_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb8_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb16_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb32_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb64_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb128_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb256_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb512_data_start),
-  reinterpret_cast<uint8_t *>(&_binary_bbb1024_data_start)
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb1_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb2_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb4_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb8_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb16_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb32_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb64_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb128_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb256_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb512_data_start),
+  reinterpret_cast<uint8_t *>(&_binary_texture_bbb_bbb1024_data_start)
 };
 
 void _copy_bbb_texture(uint32_t dst_offset, uint8_t const * const src, uint32_t mip)
@@ -235,20 +246,21 @@ void do_get_condition(uint32_t * command_buf,
 		      uint32_t * receive_buf,
 		      button_state& buttons)
 {
-  using command_type = get_condition;
-  using response_type = data_transfer<ft0::data_transfer::data_format>;
+  uint32_t send_buf[1024] __attribute__((aligned(32)));
+  uint32_t recv_buf[1024] __attribute__((aligned(32)));
 
-  get_condition::data_fields data_fields = {
-    .function_type = std::byteswap(function_type::controller)
-  };
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
-  const uint32_t command_size = maple::init_host_command_all_ports<command_type, response_type>(command_buf, receive_buf,
-                                                                                        data_fields);
-  using host_response_type = struct maple::host_response<response_type::data_fields>;
-  auto host_response = reinterpret_cast<host_response_type *>(receive_buf);
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
 
-  maple::dma_start(command_buf, command_size,
-                   receive_buf, maple::sizeof_command(host_response));
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  host_command->bus_data.data_fields.function_type = std::byteswap(function_type::controller);
+
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
   maple::dma_wait_complete();
 
   buttons.reset();
@@ -582,7 +594,7 @@ void main()
   holly.PT_ALPHA_REF = 0x1;
   background_parameter(0xff00ff00);
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_verite_8x16_data_start);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_font_verite_8x16_verite_8x16_data_start);
   uint32_t bbb_offset = font_bitmap::inflate(1,  // pitch
 					     8,  // width
 					     16, // height

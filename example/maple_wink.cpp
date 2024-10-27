@@ -11,7 +11,7 @@
 
 #include "holly/video_output.hpp"
 
-extern uint32_t _binary_wink_data_start __asm("_binary_wink_data_start");
+extern uint32_t _binary_wink_data_start __asm("_binary_texture_wink_wink_data_start");
 constexpr uint32_t width = 48;
 constexpr uint32_t height = 32;
 constexpr uint32_t pixels_per_byte = 8;

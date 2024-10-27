@@ -26,7 +26,7 @@
 #include "math/vec4.hpp"
 
 #include "font/font_bitmap.hpp"
-#include "verite_8x16.hpp"
+#include "font/verite_8x16/verite_8x16.data.h"
 #include "string.hpp"
 
 constexpr float half_degree = 0.01745329f / 2;
@@ -100,7 +100,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[0] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.x += 0.6 * n_dot_l / (length(n) * length(l));
+        color.x += 0.6 * n_dot_l / (magnitude(n) * magnitude(l));
       }
     }
 
@@ -108,7 +108,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[1] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.y += 0.6 * n_dot_l / (length(n) * length(l));
+        color.y += 0.6 * n_dot_l / (magnitude(n) * magnitude(l));
       }
     }
 
@@ -116,7 +116,7 @@ void transform(ta_parameter_writer& parameter,
       auto l = lights[2] - point;
       auto n_dot_l = dot(n, l);
       if (n_dot_l > 0) {
-        color.z += 0.6 * n_dot_l / (length(n) * length(l));
+        color.z += 0.6 * n_dot_l / (magnitude(n) * magnitude(l));
       }
     }
 
@@ -274,7 +274,7 @@ void main()
 
   video_output::set_mode_vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_verite_8x16_data_start);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_font_verite_8x16_verite_8x16_data_start);
   font_bitmap::inflate(1,  // pitch
                        8,  // width
                        16, // height

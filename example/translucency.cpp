@@ -17,7 +17,7 @@
 #include "holly/texture_memory_alloc.hpp"
 #include "memorymap.hpp"
 
-#include "macaw.hpp"
+#include "texture/macaw/macaw.data.h"
 
 struct vertex {
   float x;
@@ -145,8 +145,8 @@ void main()
 {
   video_output::set_mode_vga();
 
-  auto src = reinterpret_cast<const uint8_t *>(&_binary_macaw_data_start);
-  auto size  = reinterpret_cast<const uint32_t>(&_binary_macaw_data_size);
+  auto src = reinterpret_cast<const uint8_t *>(&_binary_texture_macaw_macaw_data_start);
+  auto size  = reinterpret_cast<const uint32_t>(&_binary_texture_macaw_macaw_data_size);
   auto texture = reinterpret_cast<volatile uint16_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
   for (uint32_t px = 0; px < size / 3; px++) {
     uint8_t r = src[px * 3 + 0];

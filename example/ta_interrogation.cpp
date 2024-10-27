@@ -198,6 +198,7 @@ void ta_copy(uint32_t * address, uint32_t size)
 
 void main()
 {
+  serial::init(0);
   video_output::set_mode_vga();
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
