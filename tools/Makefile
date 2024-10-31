@@ -22,7 +22,7 @@ ftdi_%.o: ftdi_%.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(FTDI_CFLAGS) -c $< -o $@
 
 ftdi_%: ftdi_%.o crc32.o
-	$(CXX) $(LDFLAGS) $(FTDI_LDFLAGS) $^ -o $@
+	$(CXX) $^ -o $@ $(FTDI_LDFLAGS)
 
 ttf_outline: ttf_outline.o 2d_pack.o
 

@@ -96,11 +96,13 @@ int init_ftdi_context(struct ftdi_context * ftdi)
     return -1;
   }
 
+  /*
   res = ftdi_set_latency_timer(ftdi, 1);
   if (res < 0) {
     fprintf(stderr, "ftdi_set_latency_timer\n");
     return -1;
   }
+  */
 
   res = ftdi_tciflush(ftdi);
   if (res < 0) {
@@ -155,8 +157,6 @@ long read_with_timeout(struct ftdi_context * ftdi, uint8_t * read_buf, const lon
   }
   return read_length;
 }
-
-const int chunk_size = 1024;
 
 long min(long a, long b)
 {
@@ -237,6 +237,7 @@ int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t siz
   }
   fprintf(stderr, "remote: dest: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
   if (reply.arg[0] != dest || reply.arg[1] != size) {
+    fprintf(stderr, "dest or size mismatch\n");
     return -1;
   }
 
@@ -289,7 +290,7 @@ int do_jump(struct ftdi_context * ftdi)
 
 int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
 {
-  FILE * file = fopen(filename, "r");
+  FILE * file = fopen(filename, "rb");
   if (file == NULL) {
     fprintf(stderr, "fopen\n");
     return -1;
@@ -314,7 +315,11 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
   *buf = (uint8_t *)malloc(off);
   ssize_t fread_size = fread(*buf, 1, off, file);
   if (fread_size < 0) {
-    fprintf(stderr, "fread");
+    fprintf(stderr, "fread error");
+    return -1;
+  }
+  if (fread_size != off) {
+    fprintf(stderr, "fread short read: %ld ; expected: %ld\n", fread_size, off);
     return -1;
   }
 
@@ -329,14 +334,13 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
   return 0;
 }
 
-int do_read(struct ftdi_context * ftdi)
+int do_read(struct ftdi_context * ftdi, uint8_t * buf, const uint32_t size)
 {
   fprintf(stderr, "do_read\n");
 
   int res;
 
   const uint32_t src = 0xac010000;
-  const uint32_t size = 51584;
   union serial_load::command_reply command = serial_load::read_command(src, size);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
@@ -350,10 +354,14 @@ int do_read(struct ftdi_context * ftdi)
     return -1;
   }
 
-  uint32_t * buf = (uint32_t *)malloc(size);
-  res = ftdi_read_data(ftdi, (uint8_t *)buf, size);
-  assert(res >= 0);
-  assert((uint32_t)res == size);
+  uint32_t read_length = 0;
+  while (read_length < size) {
+    res = ftdi_read_data(ftdi, (uint8_t *)buf, size - read_length);
+    assert(res >= 0);
+    read_length += res;
+    if (read_length < size)
+      fprintf(stderr, "short read; want %x out of %x\n", size - read_length, size);
+  }
 
   uint32_t buf_crc = crc32((uint8_t*)buf, size);
 
@@ -414,18 +422,24 @@ int main(int argc, char * argv[])
     return EXIT_FAILURE;
   }
 
+  uint8_t discard[1024];
+  res = ftdi_read_data(ftdi, discard, (sizeof (discard)));
+  assert(res >= 0);
+  (void)discard;
+
   struct timespec start;
   struct timespec end;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
   assert(res >= 0);
+
   int do_write_ret = do_write(ftdi, buf, size);
   res = clock_gettime(CLOCK_MONOTONIC, &end);
   assert(res >= 0);
   fprintf(stderr, "do_write time: %.03f\n", timespec_difference(&end, &start));
   if (do_write_ret == 0) {
-    //do_read(ftdi);
-    do_jump(ftdi);
-    console(ftdi);
+    //do_read(ftdi, buf2, size);
+    //do_jump(ftdi);
+    //console(ftdi);
   } else {
     return_code = EXIT_FAILURE;
   }
