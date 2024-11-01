@@ -9,7 +9,7 @@
 
 namespace serial {
 
-static inline void init_wait()
+void init_wait()
 {
   sh7091.TMU.TSTR &= (~tmu::tstr::str1::counter_start) & 0xff; // stop TCNT1
   sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;

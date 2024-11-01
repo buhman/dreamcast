@@ -1,3 +1,4 @@
+#include <inttypes.h>
 #include <assert.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -5,6 +6,8 @@
 #include <stdbool.h>
 #include <time.h>
 #include <string.h>
+#include <math.h>
+#include <errno.h>
 
 #include <ftdi.h>
 #include <libusb.h>
@@ -12,53 +15,66 @@
 #include "crc32.h"
 #include "serial_protocol.hpp"
 
-extern int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
-				      unsigned short *value, unsigned short *index);
+extern "C" int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
+                                          unsigned short *value, unsigned short *index);
 
-int dreamcast_rates[] = {
-  1562500, // 0
-  781250,  // 1
-  520833,  // 2
-  390625,  // 3
-  312500,  // 4
-  260416,  // 5
-  223214,  // 6
-  195312,  // 7
-  173611,  // 8
-  156250,  // 9
-  142045,  // 10
-  130208,  // 11
-  120192   // 12
-};
+double dreamcast_rate(int cks, int scbrr)
+{
+  assert(cks >= 0 && cks <= 3);
+  assert(scbrr >= 0 && scbrr <= 255);
 
-int init_ftdi_context(struct ftdi_context * ftdi)
+  double div = 1.0;
+  for (; cks > 0; cks--) { div *= 4; };
+
+  return 1562500.0 / (div * ((double)scbrr + 1.0));
+}
+
+int init_ftdi_context(struct ftdi_context * ftdi, uint32_t scbrr)
 {
   ftdi_set_interface(ftdi, INTERFACE_ANY);
   struct ftdi_device_list * devlist;
-  int res;
-  if ((res = ftdi_usb_find_all(ftdi, &devlist, 0, 0)) < 0) {
-    fprintf(stderr, "ftdi_usb_find_all\n");
+  int num_devices;
+  num_devices = ftdi_usb_find_all(ftdi, &devlist, 0, 0);
+  if (num_devices < 0) {
+    fprintf(stderr, "ftdi_usb_find_all: %d\n", num_devices);
     return -1;
-  }
-
-  if (res == 0) {
-    fprintf(stderr, "no device\n");
+  } else if (num_devices == 0) {
+    fprintf(stderr, "ftdi_usb_find_all: zero matching devices\n");
     return -1;
   }
 
   struct libusb_device_descriptor desc;
   struct ftdi_device_list * devlist_item = devlist;
-  for (int i = 0; i < res; i++) {
+  struct libusb_device * dev = devlist_item->dev;
+  int res;
+  for (int i = 0; i < num_devices; i++) {
     res = libusb_get_device_descriptor(devlist_item->dev, &desc);
     if (res < 0) {
-      fprintf(stderr, "libusb_get_device_descriptor\n");
+      fprintf(stderr, "libusb_get_device_descriptor: %d\n", res);
       return -1;
     }
-    fprintf(stdout, "idVendor: %04x; idProduct: %04x;\n", desc.idVendor, desc.idProduct);
-    fprintf(stdout, "bNumConfigurations: %d;\n", desc.bNumConfigurations);
+    fprintf(stderr, "[%d]\n", i);
+    fprintf(stderr, "  idVendor: %04x; idProduct: %04x;\n", desc.idVendor, desc.idProduct);
+
+    uint8_t port_numbers[7];
+    res = libusb_get_port_numbers(devlist_item->dev,
+                                  port_numbers,
+                                  (sizeof (port_numbers)));
+    if (res < 0) {
+      fprintf(stderr, "libusb_get_port_numbers: %d\n", res);
+      return -1;
+    }
+    fprintf(stderr, "  libusb port number: ");
+    for (int i = 0; i < res; i++) {
+      if (i != 0) fprintf(stderr, ":");
+      fprintf(stderr, "%o", port_numbers[i]);
+    }
+    fprintf(stderr, "\n");
+
     devlist_item = devlist_item->next;
   }
 
+  assert(dev != NULL);
   res = ftdi_usb_open_dev(ftdi, devlist->dev);
   if (res < 0) {
     fprintf(stderr, "ftdi_usb_open_dev\n");
@@ -66,19 +82,8 @@ int init_ftdi_context(struct ftdi_context * ftdi)
   }
   ftdi_list_free(&devlist);
 
-  /*
-  unsigned short value;
-  unsigned short index;
-  for (unsigned int i = 0; i < (sizeof (dreamcast_rates)) / (sizeof (dreamcast_rates[0])); i++) {
-    int baud = convert_baudrate_UT_export(dreamcast_rates[i], ftdi, &value, &index);
-    float baudf = baud;
-    float ratef = dreamcast_rates[i];
-    float error = (baudf > ratef) ? ratef / baudf : baudf / ratef;
-    fprintf(stdout, "%d: best: %d, error: %f\n", dreamcast_rates[i], baud, (1.f - error) * 100.f);
-  }
-  */
-
-  res = ftdi_set_baudrate(ftdi, dreamcast_rates[0]);
+  constexpr uint32_t cks = 0;
+  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(cks, scbrr)));
   if (res < 0) {
     fprintf(stderr, "ftdi_set_baudrate\n");
     return -1;
@@ -116,6 +121,10 @@ int init_ftdi_context(struct ftdi_context * ftdi)
     return -1;
   }
 
+  uint8_t discard[1024];
+  res = ftdi_read_data(ftdi, discard, (sizeof (discard)));
+  assert(res >= 0);
+  (void)discard;
 
   return 0;
 }
@@ -221,12 +230,16 @@ int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_l
   return 0;
 }
 
-int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t size)
+int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * buf, const uint32_t size)
 {
-  fprintf(stderr, "do_write\n");
   int res;
 
-  const uint32_t dest = 0xac010000;
+  if (size > 0xffffff) {
+    fprintf(stderr, "write: invalid size %d (bytes)\n", size);
+    fprintf(stderr, "write size must be less than or equal to 16777215 bytes\n");
+    return -1;
+  }
+
   union serial_load::command_reply command = serial_load::write_command(dest, size);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
@@ -235,9 +248,10 @@ int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t siz
   if (res != 0) {
     return -2;
   }
-  fprintf(stderr, "remote: dest: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
-  if (reply.arg[0] != dest || reply.arg[1] != size) {
-    fprintf(stderr, "dest or size mismatch\n");
+  if (reply.arg[0] != command.arg[0] || reply.arg[1] != command.arg[1]) {
+    fprintf(stderr, "write: argument mismatch: (%08x, %08x) != (%08x, %08x)\n",
+            reply.arg[0],   reply.arg[1],
+            command.arg[0], command.arg[1]);
     return -1;
   }
 
@@ -264,12 +278,9 @@ int do_write(struct ftdi_context * ftdi, const uint8_t * buf, const uint32_t siz
   return 0;
 }
 
-int do_jump(struct ftdi_context * ftdi)
+int do_jump(struct ftdi_context * ftdi, const uint32_t dest)
 {
-  fprintf(stderr, "do_jump\n");
   int res;
-
-  const uint32_t dest = 0xac010000;
 
   union serial_load::command_reply command = serial_load::jump_command(dest);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
@@ -280,19 +291,69 @@ int do_jump(struct ftdi_context * ftdi)
   if (res != 0) {
     return -2;
   }
-  fprintf(stderr, "remote: jump: %08x\n", reply.arg[0]);
-  if (reply.arg[0] != dest || reply.arg[1] != 0) {
+  if (reply.arg[0] != command.arg[0] || reply.arg[1] != command.arg[1]) {
+    fprintf(stderr, "jump: argument mismatch: (%08x, %08x) != (%08x, %08x)\n",
+            reply.arg[0],   reply.arg[1],
+            command.arg[0], command.arg[1]);
     return -1;
   }
 
   return 0;
 }
 
-int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
+int do_show_baudrate_error(struct ftdi_context * ftdi, uint32_t rows)
+{
+  /*
+    B = (390625 * 4^(1 - n)) / (N + 1)
+   */
+
+  fprintf(stderr, "\n");
+  fprintf(stderr, " SH7091 baud |   FTDI baud |   error \n");
+  fprintf(stderr, " ------------|-------------|---------\n");
+  unsigned short value;
+  unsigned short index;
+  rows = min(rows, 256);
+  for (uint32_t i = 0; i < rows; i++) {
+    int baud = convert_baudrate_UT_export(dreamcast_rate(0, i), ftdi, &value, &index);
+    if (baud < 0) {
+      fprintf(stderr, "ftdi_convert_baudrate: %d\n", baud);
+      return -1;
+    }
+    double baudf = baud;
+    double ratef = dreamcast_rate(0, i);
+    double error = (baudf - ratef) / ratef * 100.0;
+    fprintf(stderr, " %11.00f   %11.00f    % 02.03f%%\n", round(ratef), baudf, error);
+  }
+
+  fprintf(stderr, "\n  \"\n  Note: As far as possible, the setting should be made so that the\n  error is within 1%%.\n  \"\n");
+  fprintf(stderr, "    - SH7091 Hardware Manual, 03/02/1999, page 486\n");
+
+  return 0;
+}
+
+int do_list_baudrates(struct ftdi_context * ftdi, uint32_t rows)
+{
+  (void)ftdi;
+
+  fprintf(stderr, "   scbrr |      cks 0 |     cks 1 |     cks 2 |     cks 3\n");
+  fprintf(stderr, "---------------------------------------------------------\n");
+  rows = min(rows, 256);
+  for (uint32_t i = 0; i < rows; i++) {
+    fprintf(stderr, "    0x%02x  % 11.2f % 11.2f % 11.2f % 11.2f\n",
+            i,
+            dreamcast_rate(0, i),
+            dreamcast_rate(1, i),
+            dreamcast_rate(2, i),
+            dreamcast_rate(3, i));
+  }
+  return 0;
+}
+
+int read_file(const char * filename, uint8_t ** buf, uint32_t * size_out)
 {
   FILE * file = fopen(filename, "rb");
   if (file == NULL) {
-    fprintf(stderr, "fopen\n");
+    fprintf(stderr, "fopen(\"%s\", \"rb\"): %s\n", filename, strerror(errno));
     return -1;
   }
 
@@ -303,7 +364,12 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
     return -1;
   }
 
-  long off = ftell(file);
+  long offset = ftell(file);
+  if (offset < 0) {
+    fprintf(stderr, "ftell");
+    return -1;
+  }
+  size_t size = offset;
 
   ret = fseek(file, 0L, SEEK_SET);
   if (ret < 0) {
@@ -311,15 +377,11 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
     return -1;
   }
 
-  fprintf(stderr, "%s size %ld\n", filename, off);
-  *buf = (uint8_t *)malloc(off);
-  ssize_t fread_size = fread(*buf, 1, off, file);
-  if (fread_size < 0) {
-    fprintf(stderr, "fread error");
-    return -1;
-  }
-  if (fread_size != off) {
-    fprintf(stderr, "fread short read: %ld ; expected: %ld\n", fread_size, off);
+  fprintf(stderr, "%s size %ld\n", filename, size);
+  *buf = (uint8_t *)malloc(size);
+  size_t fread_size = fread(*buf, 1, size, file);
+  if (fread_size != size) {
+    fprintf(stderr, "fread `%s` short read: %" PRIu64 " ; expected: %" PRIu64 "\n", filename, fread_size, size);
     return -1;
   }
 
@@ -329,18 +391,44 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size)
     return -1;
   }
 
-  *size = off;
+  *size_out = size;
 
   return 0;
 }
 
-int do_read(struct ftdi_context * ftdi, uint8_t * buf, const uint32_t size)
+int write_file(const char * filename, uint8_t * buf, uint32_t size)
 {
-  fprintf(stderr, "do_read\n");
+  FILE * file = fopen(filename, "wb");
+  if (file == NULL) {
+    fprintf(stderr, "fopen(\"%s\", \"wb\"): %s\n", filename, strerror(errno));
+    return -1;
+  }
 
+  size_t fwrite_size = fwrite(buf, 1, size, file);
+  if (fwrite_size != size) {
+    fprintf(stderr, "fwrite `%s` short write: %" PRIu64 " ; expected: %" PRIu32 "\n", filename, fwrite_size, size);
+    return -1;
+  }
+
+  int ret = fclose(file);
+  if (ret < 0) {
+    fprintf(stderr, "fclose");
+    return -1;
+  }
+
+  return 0;
+}
+
+int do_read(struct ftdi_context * ftdi, const uint32_t src, uint8_t * buf, const uint32_t size)
+{
   int res;
 
-  const uint32_t src = 0xac010000;
+  if (size > 0xffffff) {
+    fprintf(stderr, "read: invalid size %d (bytes)\n", size);
+    fprintf(stderr, "read size must be less than or equal to 16777215 bytes\n");
+    return -1;
+  }
+
   union serial_load::command_reply command = serial_load::read_command(src, size);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
@@ -349,8 +437,10 @@ int do_read(struct ftdi_context * ftdi, uint8_t * buf, const uint32_t size)
   if (res != 0) {
     return -2;
   }
-  fprintf(stderr, "remote: src: %08x size: %08x\n", reply.arg[0], reply.arg[1]);
-  if (reply.arg[0] != src || reply.arg[1] != size) {
+  if (reply.arg[0] != command.arg[0] || reply.arg[1] != command.arg[1]) {
+    fprintf(stderr, "read: argument mismatch: (%08x, %08x) != (%08x, %08x)\n",
+            reply.arg[0],   reply.arg[1],
+            command.arg[0], command.arg[1]);
     return -1;
   }
 
@@ -376,7 +466,60 @@ int do_read(struct ftdi_context * ftdi, uint8_t * buf, const uint32_t size)
   return 0;
 }
 
-void console(struct ftdi_context * ftdi)
+int do_speed(struct ftdi_context * ftdi, uint32_t scbrr)
+{
+  int res;
+
+  if (scbrr > 255) {
+    fprintf(stderr, "speed: invalid speed %d\n", scbrr);
+    fprintf(stderr, "speed is expressed as a raw SCBRR value; see `list_baudrates`\n");
+    return -1;
+  }
+
+  union serial_load::command_reply command = serial_load::speed_command(scbrr);
+  res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
+  assert(res == (sizeof (command)));
+
+  union serial_load::command_reply reply;
+  res = read_reply(ftdi, serial_load::reply::speed, reply);
+  if (res != 0) {
+    return -2;
+  }
+
+  if (reply.arg[0] != command.arg[0] || reply.arg[1] != command.arg[1]) {
+    fprintf(stderr, "speed: argument mismatch: (%08x, %08x) != (%08x, %08x)\n",
+            reply.arg[0],   reply.arg[1],
+            command.arg[0], command.arg[1]);
+    return -1;
+  }
+
+  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(0, scbrr)));
+  if (res < 0) {
+    fprintf(stderr, "ftdi_set_baudrate\n");
+    return -1;
+  }
+
+  res = ftdi_tciflush(ftdi);
+  if (res < 0) {
+    fprintf(stderr, "ftdi_tciflush\n");
+    return -1;
+  }
+
+  res = ftdi_tcoflush(ftdi);
+  if (res < 0) {
+    fprintf(stderr, "ftdi_tcoflush\n");
+    return -1;
+  }
+
+  uint8_t discard[1024];
+  res = ftdi_read_data(ftdi, discard, (sizeof (discard)));
+  assert(res >= 0);
+  (void)discard;
+
+  return 0;
+}
+
+void do_console(struct ftdi_context * ftdi)
 {
   int res;
 
@@ -387,18 +530,186 @@ void console(struct ftdi_context * ftdi)
   while (1) {
     res = ftdi_read_data(ftdi, read_buf, ftdi->readbuffer_chunksize);
     if (res > 0) {
-      fwrite(read_buf, 1, res, stderr);
+      fwrite(read_buf, 1, res, stdout);
+      fflush(stdout);
     }
   }
 }
 
-int main(int argc, char * argv[])
+enum struct argument_type {
+  string,
+  integer
+};
+
+struct cli_command {
+  const char * name;
+  int num_arguments;
+  void * func;
+};
+
+struct cli_command commands[] = {
+  { "read"               , 3, (void *)&do_read                 },
+  { "write"              , 2, (void *)&do_write                },
+  { "jump"               , 1, (void *)&do_jump                 },
+  { "speed"              , 1, (void *)&do_speed                },
+  { "list_baudrates"     , 1, (void *)&do_list_baudrates       },
+  { "show_baudrate_error", 1, (void *)&do_show_baudrate_error  },
+  { "console"            , 0, (void *)&do_console              },
+};
+
+constexpr int commands_length = (sizeof (commands)) / (sizeof (commands[0]));
+
+typedef int (*func_0_arg)(struct ftdi_context *);
+typedef int (*func_1_arg)(struct ftdi_context *, uint32_t);
+typedef int (*func_2_arg)(struct ftdi_context *, uint32_t, uint8_t *, uint32_t);
+typedef int (*func_3_arg)(struct ftdi_context *, uint32_t, uint32_t, uint8_t *, uint32_t);
+
+int parse_integer(const char * s, uint32_t * value)
 {
-  if (argc < 2) {
-    fprintf(stderr, "argc\n");
-    return EXIT_FAILURE;
+  if (s[0] == '0' && s[1] == 'x') {
+    s = &s[2];
   }
 
+  uint32_t n = 0;
+  while (*s != 0) {
+    char c = *s++;
+    n = n << 4;
+    switch (c) {
+    case '0': n += 0; break;
+    case '1': n += 1; break;
+    case '2': n += 2; break;
+    case '3': n += 3; break;
+    case '4': n += 4; break;
+    case '5': n += 5; break;
+    case '6': n += 6; break;
+    case '7': n += 7; break;
+    case '8': n += 8; break;
+    case '9': n += 9; break;
+    case 'A': [[fallthrough]];
+    case 'a': n += 0xa; break;
+    case 'B': [[fallthrough]];
+    case 'b': n += 0xb; break;
+    case 'C': [[fallthrough]];
+    case 'c': n += 0xc; break;
+    case 'D': [[fallthrough]];
+    case 'd': n += 0xd; break;
+    case 'E': [[fallthrough]];
+    case 'e': n += 0xe; break;
+    case 'F': [[fallthrough]];
+    case 'f': n += 0xf; break;
+    default:
+      return -1;
+    }
+  }
+
+  *value = n;
+  return 0;
+}
+
+#define CHECK_ARGC(__name__) \
+  if (arg_index >= argc) { \
+    fprintf(stderr, "while processing command `%s` expected argument `%s`\n", name, #__name__); \
+    return -1; \
+  }
+
+#define INTEGER_ARGUMENT(__name__) \
+  CHECK_ARGC(__name__); \
+  uint32_t __name__; \
+  const char * __name__##str = argv[arg_index++]; \
+  { int res = parse_integer(__name__##str, &__name__);   \
+  if (res < 0) { \
+    fprintf(stderr, "while processing command `%s` expected integer at `%s`", name, __name__##str); \
+    return -1; \
+  } }
+
+#define STRING_ARGUMENT(__name__) \
+  CHECK_ARGC(__name__); \
+  const char * __name__ = argv[arg_index++];
+
+int handle_command(int argc, const char * argv[], struct ftdi_context * ftdi)
+{
+  assert(argc >= 1);
+  int arg_index = 0;
+  const char * name = argv[arg_index++];
+  int func_ret;
+
+  for (int i = 0; i < commands_length; i++) {
+    if (strcmp(commands[i].name, name) == 0) {
+      switch (commands[i].num_arguments) {
+      case 0:
+        {
+          fprintf(stderr, "handle command: %s ()\n", commands[i].name);
+          func_0_arg func = (func_0_arg)commands[i].func;
+          func_ret = func(ftdi);
+        }
+        break;
+      case 1:
+        {
+          INTEGER_ARGUMENT(arg0);
+
+          fprintf(stderr, "handle command: %s (0x%08x)\n", commands[i].name, arg0);
+          func_1_arg func = (func_1_arg)commands[i].func;
+          func_ret = func(ftdi, arg0);
+        }
+        break;
+      case 2:
+        {
+          INTEGER_ARGUMENT(dest_addr);
+          STRING_ARGUMENT(filename);
+
+          uint8_t * buf = NULL;
+          uint32_t write_size;
+          int res = read_file(filename, &buf, &write_size);
+          if (res < 0) {
+            return -1;
+          }
+
+          fprintf(stderr, "handle command: %s (0x%08x, %s)\n", commands[i].name, dest_addr, filename);
+          func_2_arg func = (func_2_arg)commands[i].func;
+          func_ret = func(ftdi, dest_addr, buf, write_size);
+
+          assert(buf != NULL);
+          free(buf);
+        }
+        break;
+      case 3:
+        {
+          INTEGER_ARGUMENT(src_addr);
+          INTEGER_ARGUMENT(read_size);
+          STRING_ARGUMENT(filename);
+
+          uint8_t * buf = (uint8_t *)malloc(read_size);
+
+          fprintf(stderr, "handle command %s (0x%08x, 0x%08x) → %s\n", commands[i].name, src_addr, read_size, filename);
+          func_2_arg func = (func_2_arg)commands[i].func;
+          func_ret = func(ftdi, src_addr, buf, read_size);
+
+          int res = write_file(filename, buf, read_size);
+          if (res < 0) {
+            return -1;
+          }
+
+          assert(buf != NULL);
+          free(buf);
+        }
+        break;
+      default:
+        assert(false); // unimplemented
+      }
+
+      if (func_ret < 0)
+        return func_ret;
+      else
+        return arg_index;
+    }
+  }
+
+  fprintf(stderr, "unknown command `%s`\n", name);
+  return -1;
+}
+
+int main(int argc, const char * argv[])
+{
   struct ftdi_context * ftdi;
 
   ftdi = ftdi_new();
@@ -408,25 +719,24 @@ int main(int argc, char * argv[])
   }
 
   int res;
-  res = init_ftdi_context(ftdi);
+  res = init_ftdi_context(ftdi, 0);
   if (res < 0) {
     return EXIT_FAILURE;
   }
 
-  int return_code = EXIT_SUCCESS;
-
-  uint8_t * buf;
-  uint32_t size;
-  res = read_file(argv[1], &buf, &size);
-  if (res < 0) {
-    return EXIT_FAILURE;
+  assert(argc >= 1);
+  argc--;
+  argv++;
+  while (argc > 0) {
+    res = handle_command(argc, argv, ftdi);
+    if (res < 0) {
+      return -1;
+    }
+    argc -= res;
+    argv += res;
   }
 
-  uint8_t discard[1024];
-  res = ftdi_read_data(ftdi, discard, (sizeof (discard)));
-  assert(res >= 0);
-  (void)discard;
-
+  /*
   struct timespec start;
   struct timespec end;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
@@ -447,6 +757,7 @@ int main(int argc, char * argv[])
   res = clock_gettime(CLOCK_MONOTONIC, &end);
   assert(res >= 0);
   fprintf(stderr, "total time: %.03f\n", timespec_difference(&end, &start));
+  */
 
-  return return_code;
+  return 0;
 }

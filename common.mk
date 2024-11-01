@@ -66,10 +66,7 @@ sine.pcm: common.mk
 		synth 100s sin 700 vol -10dB
 	mv $@.raw $@
 
-%.scramble: %.bin
-	./scramble $< $@
-
-%.iso: %.scramble ip.bin
+%.iso: %.bin ip.bin
 	mkisofs \
 		-C 0,11702 \
 		-sysid     "SEGA SEGAKATANA" \
@@ -94,9 +91,6 @@ sine.pcm: common.mk
 		/=./pcm/CLOCKTOW.PCM \
 		/=./pcm/ELEC.PCM \
 		/=./pcm/ECCLESIA.PCM
-
-%.cdi: %.iso
-	./cdi4dc $< $@ >/dev/null
 
 include headers.mk
 

@@ -98,12 +98,7 @@ void recv(uint8_t c)
 	    if (state.buf.cmd == command::read) prestart_read();
 	    return;
 	  } else {
-	    /*
-	    union command_reply reply = crc_error_reply(crc);
-	    serial::string(reply.u8, 16);
-	    state.len = 0;
-	    return;
-	    */
+            // do nothing
 	  }
 	}
       }
@@ -181,8 +176,8 @@ void tick()
 
       // cautiously re-initialize serial; it is possible the called
       // function modified serial state
-      serial::init(state.speed);
       sh7091.DMAC.CHCR1 = 0;
+      serial::init(state.speed);
 
       // transition to next state
       state.fsm_state = fsm_state::idle;
@@ -190,6 +185,12 @@ void tick()
     break;
   case fsm_state::speed:
     {
+      using namespace scif;
+      // wait for serial transmission to end
+      constexpr uint32_t transmission_end = scfsr2::tend::bit_mask | scfsr2::tdfe::bit_mask;
+      if ((sh7091.SCIF.SCFSR2 & transmission_end) != transmission_end)
+	return;
+
       const uint32_t speed = state.buf.arg[0];
       state.speed = speed & 0xff;
       serial::init(state.speed);
