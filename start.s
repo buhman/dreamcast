@@ -6,9 +6,11 @@ _start:
 
         /* mask all interrupts */
         mov.l   imask_all,r0
+        mov.l   zero_rb,r2
         stc     sr,r1
         or      r1,r0
-        ldc     r0,sr
+        and     r0,r2
+        ldc     r2,sr
 
 	/* save pr */
 	sts.l pr,@-r15
@@ -31,6 +33,8 @@ stack_end_ptr:
         .long __stack_end
 imask_all:
         .long 0xf0
+zero_rb:
+        .long ~(1 << 29)
 runtime_init_ptr:
         .long _runtime_init
 main_ptr:
