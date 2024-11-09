@@ -18,6 +18,9 @@
 extern "C" int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
                                           unsigned short *value, unsigned short *index);
 
+constexpr int current_cks = 0;
+static int current_scbrr = -1;
+
 double dreamcast_rate(int cks, int scbrr)
 {
   assert(cks >= 0 && cks <= 3);
@@ -77,47 +80,47 @@ int init_ftdi_context(struct ftdi_context * ftdi, uint32_t scbrr)
   assert(dev != NULL);
   res = ftdi_usb_open_dev(ftdi, devlist->dev);
   if (res < 0) {
-    fprintf(stderr, "ftdi_usb_open_dev\n");
+    fprintf(stderr, "ftdi_usb_open_dev: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
   ftdi_list_free(&devlist);
 
-  constexpr uint32_t cks = 0;
-  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(cks, scbrr)));
+  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(current_cks, scbrr)));
   if (res < 0) {
-    fprintf(stderr, "ftdi_set_baudrate\n");
+    fprintf(stderr, "ftdi_set_baudrate: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
+  current_scbrr = scbrr;
 
   res = ftdi_set_line_property2(ftdi, BITS_8, STOP_BIT_1, NONE, BREAK_ON);
   if (res < 0) {
-    fprintf(stderr, "ftdi_set_line_property\n");
+    fprintf(stderr, "ftdi_set_line_property2: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
 
   res = ftdi_set_line_property2(ftdi, BITS_8, STOP_BIT_1, NONE, BREAK_OFF);
   if (res < 0) {
-    fprintf(stderr, "ftdi_set_line_property\n");
+    fprintf(stderr, "ftdi_set_line_property2: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
 
   /*
   res = ftdi_set_latency_timer(ftdi, 1);
   if (res < 0) {
-    fprintf(stderr, "ftdi_set_latency_timer\n");
+    fprintf(stderr, "ftdi_set_latency_timer %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
   */
 
   res = ftdi_tciflush(ftdi);
   if (res < 0) {
-    fprintf(stderr, "ftdi_tciflush\n");
+    fprintf(stderr, "ftdi_tciflush: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
 
   res = ftdi_tcoflush(ftdi);
   if (res < 0) {
-    fprintf(stderr, "ftdi_tcoflush\n");
+    fprintf(stderr, "ftdi_tcoflush: %s\n", ftdi_get_error_string(ftdi));
     return -1;
   }
 
@@ -225,7 +228,7 @@ int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_l
     dump_command_reply(reply);
     return -1;
   }
-  dump_command_reply(reply);
+  //dump_command_reply(reply);
 
   return 0;
 }
@@ -255,25 +258,47 @@ int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * bu
     return -1;
   }
 
+  int clock_res;
   struct timespec start;
-  struct timespec end;
+  //struct timespec end1;
+  struct timespec end2;
   res = clock_gettime(CLOCK_MONOTONIC, &start);
   assert(res == 0);
   res = ftdi_write_data(ftdi, buf, size);
+  //clock_res = clock_gettime(CLOCK_MONOTONIC, &end1);
+  //assert(clock_res == 0);
   assert(res >= 0);
   assert((uint32_t)res == size);
-  res = clock_gettime(CLOCK_MONOTONIC, &end);
-  assert(res == 0);
-  fprintf(stderr, "symmetric time: %.03f\n", timespec_difference(&end, &start));
 
   uint32_t buf_crc = crc32(buf, size);
 
   union serial_load::command_reply crc_reply;
   res = read_reply(ftdi, serial_load::reply::write_crc, crc_reply);
+  clock_res = clock_gettime(CLOCK_MONOTONIC, &end2);
+  assert(clock_res == 0);
   if (res != 0) {
     return -1;
   }
   fprintf(stderr, "remote crc: %08x; local crc %08x\n", crc_reply.arg[0], buf_crc);
+
+  // one start bit, one stop bit, 8 data bits: 8/10
+  unsigned short value;
+  unsigned short index;
+  double dreamcast_baud = dreamcast_rate(current_cks, current_scbrr);
+  int ftdi_baud = convert_baudrate_UT_export(dreamcast_baud, ftdi, &value, &index);
+  double idealized_baud = static_cast<double>(ftdi_baud) * 8.0 / 10.0;
+  double idealized_time = static_cast<double>(size) * 8.0 / idealized_baud;
+
+  //double measured_time1 = timespec_difference(&end1, &start);
+  double measured_time2 = timespec_difference(&end2, &start);
+  // subtract 128 bit-periods (16 bytes) to account for the time spent waiting for the read reply
+  // at 1562500 bits per second, this subtracts an (insignificant) 102 µs from the displayed time
+  double time_adjustment = (16.0 * 8.0) / (dreamcast_baud * 8.0 / 10.0);
+  measured_time2 -= time_adjustment;
+
+  fprintf(stderr, "%d bits/sec:\n", ftdi_baud);
+  fprintf(stderr, "  idealized write time : %.03f  seconds\n", idealized_time);
+  fprintf(stderr, "   measured write time : %.03f  seconds\n", measured_time2);
 
   return 0;
 }
@@ -377,7 +402,7 @@ int read_file(const char * filename, uint8_t ** buf, uint32_t * size_out)
     return -1;
   }
 
-  fprintf(stderr, "%s size %ld\n", filename, size);
+  fprintf(stderr, "read_file: %s size %ld\n", filename, size);
   *buf = (uint8_t *)malloc(size);
   size_t fread_size = fread(*buf, 1, size, file);
   if (fread_size != size) {
@@ -493,11 +518,12 @@ int do_speed(struct ftdi_context * ftdi, uint32_t scbrr)
     return -1;
   }
 
-  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(0, scbrr)));
+  res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(current_cks, scbrr)));
   if (res < 0) {
     fprintf(stderr, "ftdi_set_baudrate\n");
     return -1;
   }
+  current_scbrr = scbrr;
 
   res = ftdi_tciflush(ftdi);
   if (res < 0) {
@@ -735,29 +761,6 @@ int main(int argc, const char * argv[])
     argc -= res;
     argv += res;
   }
-
-  /*
-  struct timespec start;
-  struct timespec end;
-  res = clock_gettime(CLOCK_MONOTONIC, &start);
-  assert(res >= 0);
-
-  int do_write_ret = do_write(ftdi, buf, size);
-  res = clock_gettime(CLOCK_MONOTONIC, &end);
-  assert(res >= 0);
-  fprintf(stderr, "do_write time: %.03f\n", timespec_difference(&end, &start));
-  if (do_write_ret == 0) {
-    //do_read(ftdi, buf2, size);
-    //do_jump(ftdi);
-    //console(ftdi);
-  } else {
-    return_code = EXIT_FAILURE;
-  }
-
-  res = clock_gettime(CLOCK_MONOTONIC, &end);
-  assert(res >= 0);
-  fprintf(stderr, "total time: %.03f\n", timespec_difference(&end, &start));
-  */
 
   return 0;
 }
