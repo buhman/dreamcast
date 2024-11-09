@@ -17,6 +17,8 @@ commands = [
     "READ",
     "JUMP",
     "SPED",
+
+    "MPLS",
 ]
 
 replies = [
@@ -24,15 +26,24 @@ replies = [
     "read",
     "jump",
     "sped",
-    "crcW",
-    "crcR",
+    "crcw",
+    "crcr",
+
+    "mpls",
+    "mlcs",
 ]
+
+seen = set()
 
 for c in commands:
     x = gen_cmd(c.encode('ascii'))
+    assert x not in seen
+    seen.add(x)
     print(c, f"{x:08x}")
 
 
 for c in replies:
     x = gen_cmd(c.encode('ascii'))
+    assert x not in seen
+    seen.add(x)
     print(c, f"{x:08x}")

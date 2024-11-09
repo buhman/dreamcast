@@ -70,10 +70,10 @@ static inline void prestart_read()
 }
 
 struct state_arglen_reply command_list[] = {
-  {command::write, reply::write, fsm_state::write},
-  {command::read , reply::read , fsm_state::read },
-  {command::jump , reply::jump , fsm_state::jump },
-  {command::speed, reply::speed, fsm_state::speed},
+  {command::_write, reply::_write, fsm_state::write},
+  {command::_read , reply::_read , fsm_state::read },
+  {command::_jump , reply::_jump , fsm_state::jump },
+  {command::_speed, reply::_speed, fsm_state::speed},
 };
 constexpr uint32_t command_list_length = (sizeof (command_list)) / (sizeof (command_list[0]));
 
@@ -89,13 +89,13 @@ void recv(uint8_t c)
 	  uint32_t crc = crc32(&state.buf.u8[0], 12);
 	  if (crc == state.buf.crc) {
 	    // valid command, do the transition
-	    if (state.buf.cmd == command::write) prestart_write();
+	    if (state.buf.cmd == command::_write) prestart_write();
 	    state.fsm_state = sar.fsm_state;
 	    state.len = 0;
 	    union command_reply reply = command_reply(sar.reply, state.buf.arg[0], state.buf.arg[1]);
 	    serial::string(reply.u8, 16);
 
-	    if (state.buf.cmd == command::read) prestart_read();
+	    if (state.buf.cmd == command::_read) prestart_read();
 	    return;
 	  } else {
             // do nothing
@@ -130,7 +130,7 @@ void tick()
       }
       if (chcr1 & dmac::chcr::te::transfers_completed) {
 	state.write_crc.value ^= 0xffffffff;
-	union command_reply reply = write_crc_reply(state.write_crc.value);
+	union command_reply reply = reply::write_crc(state.write_crc.value);
 	serial::string(reply.u8, 16);
 
 	sh7091.DMAC.CHCR1 = 0;
@@ -153,7 +153,7 @@ void tick()
 
       if (chcr1 & dmac::chcr::te::transfers_completed) {
 	state.read_crc.value ^= 0xffffffff;
-	union command_reply reply = read_crc_reply(state.read_crc.value);
+	union command_reply reply = reply::read_crc(state.read_crc.value);
 	serial::string(reply.u8, 16);
 
 	sh7091.DMAC.CHCR1 = 0;

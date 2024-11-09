@@ -243,11 +243,11 @@ int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * bu
     return -1;
   }
 
-  union serial_load::command_reply command = serial_load::write_command(dest, size);
+  union serial_load::command_reply command = serial_load::command::write(dest, size);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
   union serial_load::command_reply reply;
-  res = read_reply(ftdi, serial_load::reply::write, reply);
+  res = read_reply(ftdi, serial_load::reply::_write, reply);
   if (res != 0) {
     return -2;
   }
@@ -273,7 +273,7 @@ int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * bu
   uint32_t buf_crc = crc32(buf, size);
 
   union serial_load::command_reply crc_reply;
-  res = read_reply(ftdi, serial_load::reply::write_crc, crc_reply);
+  res = read_reply(ftdi, serial_load::reply::_write_crc, crc_reply);
   clock_res = clock_gettime(CLOCK_MONOTONIC, &end2);
   assert(clock_res == 0);
   if (res != 0) {
@@ -307,12 +307,12 @@ int do_jump(struct ftdi_context * ftdi, const uint32_t dest)
 {
   int res;
 
-  union serial_load::command_reply command = serial_load::jump_command(dest);
+  union serial_load::command_reply command = serial_load::command::jump(dest);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
 
   union serial_load::command_reply reply;
-  res = read_reply(ftdi, serial_load::reply::jump, reply);
+  res = read_reply(ftdi, serial_load::reply::_jump, reply);
   if (res != 0) {
     return -2;
   }
@@ -454,11 +454,11 @@ int do_read(struct ftdi_context * ftdi, const uint32_t src, uint8_t * buf, const
     return -1;
   }
 
-  union serial_load::command_reply command = serial_load::read_command(src, size);
+  union serial_load::command_reply command = serial_load::command::read(src, size);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
   union serial_load::command_reply reply;
-  res = read_reply(ftdi, serial_load::reply::read, reply);
+  res = read_reply(ftdi, serial_load::reply::_read, reply);
   if (res != 0) {
     return -2;
   }
@@ -481,7 +481,7 @@ int do_read(struct ftdi_context * ftdi, const uint32_t src, uint8_t * buf, const
   uint32_t buf_crc = crc32((uint8_t*)buf, size);
 
   union serial_load::command_reply crc_reply;
-  res = read_reply(ftdi, serial_load::reply::read_crc, crc_reply);
+  res = read_reply(ftdi, serial_load::reply::_read_crc, crc_reply);
   if (res != 0) {
     return -1;
   }
@@ -501,12 +501,12 @@ int do_speed(struct ftdi_context * ftdi, uint32_t scbrr)
     return -1;
   }
 
-  union serial_load::command_reply command = serial_load::speed_command(scbrr);
+  union serial_load::command_reply command = serial_load::command::speed(scbrr);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
 
   union serial_load::command_reply reply;
-  res = read_reply(ftdi, serial_load::reply::speed, reply);
+  res = read_reply(ftdi, serial_load::reply::_speed, reply);
   if (res != 0) {
     return -2;
   }
