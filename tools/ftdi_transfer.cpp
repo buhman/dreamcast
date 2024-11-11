@@ -15,6 +15,11 @@
 #include "crc32.h"
 #include "serial_protocol.hpp"
 
+#include "maple/maple_bus_bits.hpp"
+#include "maple/maple.hpp"
+#include "maple/maple_host_command_writer.hpp"
+#include "maple/maple_bus_commands.hpp"
+
 extern "C" int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
                                           unsigned short *value, unsigned short *index);
 
@@ -190,6 +195,10 @@ void dump_command_reply(union serial_load::command_reply& cr)
   for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)) / (sizeof (uint32_t)); i++) {
     fprintf(stderr, "  %08x\n", serial_load::le_bswap(cr.u32[i]));
   }
+  for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)); i++) {
+    fprintf(stderr, "%02x ", cr.u8[i]);
+  }
+  fprintf(stderr, "\n");
 }
 
 int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_load::command_reply& reply)
@@ -200,7 +209,7 @@ int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_l
 
   long length = read_with_timeout(ftdi, reply.u8, read_length);
   if (length != read_length) {
-    fprintf(stderr, "short read; want %ld bytes; received: %ld\n", read_length, length);
+    fprintf(stderr, "read_reply: short read; want %ld bytes; received: %ld\n", read_length, length);
     return -1;
   }
 
@@ -273,7 +282,7 @@ int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * bu
   uint32_t buf_crc = crc32(buf, size);
 
   union serial_load::command_reply crc_reply;
-  res = read_reply(ftdi, serial_load::reply::_write_crc, crc_reply);
+  res = read_reply(ftdi, serial_load::reply::_crc, crc_reply);
   clock_res = clock_gettime(CLOCK_MONOTONIC, &end2);
   assert(clock_res == 0);
   if (res != 0) {
@@ -299,6 +308,10 @@ int do_write(struct ftdi_context * ftdi, const uint32_t dest, const uint8_t * bu
   fprintf(stderr, "%d bits/sec:\n", ftdi_baud);
   fprintf(stderr, "  idealized write time : %.03f  seconds\n", idealized_time);
   fprintf(stderr, "   measured write time : %.03f  seconds\n", measured_time2);
+
+  if (crc_reply.arg[0] != buf_crc) {
+    return -1;
+  }
 
   return 0;
 }
@@ -471,22 +484,25 @@ int do_read(struct ftdi_context * ftdi, const uint32_t src, uint8_t * buf, const
 
   uint32_t read_length = 0;
   while (read_length < size) {
-    res = ftdi_read_data(ftdi, (uint8_t *)buf, size - read_length);
+    res = ftdi_read_data(ftdi, (uint8_t *)&buf[read_length], size - read_length);
     assert(res >= 0);
     read_length += res;
     if (read_length < size)
-      fprintf(stderr, "short read; want %x out of %x\n", size - read_length, size);
+      fprintf(stderr, "read: short read; want %x out of %x\n", size - read_length, size);
   }
 
   uint32_t buf_crc = crc32((uint8_t*)buf, size);
 
   union serial_load::command_reply crc_reply;
-  res = read_reply(ftdi, serial_load::reply::_read_crc, crc_reply);
+  res = read_reply(ftdi, serial_load::reply::_crc, crc_reply);
   if (res != 0) {
     return -1;
   }
-  fprintf(stderr, "remote crc: %08x; local crc %08x\n", crc_reply.arg[0], buf_crc);
 
+  fprintf(stderr, "remote crc: %08x; local crc %08x\n", crc_reply.arg[0], buf_crc);
+  if (crc_reply.arg[0] != buf_crc) {
+    return -1;
+  }
 
   return 0;
 }
@@ -562,6 +578,214 @@ void do_console(struct ftdi_context * ftdi)
   }
 }
 
+int lm_bit_to_int(uint8_t bit)
+{
+  switch (bit) {
+  case 0b00001:
+    return 0;
+  case 0b00010:
+    return 1;
+  case 0b00100:
+    return 2;
+  case 0b01000:
+    return 3;
+  case 0b10000:
+    return 4;
+  default:
+    return -1;
+  }
+}
+
+constexpr int count_left_set_bits(uint32_t n, int stop_bit)
+{
+  int bit_ix = 31;
+  int count = 0;
+  while (bit_ix != stop_bit) {
+    if (n & (1 << 31)) {
+      count += 1;
+    }
+    n <<= 1;
+    bit_ix -= 1;
+  }
+
+  return count;
+}
+static_assert(count_left_set_bits(0xe, 1) == 2);
+static_assert(count_left_set_bits(0x2, 1) == 0);
+
+consteval int count_trailing_zeros(uint32_t n)
+{
+  int count = 0;
+  for (int i = 0; i < 32; i++) {
+    if ((n & 1) != 0)
+      break;
+    count += 1;
+    n >>= 1;
+  }
+  return count;
+}
+static_assert(count_trailing_zeros(0x80) == 7);
+static_assert(count_trailing_zeros(0x2) == 1);
+
+void print_storage_function_definition(const uint32_t fd)
+{
+  int partitions = ((fd >> 24) & 0xff) + 1;
+  int bytes_per_block = (((fd >> 16) & 0xff) + 1) * 32;
+  int write_accesses = (fd >> 12) & 0xf;
+  int read_accesses = (fd >> 8) & 0xf;
+
+  fprintf(stderr, "    storage function definition:\n");
+  fprintf(stderr, "      partitions: %d\n", partitions);
+  fprintf(stderr, "      bytes_per_block: %d\n", bytes_per_block);
+  fprintf(stderr, "      write_accesses: %d\n", write_accesses);
+  fprintf(stderr, "      read_accesses: %d\n", read_accesses);
+}
+
+void print_device_id(struct maple::device_id& device_id)
+{
+  fprintf(stderr, "    ft: %08x\n", device_id.ft);
+  fprintf(stderr, "    fd[0]: %08x\n", device_id.fd[0]);
+  fprintf(stderr, "    fd[1]: %08x\n", device_id.fd[1]);
+  fprintf(stderr, "    fd[2]: %08x\n", device_id.fd[2]);
+
+  if (device_id.ft & function_type::storage) {
+    int fd_ix = count_left_set_bits(device_id.ft, count_trailing_zeros(function_type::storage));
+    print_storage_function_definition(device_id.fd[fd_ix]);
+  }
+}
+
+int do_maple_raw(struct ftdi_context * ftdi,
+                 uint8_t * send_buf,
+                 uint32_t send_size,
+                 uint8_t * recv_buf,
+                 uint32_t recv_size)
+{
+  int res;
+
+  union serial_load::command_reply command = serial_load::command::maple_raw(send_size, recv_size);
+  dump_command_reply(command);
+  res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
+  assert(res == (sizeof (command)));
+  union serial_load::command_reply reply;
+  fprintf(stderr, "maple_raw: wait maple_raw reply\n");
+  res = read_reply(ftdi, serial_load::reply::_maple_raw, reply);
+  if (res != 0) {
+    return -2;
+  }
+  if (reply.arg[0] != command.arg[0] || reply.arg[1] != command.arg[1]) {
+    fprintf(stderr, "maple_raw: argument mismatch: (%08x, %08x) != (%08x, %08x)\n",
+            reply.arg[0],   reply.arg[1],
+            command.arg[0], command.arg[1]);
+    return -1;
+  }
+
+  res = ftdi_write_data(ftdi, send_buf, send_size);
+  assert(res >= 0);
+  assert((uint32_t)res == send_size);
+
+  uint32_t send_buf_crc = crc32(send_buf, send_size);
+  fprintf(stderr, "send_size: %d\n", send_size);
+  for (uint32_t i = 0; i < send_size; i++) {
+    fprintf(stderr, "%02x ", send_buf[i]);
+    if (i % 4 == 3)
+      fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "\n");
+
+  union serial_load::command_reply send_crc_reply;
+  fprintf(stderr, "maple_raw: send: wait crc reply\n");
+  res = read_reply(ftdi, serial_load::reply::_crc, send_crc_reply);
+  if (res != 0) {
+    return -1;
+  }
+  fprintf(stderr, "maple_raw: send: remote crc: %08x; local crc %08x\n", send_crc_reply.arg[0], send_buf_crc);
+  if (send_crc_reply.arg[0] != send_buf_crc) {
+    dump_command_reply(send_crc_reply);
+    return -1;
+  }
+
+  uint32_t read_length = 0;
+  while (read_length < recv_size) {
+    res = ftdi_read_data(ftdi, &recv_buf[read_length], recv_size - read_length);
+    assert(res >= 0);
+    read_length += res;
+    if (read_length < recv_size)
+      fprintf(stderr, "maple raw: short read; want %x out of %x\n", recv_size - read_length, recv_size);
+  }
+
+  uint32_t recv_buf_crc = crc32(recv_buf, recv_size);
+
+  union serial_load::command_reply recv_crc_reply;
+  fprintf(stderr, "maple_raw: recv: wait crc reply\n");
+  res = read_reply(ftdi, serial_load::reply::_crc, recv_crc_reply);
+  if (res != 0) {
+    return -1;
+  }
+
+  fprintf(stderr, "maple_raw: recv: remote crc: %08x; local crc %08x\n", recv_crc_reply.arg[0], recv_buf_crc);
+  if (recv_crc_reply.arg[0] != recv_buf_crc) {
+    return -1;
+  }
+
+  return 0;
+}
+
+int do_maple_list(struct ftdi_context * ftdi)
+{
+  uint8_t send_buf[1024] = {0};
+  uint8_t recv_buf[1024] = {0};
+
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
+
+  auto writer = maple::host_command_writer<0xac002020>(reinterpret_cast<uint32_t *>(send_buf), reinterpret_cast<uint32_t *>(recv_buf));
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  for (uint32_t i = 0; i < writer.send_offset; i++) {
+    fprintf(stderr, "%02x ", send_buf[i]);
+  }
+  fprintf(stderr, "\n");
+
+  int res = do_maple_raw(ftdi,
+                         send_buf, writer.send_offset,
+                         recv_buf, writer.recv_offset);
+  if (res != 0) {
+    return -1;
+  }
+
+  for (uint32_t i = 0; i < writer.recv_offset; i++) {
+    fprintf(stderr, "%02x ", recv_buf[i]);
+    if (i % 4 == 3)
+      fprintf(stderr, "\n");
+  }
+  fprintf(stderr, "\n");
+  fprintf(stderr, "%d\n", response_type::command_code);
+  fprintf(stderr, "%p\n", host_response);
+  fprintf(stderr, "%p\n", recv_buf);
+
+  for (uint8_t port = 0; port < 4; port++) {
+    auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
+    fprintf(stderr, "port: %d\n", port);
+    if (bus_data.command_code != response_type::command_code) {
+      fprintf(stderr, "  disconnected %02x %02x %02x %02x\n",
+              bus_data.command_code,
+              bus_data.destination_ap,
+              bus_data.source_ap,
+              bus_data.data_size);
+    } else {
+      fprintf(stderr, "  ft:    %08x\n", std::byteswap(data_fields.device_id.ft));
+      fprintf(stderr, "  fd[0]: %08x\n", std::byteswap(data_fields.device_id.fd[0]));
+      fprintf(stderr, "  fd[1]: %08x\n", std::byteswap(data_fields.device_id.fd[1]));
+      fprintf(stderr, "  fd[2]: %08x\n", std::byteswap(data_fields.device_id.fd[2]));
+      fprintf(stderr, "  source_ap.lm_bus: %d\n", bus_data.source_ap & ap::lm_bus::bit_mask);
+    }
+  }
+
+  return 0;
+}
+
 enum struct argument_type {
   string,
   integer
@@ -581,6 +805,7 @@ struct cli_command commands[] = {
   { "list_baudrates"     , 1, (void *)&do_list_baudrates       },
   { "show_baudrate_error", 1, (void *)&do_show_baudrate_error  },
   { "console"            , 0, (void *)&do_console              },
+  { "maple_list"         , 0, (void *)&do_maple_list           },
 };
 
 constexpr int commands_length = (sizeof (commands)) / (sizeof (commands[0]));

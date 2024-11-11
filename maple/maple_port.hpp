@@ -23,3 +23,15 @@ constexpr inline uint32_t host_instruction_port_select(const uint32_t port)
   case 3: return host_instruction::port_select::d;
   }
 }
+
+constexpr inline uint32_t ap_lm_bus(const uint32_t lm)
+{
+  switch (lm) {
+  default: [[fallthrough]];
+  case 0: return ap::lm_bus::_0;
+  case 1: return ap::lm_bus::_1;
+  case 2: return ap::lm_bus::_2;
+  case 3: return ap::lm_bus::_3;
+  case 4: return ap::lm_bus::_4;
+  }
+}

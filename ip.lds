@@ -71,8 +71,8 @@ SECTIONS
 
   INCLUDE "debug.lds"
 }
-__stack_reservation = 0x1000;
-__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - __stack_reservation;
+
+__stack_end = ORIGIN(p1ram) + LENGTH(p1ram);
 
 __text_link_start = 0;
 __text_link_end = 0;
@@ -97,3 +97,6 @@ __vbr_link_end = 0;
 __vbr_load_end = 0;
 
 INCLUDE "addresses.lds"
+
+__send_buf = 0xac000020;
+__recv_buf = 0xac002020;

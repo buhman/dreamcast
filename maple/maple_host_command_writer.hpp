@@ -1,6 +1,7 @@
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
+#include <stddef.h>
 #include <tuple>
 
 #include "maple/maple.hpp"
@@ -9,6 +10,7 @@
 
 namespace maple {
 
+template <uint32_t base_address = 0>
 struct host_command_writer {
   uint32_t * const send_buf;
   uint32_t * const recv_buf;
@@ -43,7 +45,13 @@ struct host_command_writer {
                                    | (host_port_select & host_instruction::port_select::bit_mask)
                                    | host_instruction::transfer_length(data_size / 4);
 
-    host_command->receive_data_storage_address = receive_data_storage_address::address(reinterpret_cast<uint32_t>(host_response));
+    uint32_t host_response_address;
+    if constexpr (base_address != 0) {
+      host_response_address = base_address + recv_offset;
+    } else {
+      host_response_address = reinterpret_cast<uint32_t>(host_response);
+    }
+    host_command->receive_data_storage_address = receive_data_storage_address::address(host_response_address);
 
     host_command->bus_data.command_code = C::command_code;
     host_command->bus_data.destination_ap = destination_ap;

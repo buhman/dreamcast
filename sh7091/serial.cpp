@@ -99,6 +99,8 @@ void string(const char * s)
 void string(const uint8_t * s, uint32_t len)
 {
   while (len > 0) {
+    //hexlify(*s++);
+    //character(' ');
     character(*s++);
     len--;
   }

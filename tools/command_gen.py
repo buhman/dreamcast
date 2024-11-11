@@ -19,6 +19,7 @@ commands = [
     "SPED",
 
     "MPLS",
+    "MPRW",
 ]
 
 replies = [
@@ -26,11 +27,11 @@ replies = [
     "read",
     "jump",
     "sped",
-    "crcw",
-    "crcr",
 
     "mpls",
-    "mlcs",
+    "mprw",
+
+    "rcrc"
 ]
 
 seen = set()

@@ -7,4 +7,4 @@ MEMORY
 
 INCLUDE "common.lds"
 
-__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - 0x3000;
+__stack_end = ORIGIN(p1ram) + LENGTH(p1ram) - 0x4000;

@@ -51,33 +51,106 @@ void jump_to_func(const uint32_t addr)
   // restore our stack
 }
 
-static inline void prestart_write()
+static void prestart_write()
 {
   uint32_t dest = state.buf.arg[0];
   uint32_t size = state.buf.arg[1];
   serial::recv_dma(dest - 1, size + 1);
-  state.write_crc.value = 0xffffffff;
-  state.write_crc.offset = dest;
+  state.reply_crc.value = 0xffffffff;
+  state.reply_crc.offset = dest;
 }
 
-static inline void prestart_read()
+static void poststart_read()
 {
   uint32_t src = state.buf.arg[0];
   uint32_t size = state.buf.arg[1];
   serial::send_dma(src, size);
-  state.read_crc.value = 0xffffffff;
-  state.read_crc.offset = src;
+  state.reply_crc.value = 0xffffffff;
+  state.reply_crc.offset = src;
 }
 
+static void prestart_maple_raw__command()
+{
+  uint32_t dest = reinterpret_cast<uint32_t>(&__send_buf);
+  //uint32_t dest = 0xac000020;
+  uint32_t size = state.buf.arg[0];
+  serial::recv_dma(dest - 1, size + 1);
+  state.reply_crc.value = 0xffffffff;
+  state.reply_crc.offset = dest;
+}
+
+static void prestart_maple_raw__response()
+{
+  uint32_t src = reinterpret_cast<uint32_t>(&__recv_buf);
+  //uint32_t src = 0xac002020;
+  uint32_t size = state.buf.arg[1];
+  serial::send_dma(src, size);
+  state.reply_crc.value = 0xffffffff;
+  state.reply_crc.offset = src;
+}
+
+  /*
+static reply::maple_list_entry maple_list[4 + 4 * 5];
+
+static void prestart_maple_list(struct maple_port * port)
+{
+  uint32_t function_type = state.buf.arg[0];
+  uint32_t list_ix = 0;
+
+  for (int port_ix = 0; port_ix < 4; port_ix++) {
+
+    if ((port[port_ix].device_id.ft & function_type) == 0) {
+      continue;
+    }
+
+    maple_list[list_ix].port = port_ix;
+    maple_list[list_ix].lm = 0;
+    maple_list[list_ix]._res = 0;
+    maple_list[list_ix].device_id.ft = port[port_ix].device_id.ft;
+    maple_list[list_ix].device_id.fd[0] = port[port_ix].device_id.fd[0];
+    maple_list[list_ix].device_id.fd[1] = port[port_ix].device_id.fd[1];
+    maple_list[list_ix].device_id.fd[2] = port[port_ix].device_id.fd[2];
+    list_ix++;
+
+    int bit = 1;
+    for (int lm_ix = 0; lm_ix < 5; lm_ix++) {
+      if ((port[port_ix].ap__lm & bit) != 0) {
+        maple_list[list_ix].port = port_ix;
+        maple_list[list_ix].lm = bit;
+        maple_list[list_ix]._res = 0;
+        maple_list[list_ix].device_id.ft = port[port_ix].lm[lm_ix].device_id.ft;
+        maple_list[list_ix].device_id.fd[0] = port[port_ix].lm[lm_ix].device_id.fd[0];
+        maple_list[list_ix].device_id.fd[1] = port[port_ix].lm[lm_ix].device_id.fd[1];
+        maple_list[list_ix].device_id.fd[2] = port[port_ix].lm[lm_ix].device_id.fd[2];
+        list_ix++;
+      }
+      bit <<= 1;
+    }
+  }
+
+  state.buf.arg[1] = list_ix * (sizeof (struct reply::maple_list_entry));
+}
+
+static void poststart_maple_list()
+{
+  uint32_t src = reinterpret_cast<uint32_t>(maple_list);
+  uint32_t size = state.buf.arg[1];
+  serial::send_dma(src, size);
+  state.reply_crc.value = 0xffffffff;
+  state.reply_crc.offset = src;
+}
+  */
+
 struct state_arglen_reply command_list[] = {
-  {command::_write, reply::_write, fsm_state::write},
-  {command::_read , reply::_read , fsm_state::read },
-  {command::_jump , reply::_jump , fsm_state::jump },
-  {command::_speed, reply::_speed, fsm_state::speed},
+  {command::_write      , reply::_write      , fsm_state::write               },
+  {command::_read       , reply::_read       , fsm_state::read                },
+  {command::_jump       , reply::_jump       , fsm_state::jump                },
+  {command::_speed      , reply::_speed      , fsm_state::speed               },
+  {command::_maple_raw  , reply::_maple_raw  , fsm_state::maple_raw__command  },
 };
 constexpr uint32_t command_list_length = (sizeof (command_list)) / (sizeof (command_list[0]));
 
-void recv(uint8_t c)
+void recv(struct maple_poll_state& poll_state, uint8_t c)
 {
   state.buf.u8[state.len++] = c;
   switch (state.fsm_state) {
@@ -90,12 +163,13 @@ void recv(uint8_t c)
 	  if (crc == state.buf.crc) {
 	    // valid command, do the transition
 	    if (state.buf.cmd == command::_write) prestart_write();
+	    if (state.buf.cmd == command::_maple_raw) prestart_maple_raw__command();
 	    state.fsm_state = sar.fsm_state;
 	    state.len = 0;
-	    union command_reply reply = command_reply(sar.reply, state.buf.arg[0], state.buf.arg[1]);
+            union command_reply reply = command_reply(sar.reply, state.buf.arg[0], state.buf.arg[1]);
 	    serial::string(reply.u8, 16);
 
-	    if (state.buf.cmd == command::_read) prestart_read();
+	    if (state.buf.cmd == command::_read) poststart_read();
 	    return;
 	  } else {
             // do nothing
@@ -112,54 +186,72 @@ void recv(uint8_t c)
   }
 }
 
-void tick()
+void tick(struct maple_poll_state& poll_state)
 {
   switch (state.fsm_state) {
   case fsm_state::idle:
     break;
+  case fsm_state::maple_raw__command: [[fallthrough]];
   case fsm_state::write:
     {
       // read chcr1 before dar1 to avoid race
       uint32_t chcr1 = sh7091.DMAC.CHCR1;
       uint32_t dar1 = sh7091.DMAC.DAR1;
-      if (dar1 > state.write_crc.offset) {
-	uint32_t len = dar1 - state.write_crc.offset;
-	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.write_crc.offset);
-	state.write_crc.value = crc32_update(state.write_crc.value, buf, len);
-	state.write_crc.offset += len;
+      if (dar1 > state.reply_crc.offset) {
+	uint32_t len = dar1 - state.reply_crc.offset;
+	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.reply_crc.offset);
+	state.reply_crc.value = crc32_update(state.reply_crc.value, buf, len);
+	state.reply_crc.offset += len;
       }
       if (chcr1 & dmac::chcr::te::transfers_completed) {
-	state.write_crc.value ^= 0xffffffff;
-	union command_reply reply = reply::write_crc(state.write_crc.value);
+	state.reply_crc.value ^= 0xffffffff;
+	union command_reply reply = reply::crc(state.reply_crc.value);
+	serial::string(reply.u8, 16);
+
+	sh7091.DMAC.CHCR1 = 0;
+
+	// transition to next state
+        if (state.fsm_state == fsm_state::maple_raw__command) {
+          poll_state.send_length = state.buf.arg[0];
+          poll_state.recv_length = state.buf.arg[1];
+          poll_state.want_raw = 1;
+          state.fsm_state = fsm_state::maple_raw__maple_dma;
+        } else
+          state.fsm_state = fsm_state::idle;
+      }
+    }
+    break;
+  case fsm_state::maple_raw__maple_dma:
+    {
+      // transition to next state
+      if (poll_state.want_raw == 0) {
+        prestart_maple_raw__response();
+        state.fsm_state = fsm_state::maple_raw__response;
+      }
+    }
+    break;
+  case fsm_state::maple_raw__response: [[fallthrough]];
+  case fsm_state::read:
+    {
+      // read chcr1 before sar1 to avoid race
+      uint32_t chcr1 = sh7091.DMAC.CHCR1;
+      uint32_t sar1 = sh7091.DMAC.SAR1;
+      if (sar1 > state.reply_crc.offset) {
+	uint32_t len = sar1 - state.reply_crc.offset;
+	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.reply_crc.offset);
+	state.reply_crc.value = crc32_update(state.reply_crc.value, buf, len);
+	state.reply_crc.offset += len;
+      }
+
+      if (chcr1 & dmac::chcr::te::transfers_completed) {
+	state.reply_crc.value ^= 0xffffffff;
+	union command_reply reply = reply::crc(state.reply_crc.value);
 	serial::string(reply.u8, 16);
 
 	sh7091.DMAC.CHCR1 = 0;
 
 	// transition to next state
 	state.fsm_state = fsm_state::idle;
-      }
-    }
-    break;
-  case fsm_state::read:
-    {
-      uint32_t chcr1 = sh7091.DMAC.CHCR1;
-      uint32_t sar1 = sh7091.DMAC.SAR1;
-      if (sar1 > state.read_crc.offset) {
-	uint32_t len = sar1 - state.read_crc.offset;
-	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.read_crc.offset);
-	state.read_crc.value = crc32_update(state.read_crc.value, buf, len);
-	state.read_crc.offset += len;
-      }
-
-      if (chcr1 & dmac::chcr::te::transfers_completed) {
-	state.read_crc.value ^= 0xffffffff;
-	union command_reply reply = reply::read_crc(state.read_crc.value);
-	serial::string(reply.u8, 16);
-
-	sh7091.DMAC.CHCR1 = 0;
-
-	// transition to next state
-	//state.fsm_state = fsm_state::idle;
       }
     }
     break;

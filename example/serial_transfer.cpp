@@ -16,6 +16,8 @@
 
 #include "crc32.h"
 
+static struct serial_load::maple_poll_state poll_state __attribute__((aligned(32)));
+
 extern uint32_t _binary_font_portfolio_6x8 __asm("_binary_font_portfolio_6x8_portfolio_6x8_data_start");
 
 template <typename T>
@@ -43,22 +45,7 @@ struct serial_error_counter {
 
 struct serial_error_counter error_counter;
 
-enum struct step {
-  IDLE = 0,
-  DEVICE_STATUS,
-  EXTENSION_DEVICE_STATUS,
-  EXTENSION_DEVICE_REPLY,
-};
-
-struct maple_display_poll_state {
-  bool want_start;
-  enum step step;
-  struct {
-    uint8_t ap__lm;
-  } port[4];
-};
-
-void send_vmu_framebuffer(maple::host_command_writer& writer, uint8_t port, uint8_t lm)
+void send_vmu_framebuffer(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm)
 {
   using command_type = maple::block_write<uint8_t[0]>;
   using response_type = maple::device_reply;
@@ -88,9 +75,9 @@ void send_vmu_framebuffer(maple::host_command_writer& writer, uint8_t port, uint
   copy<uint8_t>(data_fields.written_data, fb, maple::display::vmu::framebuffer_size);
 }
 
-void recv_extension_device_status(struct maple_display_poll_state &state)
+void recv_extension_device_status(struct serial_load::maple_poll_state &state)
 {
-  auto writer = maple::host_command_writer(send_buf, recv_buf);
+  auto writer = maple::host_command_writer<>(send_buf, recv_buf);
 
   using response_type = maple::host_response<maple::device_status::data_fields>;
   auto host_response = reinterpret_cast<response_type *>(recv_buf);
@@ -112,20 +99,25 @@ void recv_extension_device_status(struct maple_display_poll_state &state)
 
       auto& bus_data = host_response[response_index++].bus_data;
       auto& data_fields = bus_data.data_fields;
-      if ((bus_data.command_code == maple::device_status::command_code) &&
-	  (std::byteswap(data_fields.device_id.ft) & function_type::bw_lcd)) {
-
-	last_send_offset = writer.send_offset;
-	send_vmu_framebuffer(writer, port, bit);
+      if (bus_data.command_code != maple::device_status::command_code) {
+        state.port[port].lm[i].device_id.ft = 0;
       } else {
-	// this extension device is not a bw_lcd; remove it
-	state.port[port].ap__lm &= ~bit;
+        state.port[port].lm[i].device_id.ft = std::byteswap(data_fields.device_id.ft);
+        state.port[port].lm[i].device_id.fd[0] = std::byteswap(data_fields.device_id.fd[0]);
+        state.port[port].lm[i].device_id.fd[1] = std::byteswap(data_fields.device_id.fd[1]);
+        state.port[port].lm[i].device_id.fd[2] = std::byteswap(data_fields.device_id.fd[2]);
+
+        if (state.port[port].lm[i].device_id.ft & function_type::bw_lcd) {
+          last_send_offset = writer.send_offset;
+          send_vmu_framebuffer(writer, port, bit);
+        }
       }
       bit <<= 1;
     }
   }
 
   {
+    // change the last command from
     using command_type = maple::host_command<maple::block_write<uint8_t[0]>::data_fields>;
     auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
     host_command->host_instruction |= host_instruction::end_flag;
@@ -135,7 +127,7 @@ void recv_extension_device_status(struct maple_display_poll_state &state)
   }
 }
 
-void send_extension_device_request(maple::host_command_writer& writer, uint8_t port, uint8_t lm)
+void send_extension_device_request(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm)
 {
   uint32_t host_port_select = host_instruction_port_select(port);
   uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
@@ -148,20 +140,19 @@ void send_extension_device_request(maple::host_command_writer& writer, uint8_t p
 						     false); // end_flag
 }
 
-typedef void (* func_t)(maple::host_command_writer& writer, uint8_t port, uint8_t lm);
-void do_lm_requests(maple::host_command_writer& writer, uint8_t port, uint8_t lm, func_t func)
+typedef void (* func_t)(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm);
+void do_lm_requests(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm, func_t func)
 {
   uint32_t bit = ap::lm_bus::_0;
   for (int i = 0; i < 5; i++) {
     if (lm & bit) {
-      lm &= ~bit;
       func(writer, port, bit);
     }
     bit <<= 1;
   }
 }
 
-void recv_device_status(struct maple_display_poll_state &state)
+void recv_device_status(struct serial_load::maple_poll_state &state)
 {
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
@@ -170,13 +161,17 @@ void recv_device_status(struct maple_display_poll_state &state)
 
   for (int port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
+    auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != maple::device_status::command_code) {
       state.port[port].ap__lm = 0;
+      state.port[port].device_id.ft = 0;
     } else {
-      //auto& data_fields = bus_data.data_fields;
-
       uint8_t lm = bus_data.source_ap & ap::lm_bus::bit_mask;
       state.port[port].ap__lm = lm;
+      state.port[port].device_id.ft = std::byteswap(data_fields.device_id.ft);
+      state.port[port].device_id.fd[0] = std::byteswap(data_fields.device_id.fd[0]);
+      state.port[port].device_id.fd[1] = std::byteswap(data_fields.device_id.fd[1]);
+      state.port[port].device_id.fd[2] = std::byteswap(data_fields.device_id.fd[2]);
       do_lm_requests(writer, port, lm, &send_extension_device_request);
     }
   }
@@ -198,11 +193,26 @@ void send_device_request()
                    recv_buf, writer.recv_offset);
 }
 
-void handle_maple(struct maple_display_poll_state& state)
+void send_raw(struct serial_load::maple_poll_state& state)
 {
+  maple::dma_start(&__send_buf, state.send_length,
+                   &__recv_buf, state.recv_length);
+  /*
+  maple::dma_start((uint32_t*)0xac000020, state.send_length,
+                   (uint32_t*)0xac002020, state.recv_length);
+  */
+}
+
+void handle_maple(struct serial_load::maple_poll_state& state)
+{
+  using namespace serial_load;
+
   switch (state.step) {
   case step::IDLE:
-    if (state.want_start) {
+    if (state.want_raw) {
+      send_raw(state);
+      state.step = step::RAW;
+    } else if (state.want_start) {
       // always send to all ports
       send_device_request();
       state.step = step::DEVICE_STATUS;
@@ -212,20 +222,25 @@ void handle_maple(struct maple_display_poll_state& state)
   case step::DEVICE_STATUS:
     if (maple::dma_poll_complete()) {
       recv_device_status(state);
-      state.step = step::EXTENSION_DEVICE_STATUS;
+      state.step = step::EXTENSION__DEVICE_STATUS;
     }
     break;
-  case step::EXTENSION_DEVICE_STATUS:
+  case step::EXTENSION__DEVICE_STATUS:
     if (maple::dma_poll_complete()) {
       recv_extension_device_status(state);
-      state.step = step::EXTENSION_DEVICE_REPLY;
+      state.step = step::EXTENSION__DEVICE_STATUS__DEVICE_REPLY;
     }
     break;
-  case step::EXTENSION_DEVICE_REPLY:
+  case step::EXTENSION__DEVICE_STATUS__DEVICE_REPLY:
     if (maple::dma_poll_complete()) {
       state.step = step::IDLE;
     }
     break;
+  case step::RAW:
+    if (maple::dma_poll_complete()) {
+      state.want_raw = 0;
+      state.step = step::IDLE;
+    }
   }
 }
 
@@ -281,13 +296,16 @@ void render_u8(uint32_t src, char * dst)
   for (int i = 0; i < 2; i++) dst[i] = num_buf[i];
 }
 
+static int count = 0;
+
 void render_idle_state(char * dst)
 {
-  render_line("idle", &dst[0]);
+  render_line("idle3", &dst[0]);
+
   render_u32(serial_load::state.buf.u32[0], &dst[8]);
-  render_u32(serial_load::state.buf.u32[1], &dst[16]);
-  render_u8(serial_load::state.len, &dst[24]);
-  render_clear(&dst[26], 6);
+  render_u8(serial_load::state.len, &dst[16]);
+  render_clear(&dst[18], 6);
+  render_u32(count++, &dst[24]);
 }
 
 void render_write_state(char * dst)
@@ -295,7 +313,7 @@ void render_write_state(char * dst)
   render_line("write", &dst[0]);
   render_u32(sh7091.DMAC.DMATCR1, &dst[8]);
   render_u32(sh7091.DMAC.DAR1, &dst[16]);
-  render_u32(serial_load::state.write_crc.value, &dst[24]);
+  render_u32(serial_load::state.reply_crc.value, &dst[24]);
 }
 
 void render_read_state(char * dst)
@@ -303,7 +321,7 @@ void render_read_state(char * dst)
   render_line("read", &dst[0]);
   render_u32(sh7091.DMAC.DMATCR1, &dst[8]);
   render_u32(sh7091.DMAC.SAR1, &dst[16]);
-  render_u32(serial_load::state.read_crc.value, &dst[24]);
+  render_u32(serial_load::state.reply_crc.value, &dst[24]);
 }
 
 void render_fsm_state(char * dst)
@@ -327,8 +345,25 @@ void render_fsm_state(char * dst)
     render_line("speed", &dst[0]);
     render_clear(&dst[8], 24);
     break;
+  case fsm_state::maple_raw__command:
+    render_line("mr__cmd", &dst[0]);
+    render_u32(sh7091.DMAC.DAR1, &dst[8]);
+    render_u32(sh7091.DMAC.SAR1, &dst[16]);
+    render_clear(&dst[24], 8);
+    break;
+  case fsm_state::maple_raw__maple_dma:
+    render_line("mr__dma", &dst[0]);
+    render_u32(poll_state.send_length, &dst[8]);
+    render_u32(poll_state.recv_length, &dst[16]);
+    render_u8(poll_state.want_raw, &dst[24]);
+    render_clear(&dst[26], 6);
+    break;
+  case fsm_state::maple_raw__response:
+    render_line("mr__resp", &dst[0]);
+    render_clear(&dst[8], 24);
+    break;
   default:
-    render_line("invalid", &dst[0]);
+    render_line("unknown", &dst[0]);
     render_clear(&dst[8], 24);
     break;
   }
@@ -362,10 +397,13 @@ void main() __attribute__((section(".text.main")));
 
 void main()
 {
+  poll_state.want_start = 0;
+  poll_state.want_raw = 0;
+  poll_state.step = serial_load::step::IDLE;
+
   constexpr uint32_t serial_speed = 0;
   serial_load::init(serial_speed);
 
-  struct maple_display_poll_state state = {0};
   const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
   auto renderer0 = maple::display::font_renderer(font);
   framebuffer[0] = renderer0.fb;
@@ -383,6 +421,13 @@ void main()
   error_counter.er = 0;
   error_counter.dr = 0;
   error_counter.orer = 0;
+
+  /*
+  const uint8_t m[] = {0xe0, 0x22, 0x24, 0xb6, 0x30, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0xa5, 0xce, 0x18, 0xda};
+  for (uint32_t i = 0; i < (sizeof (m)); i++) {
+    serial_load::recv(state, m[i]);
+  }
+  */
 
   while (1) {
     using namespace scif;
@@ -411,16 +456,16 @@ void main()
       if (serial_load::state.fsm_state == serial_load::fsm_state::idle) {
 	while (sh7091.SCIF.SCFSR2 & scfsr2::rdf::bit_mask) {
 	  const uint8_t c = sh7091.SCIF.SCFRDR2;
-	  serial_load::recv(c);
+	  serial_load::recv(poll_state, c);
 	  sh7091.SCIF.SCFSR2 = scfsr2 & ~scfsr2::rdf::bit_mask;
 	}
       }
     }
 
-    serial_load::tick();
+    serial_load::tick(poll_state);
     render(renderer0, renderer1);
 
-    state.want_start = 1;
-    handle_maple(state);
+    poll_state.want_start = 1;
+    handle_maple(poll_state);
   }
 }

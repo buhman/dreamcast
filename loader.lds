@@ -3,7 +3,7 @@ MEMORY
 {
   p1ram : ORIGIN = 0xac005000, LENGTH = 0x0000
   p2ram : ORIGIN = 0xac010000, LENGTH = 0xff0000
-  ldram : ORIGIN = 0xacffd000, LENGTH = 0x3000
+  ldram : ORIGIN = 0xacffd000, LENGTH = 0x4000
 }
 SECTIONS
 {
@@ -72,4 +72,7 @@ SECTIONS
 INCLUDE "symbols.lds"
 INCLUDE "addresses.lds"
 
-__stack_end = 0x8c008000;
+__stack_end = 0x8c00f000;
+
+__send_buf = 0xac000020;
+__recv_buf = 0xac002020;

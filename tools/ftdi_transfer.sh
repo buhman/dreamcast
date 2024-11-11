@@ -1,5 +1,7 @@
 #!/bin/sh
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+
 filename="$1"
 
 if [ -z "$filename" ]; then
@@ -9,7 +11,7 @@ fi
 
 set -ex
 
-./ftdi_transfer \
+${SCRIPT_DIR}/ftdi_transfer \
     write 0xac010000 "$filename" \
-    jump  0xac010000 \
-    console
+    jump  0xac010000
+#    console

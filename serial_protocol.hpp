@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "maple/maple_bus_commands.hpp"
+
 #include "crc32.h"
 
 namespace serial_load {
@@ -56,12 +58,14 @@ namespace command {
   constexpr uint32_t _jump = gen_cmd("JUMP");
   constexpr uint32_t _speed = gen_cmd("SPED");
 
-  constexpr uint32_t _maple_list = gen_cmd("MPLS");
+  constexpr uint32_t _maple_raw = gen_cmd("MPRW");
 
   static_assert(_write == 0x2cc46ed8);
-  static_assert(_read == 0xf18d57c7);
-  static_assert(_jump == 0xa6696f38);
+  static_assert(_read  == 0xf18d57c7);
+  static_assert(_jump  == 0xa6696f38);
   static_assert(_speed == 0x27a7a9f4);
+
+  static_assert(_maple_raw  == 0xb62422e0);
 
   constexpr union command_reply write(uint32_t dest, uint32_t size)
   {
@@ -83,9 +87,9 @@ namespace command {
     return command_reply(_speed, speed, 0);
   }
 
-  constexpr union command_reply maple_list(uint32_t function_type)
+  constexpr union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
   {
-    return command_reply(_maple_list, function_type, 0);
+    return command_reply(_maple_raw, send_size, recv_size);
   }
 }
 
@@ -94,18 +98,19 @@ namespace reply {
   constexpr uint32_t _read = gen_cmd("read");
   constexpr uint32_t _jump = gen_cmd("jump");
   constexpr uint32_t _speed = gen_cmd("sped");
-  constexpr uint32_t _write_crc = gen_cmd("crcw");
-  constexpr uint32_t _read_crc = gen_cmd("crcr");
 
-  constexpr uint32_t _maple_list = gen_cmd("mpls");
-  constexpr uint32_t _maple_list_crc = gen_cmd("mlcs");
+  constexpr uint32_t _maple_raw = gen_cmd("mprw");
+
+  constexpr uint32_t _crc = gen_cmd("rcrc");
 
   static_assert(_write == 0x8c661aaa);
   static_assert(_read  == 0x512f23b5);
   static_assert(_jump  == 0x06cb1b4a);
   static_assert(_speed == 0x8705dd86);
-  static_assert(_write_crc == 0x3cccc074);
-  static_assert(_read_crc == 0x99cc92f4);
+
+  static_assert(_maple_raw  == 0x16865692);
+
+  static_assert(_crc   == 0xcc9aab7c);
 
   constexpr union command_reply write(uint32_t dest, uint32_t size)
   {
@@ -127,14 +132,14 @@ namespace reply {
     return command_reply(_speed, speed, 0);
   }
 
-  constexpr union command_reply write_crc(uint32_t crc)
+  constexpr union command_reply crc(uint32_t crc)
   {
-    return command_reply(_write_crc, crc, 0);
+    return command_reply(_crc, crc, 0);
   }
 
-  constexpr union command_reply read_crc(uint32_t crc)
+  constexpr union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
   {
-    return command_reply(_read_crc, crc, 0);
+    return command_reply(_maple_raw, send_size, recv_size);
   }
 }
 
