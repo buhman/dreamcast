@@ -116,15 +116,13 @@ void recv_extension_device_status(struct serial_load::maple_poll_state &state)
     }
   }
 
-  {
-    // change the last command from
-    using command_type = maple::host_command<maple::block_write<uint8_t[0]>::data_fields>;
-    auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
-    host_command->host_instruction |= host_instruction::end_flag;
+  // rewrite the end flag of the last request
+  using command_type = maple::host_command<uint8_t[0]>;
+  auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
+  host_command->host_instruction |= host_instruction::end_flag;
 
-    maple::dma_start(send_buf, writer.send_offset,
-		     recv_buf, writer.recv_offset);
-  }
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 }
 
 void send_extension_device_request(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm)
@@ -141,11 +139,12 @@ void send_extension_device_request(maple::host_command_writer<>& writer, uint8_t
 }
 
 typedef void (* func_t)(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm);
-void do_lm_requests(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm, func_t func)
+void do_lm_requests(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm, uint32_t& last_send_offset, func_t func)
 {
   uint32_t bit = ap::lm_bus::_0;
   for (int i = 0; i < 5; i++) {
     if (lm & bit) {
+      last_send_offset = writer.send_offset;
       func(writer, port, bit);
     }
     bit <<= 1;
@@ -158,6 +157,7 @@ void recv_device_status(struct serial_load::maple_poll_state &state)
 
   using response_type = maple::host_response<maple::device_status::data_fields>;
   auto host_response = reinterpret_cast<response_type *>(recv_buf);
+  uint32_t last_send_offset = 0;
 
   for (int port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -172,9 +172,14 @@ void recv_device_status(struct serial_load::maple_poll_state &state)
       state.port[port].device_id.fd[0] = std::byteswap(data_fields.device_id.fd[0]);
       state.port[port].device_id.fd[1] = std::byteswap(data_fields.device_id.fd[1]);
       state.port[port].device_id.fd[2] = std::byteswap(data_fields.device_id.fd[2]);
-      do_lm_requests(writer, port, lm, &send_extension_device_request);
+      do_lm_requests(writer, port, lm, last_send_offset, &send_extension_device_request);
     }
   }
+
+  // rewrite the end flag of the last request
+  using command_type = maple::host_command<uint8_t[0]>;
+  auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
+  host_command->host_instruction |= host_instruction::end_flag;
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
@@ -195,6 +200,9 @@ void send_device_request()
 
 void send_raw(struct serial_load::maple_poll_state& state)
 {
+  for (int i = 0; i < 1024; i++) {
+    ((uint8_t*)&__recv_buf)[i] = 0xee;
+  }
   maple::dma_start(&__send_buf, state.send_length,
                    &__recv_buf, state.recv_length);
   /*

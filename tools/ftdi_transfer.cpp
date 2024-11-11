@@ -19,6 +19,8 @@
 #include "maple/maple.hpp"
 #include "maple/maple_host_command_writer.hpp"
 #include "maple/maple_bus_commands.hpp"
+#include "maple/maple_port.hpp"
+#include "maple/maple_bus_ft1.hpp"
 
 extern "C" int convert_baudrate_UT_export(int baudrate, struct ftdi_context *ftdi,
                                           unsigned short *value, unsigned short *index);
@@ -195,10 +197,12 @@ void dump_command_reply(union serial_load::command_reply& cr)
   for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)) / (sizeof (uint32_t)); i++) {
     fprintf(stderr, "  %08x\n", serial_load::le_bswap(cr.u32[i]));
   }
+  /*
   for (uint32_t i = 0; i < (sizeof (union serial_load::command_reply)); i++) {
     fprintf(stderr, "%02x ", cr.u8[i]);
   }
   fprintf(stderr, "\n");
+  */
 }
 
 int read_reply(struct ftdi_context * ftdi, uint32_t expected_cmd, union serial_load::command_reply& reply)
@@ -578,24 +582,6 @@ void do_console(struct ftdi_context * ftdi)
   }
 }
 
-int lm_bit_to_int(uint8_t bit)
-{
-  switch (bit) {
-  case 0b00001:
-    return 0;
-  case 0b00010:
-    return 1;
-  case 0b00100:
-    return 2;
-  case 0b01000:
-    return 3;
-  case 0b10000:
-    return 4;
-  default:
-    return -1;
-  }
-}
-
 constexpr int count_left_set_bits(uint32_t n, int stop_bit)
 {
   int bit_ix = 31;
@@ -634,24 +620,44 @@ void print_storage_function_definition(const uint32_t fd)
   int write_accesses = (fd >> 12) & 0xf;
   int read_accesses = (fd >> 8) & 0xf;
 
-  fprintf(stderr, "    storage function definition:\n");
-  fprintf(stderr, "      partitions: %d\n", partitions);
-  fprintf(stderr, "      bytes_per_block: %d\n", bytes_per_block);
-  fprintf(stderr, "      write_accesses: %d\n", write_accesses);
-  fprintf(stderr, "      read_accesses: %d\n", read_accesses);
+  fprintf(stderr, "  storage function definition:\n");
+  fprintf(stderr, "    partitions: %d\n", partitions);
+  fprintf(stderr, "    bytes_per_block: %d\n", bytes_per_block);
+  fprintf(stderr, "    write_accesses: %d\n", write_accesses);
+  fprintf(stderr, "    read_accesses: %d\n", read_accesses);
+}
+
+template <typename T>
+static inline T be_bswap(const T n)
+{
+  if constexpr (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+    return n;
+  else
+    return std::byteswap<T>(n);
 }
 
 void print_device_id(struct maple::device_id& device_id)
 {
-  fprintf(stderr, "    ft: %08x\n", device_id.ft);
-  fprintf(stderr, "    fd[0]: %08x\n", device_id.fd[0]);
-  fprintf(stderr, "    fd[1]: %08x\n", device_id.fd[1]);
-  fprintf(stderr, "    fd[2]: %08x\n", device_id.fd[2]);
+  fprintf(stderr, "  ft: %08x\n", be_bswap<uint32_t>(device_id.ft));
+  fprintf(stderr, "  fd[0]: %08x\n", be_bswap<uint32_t>(device_id.fd[0]));
+  fprintf(stderr, "  fd[1]: %08x\n", be_bswap<uint32_t>(device_id.fd[1]));
+  fprintf(stderr, "  fd[2]: %08x\n", be_bswap<uint32_t>(device_id.fd[2]));
+}
 
-  if (device_id.ft & function_type::storage) {
-    int fd_ix = count_left_set_bits(device_id.ft, count_trailing_zeros(function_type::storage));
-    print_storage_function_definition(device_id.fd[fd_ix]);
-  }
+void print_media_info(struct ft1::get_media_info_data_transfer::data_format& data)
+{
+  fprintf(stderr, "  media_info:\n");
+  fprintf(stderr, "    total_size: %04x\n", data.total_size);
+  fprintf(stderr, "    partition_number: %04x\n", data.partition_number);
+  fprintf(stderr, "    system_area_block_number: %04x\n", data.system_area_block_number);
+  fprintf(stderr, "    fat_area_block_number: %04x\n", data.fat_area_block_number);
+  fprintf(stderr, "    number_of_fat_area_blocks: %04x\n", data.number_of_fat_area_blocks);
+  fprintf(stderr, "    file_information_block_number: %04x\n", data.file_information_block_number);
+  fprintf(stderr, "    number_of_file_information_blocks: %04x\n", data.number_of_file_information_blocks);
+  fprintf(stderr, "    volume_icon: %04x\n", data.volume_icon);
+  fprintf(stderr, "    save_area_block_number: %04x\n", data.save_area_block_number);
+  fprintf(stderr, "    number_of_save_area_blocks: %04x\n", data.number_of_save_area_blocks);
+  fprintf(stderr, "    reserved_for_execution_file: %08x\n", data.reserved_for_execution_file);
 }
 
 int do_maple_raw(struct ftdi_context * ftdi,
@@ -663,7 +669,7 @@ int do_maple_raw(struct ftdi_context * ftdi,
   int res;
 
   union serial_load::command_reply command = serial_load::command::maple_raw(send_size, recv_size);
-  dump_command_reply(command);
+  //dump_command_reply(command);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
   union serial_load::command_reply reply;
@@ -684,6 +690,7 @@ int do_maple_raw(struct ftdi_context * ftdi,
   assert((uint32_t)res == send_size);
 
   uint32_t send_buf_crc = crc32(send_buf, send_size);
+  /*
   fprintf(stderr, "send_size: %d\n", send_size);
   for (uint32_t i = 0; i < send_size; i++) {
     fprintf(stderr, "%02x ", send_buf[i]);
@@ -691,6 +698,7 @@ int do_maple_raw(struct ftdi_context * ftdi,
       fprintf(stderr, "\n");
   }
   fprintf(stderr, "\n");
+  */
 
   union serial_load::command_reply send_crc_reply;
   fprintf(stderr, "maple_raw: send: wait crc reply\n");
@@ -730,22 +738,243 @@ int do_maple_raw(struct ftdi_context * ftdi,
   return 0;
 }
 
-int do_maple_list(struct ftdi_context * ftdi)
+template <uint32_t base_address>
+void send_extension_device_request(maple::host_command_writer<base_address>& writer, uint8_t port, uint8_t lm)
 {
-  uint8_t send_buf[1024] = {0};
-  uint8_t recv_buf[1024] = {0};
+  uint32_t host_port_select = host_instruction_port_select(port);
+  uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
 
   using command_type = maple::device_request;
   using response_type = maple::device_status;
 
-  auto writer = maple::host_command_writer<0xac002020>(reinterpret_cast<uint32_t *>(send_buf), reinterpret_cast<uint32_t *>(recv_buf));
+  writer.template append_command<command_type, response_type>(host_port_select,
+                                                              destination_ap,
+                                                              false); // end_flag
+}
+
+template <uint32_t base_address>
+void send_get_media_info(maple::host_command_writer<base_address>& writer, uint8_t port, uint8_t lm)
+{
+  uint32_t host_port_select = host_instruction_port_select(port);
+  uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
+
+  using command_type = maple::get_media_info;
+  using response_type = maple::data_transfer<ft1::get_media_info_data_transfer::data_format>;
+
+  auto [host_command, host_response] =
+    writer.template append_command<command_type, response_type>(host_port_select,
+                                                                destination_ap,
+                                                                false); // end_flag
+
+  host_command->bus_data.data_fields.function_type = be_bswap<uint32_t>(function_type::storage);
+  host_command->bus_data.data_fields.pt = 0;
+}
+
+struct block_read_response {
+  union responses {
+    struct maple::file_error::data_fields file_error;
+    struct maple::data_transfer<ft1::block_read_data_transfer::data_format>::data_fields data_transfer;
+  };
+
+  using data_fields = union responses;
+};
+
+template <uint32_t base_address>
+void send_block_read(maple::host_command_writer<base_address>& writer, uint8_t port, uint8_t lm, uint32_t recv_trailing, int partition, int phase, int block_number)
+{
+  uint32_t host_port_select = host_instruction_port_select(port);
+  uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
+
+  using command_type = maple::block_read;
+  using response_type = block_read_response;
+
+  auto [host_command, host_response] =
+    writer.template append_command<command_type, response_type>(host_port_select,
+                                                                destination_ap,
+                                                                false, // end_flag
+                                                                0,  // send_trailing
+                                                                recv_trailing  // recv_trailing
+                                                                );
+
+  auto& data_fields = host_command->bus_data.data_fields;
+  data_fields.function_type = be_bswap<uint32_t>(function_type::storage);
+  data_fields.pt = partition;
+  data_fields.phase = phase;
+  data_fields.block_number = be_bswap<uint16_t>(block_number);
+}
+
+template <uint32_t base_address>
+void do_lm_requests(maple::host_command_writer<base_address>& writer, uint8_t port, uint8_t lm, uint32_t& last_send_offset,
+                    void (* func)(maple::host_command_writer<base_address>& writer, uint8_t port, uint8_t lm))
+{
+  uint32_t bit = ap::lm_bus::_0;
+  for (int i = 0; i < 5; i++) {
+    if (lm & bit) {
+      last_send_offset = writer.send_offset;
+      func(writer, port, bit);
+    }
+    bit <<= 1;
+  }
+}
+
+struct storage_state {
+  uint32_t fd;
+
+  uint32_t partitions() {
+    return ((fd >> 24) & 0xff) + 1;
+  }
+  uint32_t bytes_per_block() {
+    return (((fd >> 16) & 0xff) + 1) * 32;
+  }
+  uint32_t write_accesses() {
+    return (fd >> 12) & 0xf;
+  }
+  uint32_t read_accesses() {
+    return (fd >> 8) & 0xf;
+  }
+
+  uint32_t bytes_per_read_access()
+  {
+    // divide rounding up
+    return (bytes_per_block() + (read_accesses() - 1)) / read_accesses();
+  }
+
+  uint32_t bytes_per_write_access()
+  {
+    // divide rounding up
+    return (bytes_per_block() + (write_accesses() - 1)) / write_accesses();
+  }
+
+};
+
+template <uint32_t base_address>
+int handle_block_read_dump(struct ftdi_context * ftdi,
+                           maple::host_command_writer<base_address>& writer,
+                           struct storage_state& storage_state,
+                           uint32_t last_send_offset,
+                           FILE * dump)
+{
+  using command_type = maple::block_read;
+  using host_command_type = maple::host_command<command_type::data_fields>;
+
+  uint8_t * send_buf = reinterpret_cast<uint8_t *>(writer.send_buf);
+  auto host_command = reinterpret_cast<host_command_type *>(&send_buf[last_send_offset]);
+  host_command->host_instruction |= host_instruction::end_flag;
+
+  int res = do_maple_raw(ftdi,
+                         reinterpret_cast<uint8_t *>(writer.send_buf), writer.send_offset,
+                         reinterpret_cast<uint8_t *>(writer.recv_buf), writer.recv_offset);
+  if (res != 0) {
+    return -1;
+  }
+
+  using response_type = block_read_response;
+  using host_response_type = maple::host_response<response_type::data_fields>;
+  const uint32_t recv_trailing = storage_state.bytes_per_read_access();
+  const uint32_t host_response_size = (sizeof (host_response_type)) + recv_trailing;
+
+  uint8_t * recv_buf = reinterpret_cast<uint8_t *>(writer.recv_buf);
+
+  for (uint32_t offset = 0; offset < writer.recv_offset; offset += host_response_size) {
+    auto host_response = reinterpret_cast<host_response_type *>(&recv_buf[offset]);
+    auto& bus_data = host_response->bus_data;
+    if (bus_data.command_code != maple::data_transfer<uint8_t[0]>::command_code) {
+      fprintf(stderr, "lm did not reply to block read: %d\n", bus_data.command_code);
+      auto& file_error = bus_data.data_fields.file_error;
+      if (bus_data.command_code == maple::file_error::command_code) {
+	fprintf(stderr, "function error code: %d\n", file_error.function_error_code);
+      }
+      return -1;
+    }
+
+    fwrite(bus_data.data_fields.data_transfer.data.block_data,
+           1,
+           storage_state.bytes_per_read_access(),
+           dump);
+  }
+
+  writer.send_offset = 0;
+  writer.recv_offset = 0;
+
+  return 0;
+}
+
+template <uint32_t base_address>
+int do_maple_block_read_dump(struct ftdi_context * ftdi,
+                             int port,
+                             int lm,
+                             struct storage_state& storage_state,
+                             struct ft1::get_media_info_data_transfer::data_format& media_info) // copy of media_info on the stack
+{
+  uint8_t send_buf[8192];
+  uint8_t recv_buf[8192];
+
+  char filename[256];
+  snprintf(filename, (sizeof (filename)), "dump_p%dl%d.bin", port, ap_lm_bus_int(lm));
+
+  FILE * dump = fopen(filename, "wb");
+
+  auto writer = maple::host_command_writer<base_address>(reinterpret_cast<uint32_t *>(send_buf),
+                                                         reinterpret_cast<uint32_t *>(recv_buf));
+  uint32_t last_send_offset = 0;
+
+  constexpr int partition = 0;
+
+  using response_type = maple::data_transfer<ft1::get_media_info_data_transfer::data_format>;
+  using host_response_type = maple::host_response<response_type>;
+  const uint32_t recv_trailing = storage_state.bytes_per_read_access();
+  const uint32_t host_response_size = (sizeof (host_response_type)) + recv_trailing;
+
+  for (uint16_t block_number = 0; block_number < (media_info.total_size + 1); block_number++) {
+    for (uint32_t phase = 0; phase < storage_state.read_accesses(); phase++) {
+      fprintf(stderr, "maple_block_read: block %d,%d\n", block_number, phase);
+      last_send_offset = writer.send_offset;
+      send_block_read(writer, port, lm, recv_trailing, partition, phase, block_number);
+    }
+
+    constexpr uint32_t maple_buffer_size = 8192;
+    if (writer.recv_offset + host_response_size > maple_buffer_size) {
+      int res = handle_block_read_dump<base_address>(ftdi,
+                                                     writer,
+                                                     storage_state,
+                                                     last_send_offset,
+                                                     dump);
+      if (res != 0) {
+        return -1;
+      }
+    }
+  }
+
+  if (writer.send_offset != 0) {
+    int res = handle_block_read_dump<base_address>(ftdi,
+                                                   writer,
+                                                   storage_state,
+                                                   last_send_offset,
+                                                   dump);
+    if (res != 0) {
+      return -1;
+    }
+  }
+
+  fclose(dump);
+
+  return 0;
+}
+
+int do_maple_list(struct ftdi_context * ftdi)
+{
+  constexpr uint32_t base_address = 0xac002020;
+
+  uint8_t send_buf[8192];
+  uint8_t recv_buf[8192];
+
+  using command_type = maple::device_request;
+  using response_type = maple::device_status;
+
+  auto writer = maple::host_command_writer<base_address>(reinterpret_cast<uint32_t *>(send_buf),
+                                                         reinterpret_cast<uint32_t *>(recv_buf));
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();
-
-  for (uint32_t i = 0; i < writer.send_offset; i++) {
-    fprintf(stderr, "%02x ", send_buf[i]);
-  }
-  fprintf(stderr, "\n");
 
   int res = do_maple_raw(ftdi,
                          send_buf, writer.send_offset,
@@ -754,20 +983,15 @@ int do_maple_list(struct ftdi_context * ftdi)
     return -1;
   }
 
-  for (uint32_t i = 0; i < writer.recv_offset; i++) {
-    fprintf(stderr, "%02x ", recv_buf[i]);
-    if (i % 4 == 3)
-      fprintf(stderr, "\n");
-  }
-  fprintf(stderr, "\n");
-  fprintf(stderr, "%d\n", response_type::command_code);
-  fprintf(stderr, "%p\n", host_response);
-  fprintf(stderr, "%p\n", recv_buf);
+  // reset writer
+  writer.send_offset = 0;
+  writer.recv_offset = 0;
+  uint32_t last_send_offset = 0;
 
   for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
-    fprintf(stderr, "port: %d\n", port);
+    fprintf(stderr, "[device] port: %d\n", port);
     if (bus_data.command_code != response_type::command_code) {
       fprintf(stderr, "  disconnected %02x %02x %02x %02x\n",
               bus_data.command_code,
@@ -775,11 +999,132 @@ int do_maple_list(struct ftdi_context * ftdi)
               bus_data.source_ap,
               bus_data.data_size);
     } else {
-      fprintf(stderr, "  ft:    %08x\n", std::byteswap(data_fields.device_id.ft));
-      fprintf(stderr, "  fd[0]: %08x\n", std::byteswap(data_fields.device_id.fd[0]));
-      fprintf(stderr, "  fd[1]: %08x\n", std::byteswap(data_fields.device_id.fd[1]));
-      fprintf(stderr, "  fd[2]: %08x\n", std::byteswap(data_fields.device_id.fd[2]));
-      fprintf(stderr, "  source_ap.lm_bus: %d\n", bus_data.source_ap & ap::lm_bus::bit_mask);
+      print_device_id(data_fields.device_id);
+      uint8_t source_ap__lm_bus = bus_data.source_ap & ap::lm_bus::bit_mask;
+      do_lm_requests(writer, port, source_ap__lm_bus, last_send_offset, &send_extension_device_request);
+    }
+  }
+
+  if (writer.send_offset == 0) {
+    return 0;
+  }
+
+  struct storage_state storage_state[4][5];
+
+  {
+    // rewrite the end flag of the last request
+    using host_command_type = maple::host_command<uint8_t[0]>;
+    auto host_command = reinterpret_cast<host_command_type *>(&send_buf[last_send_offset]);
+    host_command->host_instruction |= host_instruction::end_flag;
+
+    int res = do_maple_raw(ftdi,
+                           send_buf, writer.send_offset,
+                           recv_buf, writer.recv_offset);
+    if (res != 0) {
+      return -1;
+    }
+
+    const uint32_t recv_offset = writer.recv_offset;
+
+    // reset writer
+    writer.send_offset = 0;
+    writer.recv_offset = 0;
+    last_send_offset = 0;
+
+    using response_type = maple::device_status;
+    using host_response_type = maple::host_response<response_type::data_fields>;
+    for (uint32_t offset = 0; offset < recv_offset; offset += (sizeof (host_response_type))) {
+      auto host_response = reinterpret_cast<host_response_type *>(&recv_buf[offset]);
+
+      auto& bus_data = host_response->bus_data;
+      auto& data_fields = bus_data.data_fields;
+
+      if (bus_data.command_code != response_type::command_code) {
+        fprintf(stderr, "  disconnected %02x %02x %02x %02x\n",
+                bus_data.command_code,
+                bus_data.destination_ap,
+                bus_data.source_ap,
+                bus_data.data_size);
+        continue;
+      }
+
+      uint32_t port = (bus_data.source_ap & ap::port_select::bit_mask) >> 6;
+      uint32_t lm_bus = (bus_data.source_ap & ap::lm_bus::bit_mask) >> 0;
+      fprintf(stderr, "[extension] port: %d ; lm: %05b\n", port, lm_bus);
+      print_device_id(data_fields.device_id);
+
+      uint32_t ft = be_bswap<uint32_t>(data_fields.device_id.ft);
+      if (ft & function_type::storage) {
+        int fd_ix = count_left_set_bits(ft, count_trailing_zeros(function_type::storage));
+        uint32_t fd = be_bswap<uint32_t>(data_fields.device_id.fd[fd_ix]);
+        print_storage_function_definition(fd);
+
+        storage_state[port][ap_lm_bus_int(lm_bus)].fd = fd;
+        last_send_offset = writer.send_offset;
+        send_get_media_info(writer, port, lm_bus);
+      }
+    }
+  }
+
+  if (writer.send_offset == 0) {
+    return 0;
+  }
+
+  {
+    // rewrite the end flag of the last request
+    using host_command_type = maple::host_command<uint8_t[0]>;
+    auto host_command = reinterpret_cast<host_command_type *>(&send_buf[last_send_offset]);
+    host_command->host_instruction |= host_instruction::end_flag;
+
+    int res = do_maple_raw(ftdi,
+                           send_buf, writer.send_offset,
+                           recv_buf, writer.recv_offset);
+    if (res != 0) {
+      return -1;
+    }
+
+    const uint32_t recv_offset = writer.recv_offset;
+    // reset writer
+    writer.send_offset = 0;
+    writer.recv_offset = 0;
+    last_send_offset = 0;
+
+    using response_type = maple::data_transfer<ft1::get_media_info_data_transfer::data_format>;
+    using host_response_type = maple::host_response<response_type::data_fields>;
+
+    for (uint32_t offset = 0; offset < recv_offset; offset += (sizeof (host_response_type))) {
+      auto host_response = reinterpret_cast<host_response_type *>(&recv_buf[offset]);
+
+      auto& bus_data = host_response->bus_data;
+      auto& data_fields = bus_data.data_fields;
+      auto& data = data_fields.data;
+
+      if (bus_data.command_code != response_type::command_code) {
+        fprintf(stderr, "  disconnected %02x %02x %02x %02x\n",
+                bus_data.command_code,
+                bus_data.destination_ap,
+                bus_data.source_ap,
+                bus_data.data_size);
+        continue;
+      }
+
+      uint32_t port = (bus_data.source_ap & ap::port_select::bit_mask) >> 6;
+      uint32_t lm_bus = (bus_data.source_ap & ap::lm_bus::bit_mask) >> 0;
+      fprintf(stderr, "[extension] port: %d ; lm: %05b\n", port, lm_bus);
+      print_media_info(data);
+
+      using command_type = maple::block_read;
+      using host_command_type = maple::host_command<command_type>;
+      using response_type = block_read_response;
+      using host_response_type = maple::host_response<response_type::data_fields>;
+      fprintf(stderr, "block read command size %ld\n", (sizeof (host_command_type)));
+      fprintf(stderr, "block read response size %ld\n", (sizeof (host_response_type)));
+
+      do_maple_block_read_dump<base_address>(ftdi,
+                                             port,
+                                             lm_bus,
+                                             storage_state[port][ap_lm_bus_int(lm_bus)],
+                                             data);
     }
   }
 

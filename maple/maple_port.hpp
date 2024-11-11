@@ -35,3 +35,15 @@ constexpr inline uint32_t ap_lm_bus(const uint32_t lm)
   case 4: return ap::lm_bus::_4;
   }
 }
+
+constexpr inline uint32_t ap_lm_bus_int(const uint32_t lm_bus)
+{
+  switch (lm_bus) {
+  default: [[fallthrough]];
+  case ap::lm_bus::_0: return 0;
+  case ap::lm_bus::_1: return 1;
+  case ap::lm_bus::_2: return 2;
+  case ap::lm_bus::_3: return 3;
+  case ap::lm_bus::_4: return 4;
+  }
+}

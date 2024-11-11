@@ -1,4 +1,7 @@
-CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Werror -Wfatal-errors -ggdb -Wno-error=unused-parameter -Wno-error=unused-variable -fstack-protector-strong
+CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Werror -Wfatal-errors -ggdb -fstack-protector-strong
+CFLAGS += -Wno-error=unused-parameter
+CFLAGS += -Wno-error=unused-variable
+CFLAGS += -Wno-error=unused-but-set-variable
 CXXFLAGS = -std=c++23
 
 FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
