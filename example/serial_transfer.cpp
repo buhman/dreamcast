@@ -33,8 +33,8 @@ inline void copy(T * dst, const T * src, const int32_t n) noexcept
 static uint8_t * framebuffer[2];
 static char textbuffer[2][4 * 8];
 
-static uint32_t send_buf[1024 / 4] __attribute__((aligned(32)));
-static uint32_t recv_buf[1024 / 4] __attribute__((aligned(32)));
+static uint8_t send_buf[1024] __attribute__((aligned(32)));
+static uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
 struct serial_error_counter {
   uint32_t brk;
@@ -200,15 +200,8 @@ void send_device_request()
 
 void send_raw(struct serial_load::maple_poll_state& state)
 {
-  for (int i = 0; i < 1024; i++) {
-    ((uint8_t*)&__recv_buf)[i] = 0xee;
-  }
-  maple::dma_start(&__send_buf, state.send_length,
-                   &__recv_buf, state.recv_length);
-  /*
-  maple::dma_start((uint32_t*)0xac000020, state.send_length,
-                   (uint32_t*)0xac002020, state.recv_length);
-  */
+  maple::dma_start(reinterpret_cast<uint8_t *>(&__send_buf), state.send_length,
+                   reinterpret_cast<uint8_t *>(&__recv_buf), state.recv_length);
 }
 
 void handle_maple(struct serial_load::maple_poll_state& state)

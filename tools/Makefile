@@ -24,7 +24,12 @@ ttf_%: ttf_%.o
 ftdi_%.o: ftdi_%.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(FTDI_CFLAGS) -c $< -o $@
 
-ftdi_%: ftdi_%.o crc32.o
+FTDI_OBJ = \
+	ftdi_transfer.o \
+	ftdi_maple.o \
+	crc32.o
+
+ftdi_transfer: $(FTDI_OBJ)
 	$(CXX) $^ -o $@ $(FTDI_LDFLAGS)
 
 ttf_outline: ttf_outline.o 2d_pack.o

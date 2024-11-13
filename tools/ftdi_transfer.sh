@@ -13,5 +13,5 @@ set -ex
 
 ${SCRIPT_DIR}/ftdi_transfer \
     write 0xac010000 "$filename" \
-    jump  0xac010000
-#    console
+    jump  0xac010000 \
+    console
