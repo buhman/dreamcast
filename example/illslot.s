@@ -1,6 +1,8 @@
 	.global _illslot
 _illslot:
+        trapa #12
 	rts
-	mova	test,r0
+	nop
+        mova	test,r0
 
 test:	.long 0x12345678

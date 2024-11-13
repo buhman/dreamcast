@@ -72,7 +72,6 @@ static void poststart_read()
 static void prestart_maple_raw__command()
 {
   uint32_t dest = reinterpret_cast<uint32_t>(&__send_buf);
-  //uint32_t dest = 0xac000020;
   uint32_t size = state.buf.arg[0];
   serial::recv_dma(dest - 1, size + 1);
   state.reply_crc.value = 0xffffffff;
@@ -82,7 +81,6 @@ static void prestart_maple_raw__command()
 static void prestart_maple_raw__response()
 {
   uint32_t src = reinterpret_cast<uint32_t>(&__recv_buf);
-  //uint32_t src = 0xac002020;
   uint32_t size = state.buf.arg[1];
   serial::send_dma(src, size);
   state.reply_crc.value = 0xffffffff;

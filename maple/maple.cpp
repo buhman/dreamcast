@@ -107,11 +107,9 @@ uint32_t init_block_write(uint32_t * command_buf, uint32_t * receive_buf,
 }
 */
 
-static inline void _dma_start(const uint32_t * command_buf)
+static inline void _dma_start(const uint8_t * command_buf)
 {
   using namespace dmac;
-
-  //command_buf = reinterpret_cast<uint32_t *>(reinterpret_cast<uint32_t>(command_buf) | 0xa000'0000);
 
   sh7091.DMAC.DMAOR = dmaor::ddt::on_demand_data_transfer_mode       /* on-demand data transfer mode */
                     | dmaor::pr::ch2_ch0_ch1_ch3                     /* priority mode; CH2 > CH0 > CH1 > CH3 */
@@ -161,9 +159,9 @@ bool dma_poll_complete()
   return complete;
 }
 
-void dma_start(const uint32_t * send_buf,
+void dma_start(uint8_t const * const send_buf,
                const uint32_t send_size,
-               const uint32_t * recv_buf,
+               uint8_t * const recv_buf,
                const uint32_t recv_size
                )
 {
@@ -171,7 +169,7 @@ void dma_start(const uint32_t * send_buf,
   for (uint32_t i = 0; i < align_32byte(send_size) / 32; i++) {
     asm volatile ("ocbwb @%0"
                   :                                                              // output
-                  : "r" (reinterpret_cast<uint32_t>(&send_buf[(32 * i) / 4])) // input
+                  : "r" (reinterpret_cast<uint32_t>(&send_buf[32 * i])) // input
                   );
   }
 
@@ -182,7 +180,7 @@ void dma_start(const uint32_t * send_buf,
   for (uint32_t i = 0; i < align_32byte(recv_size) / 32; i++) {
     asm volatile ("ocbp @%0"
                   :                                                              // output
-                  : "r" (reinterpret_cast<uint32_t>(&recv_buf[(32 * i) / 4])) // input
+                  : "r" (reinterpret_cast<uint32_t>(&recv_buf[32 * i])) // input
                   );
   }
 }

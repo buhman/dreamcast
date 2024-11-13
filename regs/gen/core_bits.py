@@ -15,22 +15,26 @@ def aggregate_registers(d):
     return dict(aggregated)
 
 def parse_bit_number(s):
-    assert '-' not in s
+    assert '-' not in s, s
+    assert ',' not in s, s
     return int(s, 10)
 
-def parse_bit_set(s, split_char):
-    assert len(list(c for c in s if c == split_char)) == 1
-    left, right = map(parse_bit_number, s.split(split_char, maxsplit=1))
-    assert left > right, (left, right)
-    return left, right
+def parse_bit_set(s, split_char, maxsplit):
+    #assert len(list(c for c in s if c == split_char)) == 1, s
+    split = list(map(parse_bit_number, s.split(split_char, maxsplit=maxsplit)))
+    for i in range(len(split) - 1):
+        left = split[i]
+        right = split[i+1]
+        assert left > right, (left, right)
+    return split
 
 def parse_bit_range(s):
     if '-' in s:
-        left, right = parse_bit_set(s, '-')
+        left, right = parse_bit_set(s, '-', 1)
         return set(range(right, left+1))
     elif ',' in s:
-        left, right = parse_bit_set(s, ',')
-        return set([right, left])
+        bits = parse_bit_set(s, ',', -1)
+        return set(bits)
     else:
         num = parse_bit_number(s)
         return set([num])
@@ -124,8 +128,10 @@ def aggregate_all_enums(aggregated):
 '''
 
 def mask_from_bits(bits):
-    h, l = max(bits), min(bits)
-    mask = 2 ** ((h - l) + 1) - 1
+    mask = 0
+    for b in bits:
+        mask |= 1 << b
+    mask >>= min(bits)
     return mask
 
 def parse_value(value):

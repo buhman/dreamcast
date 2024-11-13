@@ -99,4 +99,4 @@ __vbr_load_end = 0;
 INCLUDE "addresses.lds"
 
 __send_buf = 0xac000020;
-__recv_buf = 0xac002020;
+__recv_buf = 0xac004020;

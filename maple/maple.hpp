@@ -38,9 +38,9 @@ void dma_wait_complete();
 
 bool dma_poll_complete();
 
-void dma_start(uint32_t const * const command_buf,
+void dma_start(uint8_t const * const command_buf,
                const uint32_t command_size,
-               uint32_t const * const receive_buf,
+               uint8_t * const receive_buf,
                const uint32_t receive_size
                );
 

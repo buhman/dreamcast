@@ -11,9 +11,11 @@ void vbr100()
 {
   serial::string("vbr100\n");
   serial::string("expevt ");
-  serial::integer(sh7091.CCN.EXPEVT);
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
   serial::string("intevt ");
-  serial::integer(sh7091.CCN.INTEVT);
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
   uint32_t spc;
   uint32_t ssr;
   asm volatile ("stc spc,%0"
@@ -42,9 +44,53 @@ void vbr600()
   while (1);
 }
 
+__attribute__ ((interrupt_handler))
+void dbr();
+
+void dbr()
+{
+  serial::string("dbr\n");
+  serial::string("expevt ");
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
+  serial::string("intevt ");
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
+
+  uint32_t spc;
+  uint32_t ssr;
+  asm volatile ("stc spc,%0" : "=r" (spc) );
+  asm volatile ("stc ssr,%0" : "=r" (ssr) );
+  serial::string("spc ");
+  serial::integer(spc);
+  serial::string("ssr ");
+  serial::integer(ssr);
+
+  uint32_t sr;
+  asm volatile ("stc sr,%0" : "=r" (sr) );
+  serial::string("sr ");
+  serial::integer(sr);
+
+  return;
+}
+
+int do_stuff(int a, int b)
+{
+  serial::string("do_stuff\n");
+  asm volatile ("nop;");
+  return a + b;
+}
+
 extern "C" uint32_t * illslot(void);
+
 void main()
 {
+  serial::string("main\n");
+  for (int i = 0; i < 10000000; i++) {
+    asm volatile ("nop;");
+  }
+  //serial::init(0);
+
   uint32_t vbr = reinterpret_cast<uint32_t>(&__vbr_link_start) - 0x100;
 
   system.IML2NRM = 0;
@@ -83,24 +129,64 @@ void main()
   serial::string("sr ");
   serial::integer<uint32_t>(sr);
 
-  sr = sr & (~(1 << 28)); // BL
+  sr &= ~sh::sr::bl; // BL
+  sr |= sh::sr::imask(15); // imask
 
-  asm volatile ("ldc %0, sr"
+  serial::string("sr ");
+  serial::integer<uint32_t>(sr);
+
+  asm volatile ("ldc %0,sr"
 		:
 		: "r" (sr));
 
-  /*
-  uint32_t vbr2;
-  asm volatile ("stc vbr,%0"
-		: "=r" (vbr2));
-  */
-
+  serial::string("vbr ");
   serial::integer<uint32_t>(vbr);
-  //serial::integer<uint32_t>(vbr2);
+  serial::string("vbr100 ");
   serial::integer<uint32_t>(reinterpret_cast<uint32_t>(&vbr100));
 
-  uint32_t * test = illslot();
-  serial::integer<uint32_t>(*test);
+  (void)dbr;
+  uint32_t dbr_address = reinterpret_cast<uint32_t>(&dbr);
+  asm volatile ("ldc %0,dbr"
+                :
+                : "r" (dbr_address));
+  serial::string("dbr ");
+  serial::integer<uint32_t>(dbr_address);
 
-  while (1);
+  sh7091.UBC.BARA = reinterpret_cast<uint32_t>(&do_stuff);
+  sh7091.CCN.BASRA = 0;
+  sh7091.UBC.BAMRA
+    = ubc::bamra::bama::all_bara_bits_are_included_in_break_conditions
+    | ubc::bamra::basma::no_basra_bits_are_included_in_break_conditions
+    ;
+  sh7091.UBC.BBRA
+    = ubc::bbra::sza::operand_size_is_not_included_in_break_conditions
+    | ubc::bbra::ida::instruction_access_cycle_is_used_as_break_condition
+    | ubc::bbra::rwa::read_cycle_or_write_cycle_is_used_as_break_condition
+    ;
+  sh7091.UBC.BRCR
+    = ubc::brcr::pcba::channel_a_pc_break_is_effected_before_instruction_execution
+    | ubc::brcr::ubde::user_break_debug_function_is_used
+    ;
+  serial::string("basra ");
+  serial::integer(sh7091.CCN.BASRA);
+  serial::string("bara ");
+  serial::integer(sh7091.UBC.BARA);
+  serial::string("bamra ");
+  serial::integer(sh7091.UBC.BAMRA);
+  serial::string("bbra ");
+  serial::integer(sh7091.UBC.BBRA);
+  serial::string("brcr ");
+  serial::integer(sh7091.UBC.BRCR);
+
+  int res = do_stuff(1, 2);
+  (void)res;
+
+  /*
+  uint32_t * test = illslot();
+  serial::string("illslot\n");
+  serial::integer<uint32_t>(*test);
+  */
+  serial::string("return\n");
+
+  //while (1);
 }
