@@ -59,17 +59,27 @@ void dbr()
 
   uint32_t spc;
   uint32_t ssr;
+  uint32_t sgr;
+  uint32_t r15;
   asm volatile ("stc spc,%0" : "=r" (spc) );
   asm volatile ("stc ssr,%0" : "=r" (ssr) );
+  asm volatile ("stc sgr,%0" : "=r" (sgr) );
+  asm volatile ("mov r15,%0" : "=r" (r15) );
   serial::string("spc ");
   serial::integer(spc);
   serial::string("ssr ");
   serial::integer(ssr);
+  serial::string("sgr ");
+  serial::integer(sgr);
+  serial::string("r15 ");
+  serial::integer(r15);
 
   uint32_t sr;
   asm volatile ("stc sr,%0" : "=r" (sr) );
   serial::string("sr ");
   serial::integer(sr);
+
+  while (1);
 
   return;
 }
@@ -178,6 +188,10 @@ void main()
   serial::string("brcr ");
   serial::integer(sh7091.UBC.BRCR);
 
+  uint32_t r15;
+  asm volatile ("mov r15,%0" : "=r" (r15) );
+  serial::string("r15 ");
+  serial::integer(r15);
   int res = do_stuff(1, 2);
   (void)res;
 

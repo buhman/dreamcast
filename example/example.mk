@@ -643,3 +643,10 @@ SHEIK_VQ_OBJ = \
 
 example/sheik_vq.elf: LDSCRIPT = $(LIB)/main.lds
 example/sheik_vq.elf: $(START_OBJ) $(SHEIK_VQ_OBJ)
+
+VGA_TIMING_OBJ = \
+	example/vga_timing.o \
+	holly/video_output.o
+
+example/vga_timing.elf: LDSCRIPT = $(LIB)/main.lds
+example/vga_timing.elf: $(START_OBJ) $(VGA_TIMING_OBJ)

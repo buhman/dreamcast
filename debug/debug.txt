@@ -1,0 +1,10 @@
+dreamcast | pc
+
+break 1   → [break state]
+          ← ackn 1
+
+regs 2    →
+          ← ackn 2
+
+          ← regs -1
+regs -1   →
