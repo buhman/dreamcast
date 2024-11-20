@@ -90,7 +90,7 @@ void init_texture_memory(const struct opb_size& opb_size)
 
 void main()
 {
-  serial::init(4);
+  serial::init(0);
   serial::string("main\n");
   video_output::set_mode_vga();
 

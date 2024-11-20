@@ -14,7 +14,7 @@
 #include "holly/texture_memory_alloc.hpp"
 #include "holly/background.hpp"
 #include "holly/region_array.hpp"
-
+#include "sh7091/store_queue.hpp"
 #include "sh7091/serial.hpp"
 
 void print_cable_type_resolution(const uint32_t cable_type, const struct video_output::framebuffer_resolution& framebuffer_resolution)
@@ -59,9 +59,9 @@ struct vertex transform_vertex(const struct vertex& v,
   };
 }
 
-uint32_t transform(uint32_t * ta_parameter_buf,
-		   const struct video_output::framebuffer_resolution& framebuffer_resolution,
-		   const float theta)
+void transform(uint32_t * ta_parameter_buf,
+               const struct video_output::framebuffer_resolution& framebuffer_resolution,
+               const float theta)
 {
   auto parameter = ta_parameter_writer(ta_parameter_buf);
 
@@ -85,7 +85,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
 
   constexpr uint32_t base_color = 0xffff0000;
-  parameter.append<ta_global_parameter::sprite>() =
+  *reinterpret_cast<ta_global_parameter::sprite *>(store_queue) =
     ta_global_parameter::sprite(parameter_control_word,
                                 isp_tsp_instruction_word,
                                 tsp_instruction_word,
@@ -94,18 +94,21 @@ uint32_t transform(uint32_t * ta_parameter_buf,
                                 0, // offset_color
                                 0, // data_size_for_sort_dma
                                 0); // next_address_for_sort_dma
+  sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  parameter.append<ta_vertex_parameter::sprite_type_0>() =
+  *reinterpret_cast<ta_vertex_parameter::sprite_type_0 *>(store_queue) =
     ta_vertex_parameter::sprite_type_0(para_control::para_type::vertex_parameter,
 				       a.x, a.y, a.z,
 				       b.x, b.y, b.z,
 				       c.x, c.y, c.z,
 				       d.x, d.y);
+  sq_transfer_64byte(ta_fifo_polygon_converter);
   // curiously, there is no quad_vertices[3].z in vertex_sprite_type_0
 
-  parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  return parameter.offset;
 }
 
 void init_texture_memory(const struct opb_size& opb_size, const struct video_output::framebuffer_resolution& framebuffer_resolution)
@@ -122,6 +125,7 @@ uint32_t _ta_parameter_buf[((32 + 64 + 32) + 32) / 4];
 
 void main()
 {
+  serial::init(0);
   uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
@@ -141,13 +145,15 @@ void main()
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
+  holly.VO_BORDER_COL = 0xffffff00;
+
   uint32_t cable_type = video_output::get_cable_type();
   auto framebuffer_resolution = video_output::set_mode_by_cable_type(cable_type);
   print_cable_type_resolution(cable_type, framebuffer_resolution);
   init_texture_memory(opb_size, framebuffer_resolution);
   core_init();
 
-  float theta = 0;
+  float theta = 10;
   uint32_t frame_ix = 0;
 
   while (true) {
@@ -155,21 +161,26 @@ void main()
 			      ta_alloc,
 			      framebuffer_resolution.width / 32,
 			      framebuffer_resolution.height / 32);
-    uint32_t ta_parameter_size = transform(ta_parameter_buf, framebuffer_resolution, theta);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
+    transform(ta_parameter_buf, framebuffer_resolution, theta);
     ta_wait_opaque_list();
 
-    core_start_render(framebuffer_resolution.width, // frame_width
-		      frame_ix);
+    core_start_render2(texture_memory_alloc::region_array.start,
+                       texture_memory_alloc::isp_tsp_parameters.start,
+                       texture_memory_alloc::background.start,
+                       texture_memory_alloc::framebuffer[frame_ix].start,
+                       framebuffer_resolution.width
+                       );
     core_wait_end_of_render_video();
 
     while (!spg_status::vsync(holly.SPG_STATUS));
     core_flip(frame_ix);
-    if (cable_type != video_output::get_cable_type()) {
-      cable_type = video_output::get_cable_type();
-      framebuffer_resolution = video_output::set_mode_by_cable_type(cable_type);
-      print_cable_type_resolution(cable_type, framebuffer_resolution);
+    uint32_t new_cable_type = video_output::get_cable_type();
+    if (cable_type != new_cable_type) {
+      framebuffer_resolution = video_output::set_mode_by_cable_type(new_cable_type);
+      print_cable_type_resolution(new_cable_type, framebuffer_resolution);
       init_texture_memory(opb_size, framebuffer_resolution);
+
+      cable_type = new_cable_type;
     }
     while (spg_status::vsync(holly.SPG_STATUS));
 
