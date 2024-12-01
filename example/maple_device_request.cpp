@@ -7,7 +7,7 @@
 
 void main()
 {
-  //serial::init(0);
+  serial::init(0);
 
   uint8_t send_buf[1024] __attribute__((aligned(32)));
   uint8_t recv_buf[1024] __attribute__((aligned(32)));

@@ -2,11 +2,12 @@
 #include <cstdint>
 #include <compare>
 #include <iostream>
+#include <array>
 
 #include "insertion_sort.hpp"
 #include "rect.hpp"
 #include "../twiddle.hpp"
-#include "2d_pack.hpp"
+#include "ttf_2d_pack.hpp"
 
 struct size {
   uint16_t width;
@@ -37,6 +38,39 @@ inline bool area_valid(const uint8_t texture[max_texture.height][max_texture.wid
   return true;
 }
 
+constexpr inline std::array<uint32_t, 2>
+from_ix(uint32_t curve_ix)
+{
+  std::array<uint32_t, 2> x_y = {0, 0};
+  uint32_t curve_bit = 0;
+
+  while (curve_ix != 0) {
+    x_y[(curve_bit + 1) % 2] |= (curve_ix & 1) << (curve_bit / 2);
+    curve_ix >>= 1;
+    curve_bit += 1;
+  }
+
+  return x_y;
+}
+
+static_assert(from_ix(0) == std::array<uint32_t, 2>{{0b000, 0b000}});
+static_assert(from_ix(2) == std::array<uint32_t, 2>{{0b001, 0b000}});
+static_assert(from_ix(8) == std::array<uint32_t, 2>{{0b010, 0b000}});
+static_assert(from_ix(10) == std::array<uint32_t, 2>{{0b011, 0b000}});
+static_assert(from_ix(32) == std::array<uint32_t, 2>{{0b100, 0b000}});
+static_assert(from_ix(34) == std::array<uint32_t, 2>{{0b101, 0b000}});
+static_assert(from_ix(40) == std::array<uint32_t, 2>{{0b110, 0b000}});
+static_assert(from_ix(42) == std::array<uint32_t, 2>{{0b111, 0b000}});
+
+static_assert(from_ix(1) == std::array<uint32_t, 2>{{0b000, 0b001}});
+static_assert(from_ix(4) == std::array<uint32_t, 2>{{0b000, 0b010}});
+static_assert(from_ix(5) == std::array<uint32_t, 2>{{0b000, 0b011}});
+static_assert(from_ix(16) == std::array<uint32_t, 2>{{0b000, 0b100}});
+static_assert(from_ix(17) == std::array<uint32_t, 2>{{0b000, 0b101}});
+static_assert(from_ix(20) == std::array<uint32_t, 2>{{0b000, 0b110}});
+static_assert(from_ix(21) == std::array<uint32_t, 2>{{0b000, 0b111}});
+
+
 uint32_t pack_into(uint8_t texture[max_texture.height][max_texture.width],
 		   struct size& window,
 		   struct rect& rect)
@@ -50,7 +84,7 @@ uint32_t pack_into(uint8_t texture[max_texture.height][max_texture.width],
   }
 
   while (true) {
-    auto [x_offset, y_offset] = twiddle::from_ix(z_curve_ix);
+    auto [x_offset, y_offset] = from_ix(z_curve_ix);
 
     if (x_offset >= window.width and y_offset >= window.height) {
       //std::cerr << z_curve_ix << ' ' << window.width << ' ' << window.height << '\n';
@@ -78,7 +112,9 @@ uint32_t pack_into(uint8_t texture[max_texture.height][max_texture.width],
       rect.y = y_offset;
 
       return twiddle::from_xy(rect.x + rect.width - 1,
-			      rect.y + rect.height - 1);
+			      rect.y + rect.height - 1,
+                              1024,
+                              1024);
     } else {
       z_curve_ix += 1;
       continue;

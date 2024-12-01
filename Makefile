@@ -36,9 +36,9 @@ geometry/%.hpp: geometry/%.obj
 	$(BUILD_BINARY_O)
 
 build-fonts:
-	./tools/ttf_outline 20 7f 20 0 little /usr/share/fonts/dejavu/DejaVuSans.ttf dejavusansmono.data
-	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/dejavu/DejaVuSans.ttf dejavusansmono_mono.data
-	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/terminus/ter-u20n.otb ter_u20n.data
+	./tools/ttf_outline 20 7f 20 0 little /usr/share/fonts/dejavu/DejaVuSans.ttf font/dejavusansmono/dejavusansmono.data
+	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/dejavu/DejaVuSans.ttf font/dejavusansmono/dejavusansmono_mono.data
+	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/terminus/ter-u20n.otb font/ter_u20n/ter_u20n.data
 
 include example/example.mk
 include chess/chess.mk

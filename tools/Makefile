@@ -32,7 +32,7 @@ FTDI_OBJ = \
 ftdi_transfer: $(FTDI_OBJ)
 	$(CXX) $^ -o $@ $(FTDI_LDFLAGS)
 
-ttf_outline: ttf_outline.o 2d_pack.o
+ttf_outline: ttf_outline.o ttf_2d_pack.o
 
 clean:
 	rm -f *.o ttf_outline

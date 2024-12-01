@@ -10,19 +10,6 @@ namespace serial_load {
 
 struct state state;
 
-static void move(void *dst, const void *src, uint32_t n)
-{
-  uint8_t * d = reinterpret_cast<uint8_t *>(dst);
-  const uint8_t * s = reinterpret_cast<const uint8_t *>(src);
-
-  if (d==s) return;
-  if (d<s) {
-    for (; n; n--) *d++ = *s++;
-  } else {
-    while (n) n--, d[n] = s[n];
-  }
-}
-
 void init(uint32_t speed)
 {
   state.len = 0;

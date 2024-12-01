@@ -36,11 +36,10 @@ struct font {
     int32_t max_advance; // 26.6 fixed point
   } face_metrics;
   uint16_t glyph_count;
-  uint16_t texture_stride;
+  uint16_t _texture_stride;
   uint16_t texture_width;
   uint16_t texture_height;
-  uint32_t texture_size;
   uint32_t max_z_curve_ix;
 } __attribute__ ((packed));
 
-static_assert((sizeof (font)) == ((sizeof (uint32_t)) * 8));
+static_assert((sizeof (font)) == ((sizeof (uint32_t)) * 7));

@@ -191,22 +191,12 @@ void init_texture_memory(const struct opb_size& opb_size)
 }
 
 void inflate_font(const uint8_t * src,
-                  const uint32_t width,
-                  const uint32_t height)
+                  const uint32_t z_curve_max_ix)
 {
   auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc::texture.start / 4]);
 
-  const uint32_t size = width * height;
-
-  uint8_t temp[size] __attribute__((aligned(4)));
-
-  twiddle::texture(temp,
-		   src,
-		   width,
-		   height);
-
-  for (uint32_t i = 0; i < size / 4; i++) {
-    texture[i] = reinterpret_cast<uint32_t *>(temp)[i];
+  for (uint32_t i = 0; i < z_curve_max_ix / 4; i++) {
+    texture[i] = reinterpret_cast<const uint32_t *>(src)[i];
   }
 }
 
@@ -232,8 +222,7 @@ void main()
   */
 
   inflate_font(texture,
-               font->texture_width,
-	       font->texture_height);
+	       font->max_z_curve_ix);
   palette_data<256>();
 
   // The address of `ta_parameter_buf` must be a multiple of 32 bytes.

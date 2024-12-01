@@ -10,7 +10,7 @@
 
 #include "../font/font.hpp"
 #include "rect.hpp"
-#include "2d_pack.hpp"
+#include "ttf_2d_pack.hpp"
 #include "../twiddle.hpp"
 
 std::endian _target_endian;
@@ -93,8 +93,8 @@ load_outline_char(const FT_Face face,
   assert(bits_per_pixel == 8 || bits_per_pixel == 4 || bits_per_pixel == 2 || bits_per_pixel == 1);
   const uint32_t pixels_per_byte = 8 / bits_per_pixel;
   const uint32_t texture_stride = texture_width / pixels_per_byte;
-  std::cerr << "pixels per byte: " << pixels_per_byte << '\n';
-  std::cerr << "texture stride: " << texture_stride << '\n';
+  //std::cerr << "pixels per byte: " << pixels_per_byte << '\n';
+  //std::cerr << "texture stride: " << texture_stride << '\n';
 
   for (uint32_t y = 0; y < rect.height; y++) {
     for (uint32_t x = 0; x < rect.width; x++) {
@@ -159,7 +159,7 @@ load_all_positions(const FT_Face face,
 		   const uint32_t start,
 		   const uint32_t end,
 		   glyph * glyphs,
-		   uint32_t * texture
+		   uint8_t * texture
 		   )
 {
   const uint32_t num_glyphs = (end - start) + 1;
@@ -197,7 +197,7 @@ load_all_positions(const FT_Face face,
 				    bits_per_pixel,
 				    char_code,
 				    &glyphs[char_code - start],
-				    reinterpret_cast<uint8_t *>(texture),
+				    texture,
 				    window_curve_ix.window.width,
 				    rects[i]);
     if (err < 0) assert(false);
@@ -271,19 +271,27 @@ int main(int argc, char *argv[])
 
   uint32_t num_glyphs = (end - start) + 1;
   glyph glyphs[num_glyphs];
-  uint32_t texture[max_texture_size / 4];
+  uint8_t texture[max_texture_size];
   memset(texture, 0x00, max_texture_size);
 
   auto window_curve_ix = load_all_positions(face, monochrome, start, end, glyphs, texture);
 
-  uint32_t texture_stride;
+  //uint32_t texture_stride;
   uint32_t texture_size;
   if (monochrome) {
-    texture_stride = window_curve_ix.window.width / 8;
+    //texture_stride = window_curve_ix.window.width / 8;
     texture_size = window_curve_ix.window.width * window_curve_ix.window.height / 8;
   } else {
-    texture_stride = window_curve_ix.window.width;
-    texture_size = window_curve_ix.window.width * window_curve_ix.window.height;
+    //texture_stride = window_curve_ix.window.width;
+    texture_size = window_curve_ix.max_z_curve_ix;
+  }
+
+  uint8_t twiddle_texture[window_curve_ix.window.width * window_curve_ix.window.height];
+  if (!monochrome) {
+    twiddle::texture<uint8_t>(twiddle_texture,
+                              texture,
+                              window_curve_ix.window.width,
+                              window_curve_ix.window.height);
   }
 
   font font;
@@ -292,18 +300,16 @@ int main(int argc, char *argv[])
   font.face_metrics.height = byteswap<int32_t>(face->size->metrics.height);
   font.face_metrics.max_advance = byteswap<int32_t>(face->size->metrics.max_advance);
   font.glyph_count = byteswap<uint16_t>(num_glyphs);
-  font.texture_stride = byteswap<uint16_t>(texture_stride);
+  //font.texture_stride = byteswap<uint16_t>(texture_stride);
   font.texture_width = byteswap<uint16_t>(window_curve_ix.window.width);
   font.texture_height = byteswap<uint16_t>(window_curve_ix.window.height);
-  font.texture_size = byteswap<uint32_t>(texture_size);
   font.max_z_curve_ix = byteswap<uint32_t>(window_curve_ix.max_z_curve_ix);
 
   std::cerr << "start: 0x" << std::hex << start << '\n';
   std::cerr << "end: 0x"   << std::hex << end   << '\n';
-  std::cerr << "texture_stride: "  << std::dec << texture_stride   << '\n';
+  //std::cerr << "texture_stride: "  << std::dec << texture_stride   << '\n';
   std::cerr << "texture_width: "  << std::dec << window_curve_ix.window.width << '\n';
   std::cerr << "texture_height: " << std::dec << window_curve_ix.window.height  << '\n';
-  std::cerr << "texture_size: " << std::dec << texture_size << '\n';
   std::cerr << "max_z_curve_ix: " << std::dec << window_curve_ix.max_z_curve_ix << '\n';
 
   FILE * out = fopen(argv[output_file_path], "w");
@@ -314,7 +320,11 @@ int main(int argc, char *argv[])
 
   fwrite(reinterpret_cast<void*>(&font), (sizeof (font)), 1, out);
   fwrite(reinterpret_cast<void*>(&glyphs[0]), (sizeof (glyph)), num_glyphs, out);
-  fwrite(reinterpret_cast<void*>(&texture[0]), (sizeof (uint8_t)), texture_size, out);
+  if (monochrome) {
+    fwrite(reinterpret_cast<void*>(&texture[0]), (sizeof (uint8_t)), texture_size, out);
+  } else {
+    fwrite(reinterpret_cast<void*>(&twiddle_texture[0]), (sizeof (uint8_t)), texture_size, out);
+  }
 
   fclose(out);
 }
