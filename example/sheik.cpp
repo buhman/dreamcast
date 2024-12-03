@@ -28,6 +28,8 @@
 #include "model/sheik/material.h"
 #include "model/sheik/model.h"
 
+#include "memory.hpp"
+
 void transfer_scene(float theta)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
@@ -122,25 +124,15 @@ void transfer_scene(float theta)
   sq_transfer_32byte(ta_fifo_polygon_converter);
 }
 
-template <typename T>
-inline void copy(T * dst, const T * src, const int32_t n) noexcept
-{
-  int32_t n_t = n / (sizeof (T));
-  while (n_t > 0) {
-    *dst++ = *src++;
-    n_t--;
-  }
-}
-
 void texture_init()
 {
   int length = (sizeof (material)) / (sizeof (material[0]));
   for (int i = 0; i < length; i++) {
     uint32_t offset = texture_memory_alloc::texture.start + material[i].pixel.vram_offset;
 
-    copy<volatile uint32_t>(&texture_memory64[offset / 4],
-			    reinterpret_cast<uint32_t *>(material[i].pixel.start),
-			    material[i].pixel.size);
+    memory::copy<volatile uint32_t>(&texture_memory64[offset / 4],
+                                    reinterpret_cast<uint32_t *>(material[i].pixel.start),
+                                    material[i].pixel.size);
   }
 }
 

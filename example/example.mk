@@ -1,3 +1,6 @@
+example/arm/%.bin: phony
+	make -C example/arm $*.bin
+
 VIDEO_OUTPUT_OBJ = \
 	example/video_output.o \
 	holly/video_output.o \

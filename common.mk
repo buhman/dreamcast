@@ -1,7 +1,3 @@
-MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
-DIR := $(dir $(MAKEFILE_PATH))
-
-LIB ?= .
 OPT ?= -O2
 GENERATED ?=
 
@@ -9,7 +5,6 @@ AARCH = --isa=sh4 --little
 
 CARCH = -m4-single-only -ml
 CFLAGS += -mfsca -funsafe-math-optimizations -ffast-math
-CFLAGS += -I"$(dir $(MAKEFILE_PATH))"
 
 CXXFLAGS += -std=c++23
 
@@ -18,41 +13,18 @@ OBJARCH = -O elf32-shl -B sh4
 TARGET = sh4-none-elf-
 
 START_OBJ = \
-	start.o \
-	runtime.o \
-	sh7091/cache.o
+	$(LIB)/start.o \
+	$(LIB)/runtime.o \
+	$(LIB)/sh7091/cache.o
 
-IP_OBJ = \
-	systemid.o \
-	toc.o \
-	sg/sg_sec.o \
-	sg_arejp.o \
-	sg_areus.o \
-	sg_areec.o \
-	sg_are00.o \
-	sg_are01.o \
-	sg_are02.o \
-	sg_are03.o \
-	sg_are04.o \
-	$(START_OBJ) \
-	example/serial_transfer.o \
-	sh7091/serial.o \
-	serial_load.o \
-	maple/maple.o \
-	font/portfolio_6x8/portfolio_6x8.data.o \
-	crc32.o
-#sg_ini.o \
-#aip.o
+geometry/%.hpp: geometry/%.obj
+	PYTHONPATH=regs/gen python tools/obj_to_cpp.py $< > $@.tmp
+	mv $@.tmp $@
 
-%.o: %.obj
-	$(OBJCOPY) -g \
-		--rename-section IP=.text.$* \
-		$< $@
-
-ip.elf: $(IP_OBJ)
-	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
-
-include base.mk
+build-fonts:
+	./tools/ttf_outline 20 7f 20 0 little /usr/share/fonts/dejavu/DejaVuSans.ttf font/dejavusansmono/dejavusansmono.data
+	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/dejavu/DejaVuSans.ttf font/dejavusansmono/dejavusansmono_mono.data
+	./tools/ttf_outline 20 7f 20 1 little /usr/share/fonts/terminus/ter-u20n.otb font/ter_u20n/ter_u20n.data
 
 sine.pcm: common.mk
 	sox \
@@ -92,18 +64,18 @@ sine.pcm: common.mk
 		/=./pcm/ELEC.PCM \
 		/=./pcm/ECCLESIA.PCM
 
-include headers.mk
-
 clean:
 	find -P \
 		-regextype posix-egrep \
 		-regex '.*\.(iso|o|d|bin|elf|cue|gch|scramble)$$' \
 		-exec rm {} \;
 
+phony:
+
 .SUFFIXES:
 .INTERMEDIATE:
 .SECONDARY:
-.PHONY: all clean
+.PHONY: all clean phony
 
 %: RCS/%,v
 %: RCS/%
