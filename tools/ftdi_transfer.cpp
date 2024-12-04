@@ -673,10 +673,10 @@ struct cli_command commands[] = {
   { "write"              , 2, (void *)&do_write                },
   { "jump"               , 1, (void *)&do_jump                 },
   { "speed"              , 1, (void *)&do_speed                },
-  { "list_baudrates"     , 1, (void *)&do_list_baudrates       },
-  { "show_baudrate_error", 1, (void *)&do_show_baudrate_error  },
   { "console"            , 0, (void *)&do_console              },
   { "maple_storage_dump" , 0, (void *)&do_maple_storage_dump   },
+  { "list_baudrates"     , 1, (void *)&do_list_baudrates       },
+  { "show_baudrate_error", 1, (void *)&do_show_baudrate_error  },
 };
 
 constexpr int commands_length = (sizeof (commands)) / (sizeof (commands[0]));
