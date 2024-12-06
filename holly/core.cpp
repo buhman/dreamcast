@@ -67,7 +67,9 @@ void core_start_render(uint32_t frame_address,
                       | isp_backgnd_t::skip(1);
   holly.ISP_BACKGND_D = _i(1.f/100000.f);
 
-  holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+  holly.FB_W_CTRL = 0
+                //| fb_w_ctrl::fb_dither
+                  | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
   constexpr uint32_t bytes_per_pixel = 2;
   holly.FB_W_LINESTRIDE = (frame_width * bytes_per_pixel) / 8;
 

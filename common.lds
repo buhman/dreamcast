@@ -43,10 +43,11 @@ SECTIONS
 
   .text.vbr ALIGN(4) : SUBALIGN(4)
   {
+    __vbr100 = .;
     KEEP(*(.vbr.100))
-    . = ALIGN(0x300);
+    . = __vbr100 + 0x300;
     KEEP(*(.vbr.400))
-    . = ALIGN(0x200);
+    . = __vbr100 + 0x500;
     KEEP(*(.vbr.600))
   } > p1ram
 

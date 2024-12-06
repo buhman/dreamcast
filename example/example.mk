@@ -87,6 +87,32 @@ MACAW_MULTIPASS_OBJ = \
 example/macaw_multipass.elf: LDSCRIPT = $(LIB)/main.lds
 example/macaw_multipass.elf: $(START_OBJ) $(MACAW_MULTIPASS_OBJ)
 
+POPPIES_MOSAIC_OBJ = \
+	example/poppies_mosaic.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/poppies/poppies.data.o \
+	sh7091/serial.o
+
+example/poppies_mosaic.elf: LDSCRIPT = $(LIB)/main.lds
+example/poppies_mosaic.elf: $(START_OBJ) $(POPPIES_MOSAIC_OBJ)
+
+POPPIES_MOSAIC2_OBJ = \
+	example/poppies_mosaic2.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/poppies/poppies.data.o \
+	sh7091/serial.o
+
+example/poppies_mosaic2.elf: LDSCRIPT = $(LIB)/main.lds
+example/poppies_mosaic2.elf: $(START_OBJ) $(POPPIES_MOSAIC2_OBJ)
+
 FONT_BITMAP_OBJ = \
 	example/font_bitmap.o \
 	holly/video_output.o \
