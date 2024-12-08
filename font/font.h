@@ -1,7 +1,11 @@
 // this file is designed to be platform-agnostic
 #pragma once
 
-#include <cstdint>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 // metrics are 26.6 fixed point
 struct glyph_metrics {
@@ -10,7 +14,7 @@ struct glyph_metrics {
   int32_t horiAdvance;
 } __attribute__ ((packed));
 
-static_assert((sizeof (glyph_metrics)) == ((sizeof (int32_t)) * 3));
+static_assert((sizeof (struct glyph_metrics)) == ((sizeof (int32_t)) * 3));
 
 struct glyph_bitmap {
   uint16_t x;
@@ -19,14 +23,14 @@ struct glyph_bitmap {
   uint16_t height;
 } __attribute__ ((packed));
 
-static_assert((sizeof (glyph_bitmap)) == ((sizeof (uint16_t)) * 4));
+static_assert((sizeof (struct glyph_bitmap)) == ((sizeof (uint16_t)) * 4));
 
 struct glyph {
-  glyph_bitmap bitmap;
-  glyph_metrics metrics;
+  struct glyph_bitmap bitmap;
+  struct glyph_metrics metrics;
 } __attribute__ ((packed));
 
-static_assert((sizeof (glyph)) == ((sizeof (glyph_bitmap)) + (sizeof (glyph_metrics))));
+static_assert((sizeof (struct glyph)) == ((sizeof (struct glyph_bitmap)) + (sizeof (struct glyph_metrics))));
 
 struct font {
   uint32_t first_char_code;
@@ -42,4 +46,8 @@ struct font {
   uint32_t max_z_curve_ix;
 } __attribute__ ((packed));
 
-static_assert((sizeof (font)) == ((sizeof (uint32_t)) * 7));
+static_assert((sizeof (struct font)) == ((sizeof (uint32_t)) * 7));
+
+#ifdef __cplusplus
+}
+#endif

@@ -19,7 +19,7 @@
 #include "twiddle.hpp"
 #include "palette.hpp"
 
-#include "font/font.hpp"
+#include "font/font.h"
 #include "font/dejavusansmono/dejavusansmono_mono.data.h"
 
 struct vertex {

@@ -17,7 +17,7 @@
 
 #include "sh7091/serial.hpp"
 
-#include "font/font.hpp"
+#include "font/font.h"
 
 #include "ter_u20n.hpp"
 

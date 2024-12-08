@@ -8,7 +8,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "../font/font.hpp"
+#include "../font/font.h"
 #include "rect.hpp"
 #include "ttf_2d_pack.hpp"
 #include "../twiddle.hpp"

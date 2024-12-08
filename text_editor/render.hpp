@@ -4,7 +4,7 @@
 
 #include "holly/ta_parameter.hpp"
 
-#include "font/font.hpp"
+#include "font/font.h"
 #include "gap_buffer.hpp"
 #include "viewport_window.hpp"
 
