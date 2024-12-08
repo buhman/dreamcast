@@ -15,7 +15,7 @@ void main()
   using command_type = maple::device_request;
   using response_type = maple::device_status;
 
-  auto writer = maple::host_command_writer<>(send_buf, recv_buf);
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
 
   auto [host_command, host_response]
     = writer.append_command_all_ports<command_type, response_type>();

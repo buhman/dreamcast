@@ -103,7 +103,7 @@ endef
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 
 %.o: %.c
-	$(CC) $(CARCH) $(CFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CC) $(CARCH) $(CFLAGS) -std=c23 $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 %.o: %.cpp
 	$(CXX) $(CARCH) $(CFLAGS) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@

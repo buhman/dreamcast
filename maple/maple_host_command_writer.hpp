@@ -70,12 +70,12 @@ struct host_command_writer {
   template <typename C, typename R>
   constexpr inline std::tuple<maple::host_command<typename C::data_fields> *,
 			      maple::host_response<typename R::data_fields> *>
-  append_command_all_ports()
+  append_command_all_ports(bool set_end_flag = true)
   {
     auto ret = append_command<C, R>(host_instruction::port_select::a, ap::de::device | ap::port_select::a, false);
     append_command<C, R>(host_instruction::port_select::b, ap::de::device | ap::port_select::b, false);
     append_command<C, R>(host_instruction::port_select::c, ap::de::device | ap::port_select::c, false);
-    append_command<C, R>(host_instruction::port_select::d, ap::de::device | ap::port_select::d, true);
+    append_command<C, R>(host_instruction::port_select::d, ap::de::device | ap::port_select::d, set_end_flag);
     return ret;
   }
 
