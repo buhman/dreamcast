@@ -338,7 +338,7 @@ int do_jump(struct ftdi_context * ftdi, const uint32_t dest)
   return 0;
 }
 
-int do_show_baudrate_error(struct ftdi_context * ftdi, uint32_t rows)
+int do_show_baudrate_error(struct ftdi_context * ftdi)
 {
   /*
     B = (390625 * 4^(1 - n)) / (N + 1)
@@ -349,7 +349,8 @@ int do_show_baudrate_error(struct ftdi_context * ftdi, uint32_t rows)
   fprintf(stderr, " ------------|-------------|---------\n");
   unsigned short value;
   unsigned short index;
-  rows = min(rows, 256);
+  //rows = min(rows, 256);
+  const int rows = 256;
   for (uint32_t i = 0; i < rows; i++) {
     int baud = convert_baudrate_UT_export(dreamcast_rate(0, i), ftdi, &value, &index);
     if (baud < 0) {
@@ -368,13 +369,14 @@ int do_show_baudrate_error(struct ftdi_context * ftdi, uint32_t rows)
   return 0;
 }
 
-int do_list_baudrates(struct ftdi_context * ftdi, uint32_t rows)
+int do_list_baudrates(struct ftdi_context * ftdi)
 {
   (void)ftdi;
 
   fprintf(stderr, "   scbrr |      cks 0 |     cks 1 |     cks 2 |     cks 3\n");
   fprintf(stderr, "---------------------------------------------------------\n");
-  rows = min(rows, 256);
+  //rows = min(rows, 256);
+  const int rows = 256;
   for (uint32_t i = 0; i < rows; i++) {
     fprintf(stderr, "    0x%02x  % 11.2f % 11.2f % 11.2f % 11.2f\n",
             i,
@@ -662,23 +664,52 @@ enum struct argument_type {
   integer
 };
 
+struct usage_example {
+  const char * usage;
+  const char * example;
+};
+
 struct cli_command {
   const char * name;
   int num_arguments;
   void * func;
+  bool need_ftdi_init;
+  const struct usage_example * usage_example;
 };
 
-struct cli_command commands[] = {
-  { "read"               , 3, (void *)&do_read                 },
-  { "write"              , 2, (void *)&do_write                },
-  { "jump"               , 1, (void *)&do_jump                 },
-  { "speed"              , 1, (void *)&do_speed                },
-  { "console"            , 0, (void *)&do_console              },
-  { "maple_storage_dump" , 0, (void *)&do_maple_storage_dump   },
-  { "list_baudrates"     , 1, (void *)&do_list_baudrates       },
-  { "show_baudrate_error", 1, (void *)&do_show_baudrate_error  },
+constexpr struct usage_example read_help = {
+  "SRC_ADDR READ_SIZE FILENAME",
+  "0xa5000000 0x800000 ./texture_memory.bin",
 };
 
+constexpr struct usage_example write_help = {
+  "DEST_ADDR FILENAME",
+  "0xac010000 ./program.bin",
+};
+
+constexpr struct usage_example jump_help = {
+  "JUMP_ADDR",
+  "0xac010000",
+};
+
+constexpr struct usage_example speed_help = {
+  "SCBRR",
+  "0x0",
+};
+
+void do_help();
+
+const struct cli_command commands[] = {
+  { "read"               , 3, (void *)&do_read                 , true,  &read_help},
+  { "write"              , 2, (void *)&do_write                , true,  &write_help},
+  { "jump"               , 1, (void *)&do_jump                 , true,  &jump_help},
+  { "speed"              , 1, (void *)&do_speed                , true,  &speed_help},
+  { "console"            , 0, (void *)&do_console              , true,  NULL},
+  { "maple_storage_dump" , 0, (void *)&do_maple_storage_dump   , true,  NULL},
+  { "list_baudrates"     , 0, (void *)&do_list_baudrates       , false, NULL},
+  { "show_baudrate_error", 0, (void *)&do_show_baudrate_error  , true,  NULL},
+  { "help"               , 0, (void *)&do_help                 , false, NULL},
+};
 constexpr int commands_length = (sizeof (commands)) / (sizeof (commands[0]));
 
 typedef int (*func_0_arg)(struct ftdi_context *);
@@ -728,9 +759,19 @@ int parse_integer(const char * s, uint32_t * value)
   return 0;
 }
 
+void short_help(const struct cli_command * command)
+{
+  if (commands->usage_example != NULL) {
+    printf("\nusage:\n\n");
+    printf("  %s %s\n\n", command->name, command->usage_example->usage);
+    printf("  %s %s\n\n", command->name, command->usage_example->example);
+  }
+}
+
 #define CHECK_ARGC(__name__) \
   if (arg_index >= argc) { \
     fprintf(stderr, "while processing command `%s` expected argument `%s`\n", name, #__name__); \
+    short_help(&commands[i]); \
     return -1; \
   }
 
@@ -741,6 +782,7 @@ int parse_integer(const char * s, uint32_t * value)
   { int res = parse_integer(__name__##str, &__name__);   \
   if (res < 0) { \
     fprintf(stderr, "while processing command `%s` expected integer at `%s`", name, __name__##str); \
+    short_help(&commands[i]); \
     return -1; \
   } }
 
@@ -748,7 +790,7 @@ int parse_integer(const char * s, uint32_t * value)
   CHECK_ARGC(__name__); \
   const char * __name__ = argv[arg_index++];
 
-int handle_command(int argc, const char * argv[], struct ftdi_context * ftdi)
+int handle_command(int argc, const char * argv[], struct ftdi_context * ftdi, bool * ftdi_init_done)
 {
   assert(argc >= 1);
   int arg_index = 0;
@@ -757,13 +799,20 @@ int handle_command(int argc, const char * argv[], struct ftdi_context * ftdi)
 
   for (int i = 0; i < commands_length; i++) {
     if (strcmp(commands[i].name, name) == 0) {
+      if (!(*ftdi_init_done) && commands[i].need_ftdi_init) {
+        int res;
+        res = init_ftdi_context(ftdi, 0);
+        if (res < 0) {
+          return -1;
+        }
+        *ftdi_init_done = true;
+      }
+
       switch (commands[i].num_arguments) {
       case 0:
         {
           fprintf(stderr, "handle command: %s ()\n", commands[i].name);
           func_0_arg func = (func_0_arg)commands[i].func;
-          fprintf(stderr, "%p\n", &do_console);
-          fprintf(stderr, "%p\n", func);
           func_ret = func(ftdi);
         }
         break;
@@ -829,12 +878,39 @@ int handle_command(int argc, const char * argv[], struct ftdi_context * ftdi)
   }
 
   fprintf(stderr, "unknown command `%s`\n", name);
+  do_help();
   return -1;
+}
+
+static const char * argv_0;
+
+void do_help()
+{
+  printf("\nusage: %s [command ...]\n\n", argv_0);
+  printf("where [command] is one or more of:\n\n");
+
+  for (int i = 0; i < commands_length; i++) {
+    printf("  %s", commands[i].name);
+    if (commands[i].usage_example != NULL) {
+      printf(" %s", commands[i].usage_example->usage);
+    }
+    printf("\n");
+  }
+  printf("\nexamples for commands that have arguments:\n\n");
+  for (int i = 0; i < commands_length; i++) {
+    if (commands[i].usage_example != NULL) {
+      printf("  %s %s\n", commands[i].name, commands[i].usage_example->example);
+    }
+  }
+  printf("\nnote: all integers are given in base 16; the `0x` prefix is optional and may be omitted.\n");
 }
 
 int main(int argc, const char * argv[])
 {
+  argv_0 = argv[0];
+
   struct ftdi_context * ftdi;
+  bool ftdi_init_done = false;
 
   ftdi = ftdi_new();
   if (ftdi == 0) {
@@ -842,17 +918,11 @@ int main(int argc, const char * argv[])
     return EXIT_FAILURE;
   }
 
-  int res;
-  res = init_ftdi_context(ftdi, 0);
-  if (res < 0) {
-    return EXIT_FAILURE;
-  }
-
   assert(argc >= 1);
   argc--;
   argv++;
   while (argc > 0) {
-    res = handle_command(argc, argv, ftdi);
+    int res = handle_command(argc, argv, ftdi, &ftdi_init_done);
     if (res < 0) {
       return -1;
     }
