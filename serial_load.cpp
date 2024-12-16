@@ -2,9 +2,13 @@
 
 #include "sh7091/serial.hpp"
 #include "sh7091/serial_dma.hpp"
+#include "sh7091/cache.hpp"
 
 #include "serial_load.hpp"
 #include "crc32.h"
+
+#include "align.hpp"
+#include "memory.hpp"
 
 namespace serial_load {
 
@@ -162,7 +166,7 @@ void recv(struct maple_poll_state& poll_state, uint8_t c)
 	}
       }
       // invalid command
-      move(&state.buf.u8[0], &state.buf.u8[1], state.len - 1);
+      memory::move(&state.buf.u8[0], &state.buf.u8[1], state.len - 1);
       state.len -= 1;
       break;
     }
@@ -185,6 +189,16 @@ void tick(struct maple_poll_state& poll_state)
       if (dar1 > state.reply_crc.offset) {
 	uint32_t len = dar1 - state.reply_crc.offset;
 	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.reply_crc.offset);
+        const uint8_t * buf32 = reinterpret_cast<const uint8_t *>((state.reply_crc.offset / 32) * 32); // round down
+
+        // purge operand cache blocks for the data written by DMA, rounding up twice
+        for (uint32_t i = 0; i < align_32byte(len) + 32; i += 32) {
+          asm volatile ("ocbp @%0"
+                        :                                             // output
+                        : "r" (reinterpret_cast<uint32_t>(&buf32[i])) // input
+                        );
+        }
+
 	state.reply_crc.value = crc32_update(state.reply_crc.value, buf, len);
 	state.reply_crc.offset += len;
       }
@@ -247,6 +261,9 @@ void tick(struct maple_poll_state& poll_state)
       constexpr uint32_t transmission_end = scfsr2::tend::bit_mask | scfsr2::tdfe::bit_mask;
       if ((sh7091.SCIF.SCFSR2 & transmission_end) != transmission_end)
 	return;
+
+      // clear the cache before jumping
+      cache::init();
 
       const uint32_t dest = state.buf.arg[0];
       jump_to_func(dest);

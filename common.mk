@@ -3,10 +3,8 @@ GENERATED ?=
 
 AARCH = --isa=sh4 --little
 
-CARCH = -m4-single-only -ml
+CARCH ?= -m4-single-only -ml
 CFLAGS += -mfsca -funsafe-math-optimizations -ffast-math
-
-CXXFLAGS += -std=c++23
 
 OBJARCH = -O elf32-shl -B sh4
 

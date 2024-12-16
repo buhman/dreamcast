@@ -12,10 +12,12 @@ namespace cache {
 void init()
 {
   for (int i = 0; i < 256; i++) {
+    // clear all V bits of the IC address array
     sh7091_ic_a[i][0] = 0;
   }
 
   for (int i = 0; i < 512; i++) {
+    // clear all V bits of the OC address array
     sh7091_oc_a[i][0] = 0;
   }
 

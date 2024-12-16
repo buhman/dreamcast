@@ -405,11 +405,13 @@ void main()
   constexpr uint32_t serial_speed = 0;
   serial_load::init(serial_speed);
 
+  /*
   const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
   auto renderer0 = maple::display::font_renderer(font);
   framebuffer[0] = renderer0.fb;
   auto renderer1 = maple::display::font_renderer(font);
   framebuffer[1] = renderer1.fb;
+  */
 
   // reset serial status
   sh7091.SCIF.SCFSR2 = 0;
@@ -463,10 +465,11 @@ void main()
       }
     }
 
+    //serial::string(".");
     serial_load::tick(poll_state);
-    render(renderer0, renderer1);
+    //render(renderer0, renderer1);
 
-    poll_state.want_start = 1;
-    handle_maple(poll_state);
+    //poll_state.want_start = 1;
+    //handle_maple(poll_state);
   }
 }
