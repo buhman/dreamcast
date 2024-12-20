@@ -48,8 +48,8 @@ inline void copy(T * dst, const T * src, const int32_t n) noexcept
 
 void send_wink(uint8_t port, uint8_t lm)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   using command_type = maple::block_write<uint8_t[0]>;
   using response_type = maple::device_reply;
@@ -86,8 +86,8 @@ void send_wink(uint8_t port, uint8_t lm)
 
 void do_lm_request(uint8_t port, uint8_t lm)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
@@ -149,8 +149,8 @@ void do_lm_requests(uint8_t port, uint8_t lm)
 
 void do_device_request()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 

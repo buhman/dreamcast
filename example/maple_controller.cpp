@@ -16,8 +16,8 @@
 
 void do_get_condition()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
@@ -54,8 +54,8 @@ void do_get_condition()
 
 void do_lm_request(uint8_t port, uint8_t lm)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
@@ -112,8 +112,8 @@ void do_lm_requests(uint8_t port, uint8_t lm)
 
 void do_device_request()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 

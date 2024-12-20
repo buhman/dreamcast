@@ -246,8 +246,8 @@ void do_get_condition(uint32_t * command_buf,
 		      uint32_t * receive_buf,
 		      button_state& buttons)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 

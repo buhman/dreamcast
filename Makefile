@@ -1,4 +1,4 @@
-all: $(patsubst %.cpp,%.elf,$(wildcard example/*.cpp))
+all: $(patsubst %.cpp,%.bin,$(wildcard example/*.cpp))
 
 include base.mk
 include common.mk

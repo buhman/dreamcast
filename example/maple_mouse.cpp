@@ -34,8 +34,8 @@ static ft9::data_transfer::data_format data;
 
 void do_get_condition()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   using command_type = maple::get_condition;
   using response_type = maple::data_transfer<ft9::data_transfer::data_format>;

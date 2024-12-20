@@ -11,8 +11,8 @@
 #include "maple/maple_bus_ft8.hpp"
 #include "sh7091/serial.hpp"
 
-uint32_t send_buf[1024] __attribute__((aligned(32)));
-uint32_t recv_buf[1024] __attribute__((aligned(32)));
+uint8_t send_buf[1024] __attribute__((aligned(32)));
+uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
 void do_lm_request(uint8_t port, uint8_t lm)
 {

@@ -6,6 +6,7 @@
 
 #include "serial_load.hpp"
 #include "crc32.h"
+#include "memory.hpp"
 
 #include "align.hpp"
 #include "memory.hpp"

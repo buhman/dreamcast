@@ -16,8 +16,8 @@
 #include "systembus.hpp"
 
 struct storage_state {
-  uint32_t * send_buf;
-  uint32_t * recv_buf;
+  uint8_t * send_buf;
+  uint8_t * recv_buf;
   uint32_t host_port_select;
   uint32_t destination_ap;
   struct {
@@ -289,8 +289,8 @@ bool allocate_file_information_data(storage_state& state,
 
 void do_lm_request(uint8_t port, uint8_t lm)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   const uint32_t host_port_select = host_instruction_port_select(port);
   const uint32_t destination_ap = ap_port_select(port) | ap::de::expansion_device | lm;
@@ -547,8 +547,8 @@ void do_lm_requests(uint8_t port, uint8_t lm)
 
 void do_device_request()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  uint8_t send_buf[1024] __attribute__((aligned(32)));
+  uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
