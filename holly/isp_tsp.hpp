@@ -17,7 +17,7 @@ namespace isp_tsp_instruction_word {
   namespace volume_instruction {
     constexpr uint32_t normal_polygon = 0 << 29;
     constexpr uint32_t inside_last_polygon = 1 << 29;
-    constexpr uint32_t outside_last_polygon = 1 << 29;
+    constexpr uint32_t outside_last_polygon = 2 << 29;
   }
 
   namespace culling_mode {

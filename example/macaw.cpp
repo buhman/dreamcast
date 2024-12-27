@@ -2,16 +2,19 @@
 
 #include "align.hpp"
 
-#include "holly/texture_memory_alloc.hpp"
 #include "holly/holly.hpp"
-#include "holly/core.hpp"
 #include "holly/core_bits.hpp"
-#include "holly/ta_fifo_polygon_converter.hpp"
-#include "holly/ta_parameter.hpp"
+#include "holly/isp_tsp.hpp"
+#include "holly/ta_bits.hpp"
+
 #include "holly/ta_global_parameter.hpp"
 #include "holly/ta_vertex_parameter.hpp"
-#include "holly/ta_bits.hpp"
-#include "holly/isp_tsp.hpp"
+
+#include "holly/ta_fifo_polygon_converter.hpp"
+#include "holly/ta_parameter.hpp"
+#include "holly/core.hpp"
+
+#include "holly/texture_memory_alloc.hpp"
 #include "holly/region_array.hpp"
 #include "holly/background.hpp"
 #include "holly/video_output.hpp"
