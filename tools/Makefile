@@ -2,18 +2,19 @@ CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Werror -Wfatal-errors -ggdb -fstack-pro
 CFLAGS += -Wno-error=unused-parameter
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-but-set-variable
+CFLAGS += -Wno-vla-cxx-extension
 CXXFLAGS = -std=c++23
 
 FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
 FREETYPE_LDFLAGS = $(shell pkg-config --libs freetype2)
 
-FTDI_CFLAGS = $(shell pkg-config --cflags libftdi1) -I..
+FTDI_CFLAGS = $(shell pkg-config --cflags libftdi1) -I.
 FTDI_LDFLAGS = $(shell pkg-config --libs libftdi1)
 
 all: ttf_outline
 
-crc32.o: ../crc32.c
-	$(CC) -std=gnu2x $(CFLAGS) -I.. -c $< -o $@
+crc32.o: crc32.c
+	$(CC) -std=gnu2x $(CFLAGS) -I. -c $< -o $@
 
 ttf_%.o: ttf_%.cpp
 	$(CXX) $(CFLAGS) $(CXXFLAGS) $(FREETYPE_CFLAGS) -c $< -o $@
