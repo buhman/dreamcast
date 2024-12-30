@@ -1,9 +1,12 @@
-CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Werror -Wfatal-errors -ggdb -fstack-protector-strong
+CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Wno-error
 CFLAGS += -Wno-error=unused-parameter
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-but-set-variable
-CFLAGS += -Wno-vla-cxx-extension
+CFLAGS += -Wno-vla-extension
 CXXFLAGS = -std=c++23
+
+PREFIX ?= /usr/local
+MANPREFIX = $(PREFIX)/share/man
 
 FREETYPE_CFLAGS = $(shell pkg-config --cflags freetype2)
 FREETYPE_LDFLAGS = $(shell pkg-config --libs freetype2)
@@ -38,10 +41,18 @@ ttf_outline: ttf_outline.o ttf_2d_pack.o
 clean:
 	rm -f *.o ttf_outline
 
+install:
+	mkdir -p $(DESTDIR)$(PREFIX)/bin
+	cp -f ftdi_transfer $(DESTDIR)$(PREFIX)/bin
+	chmod 755 $(DESTDIR)$(PREFIX)/bin/ftdi_transfer
+	mkdir -p $(DESTDIR)$(MANPREFIX)/man1
+	cp -f ftdi_transfer.1 $(DESTDIR)$(MANPREFIX)/man1
+	chmod 644 $(DESTDIR)$(MANPREFIX)/man1/ftdi_transfer.1
+
 .SUFFIXES:
 .INTERMEDIATE:
 .SECONDARY:
-.PHONY: all clean
+.PHONY: all clean install
 
 %: RCS/%,v
 %: RCS/%

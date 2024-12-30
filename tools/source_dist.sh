@@ -1,3 +1,5 @@
+#!/bin/sh
+
 rm -rf ftdi_transfer_source
 mkdir -p ftdi_transfer_source
 
