@@ -679,3 +679,17 @@ VGA_TIMING_OBJ = \
 
 example/vga_timing.elf: LDSCRIPT = $(LIB)/main.lds
 example/vga_timing.elf: $(START_OBJ) $(VGA_TIMING_OBJ)
+
+G2_BUS_OBJ = \
+	example/g2_bus.o \
+	sh7091/serial.o
+
+example/g2_bus.elf: LDSCRIPT = $(LIB)/main.lds
+example/g2_bus.elf: $(START_OBJ) $(G2_BUS_OBJ)
+
+MEMORY_MAP_OBJ = \
+	example/memory_map.o \
+	sh7091/serial.o
+
+example/memory_map.elf: LDSCRIPT = $(LIB)/main.lds
+example/memory_map.elf: $(START_OBJ) $(MEMORY_MAP_OBJ)
