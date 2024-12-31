@@ -14,7 +14,7 @@ FREETYPE_LDFLAGS = $(shell pkg-config --libs freetype2)
 FTDI_CFLAGS = $(shell pkg-config --cflags libftdi1) -I.
 FTDI_LDFLAGS = $(shell pkg-config --libs libftdi1)
 
-all: ttf_outline
+all: ftdi_transfer
 
 crc32.o: crc32.c
 	$(CC) -std=gnu2x $(CFLAGS) -I. -c $< -o $@

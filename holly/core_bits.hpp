@@ -76,7 +76,7 @@ constexpr uint32_t fb_concat(uint32_t num) { return (num & 0x3) << 4; }
 namespace fb_depth {
 constexpr uint32_t _0555_rgb_16bit = 0 << 2;
 
-constexpr uint32_t _0565_rgb_16bit = 1 << 2;
+constexpr uint32_t _565_rgb_16bit = 1 << 2;
 
 constexpr uint32_t _888_rgb_24bit_packed = 2 << 2;
 
