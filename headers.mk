@@ -92,5 +92,5 @@ gdrom/command_packet_format.hpp: regs/gdrom_command_packet_format.csv regs/gen/g
 
 # ISO9660
 
-iso9660/%.hpp: iso9660/%.csv iso9660/byte_position.py
-	python iso9660/byte_position.py $< > $@
+iso9660/%.hpp: iso9660/%.csv iso9660/byte_position_cpp.py
+	python iso9660/byte_position_cpp.py $< > $@
