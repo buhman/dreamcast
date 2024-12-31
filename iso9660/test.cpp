@@ -1,6 +1,7 @@
 #include <fstream>
 #include <string>
 #include <iostream>
+#include <bit>
 
 #include "primary_volume_descriptor.hpp"
 #include "directory_record.hpp"
@@ -15,6 +16,8 @@ void write_field(const uint8_t * s, const int len)
 
 int main()
 {
+  using namespace iso9660;
+
   std::ifstream ifs("test.iso");
   std::string content( (std::istreambuf_iterator<char>(ifs) ),
                        (std::istreambuf_iterator<char>()    ) );
