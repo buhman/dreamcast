@@ -327,12 +327,14 @@ void main()
   if (jvm_load_complete) {
     main_ptr_t jvm_main = reinterpret_cast<main_ptr_t>(load_address);
 
+    /*
     serial::string("crc32: ");
     int chunks = __data_length / 2048;
     for (int i = 0; i < chunks; i++) {
       uint32_t crc = crc32(&((uint8_t *)load_address)[i * 2048], 2048);
       serial::integer<uint32_t>(crc);
     }
+    */
 
     serial::string("jvm jump\n");
     jvm_main();
