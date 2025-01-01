@@ -38,7 +38,7 @@ void set_framebuffer_resolution(const uint32_t x_size, const uint32_t y_size)
 void set_mode(const struct mode& mode)
 {
   holly.FB_R_CTRL = mode.fb_r_ctrl
-                  | fb_r_ctrl::fb_depth::_0565_rgb_16bit
+                  | fb_r_ctrl::fb_depth::_565_rgb_16bit
                   | fb_r_ctrl::fb_enable;
 
   holly.SPG_LOAD = mode.spg_load;

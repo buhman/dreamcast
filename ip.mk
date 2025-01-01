@@ -22,7 +22,8 @@ SERIAL_LOAD_OBJ = \
 
 GDROM_JVM_BOOT_OBJ = \
 	example/gdrom_jvm_boot.o \
-	sh7091/serial.o
+	sh7091/serial.o \
+	crc32.o
 
 %.o: %.obj
 	$(OBJCOPY) -g \
@@ -34,3 +35,6 @@ serial_load_ip.elf: $(IP_OBJ) $(SERIAL_LOAD_OBJ)
 
 gdrom_jvm_boot_ip.elf: $(IP_OBJ) $(GDROM_JVM_BOOT_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
+
+gdrom-jvm-boot-ip-bin: gdrom_jvm_boot_ip.bin
+	cp $< ip.bin

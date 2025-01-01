@@ -7,9 +7,14 @@
 #include "gdrom/gdrom_bits.hpp"
 #include "gdrom/command_packet_format.hpp"
 #include "gdrom/toc.hpp"
+#include "holly/video_output.hpp"
 
 #include "iso9660/primary_volume_descriptor.hpp"
 #include "iso9660/directory_record.hpp"
+
+#include "crc32.h"
+
+typedef void (*main_ptr_t)(void);
 
 void pio_data(const uint8_t * data)
 {
@@ -32,9 +37,9 @@ void pio_data(const uint8_t * data)
 
 void read_data(uint16_t * buf, const uint32_t length)
 {
-  serial::string("read_data drq interrupt_reason: ");
-  serial::integer<uint8_t>(gdrom::status::drq(gdrom_if.status), ' ');
-  serial::integer<uint8_t>(gdrom_if.interrupt_reason);
+  //serial::string("read_data drq interrupt_reason: ");
+  //serial::integer<uint8_t>(gdrom::status::drq(gdrom_if.status), ' ');
+  //serial::integer<uint8_t>(gdrom_if.interrupt_reason);
   for (uint32_t i = 0; i < (length / 2); i++) {
     buf[i] = gdrom_if.data;
   }
@@ -110,6 +115,72 @@ bool dr_is_self_or_parent(const iso9660::directory_record * dr)
 
 #define FILE_FLAGS__DIRECTORY 2
 
+bool is_jvm_bin(const uint8_t * file_identifier, int length_of_file_identifier)
+{
+  static const uint8_t * jvm_bin = (const uint8_t *)"JVM.BIN;1";
+  int jvm_bin_length = 9;
+  if (length_of_file_identifier != jvm_bin_length)
+    return false;
+
+  for (int i = 0; i < jvm_bin_length; i++) {
+    if (file_identifier[i] != jvm_bin[i])
+      return false;
+  }
+  return true;
+}
+
+static inline int min(int a, int b)
+{
+  return a < b ? a : b;
+}
+
+static bool jvm_load_complete;
+static int __data_length;
+constexpr int load_address = 0xac010000;
+
+void load_jvm_bin(const iso9660::directory_record * dr)
+{
+  serial::string("load jvm bin:\n");
+  //__attribute__((aligned(4))) static uint16_t file_buf16[16384 / 2];
+  //uint32_t * file_buf32 = reinterpret_cast<uint32_t *>(file_buf16);
+  uint16_t * load_buf = reinterpret_cast<uint16_t *>(load_address);
+  int offset = 0;
+
+  int extent = dr->location_of_extent.get();
+  int data_length = dr->data_length.get();
+  serial::integer<uint32_t>(extent);
+
+  int transfers = 0;
+  while (data_length > 0) {
+    int transfer_size = min(data_length, 2048);
+    int sectors = transfer_size >> 11; // divide by 2048
+    if (sectors == 0)
+      sectors = 1;
+
+    cd_read(&load_buf[offset],
+            extent + 150, // 150?
+            sectors // one sector
+            );
+
+    offset += transfer_size / (sizeof (load_buf[0]));
+
+    extent += sectors;
+    data_length -= sectors * 2048;
+    transfers += 1;
+  }
+
+  serial::string("\njvm load complete\n");
+  jvm_load_complete = true;
+  serial::integer<uint32_t>(extent);
+
+  serial::string("size: ");
+  serial::integer<uint32_t>(dr->data_length.get());
+  __data_length = dr->data_length.get();
+
+  serial::string("transfers: ");
+  serial::integer<uint32_t>(transfers);
+}
+
 void walk_directory_record(const iso9660::directory_record * dr)
 {
   if (dr_is_self_or_parent(dr))
@@ -124,6 +195,12 @@ void walk_directory_record(const iso9660::directory_record * dr)
   serial::string("  file_identifier: ");
   serial::string(dr->file_identifier, dr->length_of_file_identifier);
   serial::character('\n');
+
+  if ((dr->file_flags & FILE_FLAGS__DIRECTORY) == 0) {
+    if (is_jvm_bin(dr->file_identifier, dr->length_of_file_identifier)) {
+      load_jvm_bin(dr);
+    }
+  }
 }
 
 void walk_directory(uint16_t * buf, int extent, int num_extents)
@@ -154,14 +231,14 @@ void walk_directory(uint16_t * buf, int extent, int num_extents)
 
 void main()
 {
-  //serial::init(0);
+  serial::init(0);
 
   // gdrom unlock undocumented register
   g1_if.GDUNLOCK = 0x1fffff;
 
   // Without this read from system_boot_rom, the read value of
   // gdrom_if.status is always 0xff
-  for(uint32_t i = 0; i < 0x200000 / 4; i++) {
+  for (uint32_t i = 0; i < 0x200000 / 4; i++) {
     (void)system_boot_rom[i];
   }
 
@@ -195,7 +272,24 @@ void main()
   const int data_length = root_dr->data_length.get();
   const int num_extents = data_length >> 11; // division by 2048
 
+  jvm_load_complete = false;
   walk_directory(buf, extent, num_extents);
+  serial::integer<uint32_t>(jvm_load_complete);
+  if (jvm_load_complete) {
+    main_ptr_t jvm_main = reinterpret_cast<main_ptr_t>(load_address);
+    uint8_t * load_buf = reinterpret_cast<uint8_t *>(load_address);
+
+    serial::string("crc32: ");
+    int chunks = __data_length / 2048;
+    for (int i = 0; i < chunks; i++) {
+      uint32_t crc = crc32(&((uint8_t *)load_address)[i * 2048], 2048);
+      serial::integer<uint32_t>(crc);
+    }
+
+    serial::string("jvm jump\n");
+    jvm_main();
+    serial::string("jvm return\n");
+  }
 
   while (1);
 }

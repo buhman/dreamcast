@@ -60,7 +60,8 @@ sine.pcm: common.mk
 		/=./pcm/PRELUDE.PCM \
 		/=./pcm/CLOCKTOW.PCM \
 		/=./pcm/ELEC.PCM \
-		/=./pcm/ECCLESIA.PCM
+		/=./pcm/ECCLESIA.PCM \
+		/=jvm.bin
 
 clean:
 	find -P \
