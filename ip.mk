@@ -10,20 +10,27 @@ IP_OBJ = \
 	sg_are02.o \
 	sg_are03.o \
 	sg_are04.o \
-	$(START_OBJ) \
+	$(START_OBJ)
+
+SERIAL_LOAD_OBJ = \
 	example/serial_transfer.o \
 	sh7091/serial.o \
 	serial_load.o \
 	maple/maple.o \
 	font/portfolio_6x8/portfolio_6x8.data.o \
 	crc32.o
-#sg_ini.o \
-#aip.o
+
+GDROM_JVM_BOOT_OBJ = \
+	example/gdrom_jvm_boot.o \
+	sh7091/serial.o
 
 %.o: %.obj
 	$(OBJCOPY) -g \
 		--rename-section IP=.text.$* \
 		$< $@
 
-ip.elf: $(IP_OBJ)
+serial_load_ip.elf: $(IP_OBJ) $(SERIAL_LOAD_OBJ)
+	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
+
+gdrom_jvm_boot_ip.elf: $(IP_OBJ) $(GDROM_JVM_BOOT_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
