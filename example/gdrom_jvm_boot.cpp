@@ -35,6 +35,25 @@ void pio_data(const uint8_t * data)
   while (gdrom::status::bsy(gdrom_if.status) != 0);
 }
 
+void dma_data(const uint8_t * data)
+{
+  while ((gdrom::status::bsy(gdrom_if.status) | gdrom::status::drq(gdrom_if.status)) != 0);
+
+  gdrom_if.features = gdrom::features::dma::enable;
+  gdrom_if.drive_select = gdrom::drive_select::drive_select
+                        | gdrom::drive_select::lun(0);
+
+  gdrom_if.command = gdrom::command::code::packet_command;
+  while (gdrom::status::drq(gdrom_if.status) == 0);
+
+  const uint16_t * buf = reinterpret_cast<const uint16_t *>(&data[0]);
+  for (int i = 0; i < 6; i++) {
+    gdrom_if.data = buf[i];
+  }
+
+  while (gdrom::status::bsy(gdrom_if.status) != 0);
+}
+
 void read_data(uint16_t * buf, const uint32_t length)
 {
   //serial::string("read_data drq interrupt_reason: ");
@@ -105,6 +124,23 @@ uint32_t cd_read(uint16_t * buf,
   return length;
 }
 
+void cd_read_dma(const uint32_t starting_address,
+                 const uint32_t transfer_length)
+{
+  const uint8_t data_select = 0b0010; // data
+  const uint8_t expected_data_type = 0b100; // XA mode 2 form 1
+  const uint8_t parameter_type = 0b0; // FAD specified
+  const uint8_t data = (data_select << 4) | (expected_data_type << 1) | (parameter_type << 0);
+
+  auto packet = gdrom_command_packet_format::cd_read(data,
+                                                     starting_address,
+                                                     transfer_length);
+  serial::string("cd_read\n");
+  serial::string("starting_address: ");
+  serial::integer<uint32_t>(starting_address);
+  dma_data(packet._data());
+}
+
 bool dr_is_self_or_parent(const iso9660::directory_record * dr)
 {
   if (dr->length_of_file_identifier != 1)
@@ -143,13 +179,28 @@ void load_jvm_bin(const iso9660::directory_record * dr)
   serial::string("load jvm bin:\n");
   //__attribute__((aligned(4))) static uint16_t file_buf16[16384 / 2];
   //uint32_t * file_buf32 = reinterpret_cast<uint32_t *>(file_buf16);
-  uint16_t * load_buf = reinterpret_cast<uint16_t *>(load_address);
-  int offset = 0;
 
   int extent = dr->location_of_extent.get();
   int data_length = dr->data_length.get();
-  serial::integer<uint32_t>(extent);
 
+  int sectors = ((data_length + 2047) / 2048);
+  data_length = sectors * 2048;
+
+  g1_if.GDAPRO = 0x8843407F;
+  g1_if.G1GDRC = 0x00001001;
+  g1_if.GDSTAR = load_address & ~(0b111 << 29);
+  g1_if.GDLEN = data_length;
+  g1_if.GDDIR = 1;
+  g1_if.GDEN = 1;
+  g1_if.GDST = 1;
+
+  cd_read_dma(extent + 150,
+              sectors);
+
+  serial::string("wait gdst");
+  while ((g1_if.GDST & 1) != 0);
+
+  /*
   int transfers = 0;
   while (data_length > 0) {
     int transfer_size = min(data_length, 2048);
@@ -168,6 +219,7 @@ void load_jvm_bin(const iso9660::directory_record * dr)
     data_length -= sectors * 2048;
     transfers += 1;
   }
+  */
 
   serial::string("\njvm load complete\n");
   jvm_load_complete = true;
@@ -176,9 +228,6 @@ void load_jvm_bin(const iso9660::directory_record * dr)
   serial::string("size: ");
   serial::integer<uint32_t>(dr->data_length.get());
   __data_length = dr->data_length.get();
-
-  serial::string("transfers: ");
-  serial::integer<uint32_t>(transfers);
 }
 
 void walk_directory_record(const iso9660::directory_record * dr)
@@ -277,7 +326,6 @@ void main()
   serial::integer<uint32_t>(jvm_load_complete);
   if (jvm_load_complete) {
     main_ptr_t jvm_main = reinterpret_cast<main_ptr_t>(load_address);
-    uint8_t * load_buf = reinterpret_cast<uint8_t *>(load_address);
 
     serial::string("crc32: ");
     int chunks = __data_length / 2048;
