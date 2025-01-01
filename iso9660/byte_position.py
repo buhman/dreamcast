@@ -36,6 +36,8 @@ def sanitize_field_name(name):
 def sanitize_content_name(name):
     if name == 'Numerical value':
         return 'numerical_value'
+    elif name == '8 bits':
+        return 'numerical_value'
     else:
         return 'bytes'
 

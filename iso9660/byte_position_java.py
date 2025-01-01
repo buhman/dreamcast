@@ -39,7 +39,7 @@ def render_fields(input_name, fields):
         yield f"public static final int {field.name.upper()}_START = {field.start - 1};"
         yield f"public static final int {field.name.upper()}_END = {field.end - 1};"
 
-    yield f"{pascalcase(input_name)}(byte[] array, int offset) {{"
+    yield f"public {pascalcase(input_name)}(byte[] array, int offset) {{"
     yield "super(array, offset);"
     yield "}"
 
