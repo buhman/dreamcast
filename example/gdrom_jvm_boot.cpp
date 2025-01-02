@@ -153,8 +153,8 @@ bool dr_is_self_or_parent(const iso9660::directory_record * dr)
 
 bool is_jvm_bin(const uint8_t * file_identifier, int length_of_file_identifier)
 {
-  static const uint8_t * jvm_bin = (const uint8_t *)"JVM.BIN;1";
-  int jvm_bin_length = 9;
+  static const uint8_t * jvm_bin = (const uint8_t *)"0JVM.BIN;1";
+  int jvm_bin_length = 10;
   if (length_of_file_identifier != jvm_bin_length)
     return false;
 
@@ -230,10 +230,10 @@ void load_jvm_bin(const iso9660::directory_record * dr)
   __data_length = dr->data_length.get();
 }
 
-void walk_directory_record(const iso9660::directory_record * dr)
+bool walk_directory_record(const iso9660::directory_record * dr)
 {
   if (dr_is_self_or_parent(dr))
-    return;
+    return false;
 
   if ((dr->file_flags & FILE_FLAGS__DIRECTORY) == 0) {
     serial::string(" [regular file] ");
@@ -248,8 +248,10 @@ void walk_directory_record(const iso9660::directory_record * dr)
   if ((dr->file_flags & FILE_FLAGS__DIRECTORY) == 0) {
     if (is_jvm_bin(dr->file_identifier, dr->length_of_file_identifier)) {
       load_jvm_bin(dr);
+      return true;
     }
   }
+  return false;
 }
 
 void walk_directory(uint16_t * buf, int extent, int num_extents)
@@ -269,7 +271,9 @@ void walk_directory(uint16_t * buf, int extent, int num_extents)
       if (dr->length_of_directory_record == 0)
         break;
 
-      walk_directory_record(dr);
+      bool jvm_loaded = walk_directory_record(dr);
+      if (jvm_loaded)
+        break;
 
       offset += dr->length_of_directory_record;
     }
@@ -304,6 +308,10 @@ void main()
 
   auto pvd = reinterpret_cast<const iso9660::primary_volume_descriptor *>(&buf[0]);
   auto root_dr = reinterpret_cast<const iso9660::directory_record *>(&pvd->directory_record_for_root_directory[0]);
+
+  for (int i = 0; i < 16; i++) {
+    serial::integer<uint8_t, string::dec_type>(((uint8_t *)buf)[i], ' ');
+  }
 
   serial::string("primary volume descriptor:\n");
   serial::string("  standard_identifier: ");
