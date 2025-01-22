@@ -2,6 +2,8 @@ DEBUG = -g -gdwarf-4
 
 AFLAGS += --fatal-warnings
 
+CSTD ?= -std=gnu23
+CXXSTD ?= -std=c++23
 CFLAGS += -falign-functions=4 -ffunction-sections -fdata-sections -fshort-enums -ffreestanding -nostdlib -fno-builtin
 CFLAGS += -Wall -Werror -Wfatal-errors
 CFLAGS += -Wno-array-bounds
@@ -103,10 +105,10 @@ endef
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 
 %.o: %.c
-	$(CC) $(CARCH) $(CFLAGS) -std=gnu23 $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CC) $(CARCH) $(CFLAGS) $(CSTD) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 %.o: %.cpp
-	$(CXX) $(CARCH) $(CFLAGS) -std=c++23 $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
+	$(CXX) $(CARCH) $(CFLAGS) $(CXXSTD) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 %.elf:
 	$(LD) $(LDFLAGS) -L $(LIB) -T $(LDSCRIPT) $^ -o $@
