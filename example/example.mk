@@ -701,3 +701,15 @@ MEMORY_MAP_OBJ = \
 
 example/memory_map.elf: LDSCRIPT = $(LIB)/main.lds
 example/memory_map.elf: $(START_OBJ) $(MEMORY_MAP_OBJ)
+
+TRIANGLE_GOURAUD_OBJ = \
+	example/triangle_gouraud.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o
+
+example/triangle_gouraud.elf: LDSCRIPT = $(LIB)/main.lds
+example/triangle_gouraud.elf: $(START_OBJ) $(TRIANGLE_GOURAUD_OBJ)
