@@ -309,10 +309,6 @@ void main()
   auto pvd = reinterpret_cast<const iso9660::primary_volume_descriptor *>(&buf[0]);
   auto root_dr = reinterpret_cast<const iso9660::directory_record *>(&pvd->directory_record_for_root_directory[0]);
 
-  for (int i = 0; i < 16; i++) {
-    serial::integer<uint8_t, string::dec_type>(((uint8_t *)buf)[i], ' ');
-  }
-
   serial::string("primary volume descriptor:\n");
   serial::string("  standard_identifier: ");
   serial::string(pvd->standard_identifier, 5);
