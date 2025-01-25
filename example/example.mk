@@ -209,6 +209,18 @@ WIFFLE_ATTENUATION_OBJ = \
 example/wiffle_attenuation.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_attenuation.elf: $(START_OBJ) $(WIFFLE_ATTENUATION_OBJ)
 
+WIFFLE_SCREEN_SPACE_OBJ = \
+	example/wiffle_screen_space.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o
+
+example/wiffle_screen_space.elf: LDSCRIPT = $(LIB)/main.lds
+example/wiffle_screen_space.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_OBJ)
+
 MODIFIER_VOLUME_OBJ = \
 	example/modifier_volume.o \
 	holly/video_output.o \
@@ -713,3 +725,22 @@ TRIANGLE_GOURAUD_OBJ = \
 
 example/triangle_gouraud.elf: LDSCRIPT = $(LIB)/main.lds
 example/triangle_gouraud.elf: $(START_OBJ) $(TRIANGLE_GOURAUD_OBJ)
+
+SPRITE_GOURAUD_OBJ = \
+	example/sprite_gouraud.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o
+
+example/sprite_gouraud.elf: LDSCRIPT = $(LIB)/main.lds
+example/sprite_gouraud.elf: $(START_OBJ) $(SPRITE_GOURAUD_OBJ)
+
+TEXTURE_MEMORY_OBJ = \
+	example/texture_memory.o \
+	sh7091/serial.o
+
+example/texture_memory.elf: LDSCRIPT = $(LIB)/main.lds
+example/texture_memory.elf: $(START_OBJ) $(TEXTURE_MEMORY_OBJ)
