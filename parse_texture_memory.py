@@ -207,12 +207,12 @@ def parse_object_lists(mem, region_array_entry):
     parse_object_list(mem, region_array_entry.punch_through_list_pointer)
 
 
-region_array = 0x296000
-framebuffer = 0x200000
+region_array = 0x10_0000
+framebuffer = 0x11_0000
 region_array_entries = list(parse_region_array(mem, region_array))
 
 for region_array_entry in region_array_entries:
     parse_object_lists(mem, region_array_entry)
 
-#with open('framebuffer.data', 'wb') as f:
-#    f.write(mem[framebuffer:framebuffer + 640 * 480 * 2])
+with open('framebuffer.data', 'wb') as f:
+    f.write(mem[framebuffer:framebuffer + 640 * 480 * 4])
