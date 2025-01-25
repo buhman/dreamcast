@@ -133,7 +133,7 @@ def parse_isp_tsp_instruction_word(value):
     _16bit_uv = (value >> 22) & 1
     cache_bypass = (value >> 21) & 1
     dcalc_ctrl = (value >> 20) & 1
-
+    print(hex(value))
     return isp_tsp_instruction_word(
         depth_compare_mode(value),
         culling_mode(value),
@@ -171,17 +171,17 @@ def print_params(mem, ol_array, num_vertices):
 
 def parse_object_list_data(mem, value):
     if ((value >> 31) & 1) == 0:
-        print('  triangle:')
+        print('  triangle:', hex(value))
     elif ((value >> 29) & 0b111) == 0b100:
-        print('  triangle array:')
+        print('  triangle array:', hex(value))
         ol_array = print_array(value)
         print_params(mem, ol_array, 3)
     elif ((value >> 29) & 0b111) == 0b101:
-        print('  quad array:')
+        print('  quad array:', hex(value))
         ol_array = print_array(value)
         print_params(mem, ol_array, 4)
     elif ((value >> 29) & 0b111) == 0b111:
-        print('  block link:')
+        print('  block link:', hex(value))
         end_of_list = (value >> 28) & 1
         if end_of_list:
             print('    [end of list]')
