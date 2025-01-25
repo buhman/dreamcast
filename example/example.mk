@@ -216,7 +216,8 @@ WIFFLE_SCREEN_SPACE_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	sh7091/serial.o
+	sh7091/serial.o \
+	sobel.o
 
 example/wiffle_screen_space.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_screen_space.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_OBJ)

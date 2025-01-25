@@ -20,6 +20,8 @@
 #include "geometry/wiffle.hpp"
 #include "math/vec4.hpp"
 
+void convolve(uint32_t * in, uint32_t * out);
+
 constexpr float half_degree = 0.01745329f / 2;
 
 #define MODEL wiffle
@@ -170,6 +172,9 @@ void transform(ta_parameter_writer& parameter,
 uint32_t ta_parameter_buf[((32 * 8192) + 32) / 4]
 __attribute__((aligned(32)));
 
+uint32_t inbuf[640 * 480];
+uint32_t outbuf[640 * 480];
+
 void main()
 {
   video_output::set_mode_vga();
@@ -270,13 +275,17 @@ void main()
                        bytes_per_pixel);
     core_wait_end_of_render_video();
 
+    uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
 
+
+
+    uint32_t * out = (uint32_t *)&texture_memory32[texture_memory_alloc.framebuffer[0].start / 4];
+    convolve(in, out);
 
     while (!spg_status::vsync(holly.SPG_STATUS));
     holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[0].start;
     while (spg_status::vsync(holly.SPG_STATUS));
 
-    /*
     holly.FB_R_CTRL = fb_r_ctrl::vclk_div::pclk_vclk_1
                     | fb_r_ctrl::fb_depth::_0888_rgb_32bit
                     | fb_r_ctrl::fb_enable;
@@ -284,9 +293,7 @@ void main()
     holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
                     | fb_r_size::fb_y_size(480 - 3)
                     | fb_r_size::fb_x_size((640 * 32) / 32 - 1);
-    */
 
-    //theta += half_degree;
-    break;
+    theta += half_degree;
   }
 }
