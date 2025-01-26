@@ -756,7 +756,15 @@ example/holly_recv_dma.elf: $(START_OBJ) $(HOLLY_RECV_DMA_OBJ)
 FIPR_OBJ = \
 	example/fipr.o \
 	fipr.o \
+	sobel_fipr.o \
 	sh7091/serial.o
 
 example/fipr.elf: LDSCRIPT = $(LIB)/main.lds
 example/fipr.elf: $(START_OBJ) $(FIPR_OBJ)
+
+ORA_OBJ = \
+	example/ora.o \
+	sh7091/serial.o
+
+example/ora.elf: LDSCRIPT = $(LIB)/main.lds
+example/ora.elf: $(START_OBJ) $(ORA_OBJ)

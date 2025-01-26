@@ -25,7 +25,7 @@
 
 #include "geometry/wiffle.hpp"
 
-void convolve(uint32_t * in, uint32_t * out);
+#include "sobel.hpp"
 
 constexpr float half_degree = 0.01745329f / 2;
 
@@ -250,7 +250,30 @@ void dma_init()
 }
 
 static uint32_t inbuf[640 * 480] __attribute__((aligned(32)));
+static float temp[640 * 480] __attribute__((aligned(32)));
 static uint32_t outbuf[640 * 480] __attribute__((aligned(32)));
+
+void make_temp()
+{
+  for (int i = 0; i < 640 * 480; i++) {
+    if ((i & 31) == 0) {
+      asm volatile ("pref @%0"
+                    :                          // output
+                    : "r" ((uint32_t)&inbuf[i]) // input
+                    );
+    }
+    uint32_t n = inbuf[i];
+    uint32_t sum;
+    sum = n & 0xff;
+    n >>= 8;
+    sum += n & 0xff;
+    n >>= 8;
+    sum += n & 0xff;
+    n >>= 8;
+    sum += n & 0xff;
+    temp[i] = (float)(sum * 0.25);
+  }
+}
 
 void main()
 {
@@ -356,8 +379,6 @@ void main()
 
     serial::string("ch1 dma start\n");
     dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
-    while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
-    serial::string("ch1 dma end\n");
 
     for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
       uint32_t address = (uint32_t)&inbuf[0];
@@ -367,8 +388,15 @@ void main()
                     );
     }
 
+    while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
+    serial::string("ch1 dma end\n");
+
+    serial::string("temp start\n");
+    make_temp();
+    serial::string("temp end\n");
+
     serial::string("convolve start\n");
-    convolve(inbuf, outbuf);
+    convolve(temp, outbuf);
     serial::string("convolve end\n");
 
     uint32_t framebuffer = 0x11000000 + texture_memory_alloc.framebuffer[0].start; // TA FIFO - Direct Texture Path

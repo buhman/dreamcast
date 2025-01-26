@@ -12,3 +12,4 @@ extern volatile uint32_t ta_fifo_polygon_converter_mirror[0x800000] __asm("ta_fi
 extern volatile uint32_t ta_fifo_yuv_converter_mirror[0x800000] __asm("ta_fifo_yuv_converter_mirror");
 extern volatile uint32_t ta_fifo_texture_memory_mirror[0x800000] __asm("ta_fifo_texture_memory_mirror");
 extern uint32_t store_queue[0x4000000] __asm("store_queue");
+extern uint32_t sh7091_oc_d[0x1000] __asm("sh7091_oc_d");
