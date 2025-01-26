@@ -6,6 +6,10 @@ __setup:
         mov.l r9,@-r15
         mov.l r10,@-r15
         mov.l r11,@-r15
+        fmov.s  fr12,@-r15
+        fmov.s  fr13,@-r15
+        fmov.s  fr14,@-r15
+        fmov.s  fr15,@-r15
 
         fldi1 fr8    /* 1.0 */
         fldi1 fr9    /* 2.0 */
@@ -141,6 +145,11 @@ _loop_width:
 
         /* restore registers */
 _return:
+        fmov.s  @r15+,fr15
+        fmov.s  @r15+,fr14
+        fmov.s  @r15+,fr13
+        fmov.s  @r15+,fr12
+
         mov.l @r15+,r11
         mov.l @r15+,r10
         mov.l @r15+,r9

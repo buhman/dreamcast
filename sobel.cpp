@@ -70,7 +70,7 @@ void convolve(float * in, uint32_t * out)
       float c = kernel2(in, x, y);
       int d = c > 100.f ? 0 : 0xffffffff;
 
-      out[y * 640 + x] = (uint8_t)d;
+      out[y * 640 + x] = d;
     }
   }
 }

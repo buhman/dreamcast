@@ -253,6 +253,8 @@ static uint32_t inbuf[640 * 480] __attribute__((aligned(32)));
 static float temp[640 * 480] __attribute__((aligned(32)));
 static uint32_t outbuf[640 * 480] __attribute__((aligned(32)));
 
+extern "C" int sobel_fipr(float * a, uint32_t * i);
+
 void make_temp()
 {
   for (int i = 0; i < 640 * 480; i++) {
@@ -377,7 +379,7 @@ void main()
     uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
     //uint32_t * out = (uint32_t *)&texture_memory32[texture_memory_alloc.framebuffer[0].start / 4];
 
-    serial::string("ch1 dma start\n");
+    //serial::string("ch1 dma start\n");
     dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
 
     for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
@@ -389,22 +391,34 @@ void main()
     }
 
     while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
-    serial::string("ch1 dma end\n");
+    //serial::string("ch1 dma end\n");
 
-    serial::string("temp start\n");
+    //serial::string("temp start\n");
     make_temp();
-    serial::string("temp end\n");
+    //serial::string("temp end\n");
 
-    serial::string("convolve start\n");
-    convolve(temp, outbuf);
-    serial::string("convolve end\n");
+    //serial::string("convolve start\n");
+
+    //convolve(temp, outbuf);
+    int a = sobel_fipr(temp, outbuf);
+    //serial::integer<uint32_t>((uint32_t)temp);
+    //serial::integer<uint32_t>(a);
+    for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
+      uint32_t address = (uint32_t)&outbuf[0];
+      asm volatile ("ocbwb @%0"
+                    :                          // output
+                    : "r" (address + (i * 32)) // input
+                    );
+    }
+
+    //serial::string("convolve end\n");
 
     uint32_t framebuffer = 0x11000000 + texture_memory_alloc.framebuffer[0].start; // TA FIFO - Direct Texture Path
     system.LMMODE0 = 1;
     system.LMMODE1 = 1; // 32-bit
-    serial::string("ch2 dma start\n");
+    //serial::string("ch2 dma start\n");
     ch2_dma_transfer((uint32_t)outbuf, framebuffer, (640 * 480 * 4) / 32);
-    serial::string("ch2 dma end\n");
+    //serial::string("ch2 dma end\n");
 
     while (!spg_status::vsync(holly.SPG_STATUS));
     holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[0].start;
