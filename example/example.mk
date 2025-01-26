@@ -752,3 +752,11 @@ HOLLY_RECV_DMA_OBJ = \
 
 example/holly_recv_dma.elf: LDSCRIPT = $(LIB)/main.lds
 example/holly_recv_dma.elf: $(START_OBJ) $(HOLLY_RECV_DMA_OBJ)
+
+FIPR_OBJ = \
+	example/fipr.o \
+	fipr.o \
+	sh7091/serial.o
+
+example/fipr.elf: LDSCRIPT = $(LIB)/main.lds
+example/fipr.elf: $(START_OBJ) $(FIPR_OBJ)
