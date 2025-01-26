@@ -176,9 +176,9 @@ void dma_start(uint8_t const * const send_buf,
   // start maple DMA
   _dma_start(send_buf);
 
-  // purge operand cache block for recv buffer, prior to returning to the caller
+  // invalidate operand cache block for recv buffer, prior to returning to the caller
   for (uint32_t i = 0; i < align_32byte(recv_size) / 32; i++) {
-    asm volatile ("ocbp @%0"
+    asm volatile ("ocbi @%0"
                   :                                                              // output
                   : "r" (reinterpret_cast<uint32_t>(&recv_buf[32 * i])) // input
                   );

@@ -192,9 +192,9 @@ void tick(struct maple_poll_state& poll_state)
 	const uint8_t * buf = reinterpret_cast<const uint8_t *>(state.reply_crc.offset);
         const uint8_t * buf32 = reinterpret_cast<const uint8_t *>((state.reply_crc.offset / 32) * 32); // round down
 
-        // purge operand cache blocks for the data written by DMA, rounding up twice
+        // invalidate operand cache blocks for the data written by DMA, rounding up twice
         for (uint32_t i = 0; i < align_32byte(len) + 32; i += 32) {
-          asm volatile ("ocbp @%0"
+          asm volatile ("ocbi @%0"
                         :                                             // output
                         : "r" (reinterpret_cast<uint32_t>(&buf32[i])) // input
                         );

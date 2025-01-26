@@ -745,3 +745,10 @@ TEXTURE_MEMORY_OBJ = \
 
 example/texture_memory.elf: LDSCRIPT = $(LIB)/main.lds
 example/texture_memory.elf: $(START_OBJ) $(TEXTURE_MEMORY_OBJ)
+
+HOLLY_RECV_DMA_OBJ = \
+	example/holly_recv_dma.o \
+	sh7091/serial.o
+
+example/holly_recv_dma.elf: LDSCRIPT = $(LIB)/main.lds
+example/holly_recv_dma.elf: $(START_OBJ) $(HOLLY_RECV_DMA_OBJ)
