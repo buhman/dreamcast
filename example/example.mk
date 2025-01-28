@@ -231,11 +231,23 @@ WIFFLE_SCREEN_SPACE_STORE_QUEUE_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	sh7091/serial.o \
-	sobel_fipr_store_queue.o \
-	sobel.o
+	sobel_fipr_store_queue.o
 
 example/wiffle_screen_space_store_queue.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_screen_space_store_queue.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_STORE_QUEUE_OBJ)
+
+WIFFLE_SCREEN_SPACE_STORE_QUEUE2_OBJ = \
+	example/wiffle_screen_space_store_queue2.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o \
+	sobel_fipr_store_queue2.o
+
+example/wiffle_screen_space_store_queue2.elf: LDSCRIPT = $(LIB)/main.lds
+example/wiffle_screen_space_store_queue2.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_STORE_QUEUE2_OBJ)
 
 MODIFIER_VOLUME_OBJ = \
 	example/modifier_volume.o \

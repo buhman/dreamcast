@@ -251,31 +251,8 @@ void dma_init()
 
 static uint32_t inbuf[640 * 480] __attribute__((aligned(32)));
 static float temp[640 * 480] __attribute__((aligned(32)));
-static uint32_t outbuf[640 * 480] __attribute__((aligned(32)));
 
-extern "C" int sobel_fipr(float * a, uint32_t * i);
-
-void make_temp()
-{
-  for (int i = 0; i < 640 * 480; i++) {
-    if ((i & 31) == 0) {
-      asm volatile ("pref @%0"
-                    :                          // output
-                    : "r" ((uint32_t)&inbuf[i]) // input
-                    );
-    }
-    uint32_t n = inbuf[i];
-    uint32_t sum;
-    sum = n & 0xff;
-    n >>= 8;
-    sum += n & 0xff;
-    n >>= 8;
-    sum += n & 0xff;
-    n >>= 8;
-    sum += n & 0xff;
-    temp[i] = (float)(sum * 0.25);
-  }
-}
+extern "C" int sobel_fipr_store_queue(uint32_t * input, uint32_t * output, float * temp);
 
 void main()
 {
@@ -329,7 +306,72 @@ void main()
   background_parameter2(texture_memory_alloc.background[0].start,
 			0xffc0c0c0);
 
+
+  holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[0].start;
+
+  holly.FB_R_CTRL = fb_r_ctrl::vclk_div::pclk_vclk_1
+                  | fb_r_ctrl::fb_depth::_0888_rgb_32bit
+                  | fb_r_ctrl::fb_enable;
+
+  holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
+                  | fb_r_size::fb_y_size(480 - 3)
+                  | fb_r_size::fb_x_size((640 * 32) / 32 - 1);
+
+  system.LMMODE0 = 1;
+  system.LMMODE1 = 1; // 32-bit
+
+  uint32_t * out = (uint32_t *)&texture_memory32[texture_memory_alloc.framebuffer[0].start / 4];
+  for (int i = 0; i < 640 * 480; i++) {
+    out[i] = 0xffff0000;
+  }
+
+  ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
+                             texture_memory_alloc.isp_tsp_parameters[0].end,
+                             texture_memory_alloc.object_list[0].start,
+                             texture_memory_alloc.object_list[0].end,
+                             opb_size[0].total(),
+                             ta_alloc,
+                             tile_width,
+                             tile_height);
+
+  for (uint32_t i = 0; i < MODEL::num_faces; i++) {
+    transform(i, theta, lights);
+  }
+  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  sq_transfer_32byte(ta_fifo_polygon_converter);
+
+  ta_wait_translucent_list();
+
+  holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_8888_argb_32bit;
+
+  const uint32_t bytes_per_pixel = 4;
+  core_start_render3(texture_memory_alloc.region_array[0].start,
+                     texture_memory_alloc.isp_tsp_parameters[0].start,
+                     texture_memory_alloc.background[0].start,
+                     //texture_memory_alloc.framebuffer[0].start,
+                     0x100'0000 | texture_memory_alloc.texture.start, // 64-bit area
+                     framebuffer_width,
+                     bytes_per_pixel);
+
+  ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
+                             texture_memory_alloc.isp_tsp_parameters[0].end,
+                             texture_memory_alloc.object_list[0].start,
+                             texture_memory_alloc.object_list[0].end,
+                             opb_size[0].total(),
+                             ta_alloc,
+                             tile_width,
+                             tile_height);
+
+  for (uint32_t i = 0; i < MODEL::num_faces; i++) {
+    transform(i, theta, lights);
+  }
+  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  sq_transfer_32byte(ta_fifo_polygon_converter);
+
   while (1) {
+    ta_wait_translucent_list();
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
 			       texture_memory_alloc.isp_tsp_parameters[0].end,
 			       texture_memory_alloc.object_list[0].start,
@@ -339,8 +381,8 @@ void main()
 			       tile_width,
 			       tile_height);
 
+    /*
     float theta2 = 3.14 * 2 * sin(theta / 7);
-
     lights[0].x = cos(theta) * 20;
     lights[0].z = sin(theta) * 20;
 
@@ -349,24 +391,23 @@ void main()
 
     lights[2].x = cos(theta + half_degree * 360.f) * 20;
     lights[2].z = sin(theta + half_degree * 360.f) * 20;
+    */
 
     for (uint32_t i = 0; i < MODEL::num_faces; i++) {
       transform(i, theta, lights);
     }
+    *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+    sq_transfer_32byte(ta_fifo_polygon_converter);
+
+
     /*
     transform2(parameter, lights[0], {1.f, 0.f, 0.f, 1.f});
     transform2(parameter, lights[1], {0.f, 1.f, 0.f, 1.f});
     transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
     */
 
-    *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
-      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-    sq_transfer_32byte(ta_fifo_polygon_converter);
-
-    ta_wait_translucent_list();
-
-    holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_8888_argb_32bit;
-    uint32_t bytes_per_pixel = 4;
+    core_wait_end_of_render_video();
     core_start_render3(texture_memory_alloc.region_array[0].start,
                        texture_memory_alloc.isp_tsp_parameters[0].start,
                        texture_memory_alloc.background[0].start,
@@ -374,67 +415,21 @@ void main()
                        0x100'0000 | texture_memory_alloc.texture.start, // 64-bit area
                        framebuffer_width,
                        bytes_per_pixel);
-    core_wait_end_of_render_video();
 
     uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
-    //uint32_t * out = (uint32_t *)&texture_memory32[texture_memory_alloc.framebuffer[0].start / 4];
+    uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
 
-    //serial::string("ch1 dma start\n");
     dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
-
-    for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
-      uint32_t address = (uint32_t)&inbuf[0];
-      asm volatile ("ocbp @%0"
-                    :                          // output
-                    : "r" (address + (i * 32)) // input
-                    );
-    }
-
     while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
-    //serial::string("ch1 dma end\n");
 
-    //serial::string("temp start\n");
-    make_temp();
-    //serial::string("temp end\n");
-
-    //serial::string("convolve start\n");
-
-    //convolve(temp, outbuf);
-    int a = sobel_fipr(temp, outbuf);
-    //serial::integer<uint32_t>((uint32_t)temp);
-    //serial::integer<uint32_t>(a);
-    for (uint32_t i = 0; i < (640 * 480 * 4) / 32; i++) {
-      uint32_t address = (uint32_t)&outbuf[0];
-      asm volatile ("ocbwb @%0"
-                    :                          // output
-                    : "r" (address + (i * 32)) // input
-                    );
-    }
-
-    //serial::string("convolve end\n");
-
-    uint32_t framebuffer = 0x11000000 + texture_memory_alloc.framebuffer[0].start; // TA FIFO - Direct Texture Path
-    system.LMMODE0 = 1;
-    system.LMMODE1 = 1; // 32-bit
-    //serial::string("ch2 dma start\n");
-    ch2_dma_transfer((uint32_t)outbuf, framebuffer, (640 * 480 * 4) / 32);
-    //serial::string("ch2 dma end\n");
-
-    while (!spg_status::vsync(holly.SPG_STATUS));
-    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[0].start;
-    while (spg_status::vsync(holly.SPG_STATUS));
-
-    holly.FB_R_CTRL = fb_r_ctrl::vclk_div::pclk_vclk_1
-                    | fb_r_ctrl::fb_depth::_0888_rgb_32bit
-                    | fb_r_ctrl::fb_enable;
-
-    holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
-                    | fb_r_size::fb_y_size(480 - 3)
-                    | fb_r_size::fb_x_size((640 * 32) / 32 - 1);
+    sobel_fipr_store_queue(inbuf, framebuffer, temp);
 
     theta += half_degree;
     frame_ix += 1;
     if (frame_ix > 100)
       break;
   }
+  serial::string("return\n");
+  serial::string("return\n");
+  serial::string("return\n");
 }
