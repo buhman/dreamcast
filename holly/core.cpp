@@ -140,18 +140,43 @@ void core_wait_end_of_render_video()
     "Furthermore, it is strongly recommended that the End of ISP and End of Video interrupts
     be cleared at the same time in order to make debugging easier when an error occurs."
   */
-  while ((system.ISTNRM & istnrm::end_of_render_tsp) == 0) {
+  //serial::string("eorv\n");
+  int64_t count = 0;
+  while (1) {
+    uint32_t istnrm = system.ISTNRM;
+    if ((istnrm & istnrm::end_of_render_tsp) != 0)
+      break;
+    if (istnrm & 0xc0000000) {
+      serial::string("istnrm ");
+      serial::integer<uint32_t>(istnrm);
+      serial::string("isterr ");
+      serial::integer<uint32_t>(system.ISTERR);
+    }
+
+    //serial::integer<uint32_t>(system.ISTERR);
     if (system.ISTERR) {
       //serial::string("core ");
       //serial::integer<uint32_t>(system.ISTERR);
       holly.SOFTRESET = softreset::pipeline_soft_reset;
       holly.SOFTRESET = 0;
+      //break;
+    }
+    if (count > 10000000) {
+      serial::string("core timeout:\n");
+      serial::string("isterr ");
+      serial::integer<uint32_t>(system.ISTERR);
+      serial::string("istnrm ");
+      serial::integer<uint32_t>(system.ISTNRM);
       break;
     }
+    count += 1;
   };
   system.ISTNRM = istnrm::end_of_render_tsp
 		| istnrm::end_of_render_isp
 		| istnrm::end_of_render_video;
+
+  holly.SOFTRESET = softreset::pipeline_soft_reset;
+  holly.SOFTRESET = 0;
 }
 
 void core_flip(uint32_t frame_ix)

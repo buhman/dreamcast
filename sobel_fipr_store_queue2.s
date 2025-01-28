@@ -15,7 +15,7 @@ _sobel_fipr_store_queue2:
         /* r11: var   (y loop counter)                               */
         /* r12: var   (prefetch address: input address + 1280  4)    */
         /* r13: var   (input address) */
-        /* r14: -    */
+        /* r14: (temporary)    */
 
 __setup:
         mov.l r8,@-r15
@@ -24,6 +24,7 @@ __setup:
         mov.l r11,@-r15
         mov.l r12,@-r15
         mov.l r13,@-r15
+        mov.l r14,@-r15
         fmov.s  fr12,@-r15
         fmov.s  fr13,@-r15
         fmov.s  fr14,@-r15
@@ -81,7 +82,7 @@ __setup:
         nop
 
         .align 4
-_const_100f:    .float 3900
+_const_100f:    .float 50
 
 _const_store_queue:             .long 0xe0000000
 _const_store_queue_mask:        .long 0x03ffffc0 /* (0xffffffff & (~0b111111)) & (~(0b111111 << 26)) */
@@ -93,54 +94,56 @@ _const_1280:    .short (1280 * 4)
 _const_1281:    .short (1281 * 4)
 _const_1282:    .short (1282 * 4)
 
-        /* use r10 as temporary to load the first 1280 pixels; 8 pixels per loop iteration */
+        /* use r10 as temporary to load the first 1280 pixels; 16 pixels per loop iteration */
+        .include "unpack_pixel.s"
         .align 4
 _prime_pixels_loop_init:
-        mov #80,r10               /* 1280 / 8 */
-        shll r10
         mov r0,r12
+        mov #80,r10               /* 1280 / 16 */
+        shll r10
 
 _prime_pixels_loop:
-        .include "unpack_pixel.s"
+        unpack_pixel_16
         dt r10
         bt _loop_init
         bra _prime_pixels_loop
         nop
 
-        .align 4
 _loop_init:
-        /* skip first row */
-        add r3,r0 /* r3: const (640 * 4) */
-        add r3,r8
+        /* skip first output row */
+        mov r3,r1
+        shlr r1
+        add r1,r8 /* r3: 640 * 4 */
 
         mov.w _const_height,r11   /* 478      */
         bra _loop
-        mov #80,r10               /* 640 / 8 */
+        mov #40,r10               /* 640 / 8 */
 
-_const_height:     .short 478
+_const_height:     .short 476
+/*_const_height:     .short 238*/
 
+        .include "sobel_fipr_inner2.s"
 _loop:
 _loop_width:
         /* prefetch at r8 + 1280 */
+        unpack_pixel_16
 
-        /* process the next 8 pixels */
-        .include "unpack_pixel.s"
-
-        .include "sobel_fipr_inner2.s"
+        /* process the next 16 pixels */
+        sobel_fipr_inner_2px
         mov.l r9,@r8     /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(4,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(8,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(12,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(16,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(20,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(24,r8) /* save result in the store queue */
-        .include "sobel_fipr_inner2.s"
+        sobel_fipr_inner_2px
         mov.l r9,@(28,r8) /* save result in the store queue */
 
         /* send the store queue */
@@ -158,7 +161,7 @@ _row_decrement:
         dt r11
         bt _return
         bra _loop
-        mov #80,r10 /* 640 / 8 */
+        mov #40,r10 /* 640 / 8 */
 
         /* restore registers */
 _return:
@@ -166,6 +169,7 @@ _return:
         fmov.s  @r15+,fr14
         fmov.s  @r15+,fr13
         fmov.s  @r15+,fr12
+        mov.l @r15+,r14
         mov.l @r15+,r13
         mov.l @r15+,r12
         mov.l @r15+,r11

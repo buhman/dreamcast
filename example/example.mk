@@ -244,7 +244,8 @@ WIFFLE_SCREEN_SPACE_STORE_QUEUE2_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	sh7091/serial.o \
-	sobel_fipr_store_queue2.o
+	sobel_fipr_store_queue2.o \
+	$(LIBGCC)
 
 example/wiffle_screen_space_store_queue2.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_screen_space_store_queue2.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_STORE_QUEUE2_OBJ)

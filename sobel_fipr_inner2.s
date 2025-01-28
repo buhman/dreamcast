@@ -1,3 +1,5 @@
+        .macro inner_multiplication
+
         /* y multiplication */
         mov #4,r1           /* r1 : temporary */
         fmov.s @r0,fr0      /* 0 */
@@ -49,11 +51,27 @@
         fsts FPUL,fr3
         fadd fr3,fr7
 
+        add #4,r0 /* next pixel */
+
         fschg
         fmov xd0,dr0 /* load 100.f constant */
         fcmp/gt fr0,fr7
         fschg
+
+        .endm
+
+        .macro sobel_fipr_inner_2px
+        mov #0,r9
+
+        inner_multiplication
         movt r9
         add #-1,r9
+        extu.w r9,r9
 
-        add #4,r0 /* next pixel */
+        inner_multiplication
+        movt r1
+        add #-1,r1
+        extu.w r1,r1
+        shll16 r1
+        or r1,r9
+        .endm

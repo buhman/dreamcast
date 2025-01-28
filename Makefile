@@ -4,7 +4,7 @@ include base.mk
 include common.mk
 include headers.mk
 
-OPT = -O2
+OPT = -Og
 MAKEFILE_PATH := $(patsubst %/,%,$(dir $(abspath $(firstword $(MAKEFILE_LIST)))))
 CFLAGS += -I$(MAKEFILE_PATH)
 LIB ?= $(MAKEFILE_PATH)

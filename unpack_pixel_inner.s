@@ -1,12 +1,1 @@
-        mov.l @r13,r9
-        extu.b r9,r1
-        shlr8 r9
-        extu.b r9,r2
-        add r1,r2
-        shlr8 r9
-        extu.b r9,r1
-        add r1,r2
-        shlr8 r9
-        add r2,r9
-        lds r9,fpul
-        add #4,r13
+

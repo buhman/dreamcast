@@ -143,6 +143,85 @@ void transfer_scene(float theta)
   sq_transfer_32byte(ta_fifo_polygon_converter);
 }
 
+struct quad_vertex {
+  float x;
+  float y;
+  float z;
+  float u;
+  float v;
+};
+
+// screen space coordinates
+constexpr float x_uv = 640.f / 1024.f;
+constexpr float y_uv = 480.f / 512.f;
+
+const struct quad_vertex quad_vertices[] = {
+  { 0.f,   0.f,   0.1f, 0.0f, 0.0f },
+  { 640.f, 0.f,   0.1f, x_uv, 0.0f },
+  { 640.f, 480.f, 0.1f, x_uv, y_uv },
+  { 0.f,   480.f, 0.1f, 0.0f, y_uv },
+};
+
+void transfer_translucent_quad(uint32_t texture_address, bool use_alpha)
+{
+  const uint32_t parameter_control_word = para_control::para_type::sprite
+                                        | para_control::list_type::translucent
+                                        | obj_control::col_type::packed_color
+                                        | obj_control::texture
+                                        | obj_control::_16bit_uv;
+
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::always
+                                          | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  const uint32_t alpha =
+    tsp_instruction_word::src_alpha_instr::inverse_src_alpha |
+    tsp_instruction_word::dst_alpha_instr::src_alpha;
+  const uint32_t no_alpha =
+    tsp_instruction_word::src_alpha_instr::one |
+    tsp_instruction_word::dst_alpha_instr::zero;
+
+  const uint32_t tsp_instruction_word = (use_alpha ? alpha : no_alpha)
+                                      | tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::texture_u_size::from_int(1024)
+                                      | tsp_instruction_word::texture_v_size::from_int(512)
+                                      | (use_alpha ? tsp_instruction_word::use_alpha : 0);
+
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_4444
+                                      | texture_control_word::scan_order::non_twiddled
+                                      | texture_control_word::texture_address(texture_address / 8)
+                                      | texture_control_word::stride_select;
+
+  const uint32_t base_color = 0xffff00ff;
+  *reinterpret_cast<ta_global_parameter::sprite *>(store_queue) =
+    ta_global_parameter::sprite(parameter_control_word,
+                                isp_tsp_instruction_word,
+                                tsp_instruction_word,
+                                texture_control_word,
+                                base_color,
+                                0,  // offset_color
+                                0,  // data_size_for_sort_dma
+                                0); // next_address_for_sort_dma
+  sq_transfer_32byte(ta_fifo_polygon_converter);
+
+  *reinterpret_cast<ta_vertex_parameter::sprite_type_1 *>(store_queue) =
+    ta_vertex_parameter::sprite_type_1(para_control::para_type::vertex_parameter,
+				       quad_vertices[0].x,
+				       quad_vertices[0].y,
+				       quad_vertices[0].z,
+				       quad_vertices[1].x,
+				       quad_vertices[1].y,
+				       quad_vertices[1].z,
+				       quad_vertices[2].x,
+				       quad_vertices[2].y,
+				       quad_vertices[2].z,
+				       quad_vertices[3].x,
+				       quad_vertices[3].y,
+                                       uv_16bit(quad_vertices[0].u, quad_vertices[0].v),
+                                       uv_16bit(quad_vertices[1].u, quad_vertices[1].v),
+                                       uv_16bit(quad_vertices[2].u, quad_vertices[2].v));
+  sq_transfer_64byte(ta_fifo_polygon_converter);
+}
+
 void dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
 {
   using namespace dmac;
@@ -227,14 +306,31 @@ void main()
   dma_init();
   video_output::set_mode_vga();
 
+  const int render_passes = 1;
+
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
 			      | ta_alloc_ctrl::t_opb::_16x4byte
 			      | ta_alloc_ctrl::om_opb::no_list
                               | ta_alloc_ctrl::o_opb::no_list;
 
-  const int render_passes = 1;
   const struct opb_size opb_size[render_passes] = {
+    {
+      .opaque = 0,
+      .opaque_modifier = 0,
+      .translucent = 16 * 4,
+      .translucent_modifier = 0,
+      .punch_through = 0
+    }
+  };
+
+  constexpr uint32_t ta_alloc2 = ta_alloc_ctrl::pt_opb::no_list
+                               | ta_alloc_ctrl::tm_opb::no_list
+                               | ta_alloc_ctrl::t_opb::_16x4byte
+                               | ta_alloc_ctrl::om_opb::no_list
+                               | ta_alloc_ctrl::o_opb::no_list;
+
+  const struct opb_size opb_size2[render_passes] = {
     {
       .opaque = 0,
       .opaque_modifier = 0,
@@ -265,66 +361,45 @@ void main()
 			 render_passes,
 			 texture_memory_alloc.region_array[0].start,
 			 texture_memory_alloc.object_list[0].start);
-
   background_parameter2(texture_memory_alloc.background[0].start,
 			0xffc0c0c0);
 
+  region_array_multipass(tile_width,
+			 tile_height,
+			 opb_size2,
+			 render_passes,
+			 texture_memory_alloc.region_array[1].start,
+			 texture_memory_alloc.object_list[1].start);
+  background_parameter2(texture_memory_alloc.background[1].start,
+			0xffc0c0c0);
 
   holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[0].start;
 
   holly.FB_R_CTRL = fb_r_ctrl::vclk_div::pclk_vclk_1
-                  | fb_r_ctrl::fb_depth::_0888_rgb_32bit
+                  | fb_r_ctrl::fb_depth::_565_rgb_16bit
                   | fb_r_ctrl::fb_enable;
 
   holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
                   | fb_r_size::fb_y_size(480 - 3)
-                  | fb_r_size::fb_x_size((640 * 32) / 32 - 1);
+                  | fb_r_size::fb_x_size((640 * 16) / 32 - 1);
 
-  holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_8888_argb_32bit;
+  holly.TEXT_CONTROL = text_control::stride(20); // 640 pixels
 
-  system.LMMODE0 = 1;
-  system.LMMODE1 = 1; // 32-bit
-
-  uint32_t * out = (uint32_t *)&texture_memory32[texture_memory_alloc.framebuffer[0].start / 4];
-  for (int i = 0; i < 640 * 480; i++) {
-    out[i] = 0xffff0000;
-  }
-
-  ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
-                             texture_memory_alloc.isp_tsp_parameters[0].end,
-                             texture_memory_alloc.object_list[0].start,
-                             texture_memory_alloc.object_list[0].end,
-                             opb_size[0].total(),
-                             ta_alloc,
-                             tile_width,
-                             tile_height);
-  transfer_scene(theta);
-  ta_wait_translucent_list();
-
-  const uint32_t bytes_per_pixel = 4;
-  core_start_render3(texture_memory_alloc.region_array[0].start,
-                     texture_memory_alloc.isp_tsp_parameters[0].start,
-                     texture_memory_alloc.background[0].start,
-                     //texture_memory_alloc.framebuffer[0].start,
-                     0x100'0000 | texture_memory_alloc.texture.start, // 64-bit area
-                     framebuffer_width,
-                     bytes_per_pixel);
-
-  ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
-                             texture_memory_alloc.isp_tsp_parameters[0].end,
-                             texture_memory_alloc.object_list[0].start,
-                             texture_memory_alloc.object_list[0].end,
-                             opb_size[0].total(),
-                             ta_alloc,
-                             tile_width,
-                             tile_height);
-  transfer_scene(theta);
+  //system.LMMODE0 = 1;
+  //system.LMMODE1 = 1; // 32-bit
+  system.LMMODE0 = 0;
+  system.LMMODE1 = 0; // 64-bit
 
   uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
-  uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
+
+  /*
+  for (int i = 0; i < 640 * 480; i++) {
+    uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
+    framebuffer[i] = 0xffff0000;
+  }
+  */
 
   while (1) {
-    ta_wait_translucent_list();
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
 			       texture_memory_alloc.isp_tsp_parameters[0].end,
 			       texture_memory_alloc.object_list[0].start,
@@ -333,31 +408,74 @@ void main()
 			       ta_alloc,
 			       tile_width,
 			       tile_height);
-
     transfer_scene(theta);
+    //serial::string("wait_tl1\n");
+    ta_wait_translucent_list();
+    //serial::string("wait_tl1 end\n");
 
-    core_wait_end_of_render_video();
+    holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_4444_argb_16bit;
+
     core_start_render3(texture_memory_alloc.region_array[0].start,
                        texture_memory_alloc.isp_tsp_parameters[0].start,
                        texture_memory_alloc.background[0].start,
-                       //texture_memory_alloc.framebuffer[0].start,
                        0x100'0000 | texture_memory_alloc.texture.start, // 64-bit area
                        framebuffer_width,
-                       bytes_per_pixel);
+                       2); // bytes_per_pixel
+    //serial::string("wait_eorv1\n");
+    core_wait_end_of_render_video();
+    //serial::string("wait_eorv1 end\n");
 
-    dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
+    dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 2 / 32);
     while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
 
-    sobel_fipr_store_queue2(inbuf, framebuffer, temp);
+    //sobel_fipr_store_queue2(inbuf, out, temp);
+    int frame = frame_ix & 1;
+    uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
+    uint32_t * out = (uint32_t *)(0x11000000 + texture_memory_alloc.texture.start + 640 * 480 * 2);
+    //serial::string("sobel\n");
+    //sobel_fipr_store_queue2(inbuf, framebuffer, temp);
+    sobel_fipr_store_queue2(inbuf, out, temp);
+
+    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[1].start,
+			       texture_memory_alloc.isp_tsp_parameters[1].end,
+			       texture_memory_alloc.object_list[1].start,
+			       texture_memory_alloc.object_list[1].end,
+			       opb_size2[0].total(),
+			       ta_alloc2,
+			       tile_width,
+			       tile_height);
+
+    const uint32_t texture_address0 = texture_memory_alloc.texture.start;
+    transfer_translucent_quad(texture_address0, false);
+    const uint32_t texture_address1 = texture_memory_alloc.texture.start + 640 * 480 * 2;
+    transfer_translucent_quad(texture_address1, true);
+    *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+    sq_transfer_32byte(ta_fifo_polygon_converter);
+
+    //serial::string("wait_tl2\n");
+    ta_wait_translucent_list();
+    //serial::string("wait_tl2 end\n");
+
+    holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+
+    core_start_render3(texture_memory_alloc.region_array[1].start,
+                       texture_memory_alloc.isp_tsp_parameters[1].start,
+                       texture_memory_alloc.background[1].start,
+                       texture_memory_alloc.framebuffer[frame].start,
+                       framebuffer_width,
+                       2); // bytes_per_pixel
+    //serial::string("wait_eorv2\n");
+    core_wait_end_of_render_video();
+    //serial::string("wait_eorv2 end\n");
+
+    while (!spg_status::vsync(holly.SPG_STATUS));
+    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[frame].start;
+    while (spg_status::vsync(holly.SPG_STATUS));
 
     theta += half_degree;
     frame_ix += 1;
-    if (frame_ix > 100)
-      break;
   }
-
-  ta_wait_translucent_list();
-  core_wait_end_of_render_video();
 
   serial::string("return\n");
   serial::string("return\n");
