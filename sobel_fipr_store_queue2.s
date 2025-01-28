@@ -1,6 +1,6 @@
         /* fv0 fv4 fv8 fv12 */
-        .global _sobel_fipr_store_queue
-_sobel_fipr_store_queue:
+        .global _sobel_fipr_store_queue2
+_sobel_fipr_store_queue2:
         /* r0:  var   (buffer address) */
         /* r1:  (temporary)         */
         /* r2:  (temporary)         */

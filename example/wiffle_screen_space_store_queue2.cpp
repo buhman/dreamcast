@@ -52,8 +52,7 @@ vec3 rotate(const vec3& vertex, float theta)
 }
 
 void transform(const uint32_t face_ix,
-               const float theta,
-               const vec3 lights[3])
+               const float theta)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::translucent
@@ -92,47 +91,6 @@ void transform(const uint32_t face_ix,
     uint32_t normal_ix = face[i].normal;
     auto& normal = MODEL::normals[normal_ix];
     auto n = rotate(normal, theta);
-
-    /*
-    vec4 color = {0.0, 0.0, 0.0, 1.0};
-
-    // intensity calculation
-    {
-      auto l = lights[0] - point;
-      auto n_dot_l = dot(n, l);
-      if (n_dot_l > 0) {
-	float distance = magnitude(lights[0] - point);
-	float attenuation = 1.0 / (1.0f
-				   + 0.07f * distance
-				   + 0.007f * (distance * distance));
-	color.x += 5.0 * attenuation;
-      }
-    }
-
-    {
-      auto l = lights[1] - point;
-      auto n_dot_l = dot(n, l);
-      if (n_dot_l > 0) {
-	float distance = magnitude(lights[1] - point);
-	float attenuation = 1.0 / (1.0f
-				   + 0.07f * distance
-				   + 0.007f * (distance * distance));
-        color.y += 5.0 * attenuation;
-      }
-    }
-
-    {
-      auto l = lights[2] - point;
-      auto n_dot_l = dot(n, l);
-      if (n_dot_l > 0) {
-	float distance = magnitude(lights[2] - point);
-	float attenuation = 1.0 / (1.0f
-				   + 0.07f * distance
-				   + 0.007f * (distance * distance));
-        color.z += 9.0 * attenuation;
-      }
-    }
-    */
 
     float x = point.x;
     float y = point.y;
@@ -173,6 +131,16 @@ void transform(const uint32_t face_ix,
 					  );
     sq_transfer_32byte(ta_fifo_polygon_converter);
   }
+}
+
+void transfer_scene(float theta)
+{
+  for (uint32_t i = 0; i < MODEL::num_faces; i++) {
+    transform(i, theta);
+  }
+  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  sq_transfer_32byte(ta_fifo_polygon_converter);
 }
 
 void dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
@@ -252,7 +220,7 @@ void dma_init()
 static uint32_t inbuf[640 * 480] __attribute__((aligned(32)));
 static float temp[640 * 480] __attribute__((aligned(32)));
 
-extern "C" int sobel_fipr_store_queue(uint32_t * input, uint32_t * output, float * temp);
+extern "C" int sobel_fipr_store_queue2(uint32_t * input, uint32_t * output, float * temp);
 
 void main()
 {
@@ -285,11 +253,6 @@ void main()
   uint32_t frame_ix = 0;
 
   float theta = 0;
-  vec3 lights[3] = {
-    {0.f, 0.f, 0.f},
-    {0.f, 0.f, 0.f},
-    {0.f, 0.f, 0.f},
-  };
 
   const int framebuffer_width = 640;
   const int framebuffer_height = 480;
@@ -317,6 +280,8 @@ void main()
                   | fb_r_size::fb_y_size(480 - 3)
                   | fb_r_size::fb_x_size((640 * 32) / 32 - 1);
 
+  holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_8888_argb_32bit;
+
   system.LMMODE0 = 1;
   system.LMMODE1 = 1; // 32-bit
 
@@ -333,17 +298,8 @@ void main()
                              ta_alloc,
                              tile_width,
                              tile_height);
-
-  for (uint32_t i = 0; i < MODEL::num_faces; i++) {
-    transform(i, theta, lights);
-  }
-  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-  sq_transfer_32byte(ta_fifo_polygon_converter);
-
+  transfer_scene(theta);
   ta_wait_translucent_list();
-
-  holly.FB_W_CTRL = fb_w_ctrl::fb_packmode::_8888_argb_32bit;
 
   const uint32_t bytes_per_pixel = 4;
   core_start_render3(texture_memory_alloc.region_array[0].start,
@@ -362,13 +318,10 @@ void main()
                              ta_alloc,
                              tile_width,
                              tile_height);
+  transfer_scene(theta);
 
-  for (uint32_t i = 0; i < MODEL::num_faces; i++) {
-    transform(i, theta, lights);
-  }
-  *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-  sq_transfer_32byte(ta_fifo_polygon_converter);
+  uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
+  uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
 
   while (1) {
     ta_wait_translucent_list();
@@ -381,31 +334,7 @@ void main()
 			       tile_width,
 			       tile_height);
 
-    /*
-    float theta2 = 3.14 * 2 * sin(theta / 7);
-    lights[0].x = cos(theta) * 20;
-    lights[0].z = sin(theta) * 20;
-
-    lights[1].x = cos(theta2 + half_degree * 180.f) * 20;
-    lights[1].z = sin(theta2 + half_degree * 180.f) * 20;
-
-    lights[2].x = cos(theta + half_degree * 360.f) * 20;
-    lights[2].z = sin(theta + half_degree * 360.f) * 20;
-    */
-
-    for (uint32_t i = 0; i < MODEL::num_faces; i++) {
-      transform(i, theta, lights);
-    }
-    *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
-      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-    sq_transfer_32byte(ta_fifo_polygon_converter);
-
-
-    /*
-    transform2(parameter, lights[0], {1.f, 0.f, 0.f, 1.f});
-    transform2(parameter, lights[1], {0.f, 1.f, 0.f, 1.f});
-    transform2(parameter, lights[2], {0.f, 0.f, 1.f, 1.f});
-    */
+    transfer_scene(theta);
 
     core_wait_end_of_render_video();
     core_start_render3(texture_memory_alloc.region_array[0].start,
@@ -416,19 +345,20 @@ void main()
                        framebuffer_width,
                        bytes_per_pixel);
 
-    uint32_t * in = (uint32_t *)&texture_memory64[texture_memory_alloc.texture.start / 4];
-    uint32_t * framebuffer = (uint32_t *)(0x11000000 + texture_memory_alloc.framebuffer[0].start);
-
     dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
     while ((sh7091.DMAC.CHCR1 & dmac::chcr::te::transfers_completed) == 0);
 
-    sobel_fipr_store_queue(inbuf, framebuffer, temp);
+    sobel_fipr_store_queue2(inbuf, framebuffer, temp);
 
     theta += half_degree;
     frame_ix += 1;
     if (frame_ix > 100)
       break;
   }
+
+  ta_wait_translucent_list();
+  core_wait_end_of_render_video();
+
   serial::string("return\n");
   serial::string("return\n");
   serial::string("return\n");
