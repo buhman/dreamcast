@@ -403,7 +403,7 @@ void main()
     int a = sobel_fipr(temp, outbuf);
     //serial::integer<uint32_t>((uint32_t)temp);
     //serial::integer<uint32_t>(a);
-    for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
+    for (uint32_t i = 0; i < (640 * 480 * 4) / 32; i++) {
       uint32_t address = (uint32_t)&outbuf[0];
       asm volatile ("ocbwb @%0"
                     :                          // output

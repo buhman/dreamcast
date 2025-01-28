@@ -401,7 +401,7 @@ void main()
     //serial::string("ch1 dma start\n");
     dma_transfer((uint32_t)in, (uint32_t)inbuf, 640 * 480 * 4 / 32);
 
-    for (uint32_t i = 0; i < (sizeof (640 * 480 * 4)) / 32; i++) {
+    for (uint32_t i = 0; i < (640 * 480 * 4) / 32; i++) {
       uint32_t address = (uint32_t)&inbuf[0];
       asm volatile ("ocbp @%0"
                     :                          // output
