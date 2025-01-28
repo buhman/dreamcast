@@ -223,6 +223,20 @@ WIFFLE_SCREEN_SPACE_OBJ = \
 example/wiffle_screen_space.elf: LDSCRIPT = $(LIB)/main.lds
 example/wiffle_screen_space.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_OBJ)
 
+WIFFLE_SCREEN_SPACE_STORE_QUEUE_OBJ = \
+	example/wiffle_screen_space_store_queue.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	sh7091/serial.o \
+	sobel_fipr_store_queue.o \
+	sobel.o
+
+example/wiffle_screen_space_store_queue.elf: LDSCRIPT = $(LIB)/main.lds
+example/wiffle_screen_space_store_queue.elf: $(START_OBJ) $(WIFFLE_SCREEN_SPACE_STORE_QUEUE_OBJ)
+
 MODIFIER_VOLUME_OBJ = \
 	example/modifier_volume.o \
 	holly/video_output.o \
