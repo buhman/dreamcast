@@ -2,8 +2,8 @@
         .global _sobel_fipr_store_queue
 _sobel_fipr_store_queue:
         /* r0:  var   (input address) */
-        /* r1:  const 1     4         */
-        /* r2:  const 2     4         */
+        /* r1:  (temporary)         */
+        /* r2:  (temporary)         */
         /* r3:  const 640   4         */
         /* r4:  const 642   4         */
         /* r5:  const 1280  4         */
@@ -45,6 +45,9 @@ __setup:
         /* constants */
         mova _const_100f,r0    /* use r0 as temporary */
         fmov.s @r0,fr0
+        fschg
+        fmov dr0,xd0
+        fschg
 
         /* set qacr0 */
         mov r5,r0              /* r5: C argument */
@@ -66,8 +69,6 @@ __setup:
         mov r4,r0 /* r4 saved as r0 */
 
         /* offsets */
-        mov #(1 * 4),r1
-        mov #(2 * 4),r2
         mov.w _const_640,r3
         mov.w _const_642,r4
         mov.w _const_1280,r5
@@ -81,7 +82,7 @@ __setup:
         nop
 
         .align 4
-_const_100f:    .float 100
+_const_100f:    .float 1900
 
 _const_store_queue:             .long 0xe0000000
 _const_store_queue_mask:        .long 0x03ffffc0 /* (0xffffffff & (~0b111111)) & (~(0b111111 << 26)) */

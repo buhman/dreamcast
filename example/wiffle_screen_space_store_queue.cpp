@@ -272,7 +272,7 @@ void make_temp()
     sum += n & 0xff;
     n >>= 8;
     sum += n & 0xff;
-    temp[i] = (float)(sum * 0.25);
+    temp[i] = (float)(sum);
   }
 }
 
@@ -425,5 +425,8 @@ void main()
     //serial::string("convolve end\n");
 
     theta += half_degree;
+    frame_ix += 1;
+    if (frame_ix > 20)
+      break;
   }
 }

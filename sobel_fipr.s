@@ -28,7 +28,9 @@ __setup:
         /* constants */
         mova _const_100f,r0 /* r11 as temporary */
         fmov.s @r0,fr0
+        fschg
         fmov dr0,xd0
+        fschg
 
         /* save C arguments */
         mov r4,r0 /* r4 saved as r0 */
@@ -118,7 +120,9 @@ _loop_width:
         fsts FPUL,fr3
         fadd fr3,fr7
 
-        fmov dr0,xd0 /* load 100.f constant */
+        fschg
+        fmov xd0,dr0 /* load 100.f constant */
+        fschg
 
         add #4,r0 /* next pixel */
 
