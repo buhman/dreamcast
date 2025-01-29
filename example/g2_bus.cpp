@@ -19,8 +19,6 @@ int main()
   uint32_t * buf = (uint32_t *)(0xa0000000 | 0x14000000);
 
   while (1) {
-    //*(uint32_t *)(0xa0620000) = 0xffffffff;
-
     buf[j] = patterns[i & 3];
     i++;
 
@@ -33,6 +31,13 @@ int main()
 
     j++;
 
-    serial::character('.');
+    serial::string("ISTERR:\n");
+    serial::integer<uint32_t>(system.ISTERR);
+    //serial::integer<uint32_t>(system.ISTNRM);
+    system.ISTERR = system.ISTERR;
+
+    for (int k = 0; k < 1000000; k++) {
+      asm volatile ("nop");
+    }
   }
 }
