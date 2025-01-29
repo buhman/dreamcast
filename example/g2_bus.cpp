@@ -1,25 +1,38 @@
 #include "sh7091/serial.hpp"
+#include "systembus.hpp"
+#include "systembus_bits.hpp"
+
+constexpr uint32_t patterns[] = {
+  0x11223344,
+  0x55667788,
+  0x99aabbcc,
+  0xddeeff00,
+};
 
 int main()
 {
   serial::init(0);
 
+  uint32_t i = 0;
+  uint8_t j = 0;
+
+  uint32_t * buf = (uint32_t *)(0xa0000000 | 0x14000000);
+
   while (1) {
     //*(uint32_t *)(0xa0620000) = 0xffffffff;
-    *(uint8_t *)(0xa0600480) = 0;
-    for (int i = 0; i < 30; i++) {
-      asm volatile ("nop");
-    }
 
-    *(uint8_t *)(0xa0600480) = 1;
-    for (int i = 0; i < 70; i++) {
-      asm volatile ("nop");
-    }
+    buf[j] = patterns[i & 3];
+    i++;
 
-    *(uint8_t *)(0xa0600480) = 0;
-    for (int i = 0; i < 120; i++) {
-      asm volatile ("nop");
-    }
+    uint32_t ffst = system.FFST;
+    while ( ffst::holly_cpu_if_block_internal_write_buffer(ffst)
+            | ffst::holly_g2_if_block_internal_write_buffer(ffst)
+            | ffst::aica_internal_write_buffer(ffst)) {
+      ffst = system.FFST;
+    };
+
+    j++;
+
     serial::character('.');
   }
 }
