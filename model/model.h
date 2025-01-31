@@ -35,19 +35,17 @@ using vertex_normal = vec<3, float>;
 using vertex_texture = vec<2, float>;
 
 struct object {
-  union triangle * triangle;
-  union quadrilateral * quadrilateral;
-  int triangle_count;
-  int quadrilateral_count;
-
-  int material;
+  const union triangle * triangle;
+  const union quadrilateral * quadrilateral;
+  const int triangle_count;
+  const int quadrilateral_count;
+  const int material;
 };
 
 struct model {
-  vertex_position * position;
-  vertex_texture * texture;
-  vertex_normal * normal;
-
-  struct object ** object;
-  int object_count;
+  const vertex_position * position;
+  const vertex_texture * texture;
+  const vertex_normal * normal;
+  const struct object ** object;
+  const int object_count;
 };

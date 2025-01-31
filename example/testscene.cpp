@@ -20,10 +20,21 @@
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
 
+#include "memory.hpp"
+
 #include "model/model.h"
+#include "model/material.h"
+#include "model/testscene/texture/texBrick.data.h"
+#include "model/testscene/texture/texFoliage.data.h"
+#include "model/testscene/texture/texGrass.data.h"
+#include "model/testscene/texture/texGrassClump.data.h"
+#include "model/testscene/texture/texRock.data.h"
+#include "model/testscene/texture/texWater.data.h"
+#include "model/testscene/material.h"
 #include "model/testscene/model.h"
 
 using vec3 = vec<3, float>;
+using vec2 = vec<2, float>;
 
 static float theta = 0;
 
@@ -58,82 +69,96 @@ static inline vec3 transform_vertex(vec3 vec)
 
 static uint32_t base_color = 0xffc0c000;
 
-static inline void transfer_triangle(vertex_position * position, union triangle * triangle)
+static inline void transfer_triangle(const vertex_position * position,
+                                     const vertex_texture * texture,
+                                     const union triangle * triangle)
 {
   base_color ^= base_color << 13;
   base_color ^= base_color >> 17;
   base_color ^= base_color << 5;
 
   vec3 v1 = transform_vertex(position[triangle->a.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  vec2 uv1 = texture[triangle->a.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v1.x, v1.y, v1.z,
-                                        base_color);
+                                        uv1.x, uv1.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   vec3 v2 = transform_vertex(position[triangle->b.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  vec2 uv2 = texture[triangle->a.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v2.x, v2.y, v2.z,
-                                        0xffc0c000);
+                                        uv2.x, uv2.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   vec3 v3 = transform_vertex(position[triangle->c.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
+  vec2 uv3 = texture[triangle->c.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
                                         v3.x, v3.y, v3.z,
-                                        base_color);
+                                        uv3.x, uv3.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 }
 
-static inline void transfer_quadrilateral(vertex_position * position, union quadrilateral * quadrilateral)
+static inline void transfer_quadrilateral(const vertex_position * position,
+                                          const vertex_texture * texture,
+                                          const union quadrilateral * quadrilateral)
 {
   base_color ^= base_color << 13;
   base_color ^= base_color >> 17;
   base_color ^= base_color << 5;
 
   vec3 v1 = transform_vertex(position[quadrilateral->a.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  vec2 uv1 = texture[quadrilateral->a.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v1.x, v1.y, v1.z,
-                                        base_color);
+                                        uv1.x, uv1.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   vec3 v2 = transform_vertex(position[quadrilateral->b.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  vec2 uv2 = texture[quadrilateral->b.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v2.x, v2.y, v2.z,
-                                        base_color);
-  sq_transfer_32byte(ta_fifo_polygon_converter);
-
-  vec3 v3 = transform_vertex(position[quadrilateral->c.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
-                                        v3.x, v3.y, v3.z,
-                                        base_color);
-  sq_transfer_32byte(ta_fifo_polygon_converter);
-
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
-                                        v1.x, v1.y, v1.z,
-                                        base_color);
-  sq_transfer_32byte(ta_fifo_polygon_converter);
-
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
-                                        v3.x, v3.y, v3.z,
-                                        base_color);
+                                        uv2.x, uv2.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   vec3 v4 = transform_vertex(position[quadrilateral->d.position]);
-  *reinterpret_cast<ta_vertex_parameter::polygon_type_0 *>(store_queue) =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
+  vec2 uv4 = texture[quadrilateral->d.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v4.x, v4.y, v4.z,
-                                        base_color);
+                                        uv4.x, uv4.y,
+                                        base_color,
+                                        0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
+
+  vec3 v3 = transform_vertex(position[quadrilateral->c.position]);
+  vec2 uv3 = texture[quadrilateral->c.texture];
+  *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
+                                        v3.x, v3.y, v3.z,
+                                        uv3.x, uv3.y,
+                                        base_color,
+                                        0); // offset_color
+  sq_transfer_32byte(ta_fifo_polygon_converter);
+
 }
 
-static inline void transfer_triangles(struct model * model, struct object * object)
+static inline void transfer_triangles(const struct model * model, const struct object * object)
 {
   if (object->triangle_count == 0)
     return;
@@ -141,16 +166,21 @@ static inline void transfer_triangles(struct model * model, struct object * obje
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
                                         | obj_control::col_type::packed_color
-                                        | obj_control::gouraud;
+                                        | obj_control::texture;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                       | tsp_instruction_word::dst_alpha_instr::zero
-                                      | tsp_instruction_word::fog_control::no_fog;
+                                      | tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::texture_u_size::from_int(128)
+                                      | tsp_instruction_word::texture_v_size::from_int(128);
 
-  const uint32_t texture_control_word = 0;
+  const uint32_t texture_address = texture_memory_alloc.texture.start;
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_565
+                                      | texture_control_word::scan_order::twiddled
+                                      | texture_control_word::texture_address(texture_address / 8);
 
   *reinterpret_cast<ta_global_parameter::polygon_type_0 *>(store_queue) =
     ta_global_parameter::polygon_type_0(parameter_control_word,
@@ -163,17 +193,17 @@ static inline void transfer_triangles(struct model * model, struct object * obje
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   for (int i = 0; i < object->triangle_count; i++) {
-    transfer_triangle(model->position, &object->triangle[i]);
+    transfer_triangle(model->position, model->texture, &object->triangle[i]);
   }
   for (int i = 0; i < object->quadrilateral_count; i++) {
-    transfer_quadrilateral(model->position, &object->quadrilateral[i]);
+    transfer_quadrilateral(model->position, model->texture, &object->quadrilateral[i]);
   }
 }
 
 void transfer_scene()
 {
-  struct model * model = &testscene_model;
-  struct object * object = &testscene_Waterfall;
+  const struct model * model = &testscene_model;
+  const struct object * object = &testscene_Waterfall;
   transfer_triangles(model, object);
 
   *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
@@ -181,8 +211,53 @@ void transfer_scene()
   sq_transfer_32byte(ta_fifo_polygon_converter);
 }
 
+void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
+{
+  sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(dst) >> 24) & 0b11100);
+  sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(dst) >> 24) & 0b11100);
+
+  volatile uint32_t * base = &store_queue[texture_memory_alloc.texture.start / 4];
+  uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
+
+  length = (length + 31) & ~31; // round up to nearest multiple of 32
+  while (length > 0) {
+    base[0] = src32[0];
+    base[1] = src32[1];
+    base[2] = src32[2];
+    base[3] = src32[3];
+    base[4] = src32[4];
+    base[5] = src32[5];
+    base[6] = src32[6];
+    base[7] = src32[7];
+    asm volatile ("pref @%0"
+                  :                // output
+                  : "r" (&base[0]) // input
+                  : "memory");
+    serial::integer<uint32_t>((uint32_t)base, ' ');
+    serial::integer<uint32_t>((uint32_t)src32, ' ');
+    serial::integer<uint32_t>(length);
+    length -= 32;
+    base += 8;
+    src32 += 8;
+  }
+}
+
+void transfer_textures()
+{
+  system.LMMODE0 = 0; // 64-bit address space
+  system.LMMODE1 = 0; // 64-bit address space
+
+  void * dst = reinterpret_cast<void *>(ta_fifo_texture_memory);
+  void * src = reinterpret_cast<void *>(&_binary_model_testscene_texture_texBrick_data_start);
+  transfer_ta_fifo_texture_memory_32byte(dst, src, 128 * 128 * 2);
+
+  //memory::copy<volatile uint32_t>(&texture_memory64[texture_memory_alloc.texture.start / 4], reinterpret_cast<uint32_t *>(src), 128 * 128 * 2);
+}
+
 void main()
 {
+  transfer_textures();
+
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
 			      | ta_alloc_ctrl::t_opb::no_list

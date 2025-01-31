@@ -1,4 +1,4 @@
-vertex_position testscene_position[] = {
+const vertex_position testscene_position[] = {
     {-2.726302f, 0.000000f, 2.726302f},
     {2.726302f, 0.000000f, 2.726302f},
     {-2.726302f, 0.000000f, -2.726302f},
@@ -1124,7 +1124,7 @@ vertex_position testscene_position[] = {
     {3.346258f, 0.354088f, 0.984101f},
 };
 
-vertex_texture testscene_texture[] = {
+const vertex_texture testscene_texture[] = {
     {-2.025739f, -2.025739f},
     {-0.870555f, -2.711017f},
     {0.500000f, 0.500000f},
@@ -1181,7 +1181,7 @@ vertex_texture testscene_texture[] = {
     {0.000000f, 1.000000f},
 };
 
-vertex_normal testscene_normal[] = {
+const vertex_normal testscene_normal[] = {
     {-0.000000f, 1.000000f, -0.000000f},
     {-0.000000f, 1.000000f, -0.000000f},
     {0.157200f, 0.911500f, 0.380100f},
@@ -1563,7 +1563,7 @@ vertex_normal testscene_normal[] = {
     {-0.833900f, -0.091000f, -0.544300f},
 };
 
-union triangle testscene_Ground_triangle[] = {
+const union triangle testscene_Ground_triangle[] = {
     { .v = {
         {7, 1, 0},
         {8, 4, 0},
@@ -1606,7 +1606,7 @@ union triangle testscene_Ground_triangle[] = {
     }},
 };
 
-union quadrilateral testscene_Ground_quadrilateral[] = {
+const union quadrilateral testscene_Ground_quadrilateral[] = {
     { .v = {
         {0, 0, 0},
         {7, 1, 0},
@@ -1633,15 +1633,15 @@ union quadrilateral testscene_Ground_quadrilateral[] = {
     }},
 };
 
-struct object testscene_Ground = {
+const struct object testscene_Ground = {
     .triangle = &testscene_Ground_triangle[0],
     .quadrilateral = &testscene_Ground_quadrilateral[0],
     .triangle_count = 8,
     .quadrilateral_count = 4,
-    .material = 0,
+    .material = testscene_matGrass,
 };
 
-union triangle testscene_Waterfall_triangle[] = {
+const union triangle testscene_Waterfall_triangle[] = {
     { .v = {
         {17, 17, 1},
         {25, 18, 9},
@@ -1684,7 +1684,7 @@ union triangle testscene_Waterfall_triangle[] = {
     }},
 };
 
-union quadrilateral testscene_Waterfall_quadrilateral[] = {
+const union quadrilateral testscene_Waterfall_quadrilateral[] = {
     { .v = {
         {25, 20, 9},
         {18, 17, 2},
@@ -2071,15 +2071,15 @@ union quadrilateral testscene_Waterfall_quadrilateral[] = {
     }},
 };
 
-struct object testscene_Waterfall = {
+const struct object testscene_Waterfall = {
     .triangle = &testscene_Waterfall_triangle[0],
     .quadrilateral = &testscene_Waterfall_quadrilateral[0],
     .triangle_count = 8,
     .quadrilateral_count = 64,
-    .material = 0,
+    .material = testscene_matWater,
 };
 
-union triangle testscene_Pole_triangle[] = {
+const union triangle testscene_Pole_triangle[] = {
     { .v = {
         {201, 25, 185},
         {202, 30, 186},
@@ -2122,7 +2122,7 @@ union triangle testscene_Pole_triangle[] = {
     }},
 };
 
-union quadrilateral testscene_Pole_quadrilateral[] = {
+const union quadrilateral testscene_Pole_quadrilateral[] = {
     { .v = {
         {109, 25, 93},
         {106, 26, 90},
@@ -2701,18 +2701,18 @@ union quadrilateral testscene_Pole_quadrilateral[] = {
     }},
 };
 
-struct object testscene_Pole = {
+const struct object testscene_Pole = {
     .triangle = &testscene_Pole_triangle[0],
     .quadrilateral = &testscene_Pole_quadrilateral[0],
     .triangle_count = 8,
     .quadrilateral_count = 96,
-    .material = 0,
+    .material = testscene_matBrick,
 };
 
-union triangle testscene_Foliage_triangle[] = {
+const union triangle testscene_Foliage_triangle[] = {
 };
 
-union quadrilateral testscene_Foliage_quadrilateral[] = {
+const union quadrilateral testscene_Foliage_quadrilateral[] = {
     { .v = {
         {211, 50, 195},
         {212, 51, 195},
@@ -3001,6 +3001,20 @@ union quadrilateral testscene_Foliage_quadrilateral[] = {
         {942, 52, 338},
         {940, 51, 338},
     }},
+};
+
+const struct object testscene_Foliage = {
+    .triangle = &testscene_Foliage_triangle[0],
+    .quadrilateral = &testscene_Foliage_quadrilateral[0],
+    .triangle_count = 0,
+    .quadrilateral_count = 48,
+    .material = testscene_matFoliage,
+};
+
+const union triangle testscene_Foliage_mtl_matGrassClump_triangle[] = {
+};
+
+const union quadrilateral testscene_Foliage_mtl_matGrassClump_quadrilateral[] = {
     { .v = {
         {259, 50, 201},
         {260, 51, 201},
@@ -4083,26 +4097,27 @@ union quadrilateral testscene_Foliage_quadrilateral[] = {
     }},
 };
 
-struct object testscene_Foliage = {
-    .triangle = &testscene_Foliage_triangle[0],
-    .quadrilateral = &testscene_Foliage_quadrilateral[0],
+const struct object testscene_Foliage_mtl_matGrassClump = {
+    .triangle = &testscene_Foliage_mtl_matGrassClump_triangle[0],
+    .quadrilateral = &testscene_Foliage_mtl_matGrassClump_quadrilateral[0],
     .triangle_count = 0,
-    .quadrilateral_count = 228,
-    .material = 0,
+    .quadrilateral_count = 180,
+    .material = testscene_matGrassClump,
 };
 
-struct object * testscene_object[] = {
+const struct object * testscene_object[] = {
     &testscene_Ground,
     &testscene_Waterfall,
     &testscene_Pole,
     &testscene_Foliage,
+    &testscene_Foliage_mtl_matGrassClump,
 };
 
-struct model testscene_model = {
+const struct model testscene_model = {
     .position = testscene_position,
     .texture = testscene_texture,
     .normal = testscene_normal,
     .object = testscene_object,
-    .object_count = 4
+    .object_count = 5
 };
 

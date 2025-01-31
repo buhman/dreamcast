@@ -7,7 +7,7 @@ extern volatile uint32_t texture_memory32[0x800000] __asm("texture_memory32");
 extern volatile uint32_t system_memory[0x1000000] __asm("system_memory");
 extern volatile uint32_t ta_fifo_polygon_converter[0x800000] __asm("ta_fifo_polygon_converter");
 extern volatile uint32_t ta_fifo_yuv_converter[0x800000] __asm("ta_fifo_yuv_converter");
-extern volatile uint32_t ta_fifo_texture_memory[0x800000] __asm("ta_fifo_texture_memory");
+extern uint32_t ta_fifo_texture_memory[0x800000] __asm("ta_fifo_texture_memory");
 extern volatile uint32_t ta_fifo_polygon_converter_mirror[0x800000] __asm("ta_fifo_polygon_converter_mirror");
 extern volatile uint32_t ta_fifo_yuv_converter_mirror[0x800000] __asm("ta_fifo_yuv_converter_mirror");
 extern volatile uint32_t ta_fifo_texture_memory_mirror[0x800000] __asm("ta_fifo_texture_memory_mirror");

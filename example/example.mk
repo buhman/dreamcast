@@ -804,7 +804,8 @@ TESTSCENE_OBJ = \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
-	sh7091/serial.o
+	sh7091/serial.o \
+	model/testscene/texture/texBrick.data.o
 
 example/testscene.elf: LDSCRIPT = $(LIB)/main.lds
 example/testscene.elf: $(START_OBJ) $(TESTSCENE_OBJ)
