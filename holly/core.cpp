@@ -161,7 +161,7 @@ void core_wait_end_of_render_video()
       holly.SOFTRESET = 0;
       //break;
     }
-    if (count > 10000000) {
+    if (count > 100000) {
       serial::string("core timeout:\n");
       serial::string("isterr ");
       serial::integer<uint32_t>(system.ISTERR);

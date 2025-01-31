@@ -808,3 +808,19 @@ TESTSCENE_OBJ = \
 
 example/testscene.elf: LDSCRIPT = $(LIB)/main.lds
 example/testscene.elf: $(START_OBJ) $(TESTSCENE_OBJ)
+
+TESTGROUND_OBJ = \
+	example/testground.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/testground/maskGround.data.o \
+	model/testground/texGrass.data.o \
+	model/testground/texGrass2.data.o \
+	model/testground/texRock.data.o
+
+example/testground.elf: LDSCRIPT = $(LIB)/main.lds
+example/testground.elf: $(START_OBJ) $(TESTGROUND_OBJ)
