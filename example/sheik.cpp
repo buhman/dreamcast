@@ -138,7 +138,7 @@ void texture_init()
 
 void main()
 {
-  serial::init(4);
+  serial::init(0);
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
 			      | ta_alloc_ctrl::t_opb::_32x4byte

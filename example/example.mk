@@ -796,3 +796,15 @@ ORA_OBJ = \
 
 example/ora.elf: LDSCRIPT = $(LIB)/main.lds
 example/ora.elf: $(START_OBJ) $(ORA_OBJ)
+
+TESTSCENE_OBJ = \
+	example/testscene.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o
+
+example/testscene.elf: LDSCRIPT = $(LIB)/main.lds
+example/testscene.elf: $(START_OBJ) $(TESTSCENE_OBJ)

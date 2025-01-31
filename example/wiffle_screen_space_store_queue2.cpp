@@ -475,6 +475,7 @@ void main()
 
     theta += half_degree;
     frame_ix += 1;
+    break;
   }
 
   serial::string("return\n");

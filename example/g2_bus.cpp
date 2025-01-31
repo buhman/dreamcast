@@ -31,13 +31,17 @@ int main()
 
     j++;
 
+    /*
     serial::string("ISTERR:\n");
     serial::integer<uint32_t>(system.ISTERR);
     //serial::integer<uint32_t>(system.ISTNRM);
     system.ISTERR = system.ISTERR;
+    */
 
+    /*
     for (int k = 0; k < 1000000; k++) {
       asm volatile ("nop");
     }
+    */
   }
 }
