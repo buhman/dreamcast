@@ -805,7 +805,13 @@ TESTSCENE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
 	sh7091/serial.o \
-	model/testscene/texture/texBrick.data.o
+	model/testscene/texture/texBrick.data.o \
+	model/testscene/texture/texFoliage.data.o \
+	model/testscene/texture/texGrass.data.o \
+	model/testscene/texture/texGrassClump.data.o \
+	model/testscene/texture/texRock.data.o \
+	model/testscene/texture/texWater.data.o
+
 
 example/testscene.elf: LDSCRIPT = $(LIB)/main.lds
 example/testscene.elf: $(START_OBJ) $(TESTSCENE_OBJ)

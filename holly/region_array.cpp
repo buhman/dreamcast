@@ -143,8 +143,6 @@ void region_array_multipass(const uint32_t width,  // in tile units (1 tile unit
         region_array[ix].tile = REGION_ARRAY__TILE_Y_POSITION(y)
                               | REGION_ARRAY__TILE_X_POSITION(x);
 
-        region_array[ix].tile |= REGION_ARRAY__PRE_SORT;
-
         if (pass == (num_render_passes - 1) && y == (height - 1) && x == (width - 1))
           region_array[ix].tile |= REGION_ARRAY__LAST_REGION;
 

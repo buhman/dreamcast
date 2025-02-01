@@ -1,4 +1,4 @@
-OPT ?= -O2
+OPT ?= -Og
 GENERATED ?=
 
 AARCH = --isa=sh4 --little
