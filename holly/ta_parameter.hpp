@@ -82,17 +82,18 @@ constexpr uint32_t modifier_volume_vertex_parameter_control_word()
 }
 
 struct ta_parameter_writer {
-  uint32_t * buf;
+  uint8_t * buf;
   uint32_t offset; // in bytes
 
-  ta_parameter_writer(uint32_t * buf)
-    : buf(buf), offset(0)
+  template <typename T>
+  ta_parameter_writer(T * buf)
+    : buf(reinterpret_cast<uint8_t *>(buf)), offset(0)
   { }
 
   template <typename T>
   inline T& append()
   {
-    T& t = *reinterpret_cast<T *>(&buf[offset / 4]);
+    T& t = *reinterpret_cast<T *>(&buf[offset]);
     offset += (sizeof (T));
     return t;
   }

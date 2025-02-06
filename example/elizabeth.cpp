@@ -24,14 +24,10 @@
 
 #include "model/model.h"
 #include "model/material.h"
-#include "model/testscene/texture/texBrick.data.h"
-#include "model/testscene/texture/texFoliage.data.h"
-#include "model/testscene/texture/texGrass.data.h"
-#include "model/testscene/texture/texGrassClump.data.h"
-#include "model/testscene/texture/texRock.data.h"
-#include "model/testscene/texture/texWater.data.h"
-#include "model/testscene/material.h"
-#include "model/testscene/model.h"
+#include "model/elizabeth/elizabeth_mat_emissive.data.h"
+#include "model/elizabeth/elizabeth_sword_mat_emissive.data.h"
+#include "model/elizabeth/material.h"
+#include "model/elizabeth/model.h"
 
 using vec3 = vec<3, float>;
 using vec2 = vec<2, float>;
@@ -39,27 +35,24 @@ using vec2 = vec<2, float>;
 const float degree = 0.017453292519943295;
 static float theta = 0;
 static int frame = 0;
-static bool animate_uv;
 
-static inline vec3 transform_vertex(vec3 vec)
+static inline vec3 transform_vertex(const vec3 vec, const vec3 translate)
 {
-  float x9 = vec.x;
-  float y9 = vec.y;
-  float z9 = vec.z;
+  float xm = -vec.x;
+  float ym = -vec.y;
+  float zm =  vec.z;
 
-  float rotatetheta = degree * 220;
+  float x0 = xm * cos(theta) - zm * sin(theta);
+  float y0 = ym;
+  float z0 = xm * sin(theta) + zm * cos(theta);
 
-  float x0 = x9 * cos(theta) - z9 * sin(theta);
-  float y0 = y9;
-  float z0 = x9 * sin(theta) + z9 * cos(theta);
-
-  float x1 = x0;
-  float y1 = y0 * cos(rotatetheta) - z0 * sin(rotatetheta);
-  float z1 = y0 * sin(rotatetheta) + z0 * cos(rotatetheta);
+  float x1 = x0 + translate.x;
+  float y1 = y0 + translate.y;
+  float z1 = z0 + translate.z;
 
   float x2 = x1;
-  float y2 = y1;
-  float z2 = z1 + 3.5;
+  float y2 = y1 + 1;
+  float z2 = z1 + 1.2;
 
   float x3 = x2 / z2;
   float y3 = y2 / z2;
@@ -76,10 +69,7 @@ static inline vec2 transform_uv(vec2 uv)
 {
 
   float x = uv.x;
-  float y = -uv.y;
-
-  if (animate_uv)
-    y = y + (-1.0f * frame / 50);
+  float y = uv.y;
 
   return {x, y};
 }
@@ -88,9 +78,10 @@ const uint32_t base_color = 0xa0000000;
 
 static inline void transfer_triangle(const vertex_position * position,
                                      const vertex_texture * texture,
-                                     const union triangle * triangle)
+                                     const union triangle * triangle,
+                                     const vec3 translate)
 {
-  vec3 v1 = transform_vertex(position[triangle->a.position]);
+  vec3 v1 = transform_vertex(position[triangle->a.position], translate);
   vec2 uv1 = transform_uv(texture[triangle->a.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
@@ -100,8 +91,8 @@ static inline void transfer_triangle(const vertex_position * position,
                                         0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  vec3 v2 = transform_vertex(position[triangle->b.position]);
-  vec2 uv2 = transform_uv(texture[triangle->a.texture]);
+  vec3 v2 = transform_vertex(position[triangle->b.position], translate);
+  vec2 uv2 = transform_uv(texture[triangle->b.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         v2.x, v2.y, v2.z,
@@ -110,7 +101,7 @@ static inline void transfer_triangle(const vertex_position * position,
                                         0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  vec3 v3 = transform_vertex(position[triangle->c.position]);
+  vec3 v3 = transform_vertex(position[triangle->c.position], translate);
   vec2 uv3 = transform_uv(texture[triangle->c.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
@@ -123,9 +114,10 @@ static inline void transfer_triangle(const vertex_position * position,
 
 static inline void transfer_quadrilateral(const vertex_position * position,
                                           const vertex_texture * texture,
-                                          const union quadrilateral * quadrilateral)
+                                          const union quadrilateral * quadrilateral,
+                                          const vec3 translate)
 {
-  vec3 v1 = transform_vertex(position[quadrilateral->a.position]);
+  vec3 v1 = transform_vertex(position[quadrilateral->a.position], translate);
   vec2 uv1 = transform_uv(texture[quadrilateral->a.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
@@ -135,7 +127,7 @@ static inline void transfer_quadrilateral(const vertex_position * position,
                                         0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  vec3 v2 = transform_vertex(position[quadrilateral->b.position]);
+  vec3 v2 = transform_vertex(position[quadrilateral->b.position], translate);
   vec2 uv2 = transform_uv(texture[quadrilateral->b.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
@@ -145,7 +137,7 @@ static inline void transfer_quadrilateral(const vertex_position * position,
                                         0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  vec3 v4 = transform_vertex(position[quadrilateral->d.position]);
+  vec3 v4 = transform_vertex(position[quadrilateral->d.position], translate);
   vec2 uv4 = transform_uv(texture[quadrilateral->d.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
@@ -155,7 +147,7 @@ static inline void transfer_quadrilateral(const vertex_position * position,
                                         0); // offset_color
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
-  vec3 v3 = transform_vertex(position[quadrilateral->c.position]);
+  vec3 v3 = transform_vertex(position[quadrilateral->c.position], translate);
   vec2 uv3 = transform_uv(texture[quadrilateral->c.texture]);
   *reinterpret_cast<ta_vertex_parameter::polygon_type_3 *>(store_queue) =
     ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
@@ -172,7 +164,8 @@ static inline void transfer_triangles(const struct model * model,
                                       const struct object * object,
                                       const uint32_t list_type,
                                       const uint32_t blending,
-                                      const uint32_t pixel_format)
+                                      const uint32_t pixel_format,
+                                      const vec3 translate)
 {
   if (object->triangle_count == 0 && object->quadrilateral_count == 0)
     return;
@@ -186,9 +179,7 @@ static inline void transfer_triangles(const struct model * model,
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = blending
-                                      | tsp_instruction_word::fog_control::no_fog
-                                      | tsp_instruction_word::texture_u_size::from_int(128)
-                                      | tsp_instruction_word::texture_v_size::from_int(128);
+                                      | tsp_instruction_word::fog_control::no_fog;
 
   const uint32_t texture_address = texture_memory_alloc.texture.start + material[object->material].pixel.vram_offset;
   const uint32_t texture_control_word = pixel_format
@@ -206,38 +197,34 @@ static inline void transfer_triangles(const struct model * model,
   sq_transfer_32byte(ta_fifo_polygon_converter);
 
   for (int i = 0; i < object->triangle_count; i++) {
-    transfer_triangle(model->position, model->texture, &object->triangle[i]);
+    transfer_triangle(model->position, model->texture, &object->triangle[i], translate);
   }
   for (int i = 0; i < object->quadrilateral_count; i++) {
-    transfer_quadrilateral(model->position, model->texture, &object->quadrilateral[i]);
+    transfer_quadrilateral(model->position, model->texture, &object->quadrilateral[i], translate);
   }
 }
 
 void transfer_scene()
 {
-  const struct model * model = &testscene_model;
-  const struct material_descriptor * material = testscene_material;
+  const struct model * model = &elizabeth_model;
+  const struct material_descriptor * material = elizabeth_material;
 
   // opaque
   {
-    animate_uv = false;
-
     const uint32_t list_type = para_control::list_type::opaque;
     const uint32_t blending = tsp_instruction_word::src_alpha_instr::one
-                            | tsp_instruction_word::dst_alpha_instr::zero;
-    const uint32_t pixel_format = texture_control_word::pixel_format::_565;
+                            | tsp_instruction_word::dst_alpha_instr::zero
+                            | tsp_instruction_word::texture_u_size::from_int(128)
+                            | tsp_instruction_word::texture_v_size::from_int(128);
+    const uint32_t pixel_format = texture_control_word::pixel_format::_1555;
+
+    const vec3 translate = {-0.3, -0.2, 0};
 
     transfer_triangles(model, material,
-                       &testscene_Ground,
+                       &elizabeth_elizabeth_opaque,
                        list_type,
                        blending,
-                       pixel_format);
-
-    transfer_triangles(model, material,
-                       &testscene_Pole,
-                       list_type,
-                       blending,
-                       pixel_format);
+                       pixel_format, translate);
 
     *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -246,24 +233,35 @@ void transfer_scene()
 
   // punch through
   {
-    animate_uv = false;
-
     const uint32_t list_type = para_control::list_type::punch_through;
     const uint32_t blending = tsp_instruction_word::src_alpha_instr::src_alpha
-                            | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha;
+                            | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                            | tsp_instruction_word::texture_u_size::from_int(128)
+                            | tsp_instruction_word::texture_v_size::from_int(128);
     const uint32_t pixel_format = texture_control_word::pixel_format::_1555;
 
-    transfer_triangles(model, material,
-                       &testscene_Foliage,
-                       list_type,
-                       blending,
-                       pixel_format);
+    const vec3 translate = {-0.3, -0.2, 0};
 
     transfer_triangles(model, material,
-                       &testscene_Foliage_mtl_matGrassClump,
+                       &elizabeth_elizabeth_punchthrough,
                        list_type,
                        blending,
-                       pixel_format);
+                       pixel_format,
+                       translate);
+
+    const uint32_t blending_sword = tsp_instruction_word::src_alpha_instr::src_alpha
+                                  | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                                  | tsp_instruction_word::texture_u_size::from_int(32)
+                                  | tsp_instruction_word::texture_v_size::from_int(64);
+
+    const vec3 translate_sword = {1, -0.8, 0};
+
+    transfer_triangles(model, material,
+                       &elizabeth_elizabeth_sword,
+                       list_type,
+                       blending_sword,
+                       pixel_format,
+                       translate_sword);
 
     *reinterpret_cast<ta_global_parameter::end_of_list *>(store_queue) =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -305,8 +303,8 @@ void transfer_textures()
   system.LMMODE0 = 0; // 64-bit address space
   system.LMMODE1 = 0; // 64-bit address space
 
-  for (uint32_t i = 0; i < (sizeof (testscene_material)) / (sizeof (testscene_material[0])); i++) {
-    const struct pixel_descriptor * pixel = &testscene_material[i].pixel;
+  for (uint32_t i = 0; i < (sizeof (elizabeth_material)) / (sizeof (elizabeth_material[0])); i++) {
+    const struct pixel_descriptor * pixel = &elizabeth_material[i].pixel;
 
     uint32_t offset = texture_memory_alloc.texture.start + pixel->vram_offset;
     void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
@@ -322,7 +320,7 @@ void main()
 
   constexpr uint32_t ta_alloc = ta_alloc_ctrl::pt_opb::_16x4byte
 			      | ta_alloc_ctrl::tm_opb::no_list
-			      | ta_alloc_ctrl::t_opb::_16x4byte
+			      | ta_alloc_ctrl::t_opb::no_list
 			      | ta_alloc_ctrl::om_opb::no_list
                               | ta_alloc_ctrl::o_opb::_16x4byte;
 
@@ -331,7 +329,7 @@ void main()
     {
       .opaque = 16 * 4,
       .opaque_modifier = 0,
-      .translucent = 16 * 4,
+      .translucent = 0,
       .translucent_modifier = 0,
       .punch_through = 16 * 4
     }
@@ -372,7 +370,7 @@ void main()
 			       tile_width,
 			       tile_height);
     transfer_scene();
-    ta_wait_translucent_list();
+    ta_wait_punch_through_list();
 
     core_start_render2(texture_memory_alloc.region_array[0].start,
                        texture_memory_alloc.isp_tsp_parameters[0].start,

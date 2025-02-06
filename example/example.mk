@@ -831,3 +831,31 @@ TESTGROUND_OBJ = \
 
 example/testground.elf: LDSCRIPT = $(LIB)/main.lds
 example/testground.elf: $(START_OBJ) $(TESTGROUND_OBJ)
+
+ELIZABETH_OBJ = \
+	example/elizabeth.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/elizabeth/elizabeth_sword_mat_emissive.data.o \
+	model/elizabeth/elizabeth_mat_emissive.data.o
+
+example/elizabeth.elf: LDSCRIPT = $(LIB)/main.lds
+example/elizabeth.elf: $(START_OBJ) $(ELIZABETH_OBJ)
+
+SPECK_OBJ = \
+	example/speck.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/speck/speck.data.o \
+	model/speck/white.data.o
+
+example/speck.elf: LDSCRIPT = $(LIB)/main.lds
+example/speck.elf: $(START_OBJ) $(SPECK_OBJ)

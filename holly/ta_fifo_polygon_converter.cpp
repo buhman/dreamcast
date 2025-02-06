@@ -88,7 +88,19 @@ void ta_polygon_converter_cont(uint32_t ol_base_offset,
   (void)_dummy_read;
 }
 
-void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t size)
+void ta_polygon_converter_writeback(void const * const buf, uint32_t size)
+{
+  uint8_t const * const buf8 = reinterpret_cast<uint8_t const * const>(buf);
+
+  for (uint32_t i = 0; i < size / (32); i++) {
+    asm volatile ("ocbwb @%0"
+		  :                          // output
+		  : "r" (&buf8[i * 32]) // input
+		  );
+  }
+}
+
+void ta_polygon_converter_transfer(void const * const buf, uint32_t size)
 {
   /* wait for previous transfer to complete (if any) */
   //while ((system.C2DST & C2DST__STATUS) != 0);  /* 1 == transfer is in progress */
@@ -100,12 +112,6 @@ void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t
 
      This is required on real hardware if CCR__CB is enabled, and `buf` is in a
      cacheable area (e.g: system memory access via 0x8c00_0000).*/
-  for (uint32_t i = 0; i < size / 32; i++) {
-    asm volatile ("ocbwb @%0"
-		  :                          // output
-		  : "r" (&buf[(i * 32) / 4]) // input
-		  );
-  }
 
   // this dummy read appears to be required on real hardware.
   volatile uint32_t _dummy = sh7091.DMAC.CHCR2;
@@ -115,7 +121,7 @@ void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t
 
   /* start a new CH2-DMA transfer from "system memory" to "TA FIFO polygon converter" */
   sh7091.DMAC.CHCR2 = 0; /* disable DMA channel */
-  sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(&buf[0]);  /* start address, must be aligned to a CHCHR__TS-sized (32-byte) boundary */
+  sh7091.DMAC.SAR2 = reinterpret_cast<uint32_t>(buf);  /* start address, must be aligned to a CHCHR__TS-sized (32-byte) boundary */
   sh7091.DMAC.DMATCR2 = dmatcr::transfer_count(size / 32); /* transfer count, in CHCHR__TS-sized (32-byte) units */
   sh7091.DMAC.CHCR2 = chcr::dm::destination_address_fixed
                     | chcr::sm::source_address_incremented

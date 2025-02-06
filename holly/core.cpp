@@ -151,17 +151,23 @@ void core_wait_end_of_render_video()
       serial::integer<uint32_t>(istnrm);
       serial::string("isterr ");
       serial::integer<uint32_t>(system.ISTERR);
+      serial::string("pipeline_soft_reset\n");
+      holly.SOFTRESET = softreset::pipeline_soft_reset;
+      holly.SOFTRESET = 0;
+
+      system.ISTERR = system.ISTERR;
+      system.ISTNRM = istnrm::end_of_render_tsp
+                    | istnrm::end_of_render_isp
+                    | istnrm::end_of_render_video;
+      break;
     }
 
     //serial::integer<uint32_t>(system.ISTERR);
     if (system.ISTERR) {
       //serial::string("core ");
       //serial::integer<uint32_t>(system.ISTERR);
-      holly.SOFTRESET = softreset::pipeline_soft_reset;
-      holly.SOFTRESET = 0;
-      //break;
     }
-    if (count > 100000) {
+    if (count > 300000) {
       serial::string("core timeout:\n");
       serial::string("isterr ");
       serial::integer<uint32_t>(system.ISTERR);

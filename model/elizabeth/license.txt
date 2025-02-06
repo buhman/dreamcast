@@ -1,0 +1,11 @@
+Model Information:
+* title:	elizabeth
+* source:	https://sketchfab.com/3d-models/elizabeth-1116f2dac62b490b989ff0634aae0bf9
+* author:	pyr0xene (https://sketchfab.com/pyr0xene)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "elizabeth" (https://sketchfab.com/3d-models/elizabeth-1116f2dac62b490b989ff0634aae0bf9) by pyr0xene (https://sketchfab.com/pyr0xene) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

@@ -17,7 +17,8 @@ void ta_polygon_converter_init2(uint32_t isp_tsp_parameters_start,
 				uint32_t tile_height);  // in tile units (e.g: (480 / 32))
 void ta_polygon_converter_cont(uint32_t ol_base_offset,
 			       uint32_t ta_alloc);
-void ta_polygon_converter_transfer(volatile uint32_t const * const buf, uint32_t size);
+void ta_polygon_converter_writeback(void const * const buf, uint32_t size);
+void ta_polygon_converter_transfer(void const * const buf, uint32_t size);
 void ta_wait_opaque_list();
 void ta_wait_opaque_modifier_volume_list();
 void ta_wait_translucent_list();
