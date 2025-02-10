@@ -23,7 +23,7 @@
 #include "memorymap.hpp"
 
 #include "model/model.h"
-#include "model/cube.h"
+#include "model/cube/model.h"
 #include "model/plane/model.h"
 
 #include "font/terminus/ter_u32n.data.h"
@@ -66,6 +66,12 @@ const float deg = 0.017453292519943295;
     v;                                         \
   })
 
+static inline float inverse_length(vec3 v)
+{
+  float f = dot(v, v);
+  return _fsrra(f);
+}
+
 static inline int max(int a, int b)
 {
   return (a > b) ? a : b;
@@ -104,6 +110,38 @@ void global_polygon_type_0(ta_parameter_writer& writer, bool shadow)
                                         );
 }
 
+void global_polygon_type_1(ta_parameter_writer& writer, bool shadow, float r, float g, float b)
+{
+  const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                        | para_control::list_type::opaque
+                                        | obj_control::col_type::intensity_mode_1
+                                        | (shadow ? obj_control::shadow : 0)
+                                        ;
+
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+                                          | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::src_alpha_instr::one
+                                      | tsp_instruction_word::dst_alpha_instr::zero
+                                      ;
+
+  const uint32_t texture_control_word = 0;
+
+  const float alpha = 1.0f;
+
+  writer.append<ta_global_parameter::polygon_type_1>() =
+    ta_global_parameter::polygon_type_1(parameter_control_word,
+                                        isp_tsp_instruction_word,
+                                        tsp_instruction_word,
+                                        texture_control_word,
+                                        alpha,
+                                        r,
+                                        g,
+                                        b
+                                        );
+}
+
 void global_modifier_volume(ta_parameter_writer& writer)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
@@ -121,22 +159,6 @@ void global_modifier_volume(ta_parameter_writer& writer)
 
 void transfer_line(ta_parameter_writer& writer, vec3 p1, vec3 p2, uint32_t base_color)
 {
-  /*
-  const uint32_t parameter_control_word = para_control::para_type::sprite
-                                        | para_control::list_type::opaque
-                                        | obj_control::col_type::packed_color;
-
-  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                          | isp_tsp_instruction_word::culling_mode::no_culling;
-
-  const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
-                                      | tsp_instruction_word::src_alpha_instr::one
-                                      | tsp_instruction_word::dst_alpha_instr::zero
-                                      ;
-
-  const uint32_t texture_control_word = 0;
-  */
-
   float dy = p2.y - p1.y;
   float dx = p2.x - p1.x;
   float d = _fsrra(dx * dx + dy * dy) * 0.7f;
@@ -153,17 +175,6 @@ void transfer_line(ta_parameter_writer& writer, vec3 p1, vec3 p2, uint32_t base_
     { p2.x +  dy1, p2.y + -dx1, p2.z },
   };
 
-  /*
-  writer.append<ta_global_parameter::sprite>() =
-    ta_global_parameter::sprite(parameter_control_word,
-                                isp_tsp_instruction_word,
-                                tsp_instruction_word,
-                                texture_control_word,
-                                base_color,
-                                0,  // offset_color
-                                0,  // data_size_for_sort_dma
-                                0); // next_address_for_sort_dma
-  */
   writer.append<ta_vertex_parameter::polygon_type_0>() =
     ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
                                         v[0].x, v[0].y, v[0].z,
@@ -326,6 +337,37 @@ static inline void render_quad(ta_parameter_writer& writer,
     ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
                                         base_color);
+#endif
+}
+
+static inline void render_quad_type2(ta_parameter_writer& writer,
+                                     float intensity,
+                                     vec3 ap,
+                                     vec3 bp,
+                                     vec3 cp,
+                                     vec3 dp)
+{
+#ifdef LINE_DRAWING
+#else
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+                                        ap.x, ap.y, ap.z,
+                                        intensity);
+
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+                                        bp.x, bp.y, bp.z,
+                                        intensity);
+
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+                                        dp.x, dp.y, dp.z,
+                                        intensity);
+
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
+                                        cp.x, cp.y, cp.z,
+                                        intensity);
 #endif
 }
 
@@ -571,9 +613,28 @@ void render_silhouette(ta_parameter_writer& writer,
 
 void render_cube(ta_parameter_writer& writer,
                  const mat4x4& screen,
-                 const mat4x4& model,
-                 const vec3 light_vec)
+                 const vec3 light_vec,
+                 float theta)
 {
+  //float ct = cos(theta);
+  //float st = sin(theta);
+  float scale = 0.3f;
+  const mat4x4 s = {
+    scale, 0, 0, 0,
+    0, scale, 0, 0,
+    0, 0, scale, 0,
+    0, 0, 0, 1,
+  };
+  /*
+  const mat4x4 rz = {
+    ct, -st, 0, 0,
+    st,  ct, 0, 0,
+     0,   0, 1, 0,
+     0,   0, 0, 1,
+  };
+  */
+  mat4x4 model = s;
+
   const vec3 * normal = cube_normal;
   const vec3 * position = cube_position;
   const union quadrilateral * quadrilateral = cube_Cube_quadrilateral;
@@ -584,39 +645,50 @@ void render_cube(ta_parameter_writer& writer,
   for (int i = 0; i < edge_coloring_length / 4; i++)
     reinterpret_cast<uint32_t *>(edge_coloring)[i] = 0;
 
-  global_polygon_type_0(writer, false); // no self-shadow
+  //uint32_t base_color = l_dot_n_b ? 0xff8000 : 0x0080ff;
+  const float red = 0.0f;
+  const float green = 0.5f;
+  const float blue = 1.0f;
+
+  global_polygon_type_1(writer, false, red, green, blue); // no self-shadow
 
   for (int i = 0; i < 6; i++) {
     const union quadrilateral& q = quadrilateral[i];
     vec3 n3 = normal[q.a.normal];
     vec4 n4 = model * (vec4){n3.x, n3.y, n3.z, 0.f}; // no translation component
     vec3 n = {n4.x, n4.y, n4.z};
-    float l_dot_n = dot(light_vec, n);
-    bool l_dot_n_b = l_dot_n > 0;
+    float n_dot_l = dot(n, light_vec);
+    bool n_dot_l_b = n_dot_l > 0;
 
-    set_edge_coloring(edge_coloring, edge_stride, l_dot_n_b, q.a.position, q.b.position);
-    set_edge_coloring(edge_coloring, edge_stride, l_dot_n_b, q.b.position, q.c.position);
-    set_edge_coloring(edge_coloring, edge_stride, l_dot_n_b, q.c.position, q.d.position);
-    set_edge_coloring(edge_coloring, edge_stride, l_dot_n_b, q.d.position, q.a.position);
+    set_edge_coloring(edge_coloring, edge_stride, n_dot_l_b, q.a.position, q.b.position);
+    set_edge_coloring(edge_coloring, edge_stride, n_dot_l_b, q.b.position, q.c.position);
+    set_edge_coloring(edge_coloring, edge_stride, n_dot_l_b, q.c.position, q.d.position);
+    set_edge_coloring(edge_coloring, edge_stride, n_dot_l_b, q.d.position, q.a.position);
 
     vec3 ap = model * position[q.a.position];
     vec3 bp = model * position[q.b.position];
     vec3 cp = model * position[q.c.position];
     vec3 dp = model * position[q.d.position];
 
-    uint32_t base_color = l_dot_n_b ? 0xff8000 : 0x0080ff;
-
     vec3 sap = screen_transform(screen, ap);
     vec3 sbp = screen_transform(screen, bp);
     vec3 scp = screen_transform(screen, cp);
     vec3 sdp = screen_transform(screen, dp);
 
-    render_quad(writer,
-                base_color,
-                sap,
-                sbp,
-                scp,
-                sdp);
+    float intensity = 0.2f;
+
+    if (n_dot_l > 0) {
+      intensity += 0.5f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
+      if (intensity > 1.0f)
+        intensity = 1.0f;
+    }
+
+    render_quad_type2(writer,
+                      intensity,
+                      sap,
+                      sbp,
+                      scp,
+                      sdp);
   }
 
   if (1) {
@@ -639,20 +711,26 @@ void render_plane(ta_parameter_writer& writer,
                   const mat4x4& screen,
                   const vec3 light_vec)
 {
-  //const vec3 * normal = plane_normal;
+  const vec3 * normal = plane_normal;
   const vec3 * position = plane_position;
   const union quadrilateral * quadrilateral = plane_Plane.quadrilateral;
   int count = plane_Plane.quadrilateral_count;
 
   float scale = 3;
+  float translate = 1;
   const mat4x4 model = {
     scale, 0, 0, 0,
     0, scale, 0, 0,
-    0, 0, scale, 1,
+    0, 0, scale, translate,
     0, 0, 0, 1,
   };
 
-  global_polygon_type_0(writer, true); // with shadow
+  //uint32_t base_color = 0xffff80;
+  const float red = 1.0f;
+  const float green = 1.0f;
+  const float blue = 0.5f;
+
+  global_polygon_type_1(writer, true, red, green, blue); // with shadow
 
   for (int i = 0; i < count; i++) {
     const union quadrilateral& q = quadrilateral[i];
@@ -662,26 +740,38 @@ void render_plane(ta_parameter_writer& writer,
     vec3 cp = model * position[q.c.position];
     vec3 dp = model * position[q.d.position];
 
-    uint32_t base_color = 0xffff80;
+    float intensity = 0.2f;
+
+    vec4 _n = normal[q.a.normal];
+    vec4 n4 = model * (vec4){_n.x, _n.y, _n.z, 0}; // no translation component
+    vec3 n = {n4.x, n4.y, n4.z};
+    float n_dot_l = -dot(n, light_vec);
+
+    if (n_dot_l > 0) {
+      intensity += 0.5f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
+      if (intensity > 1.0f)
+        intensity = 1.0f;
+    }
 
     vec3 sap = screen_transform(screen, ap);
     vec3 sbp = screen_transform(screen, bp);
     vec3 scp = screen_transform(screen, cp);
     vec3 sdp = screen_transform(screen, dp);
 
-    render_quad(writer,
-                base_color,
-                sap,
-                sbp,
-                scp,
-                sdp);
+    render_quad_type2(writer,
+                      intensity,
+                      sap,
+                      sbp,
+                      scp,
+                      sdp);
   }
 }
 
-constexpr inline mat4x4 screen_rotation()
+constexpr inline mat4x4 screen_rotation(float theta)
 {
-  float zt = -0.7853981633974483 / 1.5;
-  float xt = -0.7853981633974483 * 1;
+  float zt = -0.7853981633974483 / 1 + theta / 5;
+  float xt = -0.7853981633974483 * 0.7  + 0.3 * sin(theta / 3);
+
   mat4x4 rx = {
     1, 0, 0, 0,
     0, cos(xt), -sin(xt), 0,
@@ -727,11 +817,12 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen, vec3 ligh
                  light_vec);
   }
 
-  const mat4x4 model = mat4x4() * 0.3f;
+  static float cube_theta = 0;
   render_cube(writer,
               screen,
-              model,
-              light_vec);
+              light_vec,
+              cube_theta);
+  cube_theta += deg;
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -851,7 +942,8 @@ void main()
   holly.SOFTRESET = 0;
 
   core_init();
-  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode;
+  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
+                       | fpu_shad_scale::scale_factor_for_shadows(128);
   video_output::set_mode_vga();
 
   const int framebuffer_width = 640;
@@ -879,9 +971,9 @@ void main()
   const float degree = 0.017453292519943295 / 5;
   float theta = 0;
 
-  const mat4x4 screen = screen_rotation();
-
   while (1) {
+    const mat4x4 screen = screen_rotation(theta);
+
     vec3 light_vec = update_light();
 
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
