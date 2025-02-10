@@ -7,6 +7,23 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
+#include "../twiddle.hpp"
+
+bool is_power(int n)
+{
+  const int min_power = 8;
+  const int max_power = 1024;
+  int power = min_power;
+
+  while (power <= max_power) {
+    if (n == power)
+      return true;
+    power *= 2;
+  }
+  printf("%d\n", n);
+  return false;
+}
+
 int32_t
 load_bitmap_char(FT_Face face,
 		 FT_ULong char_code,
@@ -25,26 +42,24 @@ load_bitmap_char(FT_Face face,
   //printf("num_grays %d\n", face->glyph->bitmap.num_grays);
   //printf("pitch %d\n", face->glyph->bitmap.pitch);
   //printf("width %d\n", face->glyph->bitmap.width);
-  //printf("char_code %lx rows %d\n", char_code, face->glyph->bitmap.rows);
-  //assert((face->glyph->bitmap.rows % 8) == 0);
-  //assert(face->glyph->bitmap.width / face->glyph->bitmap.pitch == 8);
+  //printf("rows %d\n", face->glyph->bitmap.rows);
+  assert(face->glyph->bitmap.num_grays == 2);
+  assert(is_power(face->glyph->bitmap.rows));
+  assert(is_power(face->glyph->bitmap.width));
+  assert((int)(face->glyph->bitmap.pitch * 8) == (int)(face->glyph->bitmap.width));
 
   for (int y = 0; y < (int)face->glyph->bitmap.rows; y++) {
     uint8_t * row = &face->glyph->bitmap.buffer[y * face->glyph->bitmap.pitch];
-    uint8_t row_out = 0;
-    for (unsigned int x = 0; x < face->glyph->bitmap.width; x++) {
-      if (x % 8 == 0) row_out = 0;
-      const uint8_t bit = (row[x / 8] >> (7 - (x % 8))) & 1;
-      std::cerr << (bit ? "█" : " ");
-      row_out |= (bit << (x % 8));
-      if (x % 8 == 7 || x == (face->glyph->bitmap.width - 1))
-        buf[(y * face->glyph->bitmap.pitch) + (x / 8)] = row_out;
+    for (int x = 0; x < (int)face->glyph->bitmap.width; x += 1) {
+      const int bit = (row[x / 8] >> (7 - (x % 8))) & 1;
+      //std::cerr << (bit ? "█" : " ");
+      buf[y * face->glyph->bitmap.width + x] = bit;
     }
-    std::cerr << "|\n";
+    //std::cerr << "|\n";
   }
 
   // 'pitch' is bytes; 'width' is pixels
-  return face->glyph->bitmap.rows * face->glyph->bitmap.pitch;
+  return face->glyph->bitmap.rows * face->glyph->bitmap.width;
 }
 
 template <typename T>
@@ -95,11 +110,16 @@ int main(int argc, char *argv[])
 
   assert(end > start);
 
-  uint32_t pixels_per_glyph = (face->size->metrics.height * face->size->metrics.max_advance);
+  int width = face->size->metrics.max_advance >> 6;
+  int height = face->size->metrics.height >> 6;
+  uint32_t pixels_per_glyph = width * height;
   assert(pixels_per_glyph % 8 == 0);
-  uint32_t bytes_per_glyph = pixels_per_glyph / 8;
+  uint32_t bytes_per_glyph = pixels_per_glyph;
   uint32_t num_glyphs = (end - start) + 1;
-  uint8_t buf[bytes_per_glyph * num_glyphs];
+  uint32_t buf_size = bytes_per_glyph * num_glyphs;
+  uint8_t * buf = (uint8_t *)malloc(buf_size);
+
+  uint8_t * twiddle_buf = (uint8_t *)malloc(buf_size / 2);
 
   uint32_t bitmap_offset = 0;
   for (uint32_t char_code = start; char_code <= end; char_code++) {
@@ -111,16 +131,22 @@ int main(int argc, char *argv[])
       return -1;
     }
 
+    printf("twiddle %d %d %d %d\n", bitmap_offset, bitmap_offset / 2, width, height);
+    twiddle::texture_4bpp(&twiddle_buf[bitmap_offset / 2],
+                          &buf[bitmap_offset],
+                          width,
+                          height);
+
     bitmap_offset += bitmap_size;
-    assert(bitmap_offset < (sizeof (buf)));
+    assert(bitmap_offset <= buf_size);
   }
-  std::cerr << "bitmap_offset: 0x"  << std::dec << bitmap_offset << '\n';
+  printf("bitmap_offset: %d\n", bitmap_offset);
 
   FILE * out = fopen(output_file_path, "w");
   if (out == NULL) {
     perror("fopen(w)");
     return -1;
   }
-  fwrite(reinterpret_cast<void*>(&buf), bitmap_offset, 1, out);
+  fwrite(reinterpret_cast<void*>(twiddle_buf), bitmap_offset / 2, 1, out);
   fclose(out);
 }

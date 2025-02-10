@@ -81,6 +81,18 @@ mat<4, 4, T>::operator[](int i) const
 }
 
 template<typename T>
+inline constexpr mat<4, 4, T> operator+(mat<4, 4, T> const& m1, mat<4, 4, T> const& m2)
+{
+#define c(i, j) ( m1[i][j] + m2[i][j] )
+
+  return mat<4, 4, T>(c(0,0), c(0,1), c(0,2), c(0,3),
+                      c(1,0), c(1,1), c(1,2), c(1,3),
+                      c(2,0), c(2,1), c(2,2), c(2,3),
+                      c(3,0), c(3,1), c(3,2), c(3,3));
+#undef c
+}
+
+template<typename T>
 inline constexpr mat<4, 4, T> operator*(mat<4, 4, T> const& m1, mat<4, 4, T> const& m2)
 {
 #define c(i, j) (                               \
@@ -88,6 +100,18 @@ inline constexpr mat<4, 4, T> operator*(mat<4, 4, T> const& m1, mat<4, 4, T> con
   + m1[i][1] * m2[1][j]                         \
   + m1[i][2] * m2[2][j]                         \
   + m1[i][3] * m2[3][j] )
+
+  return mat<4, 4, T>(c(0,0), c(0,1), c(0,2), c(0,3),
+                      c(1,0), c(1,1), c(1,2), c(1,3),
+                      c(2,0), c(2,1), c(2,2), c(2,3),
+                      c(3,0), c(3,1), c(3,2), c(3,3));
+#undef c
+}
+
+template<typename T>
+inline constexpr mat<4, 4, T> operator*(mat<4, 4, T> const& m1, float s)
+{
+#define c(i, j) ( m1[i][j] * s )
 
   return mat<4, 4, T>(c(0,0), c(0,1), c(0,2), c(0,3),
                       c(1,0), c(1,1), c(1,2), c(1,3),
@@ -110,6 +134,23 @@ inline constexpr typename mat<4, 4, T>::row_type operator*
   + m[i][3] * v[3] )
 
   return typename mat<4, 4, T>::row_type(c(0), c(1), c(2), c(3));
+#undef c
+}
+
+template<typename T>
+inline constexpr vec<3, T> operator*
+(
+  mat<4, 4, T> const& m,
+  vec<3, T> const& v
+)
+{
+#define c(i) (                                  \
+    m[i][0] * v[0]                              \
+  + m[i][1] * v[1]                              \
+  + m[i][2] * v[2]                              \
+  + m[i][3] )
+
+  return vec<3, T>(c(0), c(1), c(2));
 #undef c
 }
 

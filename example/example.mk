@@ -859,3 +859,17 @@ SPECK_OBJ = \
 
 example/speck.elf: LDSCRIPT = $(LIB)/main.lds
 example/speck.elf: $(START_OBJ) $(SPECK_OBJ)
+
+MODIFIER_VOLUME_CUBE_OBJ = \
+	example/modifier_volume_cube.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	font/terminus/ter_u32n.data.o \
+	$(LIBGCC)
+
+example/modifier_volume_cube.elf: LDSCRIPT = $(LIB)/main.lds
+example/modifier_volume_cube.elf: $(START_OBJ) $(MODIFIER_VOLUME_CUBE_OBJ)
