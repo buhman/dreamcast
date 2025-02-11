@@ -15,7 +15,9 @@
 #include "holly/video_output.hpp"
 
 #include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
+#include "sh7091/vbr.hpp"
 
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
@@ -54,6 +56,117 @@ using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
 using mat3x3 = mat<3, 3, float>;
 using mat4x4 = mat<4, 4, float>;
+
+void vbr100()
+{
+  serial::string("vbr100\n");
+  serial::string("expevt ");
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
+  serial::string("intevt ");
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
+  while (1);
+}
+
+void vbr400()
+{
+  serial::string("vbr400");
+  serial::string("expevt ");
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
+  serial::string("intevt ");
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
+  while (1);
+}
+
+static int render_done = 0;
+
+void vbr600()
+{
+  if (sh7091.CCN.EXPEVT == 0 && sh7091.CCN.INTEVT == 0x320) {
+    uint32_t istnrm = system.ISTNRM;
+    uint32_t isterr = system.ISTERR;
+
+    if (isterr) {
+      serial::string("isterr: ");
+      serial::integer<uint32_t>(system.ISTERR);
+    }
+
+    if (istnrm & istnrm::end_of_render_tsp) {
+      system.ISTNRM = istnrm::end_of_render_tsp
+                    | istnrm::end_of_render_isp
+                    | istnrm::end_of_render_video;
+      render_done = 1;
+      return;
+    }
+  }
+
+  serial::string("vbr600");
+  serial::string("expevt ");
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
+  serial::string("intevt ");
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
+
+  serial::string("istnrm: ");
+  serial::integer<uint32_t>(system.ISTNRM);
+  serial::string("isterr: ");
+  serial::integer<uint32_t>(system.ISTERR);
+
+
+  serial::string("halt\n");
+  while (1);
+}
+
+void interrupt_init()
+{
+  system.IML2NRM = 0;
+  system.IML2ERR = 0;
+  system.IML2EXT = 0;
+
+  system.IML4NRM = 0;
+  system.IML4ERR = 0;
+  system.IML4EXT = 0;
+
+  system.IML6NRM = 0;
+  system.IML6ERR = 0;
+  system.IML6EXT = 0;
+
+  system.ISTERR = 0xffffffff;
+  system.ISTNRM = 0xffffffff;
+
+  sh7091.CCN.INTEVT = 0;
+  sh7091.CCN.EXPEVT = 0;
+
+  uint32_t vbr = reinterpret_cast<uint32_t>(&__vbr_link_start) - 0x100;
+  serial::string("vbr ");
+  serial::integer<uint32_t>(vbr);
+  serial::string("vbr100 ");
+  serial::integer<uint32_t>(reinterpret_cast<uint32_t>(&vbr100));
+
+  asm volatile ("ldc %0,vbr"
+		:
+		: "r" (vbr));
+
+  uint32_t sr;
+  asm volatile ("stc sr,%0"
+		: "=r" (sr));
+  serial::string("sr ");
+  serial::integer<uint32_t>(sr);
+
+  sr &= ~sh::sr::bl; // BL
+  sr &= ~sh::sr::imask(15); // imask
+
+  serial::string("sr ");
+  serial::integer<uint32_t>(sr);
+
+  asm volatile ("ldc %0,sr"
+		:
+		: "r" (sr));
+}
 
 const float deg = 0.017453292519943295;
 
@@ -916,6 +1029,10 @@ uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024];
 void main()
 {
   serial::init(0);
+
+  interrupt_init();
+  //asm volatile ("trapa #0");
+
   transfer_textures();
   transfer_palette();
 
@@ -942,6 +1059,9 @@ void main()
   holly.SOFTRESET = 0;
 
   core_init();
+
+  system.IML6NRM = istnrm::end_of_render_tsp;
+
   holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
                        | fpu_shad_scale::scale_factor_for_shadows(128);
   video_output::set_mode_vga();
@@ -990,32 +1110,16 @@ void main()
     ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_opaque_modifier_volume_list();
 
+    render_done = 0;
     core_start_render2(texture_memory_alloc.region_array[core].start,
                        texture_memory_alloc.isp_tsp_parameters[core].start,
                        texture_memory_alloc.background[core].start,
                        texture_memory_alloc.framebuffer[core].start,
                        framebuffer_width);
-    bool timeout = core_wait_end_of_render_video();
-    if (timeout) {
-      serial::string("timeout\ntimeout\ntimeout\ntimeout\n");
-
-      holly.SOFTRESET = softreset::pipeline_soft_reset;
-      holly.SOFTRESET = 0;
-      for (int i = 0; i < 10000; i++) {
-        asm volatile ("nop");
-      }
-      core_start_render2(texture_memory_alloc.region_array[core].start,
-                         texture_memory_alloc.isp_tsp_parameters[core].start,
-                         texture_memory_alloc.background[core].start,
-                         texture_memory_alloc.framebuffer[core].start,
-                         framebuffer_width);
-      bool timeout = core_wait_end_of_render_video();
-      if (timeout) {
-        serial::string("timeout2\ntimeout2\ntimeout2\ntimeout2\n");
-        break;
-      }
-      serial:: string("recovered\n");
-    }
+    //serial::string("wait render_done");
+    while (render_done == 0) {
+      asm volatile ("nop");
+    };
 
     holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[ta].start;
 
