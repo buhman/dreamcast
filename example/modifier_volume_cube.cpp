@@ -995,10 +995,31 @@ void main()
                        texture_memory_alloc.background[core].start,
                        texture_memory_alloc.framebuffer[core].start,
                        framebuffer_width);
-    core_wait_end_of_render_video();
+    bool timeout = core_wait_end_of_render_video();
+    if (timeout) {
+      serial::string("timeout\ntimeout\ntimeout\ntimeout\n");
+
+      holly.SOFTRESET = softreset::pipeline_soft_reset;
+      holly.SOFTRESET = 0;
+      for (int i = 0; i < 10000; i++) {
+        asm volatile ("nop");
+      }
+      core_start_render2(texture_memory_alloc.region_array[core].start,
+                         texture_memory_alloc.isp_tsp_parameters[core].start,
+                         texture_memory_alloc.background[core].start,
+                         texture_memory_alloc.framebuffer[core].start,
+                         framebuffer_width);
+      bool timeout = core_wait_end_of_render_video();
+      if (timeout) {
+        serial::string("timeout2\ntimeout2\ntimeout2\ntimeout2\n");
+        break;
+      }
+      serial:: string("recovered\n");
+    }
 
     holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[ta].start;
 
     theta += degree;
   }
+  serial::string("return\nreturn\nreturn\nreturn\n");
 }

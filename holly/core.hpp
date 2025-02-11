@@ -22,5 +22,5 @@ void core_start_render3(uint32_t region_array_start,
                         uint32_t bytes_per_pixel
 			);
 
-void core_wait_end_of_render_video();
+bool core_wait_end_of_render_video();
 void core_flip(uint32_t frame_ix);

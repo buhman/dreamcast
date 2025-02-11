@@ -134,13 +134,14 @@ void core_start_render3(uint32_t region_array_start,
   holly.STARTRENDER = 1;
 }
 
-void core_wait_end_of_render_video()
+bool core_wait_end_of_render_video()
 {
   /*
     "Furthermore, it is strongly recommended that the End of ISP and End of Video interrupts
     be cleared at the same time in order to make debugging easier when an error occurs."
   */
   //serial::string("eorv\n");
+  bool timeout = false;
   int64_t count = 0;
   while (1) {
     uint32_t istnrm = system.ISTNRM;
@@ -167,12 +168,13 @@ void core_wait_end_of_render_video()
       //serial::string("core ");
       //serial::integer<uint32_t>(system.ISTERR);
     }
-    if (count > 300000) {
+    if (count > 3000000) {
       serial::string("core timeout:\n");
       serial::string("isterr ");
       serial::integer<uint32_t>(system.ISTERR);
       serial::string("istnrm ");
       serial::integer<uint32_t>(system.ISTNRM);
+      timeout = true;
       break;
     }
     count += 1;
@@ -181,8 +183,7 @@ void core_wait_end_of_render_video()
 		| istnrm::end_of_render_isp
 		| istnrm::end_of_render_video;
 
-  holly.SOFTRESET = softreset::pipeline_soft_reset;
-  holly.SOFTRESET = 0;
+  return timeout;
 }
 
 void core_flip(uint32_t frame_ix)
