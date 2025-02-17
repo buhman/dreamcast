@@ -16,7 +16,7 @@ SECTIONS
     *(.text)
   } > p1ram
 
-  .data ALIGN(4) :
+  .data ALIGN(4) : SUBALIGN(32)
   {
     *(.data)
     *(.data.*)

@@ -873,3 +873,19 @@ MODIFIER_VOLUME_CUBE_OBJ = \
 
 example/modifier_volume_cube.elf: LDSCRIPT = $(LIB)/main.lds
 example/modifier_volume_cube.elf: $(START_OBJ) $(MODIFIER_VOLUME_CUBE_OBJ)
+
+DRAGON_OBJ = \
+	example/dragon.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/dragon/dragon.data.o \
+	model/dragon/dragon.data.pal.o \
+	model/dragon/chrome.data.o \
+	$(LIBGCC)
+
+example/dragon.elf: LDSCRIPT = $(LIB)/main.lds
+example/dragon.elf: $(START_OBJ) $(DRAGON_OBJ)
