@@ -1,15 +1,9 @@
-from pprint import pprint
-import sys
-
 import lex
 import templates
 
-with open(sys.argv[1], "rb") as f:
-    buf = f.read()
-mem = memoryview(buf)
-
 class TokenReader:
-    def __init__(self, mem):
+    def __init__(self, buf):
+        mem = memoryview(buf)
         self.tokens = list(lex.lex_all(mem, 0))
         self.ix = 0
 
@@ -262,6 +256,18 @@ def parse_mesh_texture_coords(r):
         textureCoords
     )
 
+def parse_animation(r):
+    r.consume(b"Animation")
+    name = r.consume_type(bytes)
+    r.consume(lex.TOKEN_LBRACKET)
+    objects = []
+    while not r.match(lex.TOKEN_RBRACKET):
+        objects.append(parse_one_ref(r, {b"AnimationKey", b"AnimationOptions"}))
+
+    return name, templates.Animation(
+        objects
+    )
+
 def parse_animation_set(r):
     r.consume(b"AnimationSet")
     name = r.consume_type(bytes)
@@ -274,16 +280,12 @@ def parse_animation_set(r):
         objects
     )
 
-def parse_animation(r):
-    r.consume(b"Animation")
-    name = r.consume_type(bytes)
-    r.consume(lex.TOKEN_LBRACKET)
-    objects = []
-    while not r.match(lex.TOKEN_RBRACKET):
-        objects.append(parse_one_ref(r, {b"AnimationKey", b"AnimationOptions"}))
-
-    return name, templates.Animation(
-        objects
+def parse_animation_options(r):
+    openClosed = parse_int(r)
+    positionQuality = parse_int(r)
+    return templates.AnimationOptions(
+        openClosed,
+        positionQuality
     )
 
 def parse_float_keys(r):
@@ -341,12 +343,14 @@ def parse_one(r, peek_token=None):
         return parse_mesh_normals(r)
     elif token == b"MeshTextureCoords":
         return parse_mesh_texture_coords(r)
-    elif token == b"AnimationSet":
-        return parse_animation_set(r)
-    elif token == b"Animation":
-        return parse_animation(r)
     elif token == b"AnimationKey":
         return parse_animation_key(r)
+    elif token == b"AnimationOptions":
+        return parse_animation_options(r)
+    elif token == b"Animation":
+        return parse_animation(r)
+    elif token == b"AnimationSet":
+        return parse_animation_set(r)
     else:
         assert False, token
 
@@ -365,6 +369,13 @@ def parse_all(r):
     while not r.eof():
         yield parse_one_ref(r)
 
-r = TokenReader(mem)
-for i in parse_all(r):
-    pprint(i)
+if __name__ == "__main__":
+    from pprint import pprint
+    import sys
+
+    with open(sys.argv[1], "rb") as f:
+        buf = f.read()
+
+    r = TokenReader(buf)
+    for i in parse_all(r):
+        pprint(i)
