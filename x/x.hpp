@@ -51,7 +51,12 @@ struct material {
 
 struct texture_filename {
   enum tag tag;
-  const char * filename;
+  //const char * filename;
+  const void * start;
+  int size;
+  int texture_memory_offset;
+  int16_t width;
+  int16_t height;
 };
 
 struct frame {
@@ -64,13 +69,22 @@ struct frame_transform_matrix {
   mat4x4 frame_matrix;
 };
 
+struct mesh_material_list;
+struct mesh_normals;
+struct mesh_texture_coords;
+
 struct mesh {
   enum tag tag;
   int n_vertices;
   vec3 * vertices;
   int n_faces;
-  struct mesh_face * faces;
-  const data_object * objects[];
+  mesh_face * faces;
+  //
+  const mesh_material_list * material_list;
+  const mesh_normals * normals;
+  const mesh_texture_coords * texture_coords;
+
+  //const data_object * objects[];
 };
 
 struct mesh_material_list {
@@ -86,7 +100,7 @@ struct mesh_normals {
   int n_normals;
   vec3 * normals;
   int n_face_normals;
-  struct mesh_face * face_normals;
+  mesh_face * face_normals;
 };
 
 struct mesh_texture_coords {

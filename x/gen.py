@@ -3,9 +3,13 @@ from parse import parse_all, TokenReader
 import templates
 import dataclasses
 from collections import Counter
+from os import path
 
 from pprint import pprint
 import sys
+from PIL import Image
+
+x_filename = None
 
 def obj_value(obj):
     if type(obj) is tuple:
@@ -31,6 +35,9 @@ def visit_objects(func, obj):
     yield from func(obj)
     for o in obj_value(obj).objects:
         yield from visit(func, o)
+
+def visit_objects_silent(func, obj):
+    yield from visit_objects(func, obj)
 
 def visit_self(func, obj):
     yield from func(obj)
@@ -67,7 +74,7 @@ visitors = {
     templates.TextureFilename      : visit_self,
     templates.Frame                : visit_objects,
     templates.FrameTransformMatrix : visit_self,
-    templates.Mesh                 : visit_objects,
+    templates.Mesh                 : visit_objects_silent,
     templates.MeshMaterialList     : visit_objects,
     templates.MeshNormals          : visit_self,
     templates.MeshTextureCoords    : visit_self,
@@ -147,6 +154,18 @@ def type_declaration(obj):
     string_name = get_obj_name(obj)
     return f"const {type_name} {string_name}"
 
+def find_object_by_type(objects, type):
+    return [
+        obj for obj in objects if obj_type(obj) is type
+    ]
+
+def one_object_name_or_nullptr(objects):
+    assert len(objects) in {0, 1}, objects
+    if len(objects) == 1:
+        return get_obj_name(objects[0])
+    else:
+        return "nullptr"
+
 def generate_vec3(name, name2, vertices):
     yield f"vec3 {name}_{name2}[] = {{"
     for v in vertices:
@@ -194,8 +213,26 @@ def generate_material(obj):
     yield f".specular_color = {{{specular_color}}},"
     yield f".emissive_color = {{{emissive_color}}},"
 
+texture_memory_offset = 0
 def generate_texture_filename(obj):
-    yield ""
+    global x_filename
+    global texture_memory_offset
+    directory, _ = path.split(x_filename)
+    image_path = path.join(directory, obj.filename.lower())
+    with Image.open(image_path) as im:
+        width, height = im.size
+
+    noext, _ = path.splitext(image_path)
+    data = noext.replace("/", "_")
+    data_name = f"_binary_{data}_data"
+
+    yield f".start = reinterpret_cast<const void *>(&{data_name}_start),"
+    yield f".size = reinterpret_cast<int>(&{data_name}_size),"
+    yield f".texture_memory_offset = {texture_memory_offset},"
+    yield f".width = {width},"
+    yield f".height = {height},"
+
+    texture_memory_offset += width * height * 2
 
 def generate_frame(obj):
     return
@@ -217,6 +254,16 @@ def generate_mesh(obj):
     yield f".vertices = {name}_vertices,"
     yield f".n_faces = {obj.nFaces},"
     yield f".faces = {name}_faces,"
+
+    material_list = one_object_name_or_nullptr(
+        find_object_by_type(obj.objects, templates.MeshMaterialList))
+    normals = one_object_name_or_nullptr(
+        find_object_by_type(obj.objects, templates.MeshNormals))
+    texture_coords = one_object_name_or_nullptr(
+        find_object_by_type(obj.objects, templates.MeshTextureCoords))
+    yield f".material_list = &{material_list},"
+    yield f".normals = &{normals},"
+    yield f".texture_coords = &{texture_coords},"
 
 def generate_mesh_material_list(obj):
     name = get_obj_name(obj)
@@ -313,16 +360,22 @@ def visit_all(func, objects):
     for obj in objects:
         yield from visit(func, obj)
 
-def gen(objects):
+def gen(prefix, objects):
     yield from visit_all(generate_predeclaration, objects)
     yield from visit_all(generate_definition, objects)
+    yield f"const data_object * {prefix}_objects[] = {{"
+    for obj in objects:
+        yield f"reinterpret_cast<const data_object *>(&{get_obj_name(obj)}),"
+    yield "};"
 
-with open(sys.argv[1], "rb") as f:
+prefix = sys.argv[2]
+x_filename = sys.argv[1]
+with open(x_filename, "rb") as f:
     buf = f.read()
 objects = list(parse_all(TokenReader(buf)))
 
 _ = list(visit_all(add_name_map, objects))
 
 render, out = generate.renderer()
-render(gen(objects))
+render(gen(prefix, objects))
 print(out.getvalue())

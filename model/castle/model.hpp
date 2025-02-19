@@ -9789,7 +9789,11 @@ const material material_x3ds_mat_castlestone = {
 
 const texture_filename texture_filename_0 = {
   .tag = tag::texture_filename,
-
+  .start = reinterpret_cast<const void *>(&_binary_model_castle_castlest_data_start),
+  .size = reinterpret_cast<int>(&_binary_model_castle_castlest_data_size),
+  .texture_memory_offset = 0,
+  .width = 256,
+  .height = 256,
 };
 
 const material material_x3ds_mat_Material__3 = {
@@ -9807,7 +9811,11 @@ const material material_x3ds_mat_Material__3 = {
 
 const texture_filename texture_filename_1 = {
   .tag = tag::texture_filename,
-
+  .start = reinterpret_cast<const void *>(&_binary_model_castle_oldbric_data_start),
+  .size = reinterpret_cast<int>(&_binary_model_castle_oldbric_data_size),
+  .texture_memory_offset = 131072,
+  .width = 256,
+  .height = 256,
 };
 
 const material material_x3ds_mat_shingle = {
@@ -9825,7 +9833,11 @@ const material material_x3ds_mat_shingle = {
 
 const texture_filename texture_filename_2 = {
   .tag = tag::texture_filename,
-
+  .start = reinterpret_cast<const void *>(&_binary_model_castle_shingle_data_start),
+  .size = reinterpret_cast<int>(&_binary_model_castle_shingle_data_size),
+  .texture_memory_offset = 262144,
+  .width = 256,
+  .height = 128,
 };
 
 const material material_x3ds_mat_Material__8 = {
@@ -9843,7 +9855,11 @@ const material material_x3ds_mat_Material__8 = {
 
 const texture_filename texture_filename_3 = {
   .tag = tag::texture_filename,
-
+  .start = reinterpret_cast<const void *>(&_binary_model_castle_gothic3_data_start),
+  .size = reinterpret_cast<int>(&_binary_model_castle_gothic3_data_size),
+  .texture_memory_offset = 327680,
+  .width = 256,
+  .height = 256,
 };
 
 const frame frame_x3ds_Box08 = {
@@ -9872,13 +9888,9 @@ const mesh mesh_Box08 = {
   .vertices = mesh_Box08_vertices,
   .n_faces = 44,
   .faces = mesh_Box08_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_0),
-    reinterpret_cast<const data_object *>(&mesh_normals_0),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_0),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_0,
+  .normals = &mesh_normals_0,
+  .texture_coords = &mesh_texture_coords_0,
 };
 
 const mesh_material_list mesh_material_list_0 = {
@@ -10033,13 +10045,9 @@ const mesh mesh_Box09 = {
   .vertices = mesh_Box09_vertices,
   .n_faces = 136,
   .faces = mesh_Box09_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_1),
-    reinterpret_cast<const data_object *>(&mesh_normals_1),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_1),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_1,
+  .normals = &mesh_normals_1,
+  .texture_coords = &mesh_texture_coords_1,
 };
 
 const mesh_material_list mesh_material_list_1 = {
@@ -10422,13 +10430,9 @@ const mesh mesh_Box02 = {
   .vertices = mesh_Box02_vertices,
   .n_faces = 8,
   .faces = mesh_Box02_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_2),
-    reinterpret_cast<const data_object *>(&mesh_normals_2),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_2),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_2,
+  .normals = &mesh_normals_2,
+  .texture_coords = &mesh_texture_coords_2,
 };
 
 const mesh_material_list mesh_material_list_2 = {
@@ -10499,13 +10503,9 @@ const mesh mesh_Cone02 = {
   .vertices = mesh_Cone02_vertices,
   .n_faces = 32,
   .faces = mesh_Cone02_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_3),
-    reinterpret_cast<const data_object *>(&mesh_normals_3),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_3),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_3,
+  .normals = &mesh_normals_3,
+  .texture_coords = &mesh_texture_coords_3,
 };
 
 const mesh_material_list mesh_material_list_3 = {
@@ -10602,13 +10602,9 @@ const mesh mesh_Cylinder02 = {
   .vertices = mesh_Cylinder02_vertices,
   .n_faces = 16,
   .faces = mesh_Cylinder02_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_4),
-    reinterpret_cast<const data_object *>(&mesh_normals_4),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_4),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_4,
+  .normals = &mesh_normals_4,
+  .texture_coords = &mesh_texture_coords_4,
 };
 
 const mesh_material_list mesh_material_list_4 = {
@@ -10682,13 +10678,9 @@ const mesh mesh_Box21 = {
   .vertices = mesh_Box21_vertices,
   .n_faces = 176,
   .faces = mesh_Box21_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_5),
-    reinterpret_cast<const data_object *>(&mesh_normals_5),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_5),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_5,
+  .normals = &mesh_normals_5,
+  .texture_coords = &mesh_texture_coords_5,
 };
 
 const mesh_material_list mesh_material_list_5 = {
@@ -11121,13 +11113,9 @@ const mesh mesh_Box22 = {
   .vertices = mesh_Box22_vertices,
   .n_faces = 136,
   .faces = mesh_Box22_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_6),
-    reinterpret_cast<const data_object *>(&mesh_normals_6),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_6),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_6,
+  .normals = &mesh_normals_6,
+  .texture_coords = &mesh_texture_coords_6,
 };
 
 const mesh_material_list mesh_material_list_6 = {
@@ -11510,13 +11498,9 @@ const mesh mesh_Box23 = {
   .vertices = mesh_Box23_vertices,
   .n_faces = 176,
   .faces = mesh_Box23_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_7),
-    reinterpret_cast<const data_object *>(&mesh_normals_7),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_7),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_7,
+  .normals = &mesh_normals_7,
+  .texture_coords = &mesh_texture_coords_7,
 };
 
 const mesh_material_list mesh_material_list_7 = {
@@ -11949,13 +11933,9 @@ const mesh mesh_Box24 = {
   .vertices = mesh_Box24_vertices,
   .n_faces = 44,
   .faces = mesh_Box24_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_8),
-    reinterpret_cast<const data_object *>(&mesh_normals_8),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_8),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_8,
+  .normals = &mesh_normals_8,
+  .texture_coords = &mesh_texture_coords_8,
 };
 
 const mesh_material_list mesh_material_list_8 = {
@@ -12110,13 +12090,9 @@ const mesh mesh_Box25 = {
   .vertices = mesh_Box25_vertices,
   .n_faces = 136,
   .faces = mesh_Box25_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_9),
-    reinterpret_cast<const data_object *>(&mesh_normals_9),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_9),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_9,
+  .normals = &mesh_normals_9,
+  .texture_coords = &mesh_texture_coords_9,
 };
 
 const mesh_material_list mesh_material_list_9 = {
@@ -12499,13 +12475,9 @@ const mesh mesh_Box26 = {
   .vertices = mesh_Box26_vertices,
   .n_faces = 176,
   .faces = mesh_Box26_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_10),
-    reinterpret_cast<const data_object *>(&mesh_normals_10),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_10),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_10,
+  .normals = &mesh_normals_10,
+  .texture_coords = &mesh_texture_coords_10,
 };
 
 const mesh_material_list mesh_material_list_10 = {
@@ -12938,13 +12910,9 @@ const mesh mesh_Box27 = {
   .vertices = mesh_Box27_vertices,
   .n_faces = 136,
   .faces = mesh_Box27_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_11),
-    reinterpret_cast<const data_object *>(&mesh_normals_11),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_11),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_11,
+  .normals = &mesh_normals_11,
+  .texture_coords = &mesh_texture_coords_11,
 };
 
 const mesh_material_list mesh_material_list_11 = {
@@ -13327,13 +13295,9 @@ const mesh mesh_Cylinder03 = {
   .vertices = mesh_Cylinder03_vertices,
   .n_faces = 16,
   .faces = mesh_Cylinder03_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_12),
-    reinterpret_cast<const data_object *>(&mesh_normals_12),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_12),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_12,
+  .normals = &mesh_normals_12,
+  .texture_coords = &mesh_texture_coords_12,
 };
 
 const mesh_material_list mesh_material_list_12 = {
@@ -13407,13 +13371,9 @@ const mesh mesh_Cone03 = {
   .vertices = mesh_Cone03_vertices,
   .n_faces = 32,
   .faces = mesh_Cone03_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_13),
-    reinterpret_cast<const data_object *>(&mesh_normals_13),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_13),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_13,
+  .normals = &mesh_normals_13,
+  .texture_coords = &mesh_texture_coords_13,
 };
 
 const mesh_material_list mesh_material_list_13 = {
@@ -13510,13 +13470,9 @@ const mesh mesh_Cylinder01 = {
   .vertices = mesh_Cylinder01_vertices,
   .n_faces = 174,
   .faces = mesh_Cylinder01_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_14),
-    reinterpret_cast<const data_object *>(&mesh_normals_14),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_14),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_14,
+  .normals = &mesh_normals_14,
+  .texture_coords = &mesh_texture_coords_14,
 };
 
 const mesh_material_list mesh_material_list_14 = {
@@ -13976,13 +13932,9 @@ const mesh mesh_Box01 = {
   .vertices = mesh_Box01_vertices,
   .n_faces = 8,
   .faces = mesh_Box01_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_15),
-    reinterpret_cast<const data_object *>(&mesh_normals_15),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_15),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_15,
+  .normals = &mesh_normals_15,
+  .texture_coords = &mesh_texture_coords_15,
 };
 
 const mesh_material_list mesh_material_list_15 = {
@@ -14054,13 +14006,9 @@ const mesh mesh_Box28 = {
   .vertices = mesh_Box28_vertices,
   .n_faces = 8,
   .faces = mesh_Box28_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_16),
-    reinterpret_cast<const data_object *>(&mesh_normals_16),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_16),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_16,
+  .normals = &mesh_normals_16,
+  .texture_coords = &mesh_texture_coords_16,
 };
 
 const mesh_material_list mesh_material_list_16 = {
@@ -14132,13 +14080,9 @@ const mesh mesh_Box03 = {
   .vertices = mesh_Box03_vertices,
   .n_faces = 10,
   .faces = mesh_Box03_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_17),
-    reinterpret_cast<const data_object *>(&mesh_normals_17),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_17),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_17,
+  .normals = &mesh_normals_17,
+  .texture_coords = &mesh_texture_coords_17,
 };
 
 const mesh_material_list mesh_material_list_17 = {
@@ -14201,13 +14145,9 @@ const mesh mesh_roof = {
   .vertices = mesh_roof_vertices,
   .n_faces = 4,
   .faces = mesh_roof_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_18),
-    reinterpret_cast<const data_object *>(&mesh_normals_18),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_18),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_18,
+  .normals = &mesh_normals_18,
+  .texture_coords = &mesh_texture_coords_18,
 };
 
 const mesh_material_list mesh_material_list_18 = {
@@ -14268,13 +14208,9 @@ const mesh mesh_walkway = {
   .vertices = mesh_walkway_vertices,
   .n_faces = 38,
   .faces = mesh_walkway_faces,
-
-  .objects = {
-    reinterpret_cast<const data_object *>(&mesh_material_list_19),
-    reinterpret_cast<const data_object *>(&mesh_normals_19),
-    reinterpret_cast<const data_object *>(&mesh_texture_coords_19),
-    nullptr,
-  }
+  .material_list = &mesh_material_list_19,
+  .normals = &mesh_normals_19,
+  .texture_coords = &mesh_texture_coords_19,
 };
 
 const mesh_material_list mesh_material_list_19 = {
@@ -14967,6 +14903,35 @@ const animation_key animation_key_39 = {
   .keys = {
     // not implemented
   },
+};
+
+const data_object * castle_objects[] = {
+  reinterpret_cast<const data_object *>(&header_0),
+  reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+  reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__3),
+  reinterpret_cast<const data_object *>(&material_x3ds_mat_shingle),
+  reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__8),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box08),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box09),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box02),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Cone02),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder02),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box21),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box22),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box23),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box24),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box25),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box26),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box27),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder03),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Cone03),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder01),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box01),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box28),
+  reinterpret_cast<const data_object *>(&frame_x3ds_Box03),
+  reinterpret_cast<const data_object *>(&frame_x3ds_roof),
+  reinterpret_cast<const data_object *>(&frame_x3ds_walkway),
+  reinterpret_cast<const data_object *>(&animation_set_x3ds_animset_0),
 };
 
 

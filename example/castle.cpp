@@ -29,6 +29,12 @@
 #include "math/vec4.hpp"
 #include "math/mat4x4.hpp"
 
+#include "model/castle/castlest.data.h"
+#include "model/castle/gothic3.data.h"
+#include "model/castle/oldbric.data.h"
+#include "model/castle/shingle.data.h"
+#include "model/castle/stone2.data.h"
+
 using vec2 = vec<2, float>;
 using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
@@ -177,21 +183,22 @@ void interrupt_init()
 		: "r" (sr));
 }
 
-void global_polygon_type_0(ta_parameter_writer& writer, uint32_t texture_address, uint32_t list, uint32_t cull)
+void global_polygon_type_0(ta_parameter_writer& writer, uint32_t texture_address, int width, int height)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | list
+                                        | para_control::list_type::opaque
                                         | obj_control::col_type::packed_color
+                                        | obj_control::texture
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                          | cull;
+                                          | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::src_alpha_instr::one
                                       | tsp_instruction_word::dst_alpha_instr::zero
-                                      | tsp_instruction_word::texture_u_size::from_int(256)
-                                      | tsp_instruction_word::texture_v_size::from_int(256)
+                                      | tsp_instruction_word::texture_u_size::from_int(width)
+                                      | tsp_instruction_word::texture_v_size::from_int(height)
                                       ;
 
   const uint32_t texture_control_word = texture_control_word::pixel_format::_565
@@ -239,28 +246,34 @@ static inline void render_tri(ta_parameter_writer& writer,
                               uint32_t base_color,
                               vec3 ap,
                               vec3 bp,
-                              vec3 cp)
+                              vec3 cp,
+                              vec2 at,
+                              vec2 bt,
+                              vec2 ct)
 {
   if (ap.z < 0 || bp.z < 0 || cp.z < 0)
     return;
 
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
-                                        base_color
-                                        ); // offset_color
+                                        at.x, at.y,
+                                        base_color,
+                                        0); // offset_color
 
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         bp.x, bp.y, bp.z,
-                                        base_color
-                                        ); // offset_color
+                                        bt.x, bt.y,
+                                        base_color,
+                                        0); // offset_color
 
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
-                                        base_color
-                                        ); // offset_color
+                                        ct.x, ct.y,
+                                        base_color,
+                                        0); // offset_color
 }
 
 constexpr inline mat4x4 screen_rotation(float theta)
@@ -307,34 +320,25 @@ uint32_t xorshift32()
   return xorshift_state = x;
 }
 
-const frame * frames[] = {
-  &frame_x3ds_Box08,
-  &frame_x3ds_Box09,
-  &frame_x3ds_Box02,
-  &frame_x3ds_Cone02,
-  &frame_x3ds_Cylinder02,
-  &frame_x3ds_Box21,
-  &frame_x3ds_Box22,
-  &frame_x3ds_Box23,
-  &frame_x3ds_Box24,
-  &frame_x3ds_Box25,
-  &frame_x3ds_Box26,
-  &frame_x3ds_Box27,
-  &frame_x3ds_Cylinder03,
-  &frame_x3ds_Cone03,
-  &frame_x3ds_Cylinder01,
-  &frame_x3ds_Box01,
-  &frame_x3ds_Box28,
-  &frame_x3ds_Box03,
-  &frame_x3ds_roof,
-  &frame_x3ds_walkway,
-};
-
 static inline void render_mesh(ta_parameter_writer& writer,
                                const mat4x4& screen,
                                const mat4x4& model,
                                const mesh * mesh)
 {
+  const material * m = &mesh->material_list->objects[0]->material;
+  assert(m->tag == tag::material);
+  const texture_filename * t = &m->objects[0]->texture_filename;
+  assert(t->tag == tag::texture_filename);
+
+  global_polygon_type_0(writer,
+                        texture_memory_alloc.texture.start + t->texture_memory_offset,
+                        t->width,
+                        t->height);
+
+  assert(mesh->texture_coords->tag == tag::mesh_texture_coords);
+  const vec2 * texture_coords = mesh->texture_coords->texture_coords;
+  assert(mesh->texture_coords->n_texture_coords == mesh->n_vertices);
+
   //mesh->vertices;
   for (int i = 0; i < mesh->n_faces; i++) {
     const auto& indices = mesh->faces[i].face_vertex_indices;
@@ -343,7 +347,10 @@ static inline void render_mesh(ta_parameter_writer& writer,
                base_color,
                screen_transform(screen, model * mesh->vertices[indices[0]]),
                screen_transform(screen, model * mesh->vertices[indices[1]]),
-               screen_transform(screen, model * mesh->vertices[indices[2]]));
+               screen_transform(screen, model * mesh->vertices[indices[2]]),
+               texture_coords[indices[0]],
+               texture_coords[indices[1]],
+               texture_coords[indices[2]]);
   }
 }
 
@@ -380,8 +387,11 @@ static inline void render_frame(ta_parameter_writer& writer,
 
 void render_castle(ta_parameter_writer& writer, const mat4x4& screen)
 {
-  for (uint32_t i = 0; i < (sizeof (frames)) / (sizeof (frames[0])); i++) {
-    render_frame(writer, screen, frames[i]);
+  for (uint32_t i = 0; i < (sizeof (castle_objects)) / (sizeof (castle_objects[0])); i++) {
+    if (castle_objects[i]->tag != tag::frame)
+      continue;
+
+    render_frame(writer, screen, &castle_objects[i]->frame);
   }
 }
 
@@ -389,10 +399,6 @@ static float theta = deg * 360;
 void transfer_scene(ta_parameter_writer& writer)
 {
   const mat4x4 screen = screen_rotation(theta);
-
-  global_polygon_type_0(writer, texture_memory_alloc.texture.start,
-                        para_control::list_type::opaque,
-                        isp_tsp_instruction_word::culling_mode::no_culling);
 
   render_castle(writer, screen);
 
@@ -403,14 +409,14 @@ void transfer_scene(ta_parameter_writer& writer)
   theta += deg * 0.1;
 }
 
-void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
+void transfer_ta_fifo_texture_memory_32byte(void * dst, const void * src, int length)
 {
   uint32_t out_addr = (uint32_t)dst;
   sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
   sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
 
   volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffc0) / 4];
-  uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
+  const uint32_t * src32 = reinterpret_cast<const uint32_t *>(src);
 
   length = (length + 31) & ~31; // round up to nearest multiple of 32
   while (length > 0) {
@@ -429,6 +435,39 @@ void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
     length -= 32;
     base += 8;
     src32 += 8;
+  }
+}
+
+void transfer_texture(const material * material)
+{
+  int ix = 0;
+  while (true) {
+    if (material->objects[ix] == nullptr)
+      return;
+    if (material->objects[ix]->tag == tag::texture_filename)
+      break;
+    ix += 1;
+  }
+
+  const texture_filename * t = &material->objects[ix]->texture_filename;
+  assert(t->tag == tag::texture_filename);
+
+  uint32_t offset = texture_memory_alloc.texture.start + t->texture_memory_offset;
+  void * dst = (void *)(&texture_memory64[offset / 4]);
+
+  transfer_ta_fifo_texture_memory_32byte(dst, t->start, t->size);
+}
+
+void transfer_textures()
+{
+  system.LMMODE0 = 0; // 64-bit address space
+  system.LMMODE1 = 0; // 64-bit address space
+
+  for (uint32_t i = 0; i < (sizeof (castle_objects)) / (sizeof (castle_objects[0])); i++) {
+    if (castle_objects[i]->tag != tag::material)
+      continue;
+
+    transfer_texture(&castle_objects[i]->material);
   }
 }
 
@@ -488,6 +527,7 @@ void main()
 
   ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf);
 
+  transfer_textures();
   video_output::set_mode_vga();
   while (1) {
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,

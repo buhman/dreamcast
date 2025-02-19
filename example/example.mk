@@ -898,6 +898,11 @@ CASTLE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
 	sh7091/serial.o \
+	model/castle/castlest.data.o \
+	model/castle/gothic3.data.o \
+	model/castle/oldbric.data.o \
+	model/castle/shingle.data.o \
+	model/castle/stone2.data.o \
 	$(LIBGCC)
 
 example/castle.elf: LDSCRIPT = $(LIB)/main.lds
