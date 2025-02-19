@@ -889,3 +889,16 @@ DRAGON_OBJ = \
 
 example/dragon.elf: LDSCRIPT = $(LIB)/main.lds
 example/dragon.elf: $(START_OBJ) $(DRAGON_OBJ)
+
+CASTLE_OBJ = \
+	example/castle.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/castle.elf: LDSCRIPT = $(LIB)/main.lds
+example/castle.elf: $(START_OBJ) $(CASTLE_OBJ)

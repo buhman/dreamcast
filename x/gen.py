@@ -303,6 +303,8 @@ def generate_definition(obj):
                 reference_name = obj_value(o).name
                 o = obj_map[reference_name]
             yield f"reinterpret_cast<const data_object *>(&{get_obj_name(o)}),"
+        # end of objects list
+        yield f"nullptr,"
         yield "}"
 
     yield "};"

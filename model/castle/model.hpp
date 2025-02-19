@@ -9783,6 +9783,7 @@ const material material_x3ds_mat_castlestone = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&texture_filename_0),
+    nullptr,
   }
 };
 
@@ -9800,6 +9801,7 @@ const material material_x3ds_mat_Material__3 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&texture_filename_1),
+    nullptr,
   }
 };
 
@@ -9817,6 +9819,7 @@ const material material_x3ds_mat_shingle = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&texture_filename_2),
+    nullptr,
   }
 };
 
@@ -9834,6 +9837,7 @@ const material material_x3ds_mat_Material__8 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&texture_filename_3),
+    nullptr,
   }
 };
 
@@ -9848,6 +9852,7 @@ const frame frame_x3ds_Box08 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_0),
     reinterpret_cast<const data_object *>(&mesh_Box08),
+    nullptr,
   }
 };
 
@@ -9872,6 +9877,7 @@ const mesh mesh_Box08 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_0),
     reinterpret_cast<const data_object *>(&mesh_normals_0),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_0),
+    nullptr,
   }
 };
 
@@ -9883,6 +9889,7 @@ const mesh_material_list mesh_material_list_0 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -10006,6 +10013,7 @@ const frame frame_x3ds_Box09 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_1),
     reinterpret_cast<const data_object *>(&mesh_Box09),
+    nullptr,
   }
 };
 
@@ -10030,6 +10038,7 @@ const mesh mesh_Box09 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_1),
     reinterpret_cast<const data_object *>(&mesh_normals_1),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_1),
+    nullptr,
   }
 };
 
@@ -10041,6 +10050,7 @@ const mesh_material_list mesh_material_list_1 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -10392,6 +10402,7 @@ const frame frame_x3ds_Box02 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_2),
     reinterpret_cast<const data_object *>(&mesh_Box02),
+    nullptr,
   }
 };
 
@@ -10416,6 +10427,7 @@ const mesh mesh_Box02 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_2),
     reinterpret_cast<const data_object *>(&mesh_normals_2),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_2),
+    nullptr,
   }
 };
 
@@ -10427,6 +10439,7 @@ const mesh_material_list mesh_material_list_2 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__3),
+    nullptr,
   }
 };
 
@@ -10466,6 +10479,7 @@ const frame frame_x3ds_Cone02 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_3),
     reinterpret_cast<const data_object *>(&mesh_Cone02),
+    nullptr,
   }
 };
 
@@ -10490,6 +10504,7 @@ const mesh mesh_Cone02 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_3),
     reinterpret_cast<const data_object *>(&mesh_normals_3),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_3),
+    nullptr,
   }
 };
 
@@ -10501,6 +10516,7 @@ const mesh_material_list mesh_material_list_3 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_shingle),
+    nullptr,
   }
 };
 
@@ -10566,6 +10582,7 @@ const frame frame_x3ds_Cylinder02 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_4),
     reinterpret_cast<const data_object *>(&mesh_Cylinder02),
+    nullptr,
   }
 };
 
@@ -10590,6 +10607,7 @@ const mesh mesh_Cylinder02 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_4),
     reinterpret_cast<const data_object *>(&mesh_normals_4),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_4),
+    nullptr,
   }
 };
 
@@ -10601,6 +10619,7 @@ const mesh_material_list mesh_material_list_4 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__3),
+    nullptr,
   }
 };
 
@@ -10643,6 +10662,7 @@ const frame frame_x3ds_Box21 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_5),
     reinterpret_cast<const data_object *>(&mesh_Box21),
+    nullptr,
   }
 };
 
@@ -10667,6 +10687,7 @@ const mesh mesh_Box21 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_5),
     reinterpret_cast<const data_object *>(&mesh_normals_5),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_5),
+    nullptr,
   }
 };
 
@@ -10678,6 +10699,7 @@ const mesh_material_list mesh_material_list_5 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -11079,6 +11101,7 @@ const frame frame_x3ds_Box22 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_6),
     reinterpret_cast<const data_object *>(&mesh_Box22),
+    nullptr,
   }
 };
 
@@ -11103,6 +11126,7 @@ const mesh mesh_Box22 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_6),
     reinterpret_cast<const data_object *>(&mesh_normals_6),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_6),
+    nullptr,
   }
 };
 
@@ -11114,6 +11138,7 @@ const mesh_material_list mesh_material_list_6 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -11465,6 +11490,7 @@ const frame frame_x3ds_Box23 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_7),
     reinterpret_cast<const data_object *>(&mesh_Box23),
+    nullptr,
   }
 };
 
@@ -11489,6 +11515,7 @@ const mesh mesh_Box23 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_7),
     reinterpret_cast<const data_object *>(&mesh_normals_7),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_7),
+    nullptr,
   }
 };
 
@@ -11500,6 +11527,7 @@ const mesh_material_list mesh_material_list_7 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -11901,6 +11929,7 @@ const frame frame_x3ds_Box24 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_8),
     reinterpret_cast<const data_object *>(&mesh_Box24),
+    nullptr,
   }
 };
 
@@ -11925,6 +11954,7 @@ const mesh mesh_Box24 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_8),
     reinterpret_cast<const data_object *>(&mesh_normals_8),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_8),
+    nullptr,
   }
 };
 
@@ -11936,6 +11966,7 @@ const mesh_material_list mesh_material_list_8 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -12059,6 +12090,7 @@ const frame frame_x3ds_Box25 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_9),
     reinterpret_cast<const data_object *>(&mesh_Box25),
+    nullptr,
   }
 };
 
@@ -12083,6 +12115,7 @@ const mesh mesh_Box25 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_9),
     reinterpret_cast<const data_object *>(&mesh_normals_9),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_9),
+    nullptr,
   }
 };
 
@@ -12094,6 +12127,7 @@ const mesh_material_list mesh_material_list_9 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -12445,6 +12479,7 @@ const frame frame_x3ds_Box26 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_10),
     reinterpret_cast<const data_object *>(&mesh_Box26),
+    nullptr,
   }
 };
 
@@ -12469,6 +12504,7 @@ const mesh mesh_Box26 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_10),
     reinterpret_cast<const data_object *>(&mesh_normals_10),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_10),
+    nullptr,
   }
 };
 
@@ -12480,6 +12516,7 @@ const mesh_material_list mesh_material_list_10 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -12881,6 +12918,7 @@ const frame frame_x3ds_Box27 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_11),
     reinterpret_cast<const data_object *>(&mesh_Box27),
+    nullptr,
   }
 };
 
@@ -12905,6 +12943,7 @@ const mesh mesh_Box27 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_11),
     reinterpret_cast<const data_object *>(&mesh_normals_11),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_11),
+    nullptr,
   }
 };
 
@@ -12916,6 +12955,7 @@ const mesh_material_list mesh_material_list_11 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -13267,6 +13307,7 @@ const frame frame_x3ds_Cylinder03 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_12),
     reinterpret_cast<const data_object *>(&mesh_Cylinder03),
+    nullptr,
   }
 };
 
@@ -13291,6 +13332,7 @@ const mesh mesh_Cylinder03 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_12),
     reinterpret_cast<const data_object *>(&mesh_normals_12),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_12),
+    nullptr,
   }
 };
 
@@ -13302,6 +13344,7 @@ const mesh_material_list mesh_material_list_12 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__3),
+    nullptr,
   }
 };
 
@@ -13344,6 +13387,7 @@ const frame frame_x3ds_Cone03 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_13),
     reinterpret_cast<const data_object *>(&mesh_Cone03),
+    nullptr,
   }
 };
 
@@ -13368,6 +13412,7 @@ const mesh mesh_Cone03 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_13),
     reinterpret_cast<const data_object *>(&mesh_normals_13),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_13),
+    nullptr,
   }
 };
 
@@ -13379,6 +13424,7 @@ const mesh_material_list mesh_material_list_13 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_shingle),
+    nullptr,
   }
 };
 
@@ -13444,6 +13490,7 @@ const frame frame_x3ds_Cylinder01 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_14),
     reinterpret_cast<const data_object *>(&mesh_Cylinder01),
+    nullptr,
   }
 };
 
@@ -13468,6 +13515,7 @@ const mesh mesh_Cylinder01 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_14),
     reinterpret_cast<const data_object *>(&mesh_normals_14),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_14),
+    nullptr,
   }
 };
 
@@ -13479,6 +13527,7 @@ const mesh_material_list mesh_material_list_14 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_castlestone),
+    nullptr,
   }
 };
 
@@ -13907,6 +13956,7 @@ const frame frame_x3ds_Box01 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_15),
     reinterpret_cast<const data_object *>(&mesh_Box01),
+    nullptr,
   }
 };
 
@@ -13931,6 +13981,7 @@ const mesh mesh_Box01 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_15),
     reinterpret_cast<const data_object *>(&mesh_normals_15),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_15),
+    nullptr,
   }
 };
 
@@ -13942,6 +13993,7 @@ const mesh_material_list mesh_material_list_15 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__8),
+    nullptr,
   }
 };
 
@@ -13982,6 +14034,7 @@ const frame frame_x3ds_Box28 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_16),
     reinterpret_cast<const data_object *>(&mesh_Box28),
+    nullptr,
   }
 };
 
@@ -14006,6 +14059,7 @@ const mesh mesh_Box28 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_16),
     reinterpret_cast<const data_object *>(&mesh_normals_16),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_16),
+    nullptr,
   }
 };
 
@@ -14017,6 +14071,7 @@ const mesh_material_list mesh_material_list_16 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__8),
+    nullptr,
   }
 };
 
@@ -14057,6 +14112,7 @@ const frame frame_x3ds_Box03 = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_17),
     reinterpret_cast<const data_object *>(&mesh_Box03),
+    nullptr,
   }
 };
 
@@ -14081,6 +14137,7 @@ const mesh mesh_Box03 = {
     reinterpret_cast<const data_object *>(&mesh_material_list_17),
     reinterpret_cast<const data_object *>(&mesh_normals_17),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_17),
+    nullptr,
   }
 };
 
@@ -14092,6 +14149,7 @@ const mesh_material_list mesh_material_list_17 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__8),
+    nullptr,
   }
 };
 
@@ -14123,6 +14181,7 @@ const frame frame_x3ds_roof = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_18),
     reinterpret_cast<const data_object *>(&mesh_roof),
+    nullptr,
   }
 };
 
@@ -14147,6 +14206,7 @@ const mesh mesh_roof = {
     reinterpret_cast<const data_object *>(&mesh_material_list_18),
     reinterpret_cast<const data_object *>(&mesh_normals_18),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_18),
+    nullptr,
   }
 };
 
@@ -14158,6 +14218,7 @@ const mesh_material_list mesh_material_list_18 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_shingle),
+    nullptr,
   }
 };
 
@@ -14187,6 +14248,7 @@ const frame frame_x3ds_walkway = {
   .objects = {
     reinterpret_cast<const data_object *>(&frame_transform_matrix_19),
     reinterpret_cast<const data_object *>(&mesh_walkway),
+    nullptr,
   }
 };
 
@@ -14211,6 +14273,7 @@ const mesh mesh_walkway = {
     reinterpret_cast<const data_object *>(&mesh_material_list_19),
     reinterpret_cast<const data_object *>(&mesh_normals_19),
     reinterpret_cast<const data_object *>(&mesh_texture_coords_19),
+    nullptr,
   }
 };
 
@@ -14222,6 +14285,7 @@ const mesh_material_list mesh_material_list_19 = {
 
   .objects = {
     reinterpret_cast<const data_object *>(&material_x3ds_mat_Material__8),
+    nullptr,
   }
 };
 
@@ -14321,6 +14385,7 @@ const animation_set animation_set_x3ds_animset_0 = {
     reinterpret_cast<const data_object *>(&animation_x3ds_anim_17),
     reinterpret_cast<const data_object *>(&animation_x3ds_anim_18),
     reinterpret_cast<const data_object *>(&animation_x3ds_anim_19),
+    nullptr,
   }
 };
 
@@ -14331,6 +14396,7 @@ const animation animation_x3ds_anim_0 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box08),
     reinterpret_cast<const data_object *>(&animation_key_0),
     reinterpret_cast<const data_object *>(&animation_key_1),
+    nullptr,
   }
 };
 
@@ -14359,6 +14425,7 @@ const animation animation_x3ds_anim_1 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box09),
     reinterpret_cast<const data_object *>(&animation_key_2),
     reinterpret_cast<const data_object *>(&animation_key_3),
+    nullptr,
   }
 };
 
@@ -14387,6 +14454,7 @@ const animation animation_x3ds_anim_2 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box02),
     reinterpret_cast<const data_object *>(&animation_key_4),
     reinterpret_cast<const data_object *>(&animation_key_5),
+    nullptr,
   }
 };
 
@@ -14415,6 +14483,7 @@ const animation animation_x3ds_anim_3 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Cone02),
     reinterpret_cast<const data_object *>(&animation_key_6),
     reinterpret_cast<const data_object *>(&animation_key_7),
+    nullptr,
   }
 };
 
@@ -14443,6 +14512,7 @@ const animation animation_x3ds_anim_4 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder02),
     reinterpret_cast<const data_object *>(&animation_key_8),
     reinterpret_cast<const data_object *>(&animation_key_9),
+    nullptr,
   }
 };
 
@@ -14471,6 +14541,7 @@ const animation animation_x3ds_anim_5 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box21),
     reinterpret_cast<const data_object *>(&animation_key_10),
     reinterpret_cast<const data_object *>(&animation_key_11),
+    nullptr,
   }
 };
 
@@ -14499,6 +14570,7 @@ const animation animation_x3ds_anim_6 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box22),
     reinterpret_cast<const data_object *>(&animation_key_12),
     reinterpret_cast<const data_object *>(&animation_key_13),
+    nullptr,
   }
 };
 
@@ -14527,6 +14599,7 @@ const animation animation_x3ds_anim_7 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box23),
     reinterpret_cast<const data_object *>(&animation_key_14),
     reinterpret_cast<const data_object *>(&animation_key_15),
+    nullptr,
   }
 };
 
@@ -14555,6 +14628,7 @@ const animation animation_x3ds_anim_8 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box24),
     reinterpret_cast<const data_object *>(&animation_key_16),
     reinterpret_cast<const data_object *>(&animation_key_17),
+    nullptr,
   }
 };
 
@@ -14583,6 +14657,7 @@ const animation animation_x3ds_anim_9 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box25),
     reinterpret_cast<const data_object *>(&animation_key_18),
     reinterpret_cast<const data_object *>(&animation_key_19),
+    nullptr,
   }
 };
 
@@ -14611,6 +14686,7 @@ const animation animation_x3ds_anim_10 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box26),
     reinterpret_cast<const data_object *>(&animation_key_20),
     reinterpret_cast<const data_object *>(&animation_key_21),
+    nullptr,
   }
 };
 
@@ -14639,6 +14715,7 @@ const animation animation_x3ds_anim_11 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box27),
     reinterpret_cast<const data_object *>(&animation_key_22),
     reinterpret_cast<const data_object *>(&animation_key_23),
+    nullptr,
   }
 };
 
@@ -14667,6 +14744,7 @@ const animation animation_x3ds_anim_12 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder03),
     reinterpret_cast<const data_object *>(&animation_key_24),
     reinterpret_cast<const data_object *>(&animation_key_25),
+    nullptr,
   }
 };
 
@@ -14695,6 +14773,7 @@ const animation animation_x3ds_anim_13 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Cone03),
     reinterpret_cast<const data_object *>(&animation_key_26),
     reinterpret_cast<const data_object *>(&animation_key_27),
+    nullptr,
   }
 };
 
@@ -14723,6 +14802,7 @@ const animation animation_x3ds_anim_14 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Cylinder01),
     reinterpret_cast<const data_object *>(&animation_key_28),
     reinterpret_cast<const data_object *>(&animation_key_29),
+    nullptr,
   }
 };
 
@@ -14751,6 +14831,7 @@ const animation animation_x3ds_anim_15 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box01),
     reinterpret_cast<const data_object *>(&animation_key_30),
     reinterpret_cast<const data_object *>(&animation_key_31),
+    nullptr,
   }
 };
 
@@ -14779,6 +14860,7 @@ const animation animation_x3ds_anim_16 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box28),
     reinterpret_cast<const data_object *>(&animation_key_32),
     reinterpret_cast<const data_object *>(&animation_key_33),
+    nullptr,
   }
 };
 
@@ -14807,6 +14889,7 @@ const animation animation_x3ds_anim_17 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_Box03),
     reinterpret_cast<const data_object *>(&animation_key_34),
     reinterpret_cast<const data_object *>(&animation_key_35),
+    nullptr,
   }
 };
 
@@ -14835,6 +14918,7 @@ const animation animation_x3ds_anim_18 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_roof),
     reinterpret_cast<const data_object *>(&animation_key_36),
     reinterpret_cast<const data_object *>(&animation_key_37),
+    nullptr,
   }
 };
 
@@ -14863,6 +14947,7 @@ const animation animation_x3ds_anim_19 = {
     reinterpret_cast<const data_object *>(&frame_x3ds_walkway),
     reinterpret_cast<const data_object *>(&animation_key_38),
     reinterpret_cast<const data_object *>(&animation_key_39),
+    nullptr,
   }
 };
 
