@@ -41,7 +41,7 @@ static inline uint32_t le_bswap(const uint32_t n)
     return __builtin_bswap32(n);
 }
 
-union command_reply command_reply(uint32_t cmd, uint32_t arg0, uint32_t arg1)
+static inline union command_reply command_reply(uint32_t cmd, uint32_t arg0, uint32_t arg1)
 {
   union command_reply command = {
     .cmd = le_bswap(cmd),
@@ -67,27 +67,27 @@ namespace command {
 
   static_assert(_maple_raw  == 0xb62422e0);
 
-  union command_reply write(uint32_t dest, uint32_t size)
+  static inline union command_reply write(uint32_t dest, uint32_t size)
   {
     return command_reply(_write, dest, size);
   }
 
-  union command_reply read(uint32_t dest, uint32_t size)
+  static inline union command_reply read(uint32_t dest, uint32_t size)
   {
     return command_reply(_read, dest, size);
   }
 
-  union command_reply jump(uint32_t dest)
+  static inline union command_reply jump(uint32_t dest)
   {
     return command_reply(_jump, dest, 0);
   }
 
-  union command_reply speed(uint32_t speed)
+  static inline union command_reply speed(uint32_t speed)
   {
     return command_reply(_speed, speed, 0);
   }
 
-  union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
+  static inline union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
   {
     return command_reply(_maple_raw, send_size, recv_size);
   }
@@ -112,32 +112,32 @@ namespace reply {
 
   static_assert(_crc   == 0xcc9aab7c);
 
-  union command_reply write(uint32_t dest, uint32_t size)
+  static inline union command_reply write(uint32_t dest, uint32_t size)
   {
     return command_reply(_write, dest, size);
   }
 
-  union command_reply read(uint32_t dest, uint32_t size)
+  static inline union command_reply read(uint32_t dest, uint32_t size)
   {
     return command_reply(_read, dest, size);
   }
 
-  union command_reply jump(uint32_t dest)
+  static inline union command_reply jump(uint32_t dest)
   {
     return command_reply(_jump, dest, 0);
   }
 
-  union command_reply speed(uint32_t speed)
+  static inline union command_reply speed(uint32_t speed)
   {
     return command_reply(_speed, speed, 0);
   }
 
-  union command_reply crc(uint32_t crc)
+  static inline union command_reply crc(uint32_t crc)
   {
     return command_reply(_crc, crc, 0);
   }
 
-  union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
+  static inline union command_reply maple_raw(uint32_t send_size, uint32_t recv_size)
   {
     return command_reply(_maple_raw, send_size, recv_size);
   }

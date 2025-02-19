@@ -53,15 +53,7 @@ sine.pcm: common.mk
 		/1ST_READ.BIN=./$< \
 		/=./COPYRIGH.TXT \
 		/=./ABSTRACT.TXT \
-		/=./BIBLIOGR.TXT \
-		/=./pcm/REIGN.PCM \
-		/=./pcm/PILLAR.PCM \
-		/=./pcm/RIDDLE.PCM \
-		/=./pcm/PRELUDE.PCM \
-		/=./pcm/CLOCKTOW.PCM \
-		/=./pcm/ELEC.PCM \
-		/=./pcm/ECCLESIA.PCM \
-		/=jvm.bin
+		/=./BIBLIOGR.TXT
 
 clean:
 	find -P \
