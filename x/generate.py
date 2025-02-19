@@ -7,15 +7,16 @@ def should_autonewline(line):
         and (len(line.split()) < 2 or line.split()[1] != '=') # hacky; meh
     )
 
-def _render(out, lines):
+def _render(out, lines, level=0):
     indent = " "
-    level = 0
     for l in lines:
         if l and (l[0] == "}" or l[0] == ")"):
             level -= 2
             assert level >= 0, out.getvalue()
 
-        if len(l) == 0:
+        if type(l) is tuple:
+            line_fifo.append(l)
+        elif len(l) == 0:
             out.write("\n")
         else:
             out.write(indent * level + l + "\n")

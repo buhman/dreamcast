@@ -1,7 +1,7 @@
 /* primitives */
 struct mesh_face {
-  int nfacevertexindices;
-  int facevertexindices[];
+  //int n_face_vertex_indices;
+  int face_vertex_indices[3];
 };
 
 struct float_keys {
@@ -42,11 +42,11 @@ struct header {
 
 struct material {
   enum tag tag;
-  vec4 facecolor;
+  vec4 face_color;
   float power;
-  vec3 specularcolor;
-  vec3 emissivecolor;
-  struct data_object * objects[];
+  vec3 specular_color;
+  vec3 emissive_color;
+  const data_object * objects[];
 };
 
 struct texture_filename {
@@ -56,21 +56,21 @@ struct texture_filename {
 
 struct frame {
   enum tag tag;
-  struct data_object * objects[];
+  const data_object * objects[];
 };
 
 struct frame_transform_matrix {
   enum tag tag;
-  mat4x4 framematrix;
+  mat4x4 frame_matrix;
 };
 
 struct mesh {
   enum tag tag;
-  int nvertices;
+  int n_vertices;
   vec3 * vertices;
-  int nfaces;
+  int n_faces;
   struct mesh_face * faces;
-  struct data_object * objects[];
+  const data_object * objects[];
 };
 
 struct mesh_material_list {
@@ -78,7 +78,7 @@ struct mesh_material_list {
   int n_materials;
   int n_face_indices;
   int * face_indices;
-  struct data_object * objects[];
+  const data_object * objects[];
 };
 
 struct mesh_normals {
@@ -110,12 +110,12 @@ struct animation_options {
 
 struct animation {
   enum tag tag;
-  struct data_object * objects[];
+  const data_object * objects[];
 };
 
 struct animation_set {
   enum tag tag;
-  struct data_object * objects[];
+  const data_object * objects[];
 };
 
 struct data_object {
