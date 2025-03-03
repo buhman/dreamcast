@@ -1031,6 +1031,7 @@ void main()
   serial::init(0);
 
   interrupt_init();
+  system.IML6NRM = istnrm::end_of_render_tsp;
   //asm volatile ("trapa #0");
 
   transfer_textures();
@@ -1059,8 +1060,6 @@ void main()
   holly.SOFTRESET = 0;
 
   core_init();
-
-  system.IML6NRM = istnrm::end_of_render_tsp;
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
                        | fpu_shad_scale::scale_factor_for_shadows(128);

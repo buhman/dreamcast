@@ -1,7 +1,7 @@
 #include "transform.hpp"
 
 #include "holly/isp_tsp.hpp"
-#include "holly/texture_memory_alloc.hpp"
+#include "holly/texture_memory_alloc3.hpp"
 #include "holly/ta_global_parameter.hpp"
 #include "holly/ta_vertex_parameter.hpp"
 
@@ -82,7 +82,7 @@ void transform_glyph(ta_parameter_writer& parameter,
 		     const float origin_y)
 {
   const uint32_t parameter_control_word = para_control::para_type::sprite
-                                        | para_control::list_type::opaque
+                                        | para_control::list_type::translucent
 					| obj_control::col_type::packed_color
 					| obj_control::texture
 					| obj_control::_16bit_uv;
@@ -91,16 +91,16 @@ void transform_glyph(ta_parameter_writer& parameter,
 					  | isp_tsp_instruction_word::culling_mode::no_culling;
 
 
-  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
-				      | tsp_instruction_word::dst_alpha_instr::zero
+  const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
+				      | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
 				      | tsp_instruction_word::fog_control::no_fog
 				      | tsp_instruction_word::texture_u_size::from_int(texture_width)
 				      | tsp_instruction_word::texture_v_size::from_int(texture_height);
 
-  const uint32_t texture_address = texture_memory_alloc::texture.start;
-  const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+  const uint32_t texture_address = texture_memory_alloc.texture.start;
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_8bpp_palette
 				      | texture_control_word::scan_order::twiddled
-                                      | texture_control_word::palette_selector4(0)
+                                      | texture_control_word::palette_selector8(0)
 				      | texture_control_word::texture_address(texture_address / 8);
 
   parameter.append<ta_global_parameter::sprite>() =
@@ -121,6 +121,8 @@ void transform_glyph(ta_parameter_writer& parameter,
 
     x *= glyph.bitmap.width;
     y *= glyph.bitmap.height;
+    //x *= texture_width;
+    //y *= texture_height;
     x += origin_x + float_26_6(glyph.metrics.horiBearingX);
     y += origin_y - float_26_6(glyph.metrics.horiBearingY);
 

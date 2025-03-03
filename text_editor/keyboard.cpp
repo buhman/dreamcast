@@ -11,8 +11,8 @@
 
 void do_device_request()
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  static uint8_t send_buf[1024] __attribute__((aligned(32)));
+  static uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
   auto writer = maple::host_command_writer(send_buf, recv_buf);
 
@@ -24,8 +24,9 @@ void do_device_request()
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
-  for (uint8_t port = 0; port < 1; port++) {
+  for (uint8_t port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != response_type::command_code) {
@@ -51,27 +52,36 @@ void do_device_request()
 
 void keyboard_do_get_condition(ft6::data_transfer::data_format& data)
 {
-  uint32_t send_buf[1024] __attribute__((aligned(32)));
-  uint32_t recv_buf[1024] __attribute__((aligned(32)));
+  static uint8_t send_buf[1024] __attribute__((aligned(32)));
+  static uint8_t recv_buf[1024] __attribute__((aligned(32)));
+
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  {
+    using command_type = maple::device_request;
+    using response_type = maple::device_status;
+
+    writer.append_command_all_ports<command_type, response_type>(false);
+  }
 
   using command_type = maple::get_condition;
   using response_type = maple::data_transfer<ft6::data_transfer::data_format>;
 
-  auto writer = maple::host_command_writer(send_buf, recv_buf);
-
   auto [host_command, host_response]
-    = writer.append_command_all_ports<command_type, response_type>();
+    = writer.append_command_all_ports<command_type, response_type>(true);
 
   host_command->bus_data.data_fields.function_type = std::byteswap(function_type::keyboard);
 
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
+  maple::dma_wait_complete();
 
   for (uint8_t port = 0; port < 1; port++) {
     auto& bus_data = host_response[port].bus_data;
     auto& data_fields = bus_data.data_fields;
     if (bus_data.command_code != response_type::command_code) {
-      do_device_request();
+      serial::integer<uint32_t>(bus_data.command_code);
+      serial::integer<uint32_t>(data_fields.function_type);
       continue;
     }
     if ((std::byteswap(data_fields.function_type) & function_type::keyboard) == 0) {

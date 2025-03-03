@@ -66,6 +66,7 @@ cursor_advance render_primary_buffer(ta_parameter_writer& parameter,
     char_type c = gb.buf[i];
     uint32_t ix = get_font_ix(font, c);
     auto& glyph = glyphs[ix];
+
     if (x + int_26_6(glyph.metrics.horiAdvance) <= window.box.x1) {
       transform_glyph(parameter,
 		      font->texture_width,
@@ -107,25 +108,15 @@ void render_cursor(ta_parameter_writer& parameter,
 		   );
 }
 
-void render(ta_parameter_writer& parameter,
+void render(ta_parameter_writer& writer,
 	    const font * font,
 	    const glyph * glyphs,
 	    const gap_buffer& gb,
 	    const viewport_window& window)
 {
-  cursor_advance cursor = render_primary_buffer(parameter, font, glyphs, gb, window);
+  cursor_advance cursor = render_primary_buffer(writer, font, glyphs, gb, window);
 
-  parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  render_cursor(writer, cursor, window);
 
-  ta_polygon_converter_transfer(parameter.buf, parameter.offset);
-  ta_wait_opaque_list();
-
-  parameter.offset = 0;
-
-  render_cursor(parameter, cursor, window);
-
-  parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-
-  ta_polygon_converter_transfer(parameter.buf, parameter.offset);
-  ta_wait_translucent_list();
+  writer.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 }
