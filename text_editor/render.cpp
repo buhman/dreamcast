@@ -30,7 +30,7 @@ constexpr inline int32_t int_26_6(int32_t n)
   return v;
 }
 
-cursor_advance render_primary_buffer(ta_parameter_writer& parameter,
+cursor_advance render_primary_buffer(ta_parameter_writer& writer,
 				     const font * font,
 				     const glyph * glyphs,
 				     const gap_buffer& gb,
@@ -41,6 +41,9 @@ cursor_advance render_primary_buffer(ta_parameter_writer& parameter,
   cursor_advance cursor = { 0 };
   int32_t h_advance = 0;
   int32_t v_advance = 0;
+
+  const float r_texture_width = 1.0f / font->texture_width;
+  const float r_texture_height = 1.0f / font->texture_height;
 
   int32_t init_i = first_line >= 0 ? gb.line.offsets[first_line] + 1 : 0;
   for (int32_t i = init_i; i <= gb.size; i++) {
@@ -68,9 +71,9 @@ cursor_advance render_primary_buffer(ta_parameter_writer& parameter,
     auto& glyph = glyphs[ix];
 
     if (x + int_26_6(glyph.metrics.horiAdvance) <= window.box.x1) {
-      transform_glyph(parameter,
-		      font->texture_width,
-		      font->texture_height,
+      transform_glyph(writer,
+                      r_texture_width,
+                      r_texture_height,
 		      glyph,
 		      x,
 		      y
@@ -100,7 +103,7 @@ void render_cursor(ta_parameter_writer& parameter,
   float width = int_26_6(cursor.width);
   float height = int_26_6(cursor.height);
 
-  transform_sprite(parameter,
+  transform_cursor(parameter,
 		   x, // x
 		   y, // y
 		   width,
@@ -114,6 +117,10 @@ void render(ta_parameter_writer& writer,
 	    const gap_buffer& gb,
 	    const viewport_window& window)
 {
+  glyph_begin(writer,
+              font->texture_width,
+              font->texture_height);
+
   cursor_advance cursor = render_primary_buffer(writer, font, glyphs, gb, window);
 
   render_cursor(writer, cursor, window);
