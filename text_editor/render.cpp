@@ -31,12 +31,12 @@ constexpr inline int32_t int_26_6(int32_t n)
 }
 
 cursor_advance render_primary_buffer(ta_parameter_writer& writer,
-				     const font * font,
-				     const glyph * glyphs,
-				     const gap_buffer& gb,
-				     const viewport_window& window)
+                                     const font * font,
+                                     const glyph * glyphs,
+                                     const gap_buffer& gb,
+                                     const viewport_window& window)
 {
-  int32_t first_line = min(-1, max(window.first_line, gb.line.length - 1));
+  int32_t first_line = min(window.first_line, gb.line.length - 1);
 
   cursor_advance cursor = { 0 };
   int32_t h_advance = 0;
@@ -44,6 +44,8 @@ cursor_advance render_primary_buffer(ta_parameter_writer& writer,
 
   const float r_texture_width = 1.0f / font->texture_width;
   const float r_texture_height = 1.0f / font->texture_height;
+
+  int row = first_line;
 
   int32_t init_i = first_line >= 0 ? gb.line.offsets[first_line] + 1 : 0;
   for (int32_t i = init_i; i <= gb.size; i++) {
@@ -83,6 +85,7 @@ cursor_advance render_primary_buffer(ta_parameter_writer& writer,
     if (c == '\n') {
       h_advance = 0;
       v_advance += font->face_metrics.height;
+      row += 1;
       if (int_26_6(v_advance + font->face_metrics.height) > window.box.y1) {
 	break;
       }
@@ -112,10 +115,10 @@ void render_cursor(ta_parameter_writer& parameter,
 }
 
 void render(ta_parameter_writer& writer,
-	    const font * font,
-	    const glyph * glyphs,
-	    const gap_buffer& gb,
-	    const viewport_window& window)
+            const font * font,
+            const glyph * glyphs,
+            const gap_buffer& gb,
+            const viewport_window& window)
 {
   glyph_begin(writer,
               font->texture_width,

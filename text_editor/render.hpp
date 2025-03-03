@@ -16,13 +16,13 @@ struct cursor_advance {
 };
 
 cursor_advance render_primary_buffer(ta_parameter_writer& parameter,
-				     const font * font,
-				     const glyph * glyphs,
-				     const gap_buffer& gb,
-				     const viewport_window& window);
+                                     const font * font,
+                                     const glyph * glyphs,
+                                     const gap_buffer& gb,
+                                     const viewport_window& window);
 
 void render(ta_parameter_writer& parameter,
-	    const font * font,
-	    const glyph * glyphs,
-	    const gap_buffer& gb,
-	    const viewport_window& window);
+            const font * font,
+            const glyph * glyphs,
+            const gap_buffer& gb,
+            const viewport_window& window);

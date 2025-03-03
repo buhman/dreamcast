@@ -116,10 +116,11 @@ void glyph_begin(ta_parameter_writer& writer,
 
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::src_alpha
-				      | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                                      | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
 				      | tsp_instruction_word::fog_control::no_fog
 				      | tsp_instruction_word::texture_u_size::from_int(texture_width)
-				      | tsp_instruction_word::texture_v_size::from_int(texture_height);
+				      | tsp_instruction_word::texture_v_size::from_int(texture_height)
+                                      | tsp_instruction_word::texture_shading_instruction::modulate;
 
   const uint32_t texture_address = texture_memory_alloc.texture.start;
   const uint32_t texture_control_word = texture_control_word::pixel_format::_8bpp_palette
@@ -137,35 +138,36 @@ void glyph_begin(ta_parameter_writer& writer,
                                         );
 }
 
-static inline void transfer_quad_type_1(ta_parameter_writer& writer,
-                                        struct vertex va, struct vertex vb, struct vertex vc, struct vertex vd, float z)
+static inline void transfer_quad_type_3(ta_parameter_writer& writer,
+                                        struct vertex va, struct vertex vb, struct vertex vc, struct vertex vd, float z,
+                                        uint32_t base_color)
 {
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         va.x, va.y, z,
                                         va.u, va.v,
-                                        0,  // base_color
+                                        base_color,
                                         0); // offset_color
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         vb.x, vb.y, z,
                                         vb.u, vb.v,
-                                        0,  // base_color
+                                        base_color,
                                         0); // offset_color
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
                                         vd.x, vd.y, z,
                                         vd.u, vd.v,
-                                        0,  // base_color
+                                        base_color,
                                         0); // offset_color
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(true),
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
                                         vc.x, vc.y, z,
                                         vc.u, vc.v,
-                                        0,  // base_color
+                                        base_color,
                                         0); // offset_color
 }
 
@@ -202,5 +204,6 @@ void transform_glyph(ta_parameter_writer& writer,
   }
 
   const float z = 0.1f;
-  transfer_quad_type_1(writer, out[0], out[1], out[2], out[3], z);
+  uint32_t base_color = 0xff0080ff;
+  transfer_quad_type_3(writer, out[0], out[1], out[2], out[3], z, base_color);
 }

@@ -14,7 +14,7 @@ struct viewport_window {
 
 inline void viewport_init_fullscreen(viewport_window& window)
 {
-  window.first_line = -1;
+  window.first_line = 0;
   window.box.x0 = 10;
   window.box.y0 = 20;
   window.box.x1 = 640 - 10;
