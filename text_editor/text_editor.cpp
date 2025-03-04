@@ -256,7 +256,7 @@ void main()
   struct editor_state state = { 0 };
   gap_init_from_buf(state.gb, buf, buf_size, 0);
   line_init_from_buf(state.gb, offsets, offsets_size);
-  viewport_init_fullscreen(state.window);
+  viewport_init_fullscreen(state.window, font);
 
   ft6::data_transfer::data_format keyboards[2] = { 0 };
 
@@ -269,7 +269,7 @@ void main()
   while (true) {
     keyboard_do_get_condition(keyboards[frame_ix & 1]);
     keyboard_debug(keyboards, frame_ix);
-    keyboard_update(keyboards, frame_ix, state.gb);
+    keyboard_update(keyboards, frame_ix, state.gb, state.window);
 
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[0].start,
 			       texture_memory_alloc.isp_tsp_parameters[0].end,

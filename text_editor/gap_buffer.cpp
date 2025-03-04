@@ -127,7 +127,7 @@ void gap_cursor_pos_abs(struct gap_buffer& gb, int32_t pos)
   gap_cursor_pos(gb, pos - gb.gap_start);
 }
 
-int32_t gap_column_number(struct gap_buffer& gb)
+int32_t gap_column_number(const struct gap_buffer& gb)
 {
   int32_t line_start = 0;
   if (gb.line.gap > 0)

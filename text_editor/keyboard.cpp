@@ -119,14 +119,36 @@ void keyboard_debug(ft6::data_transfer::data_format * keyboards, uint32_t frame_
   }
 }
 
-static inline bool is_shifted(const uint8_t modifier_key)
+constexpr inline bool is_modified(uint32_t modifier, uint32_t bit)
 {
-  return
-    (ft6::data_transfer::modifier_key::right_shift() & modifier_key) ||
-    (ft6::data_transfer::modifier_key::left_shift() & modifier_key);
+  uint32_t mask = ~(bit);
+  return ((modifier & bit) != 0) && ((modifier & mask) == 0);
 }
 
-void keyboard_update(ft6::data_transfer::data_format * keyboards, uint32_t frame_ix, gap_buffer& gb)
+constexpr inline bool is_unmodified(uint32_t modifier)
+{
+  return modifier == 0;
+}
+
+constexpr inline bool is_shifted(uint32_t modifier)
+{
+  uint32_t bit = ft6::data_transfer::modifier_key::right_shift() | ft6::data_transfer::modifier_key::left_shift();
+  return is_modified(modifier, bit);
+}
+
+constexpr inline bool is_left_alted(uint32_t modifier)
+{
+  uint32_t bit = (ft6::data_transfer::modifier_key::left_alt());
+  return is_modified(modifier, bit);
+}
+
+constexpr inline bool is_ctrled(uint32_t modifier)
+{
+  uint32_t bit = (ft6::data_transfer::modifier_key::left_control() | ft6::data_transfer::modifier_key::right_control());
+  return is_modified(modifier, bit);
+}
+
+void keyboard_update(ft6::data_transfer::data_format * keyboards, uint32_t frame_ix, gap_buffer& gb, viewport_window& vw)
 {
   uint32_t this_frame = (frame_ix + 0) & 1;
   uint32_t next_frame = (frame_ix + 1) & 1;
@@ -144,26 +166,56 @@ void keyboard_update(ft6::data_transfer::data_format * keyboards, uint32_t frame
     }
     if (make) {
       // make
+      int modifier_key = keyboards[this_frame].modifier_key;
       uint8_t scan_code = keyboards[this_frame].scan_code_array[i];
-      if (scan_code <= ft6::scan_code::last_printable) {
-	bool shifted = is_shifted(keyboards[this_frame].modifier_key);
-	char_type code_point = ft6::scan_code::code_point[scan_code][shifted];
-	if (code_point != 0) {
-	  gap_append(gb, code_point);
-	  continue;
-	}
-      }
-      switch (scan_code) {
-	case ft6::scan_code::_return:   gap_append(gb, '\n'); break;
-	case ft6::scan_code::backspace: gap_pop(gb);          break;
-	case ft6::scan_code::spacebar:  gap_append(gb, ' ');  break;
 
-	case ft6::scan_code::left_arrow:  gap_cursor_pos(gb, -1);      break;
-	case ft6::scan_code::right_arrow: gap_cursor_pos(gb, 1);       break;
-	case ft6::scan_code::up_arrow:    gap_cursor_pos_line(gb, -1); break;
-	case ft6::scan_code::down_arrow:  gap_cursor_pos_line(gb, 1);  break;
-	default:
-	  break;
+      if (is_shifted(modifier_key) || is_unmodified(modifier_key)) {
+        if (scan_code >= ft6::scan_code::first_printable && scan_code <= ft6::scan_code::last_printable) {
+          bool shifted = is_shifted(modifier_key);
+          char_type code_point = ft6::scan_code::code_point[scan_code][shifted];
+          if (code_point != 0) {
+            gap_append(gb, code_point);
+            continue;
+          }
+        }
+      }
+
+      if (is_unmodified(modifier_key)) {
+        switch (scan_code) {
+        case ft6::scan_code::_return:   gap_append(gb, '\n'); break;
+        case ft6::scan_code::backspace: gap_pop(gb);          break;
+        case ft6::scan_code::spacebar:  gap_append(gb, ' ');  break;
+
+        case ft6::scan_code::left_arrow:  gap_cursor_pos(gb, -1);      break;
+        case ft6::scan_code::right_arrow: gap_cursor_pos(gb, 1);       break;
+        case ft6::scan_code::up_arrow:    gap_cursor_pos_line(gb, -1); break;
+        case ft6::scan_code::down_arrow:  gap_cursor_pos_line(gb, 1);  break;
+
+        default: break;
+        }
+      }
+
+      if (is_left_alted(modifier_key)) {
+        switch (scan_code) {
+        case ft6::scan_code::v_V:
+          vw.first_line -= 1;
+          if (vw.first_line < 0)
+            vw.first_line = 0;
+          break;
+        default: break;
+        }
+      }
+
+      if (is_ctrled(modifier_key)) {
+        switch (scan_code) {
+        case ft6::scan_code::v_V:
+          vw.first_line += 1;
+          if ((vw.first_line - 1) >= gb.line.length) {
+            vw.first_line = gb.line.length;
+          }
+          break;
+        default: break;
+        }
       }
     }
   }

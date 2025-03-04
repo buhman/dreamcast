@@ -4,6 +4,7 @@ TEXT_EDITOR_OBJ = \
 	text_editor/render.o \
 	text_editor/keyboard.o \
 	text_editor/transform.o \
+	text_editor/unparse.o \
 	holly/video_output.o \
 	holly/core.o \
 	holly/region_array.o \

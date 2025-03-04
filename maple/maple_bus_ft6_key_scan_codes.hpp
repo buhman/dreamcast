@@ -91,6 +91,7 @@ namespace ft6 {
 }
 namespace ft6 {
   namespace scan_code {
+    constexpr uint32_t first_printable = 0x4;
     constexpr uint32_t last_printable = 0x38;
 
     const uint8_t code_point[last_printable + 1][2] = {
@@ -154,4 +155,3 @@ namespace ft6 {
     };
   }
 }
-

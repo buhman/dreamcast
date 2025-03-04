@@ -204,6 +204,6 @@ void transform_glyph(ta_parameter_writer& writer,
   }
 
   const float z = 0.1f;
-  uint32_t base_color = 0xff0080ff;
+  uint32_t base_color = 0xffffff;
   transfer_quad_type_3(writer, out[0], out[1], out[2], out[3], z, base_color);
 }

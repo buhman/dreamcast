@@ -2,6 +2,8 @@
 
 #include <cstdint>
 
+#include "font/font.h"
+
 struct viewport_window {
   int32_t first_line;
   struct {
@@ -12,11 +14,11 @@ struct viewport_window {
   } box;
 };
 
-inline void viewport_init_fullscreen(viewport_window& window)
+static inline void viewport_init_fullscreen(viewport_window& window, const font * font)
 {
   window.first_line = 0;
   window.box.x0 = 10;
   window.box.y0 = 20;
   window.box.x1 = 640 - 10;
-  window.box.y1 = 480 - 20;
+  window.box.y1 = 480 - (font->face_metrics.height >> 6) * 2;
 }
