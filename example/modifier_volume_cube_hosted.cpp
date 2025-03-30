@@ -236,33 +236,36 @@ static inline void render_quad(ta_parameter_writer& writer,
 }
 
 static inline void render_quad_type2(ta_parameter_writer& writer,
-                                     float intensity,
                                      vec3 ap,
                                      vec3 bp,
                                      vec3 cp,
-                                     vec3 dp)
+                                     vec3 dp,
+                                     float ai,
+                                     float bi,
+                                     float ci,
+                                     float di)
 {
 #ifdef LINE_DRAWING
 #else
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
-                                        intensity);
+                                        ai);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         bp.x, bp.y, bp.z,
-                                        intensity);
+                                        bi);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         dp.x, dp.y, dp.z,
-                                        intensity);
+                                        di);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
-                                        intensity);
+                                        ci);
 #endif
 }
 
