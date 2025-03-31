@@ -69,7 +69,7 @@ void vbr100()
 
 void vbr400()
 {
-  serial::string("vbr400");
+  serial::string("vbr400\n");
   serial::string("expevt ");
   serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
   serial::string("intevt ");
@@ -111,7 +111,7 @@ void vbr600()
     }
   }
 
-  serial::string("vbr600");
+  serial::string("vbr600\n");
   serial::string("expevt ");
   serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
   serial::string("intevt ");
@@ -157,10 +157,6 @@ void interrupt_init()
   sh7091.CCN.EXPEVT = 0;
 
   uint32_t vbr = reinterpret_cast<uint32_t>(&__vbr_link_start) - 0x100;
-  serial::string("vbr ");
-  serial::integer<uint32_t>(vbr);
-  serial::string("vbr100 ");
-  serial::integer<uint32_t>(reinterpret_cast<uint32_t>(&vbr100));
 
   asm volatile ("ldc %0,vbr"
 		:
