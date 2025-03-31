@@ -907,3 +907,17 @@ CASTLE_OBJ = \
 
 example/castle.elf: LDSCRIPT = $(LIB)/main.lds
 example/castle.elf: $(START_OBJ) $(CASTLE_OBJ)
+
+GRADIENT_OBJ = \
+	example/gradient.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	texture/gradient/gradient.data.o \
+	$(LIBGCC)
+
+example/gradient.elf: LDSCRIPT = $(LIB)/main.lds
+example/gradient.elf: $(START_OBJ) $(GRADIENT_OBJ)

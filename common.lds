@@ -34,13 +34,6 @@ SECTIONS
     KEEP(*(.ctors.*))
   } > p1ram
 
-  .bss ALIGN(4) (NOLOAD) :
-  {
-    *(.bss)
-    *(.bss.*)
-    *(COMMON)
-  } > p1ram
-
   .text.vbr ALIGN(4) : SUBALIGN(4)
   {
     __vbr100 = .;
@@ -49,6 +42,13 @@ SECTIONS
     KEEP(*(.vbr.400))
     . = __vbr100 + 0x500;
     KEEP(*(.vbr.600))
+  } > p1ram
+
+  .bss ALIGN(4) (NOLOAD) :
+  {
+    *(.bss)
+    *(.bss.*)
+    *(COMMON)
   } > p1ram
 
   INCLUDE "debug.lds"
