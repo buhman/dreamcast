@@ -219,6 +219,7 @@ void do_get_condition()
       return;
     }
 
+    data[port].digital_button = data_fields.data.digital_button;
     for (int i = 0; i < 6; i++) {
       data[port].analog_coordinate_axis[i]
         = data_fields.data.analog_coordinate_axis[i];
@@ -638,26 +639,27 @@ void render_inclusion_cube(ta_parameter_writer& writer)
                  c);
 }
 
-void render_cone(ta_parameter_writer& writer)
+void render_cone(ta_parameter_writer& writer, const mat4x4& cone_model)
 {
   const struct object * object = cone_object[0];
   const vertex_position * position = cone_position;
 
-  float scale = 1.f;
-  const mat4x4 model = {
-    scale, 0, 0, 0,
-    0, scale, 0, 0,
+  float _scale = 1.f;
+  const mat4x4 scale = {
+    _scale, 0, 0, 0,
+    0, _scale, 0, 0,
     0, 0, 0.5, 0.1,
     0, 0, 0, 1,
   };
+  const mat4x4 trans = cone_model * scale;
 
   global_modifier_volume(writer);
 
   for (int i = 0; i < object->triangle_count - 1; i++) {
     const union triangle * tri = &object->triangle[i];
-    vec3 a = model * position[tri->v[0].position];
-    vec3 b = model * position[tri->v[1].position];
-    vec3 c = model * position[tri->v[2].position];
+    vec3 a = trans * position[tri->v[0].position];
+    vec3 b = trans * position[tri->v[1].position];
+    vec3 c = trans * position[tri->v[2].position];
     render_tri_mod(writer,
                    screen_transform(a),
                    screen_transform(b),
@@ -667,16 +669,16 @@ void render_cone(ta_parameter_writer& writer)
   global_modifier_volume_last_triangle(writer, isp_tsp_instruction_word::volume_instruction::outside_last_polygon);
 
   const union triangle * tri = &object->triangle[object->triangle_count - 1];
-  vec3 a = model * position[tri->v[0].position];
-  vec3 b = model * position[tri->v[1].position];
-  vec3 c = model * position[tri->v[2].position];
+  vec3 a = trans * position[tri->v[0].position];
+  vec3 b = trans * position[tri->v[1].position];
+  vec3 c = trans * position[tri->v[2].position];
   render_tri_mod(writer,
                  screen_transform(a),
                  screen_transform(b),
                  screen_transform(c));
 }
 
-void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen)
+void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen, const mat4x4& cone_model)
 {
   // opaque
   {
@@ -699,7 +701,7 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen)
 
   {
     render_inclusion_cube(writer);
-    render_cone(writer);
+    render_cone(writer, cone_model);
   }
   // end of modifier volume list
   writer.append<ta_global_parameter::end_of_list>() =
@@ -771,6 +773,54 @@ void transfer_palette()
     holly.PALETTE_RAM[i] = src[i];
   }
   */
+}
+
+constexpr inline mat4x4 update_cone()
+{
+  static float rx = 0;
+  static float ry = 0;
+
+  float tx = 0;
+  float ty = 0;
+  if (ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0) {
+    tx =  0.5;
+  } else if (ft0::data_transfer::digital_button::da(data[0].digital_button) == 0) {
+    tx = -0.5;
+  }
+
+  if (ft0::data_transfer::digital_button::la(data[0].digital_button) == 0) {
+    ty = -0.5;
+  } else if (ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0) {
+    ty =  0.5;
+  }
+
+  /*
+    rx = 0, tx = 1, dx = 1;
+    rx = 1, tx = 1, dx = 0;
+    rx = -1, tx = 1, dx = 2;
+   */
+
+  float dx = tx - rx;
+  float dy = ty - ry;
+
+  rx += dx * 0.05;
+  ry += dy * 0.05;
+
+  mat4x4 mrx = {
+    1, 0, 0, 0,
+    0, cos(rx), -sin(rx), 0,
+    0, sin(rx),  cos(rx), 0,
+    0, 0, 0, 1,
+  };
+
+  mat4x4 mry = {
+     cos(ry), 0, sin(ry), 0,
+    0, 1, 0, 0,
+    -sin(ry), 0, cos(ry), 0,
+    0, 0, 0, 1,
+  };
+
+  return mry * mrx;
 }
 
 constexpr inline mat4x4 update_analog(mat4x4& screen)
@@ -880,6 +930,7 @@ void main()
     maple::dma_wait_complete();
     do_get_condition();
     screen = update_analog(screen);
+    mat4x4 cone_model = update_cone();
 
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
 			       texture_memory_alloc.isp_tsp_parameters[ta].end,
@@ -890,7 +941,7 @@ void main()
 			       tile_width,
 			       tile_height);
     writer.offset = 0;
-    transfer_scene(writer, screen);
+    transfer_scene(writer, screen, cone_model);
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_opaque_modifier_volume_list();
