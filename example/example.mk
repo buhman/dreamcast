@@ -944,6 +944,7 @@ FEMALE_OBJ = \
 	holly/ta_fifo_polygon_converter.o \
 	holly/video_output.o \
 	sh7091/serial.o \
+	maple/maple.o \
 	$(LIBGCC)
 
 example/female.elf: LDSCRIPT = $(LIB)/main.lds

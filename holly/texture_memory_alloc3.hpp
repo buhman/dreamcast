@@ -26,9 +26,9 @@ struct texture_memory_alloc {
 constexpr texture_memory_alloc texture_memory_alloc = {
   //                      bus a                   bus b
   // 32-bit addresses     start      end          start      end
-  .isp_tsp_parameters = {{0x00'0000, 0x07'ffe0}, {0x40'0000, 0x47'ffe0}}, // 5461 textured triangles
+  .isp_tsp_parameters = {{0x00'0000, 0x07'ffc0}, {0x40'0000, 0x47'ffc0}}, // 5461 textured triangles
   .background         = {{0x07'ffe0, 0x08'0000}, {0x47'ffe0, 0x48'0000}},
-  .object_list        = {{0x08'0000, 0x0f'ffe0}, {0x48'0000, 0x4f'ffe0}}, // ~122880 object list pointers
+  .object_list        = {{0x08'0020, 0x0f'ffe0}, {0x48'0020, 0x4f'ffe0}}, // ~122880 object list pointers
   .region_array       = {{0x10'0000, 0x11'0000}, {0x50'0000, 0x51'0000}}, // ~9 render passes
   .framebuffer        = {{0x11'0000, 0x1b'8c00}, {0x51'0000, 0x5b'8c00}}, // 720x480*2
   //.framebuffer        = {{0x11'0000, 0x23'c000}, {0x51'0000, 0x63'c000}}, // 640x480*4

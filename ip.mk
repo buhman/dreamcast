@@ -26,3 +26,10 @@ SERIAL_LOAD_OBJ = \
 
 serial_load_ip.elf: $(IP_OBJ) $(START_OBJ) $(SERIAL_LOAD_OBJ)
 	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
+
+GDROM_JVM_BOOT_OBJ = \
+	$(LIB)/example/gdrom_jvm_boot.o \
+	$(LIB)/sh7091/serial.o
+
+gdrom_jvm_boot.elf: $(IP_OBJ) $(START_OBJ) $(GDROM_JVM_BOOT_OBJ)
+	$(LD) --orphan-handling=error --print-memory-usage -T $(LIB)/ip.lds $^ -o $@
