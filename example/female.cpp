@@ -11,7 +11,7 @@
 #include "holly/ta_global_parameter.hpp"
 #include "holly/ta_parameter.hpp"
 #include "holly/ta_vertex_parameter.hpp"
-#include "holly/texture_memory_alloc4.hpp"
+#include "holly/texture_memory_alloc3.hpp"
 #include "holly/video_output.hpp"
 
 #include "sh7091/sh7091.hpp"
@@ -35,8 +35,8 @@ using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
 #include "model/model.h"
-#include "model/moai/material.h"
-#include "model/moai/model.h"
+#include "model/female/material.h"
+#include "model/female/model.h"
 
 void vbr100()
 {
@@ -255,6 +255,30 @@ static inline void render_quad(ta_parameter_writer& writer,
                                         ci);
 }
 
+static inline void render_tri(ta_parameter_writer& writer,
+                               vec3 ap,
+                               vec3 bp,
+                               vec3 cp,
+                               float ai,
+                               float bi,
+                               float ci)
+{
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+                                        ap.x, ap.y, ap.z,
+                                        ai);
+
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+                                        bp.x, bp.y, bp.z,
+                                        bi);
+
+  writer.append<ta_vertex_parameter::polygon_type_2>() =
+    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
+                                        cp.x, cp.y, cp.z,
+                                        ci);
+}
+
 constexpr inline mat4x4 screen_rotation(float theta)
 {
   //float zt = -0.7853981633974483 + (0.2);
@@ -286,8 +310,8 @@ constexpr inline mat4x4 screen_rotation(float theta)
 
   mat4x4 t = {
     1, 0, 0, 0,
-    0, 1, 0, 5.5,
-    0, 0, 1, 8.5,
+    0, 1, 0, 1,
+    0, 0, 1, 1.2,
     0, 0, 0, 1,
   };
 
@@ -317,34 +341,62 @@ float light_intensity(vec3 light_vec, mat4x4& trans, vec3 n0)
   return intensity;
 }
 
-void render_moai(ta_parameter_writer& writer, const mat4x4& model_trans, const mat4x4& screen)
+static inline void transform_quad(ta_parameter_writer& writer, mat4x4& trans, vec3& light_vec, const union quadrilateral * quad, const vertex_position * position, const vertex_normal * normal)
+{
+  vec3 a = trans * position[quad->v[0].position];
+  vec3 b = trans * position[quad->v[1].position];
+  vec3 c = trans * position[quad->v[2].position];
+  vec3 d = trans * position[quad->v[3].position];
+
+  float ai = light_intensity(light_vec, trans, normal[quad->v[0].normal]);
+  float bi = light_intensity(light_vec, trans, normal[quad->v[1].normal]);
+  float ci = light_intensity(light_vec, trans, normal[quad->v[2].normal]);
+  float di = light_intensity(light_vec, trans, normal[quad->v[3].normal]);
+
+  render_quad(writer,
+              screen_transform(a),
+              screen_transform(b),
+              screen_transform(c),
+              screen_transform(d),
+              ai,
+              bi,
+              ci,
+              di);
+}
+
+static inline void transform_tri(ta_parameter_writer& writer, mat4x4& trans, vec3& light_vec, const union triangle * tri, const vertex_position * position, const vertex_normal * normal)
+{
+  vec3 a = trans * position[tri->v[0].position];
+  vec3 b = trans * position[tri->v[1].position];
+  vec3 c = trans * position[tri->v[2].position];
+
+  float ai = light_intensity(light_vec, trans, normal[tri->v[0].normal]);
+  float bi = light_intensity(light_vec, trans, normal[tri->v[1].normal]);
+  float ci = light_intensity(light_vec, trans, normal[tri->v[2].normal]);
+
+  render_tri(writer,
+              screen_transform(a),
+              screen_transform(b),
+              screen_transform(c),
+              ai,
+              bi,
+              ci);
+}
+
+void render_female(ta_parameter_writer& writer, const mat4x4& model_trans, const mat4x4& screen)
 {
   vec3 light_vec = {20, 1, -20};
 
   mat4x4 trans = screen * model_trans;
 
-  for (int i = 0; i < moai_ranu_raku_grey.quadrilateral_count; i++) {
-    //const union quadrilateral * quad = &moai_ranu_raku_grey_quadrilateral[i];
-    const union quadrilateral * quad = &moai_ranu_raku_grey_1_quadrilateral[i];
-    vec3 a = trans * moai_position[quad->v[0].position];
-    vec3 b = trans * moai_position[quad->v[1].position];
-    vec3 c = trans * moai_position[quad->v[2].position];
-    vec3 d = trans * moai_position[quad->v[3].position];
+  for (int i = 0; i < female_Dreamcast.quadrilateral_count; i++) {
+    const union quadrilateral * quad = &female_Dreamcast_quadrilateral[i];
+    transform_quad(writer, trans, light_vec, quad, female_position, female_normal);
+  }
 
-    float ai = light_intensity(light_vec, trans, moai_normal[quad->v[0].normal]);
-    float bi = light_intensity(light_vec, trans, moai_normal[quad->v[1].normal]);
-    float ci = light_intensity(light_vec, trans, moai_normal[quad->v[2].normal]);
-    float di = light_intensity(light_vec, trans, moai_normal[quad->v[3].normal]);
-
-    render_quad(writer,
-                screen_transform(a),
-                screen_transform(b),
-                screen_transform(c),
-                screen_transform(d),
-                ai,
-                bi,
-                ci,
-                di);
+  for (int i = 0; i < female_Dreamcast.triangle_count; i++) {
+    const union triangle * quad = &female_Dreamcast_triangle[i];
+    transform_tri(writer, trans, light_vec, quad, female_position, female_normal);
   }
 }
 
@@ -360,8 +412,8 @@ void transfer_scene(ta_parameter_writer& writer)
   {
     global_polygon_type_1(writer, texture_memory_alloc.texture.start,
                           para_control::list_type::opaque,
-                          isp_tsp_instruction_word::culling_mode::cull_if_negative);
-    float scale = 0.1f;
+                          isp_tsp_instruction_word::culling_mode::no_culling);
+    float scale = 1.f;
     float translate = 0.f;
     const mat4x4 model = {
       scale, 0, 0, 0,
@@ -369,7 +421,7 @@ void transfer_scene(ta_parameter_writer& writer)
       0, 0, -scale, translate,
       0, 0, 0, 1,
     };
-    render_moai(writer, model, screen);
+    render_female(writer, model, screen);
   }
 
   // end of opaque list
@@ -450,7 +502,7 @@ void main()
 {
   serial::init(0);
 
-  serial::integer<uint32_t>((sizeof (moai_position)) / (sizeof (moai_position[0])));
+  serial::integer<uint32_t>((sizeof (female_position)) / (sizeof (female_position[0])));
 
   interrupt_init();
 

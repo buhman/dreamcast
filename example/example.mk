@@ -935,3 +935,16 @@ MOAI_OBJ = \
 
 example/moai.elf: LDSCRIPT = $(LIB)/main.lds
 example/moai.elf: $(START_OBJ) $(MOAI_OBJ)
+
+FEMALE_OBJ = \
+	example/female.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/female.elf: LDSCRIPT = $(LIB)/main.lds
+example/female.elf: $(START_OBJ) $(FEMALE_OBJ)
