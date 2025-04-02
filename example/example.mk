@@ -949,3 +949,17 @@ FEMALE_OBJ = \
 
 example/female.elf: LDSCRIPT = $(LIB)/main.lds
 example/female.elf: $(START_OBJ) $(FEMALE_OBJ)
+
+BEAR_OBJ = \
+	example/bear.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	model/bear/bear.data.o \
+	$(LIBGCC)
+
+example/bear.elf: LDSCRIPT = $(LIB)/main.lds
+example/bear.elf: $(START_OBJ) $(BEAR_OBJ)
