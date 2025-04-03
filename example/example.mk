@@ -936,8 +936,8 @@ MOAI_OBJ = \
 example/moai.elf: LDSCRIPT = $(LIB)/main.lds
 example/moai.elf: $(START_OBJ) $(MOAI_OBJ)
 
-FEMALE_OBJ = \
-	example/female.o \
+HAUNTED_MANSION_OBJ = \
+	example/haunted_mansion.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -947,8 +947,8 @@ FEMALE_OBJ = \
 	maple/maple.o \
 	$(LIBGCC)
 
-example/female.elf: LDSCRIPT = $(LIB)/main.lds
-example/female.elf: $(START_OBJ) $(FEMALE_OBJ)
+example/haunted_mansion.elf: LDSCRIPT = $(LIB)/main.lds
+example/haunted_mansion.elf: $(START_OBJ) $(HAUNTED_MANSION_OBJ)
 
 BEAR_OBJ = \
 	example/bear.o \

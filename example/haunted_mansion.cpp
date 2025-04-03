@@ -43,11 +43,11 @@ using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
 #include "model/model.h"
-#include "model/female/material.h"
-#include "model/female/model.h"
-#include "model/female/model_mansion.h"
-#include "model/female/model_cone.h"
-#include "model/female/model_cube.h"
+#include "model/haunted_mansion/material.h"
+#include "model/haunted_mansion/model_female.h"
+#include "model/haunted_mansion/model_mansion.h"
+#include "model/haunted_mansion/model_cone.h"
+#include "model/haunted_mansion/model_cube.h"
 
 void vbr100()
 {
