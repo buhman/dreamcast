@@ -963,3 +963,16 @@ BEAR_OBJ = \
 
 example/bear.elf: LDSCRIPT = $(LIB)/main.lds
 example/bear.elf: $(START_OBJ) $(BEAR_OBJ)
+
+FOG_OBJ = \
+	example/fog.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/fog.elf: LDSCRIPT = $(LIB)/main.lds
+example/fog.elf: $(START_OBJ) $(FOG_OBJ)
