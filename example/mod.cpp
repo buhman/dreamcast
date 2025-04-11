@@ -56,7 +56,24 @@ void main()
   }
 
   uint32_t * buf32 = (uint32_t *)&start[r.ix];
-  struct sample * sample = &mod.samples[0es);
+  struct sample * sample = &mod.samples[0];
+  uint32_t sample_bytes = sample->length * 2;
+  for (uint32_t i = 0; i < sample_bytes / 4; i++) {
+    wait();
+    while (aica_wave_memory[i] != buf32[i]) {
+      wait();
+      aica_wave_memory[i] = buf32[i];
+    }
+  }
+
+  // disable SH4 access / enable slot access
+  wait(); aica_sound.common.dmea0_mrwinh = aica::dmea0_mrwinh::MRWINH(0b1101);
+
+  wait(); aica_sound.channel[0].KYONB(1);
+  wait(); aica_sound.channel[0].LPCTL(1);
+  wait(); aica_sound.channel[0].PCMS(1); // 8-bit pcm
+  wait(); aica_sound.channel[0].LSA(0);
+  wait(); aica_sound.channel[0].LEA(sample_bytes);
   wait(); aica_sound.channel[0].D2R(0x0);
   wait(); aica_sound.channel[0].D1R(0x0);
   wait(); aica_sound.channel[0].RR(0x0);
