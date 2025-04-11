@@ -102,6 +102,12 @@ endef
 %.vq.o: %.vq
 	$(BUILD_BINARY_O)
 
+%.mod.h: %.mod
+	$(BUILD_BINARY_H)
+
+%.mod.o: %.mod
+	$(BUILD_BINARY_O)
+
 %.o: %.s
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 

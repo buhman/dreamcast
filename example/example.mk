@@ -976,3 +976,32 @@ FOG_OBJ = \
 
 example/fog.elf: LDSCRIPT = $(LIB)/main.lds
 example/fog.elf: $(START_OBJ) $(FOG_OBJ)
+
+BOIDS_OBJ = \
+	example/boids.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/boids.elf: LDSCRIPT = $(LIB)/main.lds
+example/boids.elf: $(START_OBJ) $(BOIDS_OBJ)
+
+
+MOD_OBJ = \
+	example/mod.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	mod/mod.o \
+	mod/getfunk/getfunk.mod.o \
+	$(LIBGCC)
+
+example/mod.elf: LDSCRIPT = $(LIB)/main.lds
+example/mod.elf: $(START_OBJ) $(MOD_OBJ)
