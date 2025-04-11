@@ -5,6 +5,18 @@
 #include "math/vec3.hpp"
 #include "math/vec2.hpp"
 
+#ifdef __dreamcast__
+using vertex_position = vec<3, float>;
+using vertex_normal = vec<3, float>;
+using vertex_texture = vec<2, float>;
+#endif
+#ifdef __saturn__
+#include "math/fp.hpp"
+using vertex_position = vec<3, fp16_16>;
+using vertex_normal = vec<3, fp16_16>;
+using vertex_texture = vec<2, fp16_16>;
+#endif
+
 struct index_ptn {
   uint16_t position;
   uint16_t texture;
@@ -29,10 +41,6 @@ union quadrilateral {
   };
   struct index_ptn v[4];
 };
-
-using vertex_position = vec<3, float>;
-using vertex_normal = vec<3, float>;
-using vertex_texture = vec<2, float>;
 
 struct object {
   const union triangle * triangle;
