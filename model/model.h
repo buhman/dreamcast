@@ -42,11 +42,21 @@ union quadrilateral {
   struct index_ptn v[4];
 };
 
+union line {
+  struct {
+    int a;
+    int b;
+  };
+  int v[2];
+};
+
 struct object {
   const union triangle * triangle;
   const union quadrilateral * quadrilateral;
+  const union line * line;
   const int triangle_count;
   const int quadrilateral_count;
+  const int line_count;
   const int material;
 };
 
