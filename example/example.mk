@@ -990,7 +990,6 @@ BOIDS_OBJ = \
 example/boids.elf: LDSCRIPT = $(LIB)/main.lds
 example/boids.elf: $(START_OBJ) $(BOIDS_OBJ)
 
-
 MOD_OBJ = \
 	example/mod.o \
 	holly/core.o \
@@ -1005,3 +1004,22 @@ MOD_OBJ = \
 
 example/mod.elf: LDSCRIPT = $(LIB)/main.lds
 example/mod.elf: $(START_OBJ) $(MOD_OBJ)
+
+Q3BSP_OBJ = \
+	example/q3bsp.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	pk/maps/20kdm2.bsp.o \
+	interrupt.o \
+	$(LIBGCC)
+
+example/q3bsp.elf: LDSCRIPT = $(LIB)/main.lds
+example/q3bsp.elf: $(START_OBJ) $(Q3BSP_OBJ)

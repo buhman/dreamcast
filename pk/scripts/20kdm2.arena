@@ -1,0 +1,7 @@
+{
+map		"20kdm2"
+bots		"Wrack"
+longname	"Return to Castle: Quake"
+fraglimit	20
+type		"ffa tourney"
+}

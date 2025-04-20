@@ -14,6 +14,7 @@ enum format_type {
   FORMAT_BASE16,
   FORMAT_STRING,
   FORMAT_CHAR,
+  FORMAT_FLOAT,
   FORMAT_PERCENT,
 };
 
@@ -62,6 +63,9 @@ static const char * parse_escape(const char * format, struct format * ft)
     return format + 1;
   case 'c':
     ft->type = FORMAT_CHAR;
+    return format + 1;
+  case 'f':
+    ft->type = FORMAT_FLOAT;
     return format + 1;
   case '%':
     ft->type = FORMAT_PERCENT;
@@ -165,6 +169,21 @@ void _printf(const char * format, ...)
           {
             const int c = va_arg(args, const int);
             print_char((char)c);
+          }
+          break;
+        case FORMAT_FLOAT:
+          {
+            double num = va_arg(args, double);
+            char s[20];
+            int32_t whole = num;
+            int offset = unparse_base10(s, whole, ft.pad_length, ft.fill_char);
+            print_string(s, offset);
+            print_char('.');
+            int32_t fraction = (int32_t)((num - (float)whole) * 1000.0);
+            if (fraction < 0)
+              fraction = -fraction;
+            offset = unparse_base10(s, fraction, 0, 0);
+            print_string(s, offset);
           }
           break;
         case FORMAT_PERCENT:

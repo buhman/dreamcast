@@ -108,6 +108,12 @@ endef
 %.mod.o: %.mod
 	$(BUILD_BINARY_O)
 
+%.bsp.h: %.bsp
+	$(BUILD_BINARY_H)
+
+%.bsp.o: %.bsp
+	$(BUILD_BINARY_O)
+
 %.o: %.s
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 
