@@ -1019,6 +1019,7 @@ Q3BSP_OBJ = \
 	printf/parse.o \
 	pk/maps/20kdm2.bsp.o \
 	interrupt.o \
+	maple/maple.o \
 	pk/textures/e7/e7walldesign01b.data.o \
 	pk/textures/e7/e7steptop2.data.o \
 	pk/textures/e7/e7dimfloor.data.o \

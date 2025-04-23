@@ -1,3 +1,5 @@
+#include <bit>
+
 #include "holly/background.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
@@ -14,6 +16,12 @@
 
 #include "systembus.hpp"
 #include "systembus_bits.hpp"
+
+#include "maple/maple.hpp"
+#include "maple/maple_host_command_writer.hpp"
+#include "maple/maple_bus_bits.hpp"
+#include "maple/maple_bus_commands.hpp"
+#include "maple/maple_bus_ft0.hpp"
 
 #include "memorymap.hpp"
 
@@ -64,110 +72,43 @@ using mat4x4 = mat<4, 4, float>;
 
 #define _fsrra(n) (1.0f / (__builtin_sqrtf(n)))
 
-void print_direntries(struct q3bsp_header * header)
+static ft0::data_transfer::data_format data[4];
+
+uint8_t send_buf[1024] __attribute__((aligned(32)));
+uint8_t recv_buf[1024] __attribute__((aligned(32)));
+
+void do_get_condition()
 {
-  // direntries
-  static const char * lump_name[] = {
-    "entities",
-    "textures",
-    "planes",
-    "nodes",
-    "leafs",
-    "leaffaces",
-    "leafbrushes",
-    "models",
-    "brushes",
-    "brushsides",
-    "vertexes",
-    "meshverts",
-    "effects",
-    "faces",
-    "lightmaps",
-    "lightvols",
-    "visdata",
-  };
-  for (int i = 0; i < 17; i++) {
-    printf("%s offset=%d length=%d\n",
-           lump_name[i],
-           header->direntries[i].offset,
-           header->direntries[i].length);
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
+
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  for (int port = 0; port < 4; port++) {
+    auto& data_fields = host_command[port].bus_data.data_fields;
+    data_fields.function_type = std::byteswap(function_type::controller);
   }
-}
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
 
-void print_header(void * buf)
-{
-  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+  for (uint8_t port = 0; port < 4; port++) {
+    auto& bus_data = host_response[port].bus_data;
+    if (bus_data.command_code != response_type::command_code) {
+      return;
+    }
+    auto& data_fields = bus_data.data_fields;
+    if ((std::byteswap(data_fields.function_type) & function_type::controller) == 0) {
+      return;
+    }
 
-  serial::string("magic: ");
-  serial::string((uint8_t *)header->magic, 4);
-  serial::character('\n');
-  printf("version: %x\n", header->version);
-
-  print_direntries(header);
-}
-
-void print_textures(void * buf, int length)
-{
-  q3bsp_texture_t * texture = reinterpret_cast<q3bsp_texture_t *>(buf);
-
-  int count = length / (sizeof (struct q3bsp_texture));
-
-  for (int i = 0; i < count; i++) {
-    printf("texture [%d]\n", i);
-    printf("  name=%s\n", texture[i].name);
-    printf("  flags=%x\n", texture[i].flags);
-    printf("  contents=%x\n", texture[i].contents);
-  }
-}
-
-void print_models(void * buf, int length)
-{
-  q3bsp_model_t * model = reinterpret_cast<q3bsp_model_t *>(buf);
-
-  int count = length / (sizeof (struct q3bsp_model));
-
-  for (int i = 0; i < count; i++) {
-    printf("model [%d]\n", i);
-    printf("  mins={%f, %f, %f}\n", model->mins[0], model->mins[2], model->mins[2]);
-    printf("  maxs={%f, %f, %f}\n", model->maxs[0], model->maxs[2], model->maxs[2]);
-    printf("  face=%d\n", model->face);
-    printf("  n_faces=%d\n", model->n_faces);
-    printf("  brush=%d\n", model->brush);
-    printf("  n_brushes=%d\n", model->n_brushes);
-  }
-}
-
-void print_faces(void * buf, int length)
-{
-  q3bsp_face_t * face = reinterpret_cast<q3bsp_face_t *>(buf);
-
-  int count = length / (sizeof (struct q3bsp_face));
-
-  printf("faces count: %d\n", count);
-  for (int i = 0; i < count; i++) {
-    printf("face [%d]\n", i);
-    printf("  type=%d n_vertexes=%d n_meshverts=%d\n", face[i].type, face[i].n_vertexes, face[i].n_meshverts);
-  }
-}
-
-void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
-{
-  // header
-  print_header(buf);
-
-  {
-    q3bsp_direntry * e = &header->direntries[LUMP_TEXTURES];
-    print_textures(&buf[e->offset], e->length);
-  }
-
-  {
-    q3bsp_direntry * e = &header->direntries[LUMP_MODELS];
-    print_models(&buf[e->offset], e->length);
-  }
-
-  {
-    q3bsp_direntry * e = &header->direntries[LUMP_FACES];
-    print_faces(&buf[e->offset], e->length);
+    data[port].digital_button = data_fields.data.digital_button;
+    for (int i = 0; i < 6; i++) {
+      data[port].analog_coordinate_axis[i]
+        = data_fields.data.analog_coordinate_axis[i];
+    }
   }
 }
 
@@ -208,7 +149,7 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                          | isp_tsp_instruction_word::culling_mode::no_culling
+                                          | isp_tsp_instruction_word::culling_mode::cull_if_negative
                                           ;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
@@ -447,9 +388,6 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
-  //debug_print_q3bsp(buf, header);
-  //while(1);
-
   mat4x4 trans = screen_trans;
 
   q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
@@ -540,6 +478,51 @@ void transfer_textures()
   }
 }
 
+mat4x4 update_analog(mat4x4& screen)
+{
+  const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
+  const float y_ = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) / 127.f;
+
+  int ra = ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0;
+  int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
+  int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
+  int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
+
+  float x = 0;
+  if (ra && !la) x = -10;
+  if (la && !ra) x =  10;
+
+  float z = 0;
+  if (ua && !da) z = -10;
+  if (da && !ua) z =  10;
+
+  mat4x4 t = {
+    1, 0, 0, x,
+    0, 1, 0, 0,
+    0, 0, 1, z,
+    0, 0, 0, 1,
+  };
+
+  float yt = 0.05f * x_;
+  float xt = 0.05f * y_;
+
+  mat4x4 rx = {
+    1, 0, 0, 0,
+    0, cos(xt), -sin(xt), 0,
+    0, sin(xt), cos(xt), 0,
+    0, 0, 0, 1,
+  };
+
+  mat4x4 ry = {
+     cos(yt), 0, sin(yt), 0,
+    0, 1, 0, 0,
+    -sin(yt), 0, cos(yt), 0,
+    0, 0, 0, 1,
+  };
+
+  return rx * ry * t * screen;
+}
+
 int main()
 {
   serial::init(0);
@@ -597,23 +580,20 @@ int main()
   int ta = 0;
   int core = 0;
 
-  mat4x4 screen_trans = {
+  mat4x4 trans = {
     1,  0, 0, -1000,
     0,  1, 0, -1000,
     0,  0, 1, 1000,
     0,  0, 0, 1,
   };
 
-  mat4x4 ztrans = {
-    1,  0, 0, -1,
-    0,  1, 0, -1,
-    0,  0, 1, 1,
-    0,  0, 0, 1,
-  };
+  do_get_condition();
 
   while (1) {
-    //screen_trans = ztrans * screen_trans;
-    screen_trans = rotate_z(0.01) * screen_trans;
+    maple::dma_wait_complete();
+    do_get_condition();
+
+    trans = update_analog(trans);
 
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
 			       texture_memory_alloc.isp_tsp_parameters[ta].end,
@@ -625,7 +605,7 @@ int main()
 			       tile_height);
 
     writer.offset = 0;
-    transfer_scene(writer, screen_trans);
+    transfer_scene(writer, trans);
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_opaque_list();
