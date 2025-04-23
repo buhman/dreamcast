@@ -63,6 +63,13 @@
 #include "pk/models/mapobjects/gratelamp/gratetorch2.data.h"
 #include "pk/models/mapobjects/gratelamp/gratetorch2b.data.h"
 
+#include "font/font_bitmap.hpp"
+#include "font/verite_8x16/verite_8x16.data.h"
+#include "palette.hpp"
+#include "printf/unparse.h"
+
+constexpr int font_offset = ((0x7f - 0x20) + 1) * 8 * 16 / 2;
+
 #include "pk/texture.h"
 
 using vec2 = vec<2, float>;
@@ -185,7 +192,7 @@ void global_texture(ta_parameter_writer& writer, int ix)
                             | tsp_instruction_word::texture_v_size::from_int(texture->height)
                             ;
 
-  uint32_t texture_address = texture_memory_alloc.texture.start + texture->offset * 2;
+  uint32_t texture_address = texture_memory_alloc.texture.start + font_offset + texture->offset * 2;
   uint32_t texture_control_word = texture_control_word::pixel_format::_565
                                 | texture_control_word::scan_order::non_twiddled
                                 | texture_control_word::texture_address(texture_address / 8)
@@ -281,14 +288,16 @@ float light_intensity(vec3 light_vec, vec3 n)
 {
   float n_dot_l = dot(n, light_vec);
 
-  float intensity = 0.4f;
+  float intensity = 0.5f;
   if (n_dot_l > 0) {
-    intensity += 0.5f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
+    intensity += 0.7f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
     if (intensity > 1.0f)
       intensity = 1.0f;
   }
   return intensity;
 }
+
+static vec3 light_vec = {20, -20, -20};
 
 void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer& writer)
 {
@@ -301,8 +310,6 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
   q3bsp_face_t * face = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
 
   int face_count = fe->length / (sizeof (struct q3bsp_face));
-
-  const vec3 light_vec = {20, 20, 20};
 
   int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
   int last_texture = -1;
@@ -383,6 +390,47 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
   }
 }
 
+int format_float(char * s, float num, int pad_length)
+{
+  int offset = 0;
+  bool negative = num < 0;
+  if (negative) num = -num;
+  int32_t whole = num;
+  int digits = digits_base10(whole);
+  offset += unparse_base10_unsigned(&s[offset], whole, pad_length, ' ');
+  if (negative)
+    s[offset - (digits + 1)] = '-';
+  s[offset++] = '.';
+  int32_t fraction = (int32_t)((num - (float)whole) * 1000.0);
+  if (fraction < 0)
+    fraction = -fraction;
+  offset += unparse_base10_unsigned(&s[offset], fraction, 3, '0');
+  return offset;
+}
+
+void render_matrix(ta_parameter_writer& writer, const mat4x4& trans)
+{
+  for (int row = 0; row < 4; row++) {
+    char __attribute__((aligned(4))) s[64];
+    for (uint32_t i = 0; i < (sizeof (s)) / 4; i++)
+      reinterpret_cast<uint32_t *>(s)[i] = 0x20202020;
+
+    int offset = 0;
+    offset += format_float(&s[offset], trans[row][0], 7);
+    offset += format_float(&s[offset], trans[row][1], 7);
+    offset += format_float(&s[offset], trans[row][2], 7);
+    offset += format_float(&s[offset], trans[row][3], 7);
+
+    font_bitmap::transform_string(writer,
+                                  8,  16, // texture
+                                  8,  16, // glyph
+                                  16 + 2 * 8, // position x
+                                  16 + row * 16, // position y
+                                  s, offset,
+                                  para_control::list_type::opaque);
+  }
+}
+
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
@@ -394,6 +442,8 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
   transform_vertices(&buf[ve->offset], ve->length, trans);
 
   transfer_faces(buf, header, writer);
+
+  render_matrix(writer, screen_trans);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -470,7 +520,7 @@ void transfer_textures()
 
   int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
   for (int i = 0; i < textures_length; i++) {
-    uint32_t offset = texture_memory_alloc.texture.start + textures[i].offset * 2;
+    uint32_t offset = texture_memory_alloc.texture.start + font_offset + textures[i].offset * 2;
     void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
     void * src = textures[i].start;
     uint32_t size = textures[i].size;
@@ -523,12 +573,26 @@ mat4x4 update_analog(mat4x4& screen)
   return rx * ry * t * screen;
 }
 
+void transfer_font()
+{
+  const uint8_t * src = reinterpret_cast<const uint8_t *>(&_binary_font_verite_8x16_verite_8x16_data_start);
+  uint32_t offset = font_bitmap::inflate(1,  // pitch
+                                         8,  // width
+                                         16, // height
+                                         8,  // texture_width
+                                         16, // texture_height
+                                         src);
+  printf("font_offset %d actual %d\n", font_offset, offset);
+}
+
 int main()
 {
   serial::init(0);
 
   interrupt_init();
   transfer_textures();
+  transfer_font();
+  palette_data<3>();
 
   constexpr uint32_t ta_alloc = 0
                               | ta_alloc_ctrl::pt_opb::no_list
@@ -581,10 +645,10 @@ int main()
   int core = 0;
 
   mat4x4 trans = {
-    1,  0, 0, -1000,
-    0,  1, 0, -1000,
-    0,  0, 1, 1000,
-    0,  0, 0, 1,
+    1.0,  0.0,   0.000, -1400.0,
+    0.0,  -0.574, -0.818,  981.0,
+    0.0,  0.818, -0.574,  711.0,
+    0.0,  0.000, 0.000,    1.0,
   };
 
   do_get_condition();

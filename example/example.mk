@@ -1020,6 +1020,8 @@ Q3BSP_OBJ = \
 	pk/maps/20kdm2.bsp.o \
 	interrupt.o \
 	maple/maple.o \
+	font/font_bitmap.o \
+	font/verite_8x16/verite_8x16.data.o \
 	pk/textures/e7/e7walldesign01b.data.o \
 	pk/textures/e7/e7steptop2.data.o \
 	pk/textures/e7/e7dimfloor.data.o \
