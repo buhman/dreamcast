@@ -63,6 +63,9 @@
 #include "pk/models/mapobjects/gratelamp/gratetorch2.data.h"
 #include "pk/models/mapobjects/gratelamp/gratetorch2b.data.h"
 
+#include "model/model.h"
+#include "model/icosphere/model.h"
+
 #include "font/font_bitmap.hpp"
 #include "font/verite_8x16/verite_8x16.data.h"
 #include "palette.hpp"
@@ -80,6 +83,8 @@ using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
 #define _fsrra(n) (1.0f / (__builtin_sqrtf(n)))
+
+static vec3 sphere_position = {890, 480, 400};
 
 static ft0::data_transfer::data_format data[4];
 
@@ -176,7 +181,12 @@ void global_polygon_type_0(ta_parameter_writer& writer)
 void global_polygon_type_1(ta_parameter_writer& writer,
                            uint32_t obj_control_texture,
                            uint32_t texture_u_v_size,
-                           uint32_t texture_control_word)
+                           uint32_t texture_control_word,
+                           const float a = 1.0f,
+                           const float r = 1.0f,
+                           const float g = 1.0f,
+                           const float b = 1.0f
+                           )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
@@ -196,11 +206,6 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                       | tsp_instruction_word::texture_shading_instruction::modulate
                                       | texture_u_v_size
                                       ;
-
-  const float a = 1.0f;
-  const float r = 1.0f;
-  const float g = 1.0f;
-  const float b = 1.0f;
 
   writer.append<ta_global_parameter::polygon_type_1>() =
     ta_global_parameter::polygon_type_1(parameter_control_word,
@@ -360,7 +365,7 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
       if (has_texture) {
         global_texture(writer, face[i].texture);
       } else {
-        global_polygon_type_1(writer, 0, 0, 0);
+        //global_polygon_type_1(writer, 0, 0, 0);
       }
     }
 
@@ -408,6 +413,7 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
                           li,
                           li);
       } else {
+        /*
         render_tri_type_2(writer,
                           ap,
                           bp,
@@ -415,8 +421,60 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
                           li,
                           li,
                           li);
+        */
       }
     }
+  }
+}
+
+void transfer_icosphere(ta_parameter_writer& writer, mat4x4& screen_trans)
+{
+  const struct model * model = &icosphere_model;
+  const struct object * object = model->object[0];
+  const vertex_position * position = model->position;
+  const vertex_normal * normal = model->normal;
+
+  float s = 50;
+  mat4x4 scale = {
+    s, 0, 0, 0,
+    0, -s, 0, 0,
+    0, 0, s, 0,
+    0, 0, 0, 1
+  };
+
+  mat4x4 translate = {
+    1, 0, 0, sphere_position.x,
+    0, 1, 0, sphere_position.y,
+    0, 0, 1, sphere_position.z,
+    0, 0, 0, 1
+  };
+
+  mat4x4 trans = screen_trans * translate * scale;
+
+  float a = 1.0f;
+  float r = 0.9f;
+  float g = 0.5f;
+  float b = 0.0f;
+  global_polygon_type_1(writer, 0, 0, 0, a, r, g, b);
+
+  for (int i = 0; i < object->triangle_count; i++) {
+    const union triangle * tri = &object->triangle[i];
+    vec3 ap = trans * position[tri->v[0].position];
+    vec3 bp = trans * position[tri->v[1].position];
+    vec3 cp = trans * position[tri->v[2].position];
+
+    if (ap.z < 0 || bp.z < 0 || cp.z < 0) return;
+
+    vec3 n = normal_transform(trans, normal[tri->v[0].normal]);
+    float li = light_intensity(light_vec, n);
+
+    render_tri_type_2(writer,
+                      screen_transform(ap),
+                      screen_transform(bp),
+                      screen_transform(cp),
+                      li,
+                      li,
+                      li);
   }
 }
 
@@ -548,6 +606,27 @@ void render_matrix(ta_parameter_writer& writer, const mat4x4& trans)
   }
 }
 
+void render_sphere_position(ta_parameter_writer& writer)
+{
+  char __attribute__((aligned(4))) s[64] = "pos:    ";
+  for (uint32_t i = 2; i < ((sizeof (s)) - 8) / 4; i++)
+    reinterpret_cast<uint32_t *>(s)[i] = 0x20202020;
+
+  int offset = 8;
+  int row = 5;
+  offset += format_float(&s[offset], sphere_position[0], 7);
+  offset += format_float(&s[offset], sphere_position[1], 7);
+  offset += format_float(&s[offset], sphere_position[2], 7);
+
+  font_bitmap::transform_string(writer,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + 2 * 8, // position x
+                                16 + row * 16, // position y
+                                s, offset,
+                                para_control::list_type::opaque);
+}
+
 static int root_ix = 0;
 
 void render_ix(ta_parameter_writer& writer, int row, char * s, int ix)
@@ -668,14 +747,24 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
   transform_vertices(&buf[ve->offset], ve->length, trans);
 
   transfer_faces(buf, header, writer);
+  transfer_icosphere(writer, trans);
 
   render_matrix(writer, trans);
   render_leaf_ix(writer);
+  render_sphere_position(writer);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
-  render_bounding_boxes(writer, trans);
+  global_polygon_type_0(writer);
+  render_quad(writer,
+              {0, 0, 0},
+              {0, 0, 0},
+              {0, 0, 0},
+              {0, 0, 0},
+              0);
+
+  //render_bounding_boxes(writer, trans);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -772,6 +861,8 @@ mat4x4 update_analog(mat4x4& screen)
   int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
   int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
 
+  int db_a = ft0::data_transfer::digital_button::a(data[0].digital_button) == 0;
+  int db_b = ft0::data_transfer::digital_button::b(data[0].digital_button) == 0;
   int db_x = ft0::data_transfer::digital_button::x(data[0].digital_button) == 0;
   int db_y = ft0::data_transfer::digital_button::y(data[0].digital_button) == 0;
 
@@ -814,25 +905,40 @@ mat4x4 update_analog(mat4x4& screen)
   q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
   q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
 
-  if (db_x && !db_y && !push) {
-    push = true;
-    //leaf_ix -= 1;
-    //if (leaf_ix < 0) leaf_ix = num_leaves - 1;
+  if (0) {
+    if (db_x && !db_y && !push) {
+      push = true;
+      //leaf_ix -= 1;
+      //if (leaf_ix < 0) leaf_ix = num_leaves - 1;
 
-    int ix = nodes[root_ix].children[0];
-    if (ix >= 0)
-      root_ix = ix;
-  }
-  if (db_y && !db_x && !push) {
-    push = true;
-    //leaf_ix += 1;
-    //if (leaf_ix > num_leaves) leaf_ix = 0;
-    int ix = nodes[root_ix].children[1];
-    if (ix >= 0)
-      root_ix = ix;
-  }
-  if (!db_x && !db_y) {
-    push = false;
+      int ix = nodes[root_ix].children[0];
+      if (ix >= 0)
+        root_ix = ix;
+    }
+    if (db_y && !db_x && !push) {
+      push = true;
+      //leaf_ix += 1;
+      //if (leaf_ix > num_leaves) leaf_ix = 0;
+      int ix = nodes[root_ix].children[1];
+      if (ix >= 0)
+        root_ix = ix;
+    }
+    if (!db_x && !db_y) {
+      push = false;
+    }
+  } else {
+    if (db_x && !db_b) {
+      sphere_position.x -= 10;
+    }
+    if (db_b && !db_x) {
+      sphere_position.x += 10;
+    }
+    if (db_y && !db_a) {
+      sphere_position.y += 10;
+    }
+    if (db_a && !db_y) {
+      sphere_position.y -= 10;
+    }
   }
 
   return rx * ry * t * screen;
@@ -910,9 +1016,9 @@ int main()
   int core = 0;
 
   mat4x4 trans = {
-    1.0,  0.0,   0.000, -1400.0,
-    0.0,  -0.574, -0.818,  981.0,
-    0.0,  0.818, -0.574,  711.0,
+    1.0,  0.0,   0.000, -1123.0,
+    0.0,  -0.888, -0.458,  859.0,
+    0.0,  0.458, -0.888,  791.0,
     0.0,  0.000, 0.000,    1.0,
   };
 
