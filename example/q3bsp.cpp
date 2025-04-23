@@ -68,9 +68,11 @@
 #include "palette.hpp"
 #include "printf/unparse.h"
 
-constexpr int font_offset = ((0x7f - 0x20) + 1) * 8 * 16 / 2;
+#include "assert.h"
 
 #include "pk/texture.h"
+
+constexpr int font_offset = ((0x7f - 0x20) + 1) * 8 * 16 / 2;
 
 using vec2 = vec<2, float>;
 using vec3 = vec<3, float>;
@@ -141,6 +143,34 @@ static inline vec3 screen_transform(vec3 v)
     v.y / (1.f * v.z) * dim + 480 / 2.0f,
     1 / v.z,
   };
+}
+
+void global_polygon_type_0(ta_parameter_writer& writer)
+{
+  const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                        | para_control::list_type::translucent
+                                        | obj_control::col_type::packed_color
+                                        ;
+
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+                                          | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::src_alpha_instr::src_alpha
+                                      | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                                      | tsp_instruction_word::use_alpha
+                                      ;
+
+  const uint32_t texture_control_word = 0;
+
+  writer.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
+                                        isp_tsp_instruction_word,
+                                        tsp_instruction_word,
+                                        texture_control_word,
+                                        0, // data_size_for_sort_dma
+                                        0  // next_address_for_sort_dma
+                                        );
 }
 
 void global_polygon_type_1(ta_parameter_writer& writer,
@@ -390,6 +420,93 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
   }
 }
 
+static inline void render_quad(ta_parameter_writer& writer,
+                               vec3 ap,
+                               vec3 bp,
+                               vec3 cp,
+                               vec3 dp,
+                               uint32_t base_color)
+{
+  if (ap.z < 0 || bp.z < 0 || cp.z < 0 || dp.z < 0)
+    return;
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        ap.x, ap.y, ap.z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        bp.x, bp.y, bp.z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        dp.x, dp.y, dp.z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
+                                        cp.x, cp.y, cp.z,
+                                        base_color);
+}
+
+void render_bounding_box(ta_parameter_writer& writer, mat4x4& trans, vec3 max, vec3 min, uint32_t color)
+{
+  vec3 a = max;
+  vec3 b = min;
+
+  global_polygon_type_0(writer);
+
+  // ax
+  render_quad(writer,
+              screen_transform(trans * (vec3){a.x, a.y, a.z}),
+              screen_transform(trans * (vec3){a.x, b.y, a.z}),
+              screen_transform(trans * (vec3){a.x, b.y, b.z}),
+              screen_transform(trans * (vec3){a.x, a.y, b.z}),
+              color);
+
+  // bx
+  render_quad(writer,
+              screen_transform(trans * (vec3){b.x, a.y, a.z}),
+              screen_transform(trans * (vec3){b.x, b.y, a.z}),
+              screen_transform(trans * (vec3){b.x, b.y, b.z}),
+              screen_transform(trans * (vec3){b.x, a.y, b.z}),
+              color);
+
+  // ay
+  render_quad(writer,
+              screen_transform(trans * (vec3){b.x, a.y, a.z}),
+              screen_transform(trans * (vec3){a.x, a.y, a.z}),
+              screen_transform(trans * (vec3){a.x, a.y, b.z}),
+              screen_transform(trans * (vec3){b.x, a.y, b.z}),
+              color);
+
+  // by
+  render_quad(writer,
+              screen_transform(trans * (vec3){b.x, b.y, a.z}),
+              screen_transform(trans * (vec3){a.x, b.y, a.z}),
+              screen_transform(trans * (vec3){a.x, b.y, b.z}),
+              screen_transform(trans * (vec3){b.x, b.y, b.z}),
+              color);
+
+  // az
+  render_quad(writer,
+              screen_transform(trans * (vec3){b.x, a.y, a.z}),
+              screen_transform(trans * (vec3){b.x, b.y, a.z}),
+              screen_transform(trans * (vec3){a.x, b.y, a.z}),
+              screen_transform(trans * (vec3){a.x, a.y, a.z}),
+              color);
+
+  // bz
+  render_quad(writer,
+              screen_transform(trans * (vec3){b.x, a.y, b.z}),
+              screen_transform(trans * (vec3){b.x, b.y, b.z}),
+              screen_transform(trans * (vec3){a.x, b.y, b.z}),
+              screen_transform(trans * (vec3){a.x, a.y, b.z}),
+              color);
+}
+
 int format_float(char * s, float num, int pad_length)
 {
   int offset = 0;
@@ -431,6 +548,115 @@ void render_matrix(ta_parameter_writer& writer, const mat4x4& trans)
   }
 }
 
+static int root_ix = 0;
+
+void render_ix(ta_parameter_writer& writer, int row, char * s, int ix)
+{
+  int offset = 15;
+  bool is_leaf = ix < 0;
+  if (ix < 0)
+    ix = -(ix - 1);
+
+  offset += unparse_base10_unsigned(&s[offset], ix, 5, ' ');
+
+  if (is_leaf) {
+    s[offset++] = ' ';
+    s[offset++] = '(';
+    s[offset++] = 'l';
+    s[offset++] = 'e';
+    s[offset++] = 'a';
+    s[offset++] = 'f';
+    s[offset++] = ')';
+  } else {
+    s[offset++] = ' ';
+    s[offset++] = '(';
+    s[offset++] = 'n';
+    s[offset++] = 'o';
+    s[offset++] = 'd';
+    s[offset++] = 'e';
+    s[offset++] = ')';
+  }
+
+  font_bitmap::transform_string(writer,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + 50 * 8, // position x
+                                16 + row * 16, // position y
+                                s, offset,
+                                para_control::list_type::opaque);
+}
+
+void render_leaf_ix(ta_parameter_writer& writer)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+  q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
+  q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
+  q3bsp_node_t * root = &nodes[root_ix];
+
+  {
+    char s[32] = "root:          ";
+    int row = 0;
+    render_ix(writer, row, s, root_ix);
+  }
+
+  {
+    char s[32] = "root.child[0]: ";
+    int row = 1;
+    render_ix(writer, row, s, root->children[0]);
+  }
+
+  {
+    char s[32] = "root.child[1]: ";
+    int row = 2;
+    render_ix(writer, row, s, root->children[1]);
+  }
+}
+
+void render_bounding_box_mm(ta_parameter_writer& writer, mat4x4& trans, int mins[3], int maxs[3], uint32_t color)
+{
+  vec3 max = {(float)maxs[0], (float)maxs[1], (float)maxs[2]};
+  vec3 min = {(float)mins[0], (float)mins[1], (float)mins[2]};
+  render_bounding_box(writer, trans, max, min, color);
+}
+
+void render_bounding_boxes(ta_parameter_writer& writer, mat4x4& trans)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
+  q3bsp_leaf_t * leafs = reinterpret_cast<q3bsp_leaf_t *>(&buf[le->offset]);
+
+  q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
+  q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
+  q3bsp_node_t * root = &nodes[root_ix];
+
+  {
+    if (root->children[0] >= 0) {
+      q3bsp_node_t * a = &nodes[root->children[0]];
+      uint32_t color = 0x80ff00e6;
+      render_bounding_box_mm(writer, trans, a->mins, a->maxs, color);
+    } else {
+      int leaf_ix = -(root->children[0] + 1);
+      q3bsp_leaf_t * leaf = &leafs[leaf_ix];
+      uint32_t color = 0x80ff0016;
+      render_bounding_box_mm(writer, trans, leaf->maxs, leaf->mins, color);
+    }
+
+    if (root->children[1] >= 0) {
+      q3bsp_node_t * b = &nodes[root->children[1]];
+      uint32_t color = 0x8000ffe6;
+      render_bounding_box_mm(writer, trans, b->mins, b->maxs, color);
+    } else {
+      int leaf_ix = -(root->children[1] + 1);
+      q3bsp_leaf_t * leaf = &leafs[leaf_ix];
+      uint32_t color = 0x8000ff16;
+      render_bounding_box_mm(writer, trans, leaf->maxs, leaf->mins, color);
+    }
+  }
+}
+
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
@@ -443,7 +669,13 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 
   transfer_faces(buf, header, writer);
 
-  render_matrix(writer, screen_trans);
+  render_matrix(writer, trans);
+  render_leaf_ix(writer);
+
+  writer.append<ta_global_parameter::end_of_list>() =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+
+  render_bounding_boxes(writer, trans);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -528,6 +760,8 @@ void transfer_textures()
   }
 }
 
+static bool push = false;
+
 mat4x4 update_analog(mat4x4& screen)
 {
   const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
@@ -537,6 +771,9 @@ mat4x4 update_analog(mat4x4& screen)
   int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
   int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
   int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
+
+  int db_x = ft0::data_transfer::digital_button::x(data[0].digital_button) == 0;
+  int db_y = ft0::data_transfer::digital_button::y(data[0].digital_button) == 0;
 
   float x = 0;
   if (ra && !la) x = -10;
@@ -570,6 +807,34 @@ mat4x4 update_analog(mat4x4& screen)
     0, 0, 0, 1,
   };
 
+  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+  //q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
+  //int num_leaves = le->length / (sizeof (struct q3bsp_leaf));
+  q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
+  q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
+
+  if (db_x && !db_y && !push) {
+    push = true;
+    //leaf_ix -= 1;
+    //if (leaf_ix < 0) leaf_ix = num_leaves - 1;
+
+    int ix = nodes[root_ix].children[0];
+    if (ix >= 0)
+      root_ix = ix;
+  }
+  if (db_y && !db_x && !push) {
+    push = true;
+    //leaf_ix += 1;
+    //if (leaf_ix > num_leaves) leaf_ix = 0;
+    int ix = nodes[root_ix].children[1];
+    if (ix >= 0)
+      root_ix = ix;
+  }
+  if (!db_x && !db_y) {
+    push = false;
+  }
+
   return rx * ry * t * screen;
 }
 
@@ -597,7 +862,7 @@ int main()
   constexpr uint32_t ta_alloc = 0
                               | ta_alloc_ctrl::pt_opb::no_list
 			      | ta_alloc_ctrl::tm_opb::no_list
-                              | ta_alloc_ctrl::t_opb::no_list
+                              | ta_alloc_ctrl::t_opb::_16x4byte
                               | ta_alloc_ctrl::om_opb::no_list
                               | ta_alloc_ctrl::o_opb::_16x4byte;
 
@@ -606,7 +871,7 @@ int main()
     {
       .opaque = 16 * 4,
       .opaque_modifier = 0,
-      .translucent = 0,
+      .translucent = 16 * 4,
       .translucent_modifier = 0,
       .punch_through = 0
     }
@@ -672,7 +937,8 @@ int main()
     transfer_scene(writer, trans);
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
-    ta_wait_opaque_list();
+    ta_wait_translucent_list();
+    //ta_wait_opaque_list();
 
     render_done = 0;
     core_start_render2(texture_memory_alloc.region_array[core].start,
