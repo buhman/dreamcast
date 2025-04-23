@@ -96,7 +96,8 @@ typedef struct q3bsp_brushside {
 
 typedef struct q3bsp_vertex {
   float position[3];
-  float texcoord[2][2];
+  float texcoord[2];
+  float lightmapcoord[2];
   float normal[3];
   uint8_t color[4];
 } q3bsp_vertex_t;

@@ -1019,6 +1019,27 @@ Q3BSP_OBJ = \
 	printf/parse.o \
 	pk/maps/20kdm2.bsp.o \
 	interrupt.o \
+	pk/textures/e7/e7walldesign01b.data.o \
+	pk/textures/e7/e7steptop2.data.o \
+	pk/textures/e7/e7dimfloor.data.o \
+	pk/textures/e7/e7brickfloor01.data.o \
+	pk/textures/e7/e7bmtrim.data.o \
+	pk/textures/e7/e7sbrickfloor.data.o \
+	pk/textures/e7/e7brnmetal.data.o \
+	pk/textures/e7/e7beam02_red.data.o \
+	pk/textures/e7/e7swindow.data.o \
+	pk/textures/e7/e7bigwall.data.o \
+	pk/textures/e7/e7panelwood.data.o \
+	pk/textures/e7/e7beam01.data.o \
+	pk/textures/gothic_floor/xstepborder5.data.o \
+	pk/textures/liquids/lavahell.data.o \
+	pk/textures/e7/e7steptop.data.o \
+	pk/textures/gothic_trim/metalblackwave01.data.o \
+	pk/textures/stone/pjrock1.data.o \
+	pk/models/mapobjects/timlamp/timlamp.data.o \
+	pk/textures/sfx/flame2.data.o \
+	pk/models/mapobjects/gratelamp/gratetorch2.data.o \
+	pk/models/mapobjects/gratelamp/gratetorch2b.data.o \
 	$(LIBGCC)
 
 example/q3bsp.elf: LDSCRIPT = $(LIB)/main.lds

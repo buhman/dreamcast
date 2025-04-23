@@ -17,6 +17,8 @@
 
 #include "memorymap.hpp"
 
+#include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
 #include "printf/printf.h"
 
@@ -30,6 +32,30 @@
 #include "math/geometry.hpp"
 
 #include "interrupt.hpp"
+
+#include "pk/textures/e7/e7walldesign01b.data.h"
+#include "pk/textures/e7/e7steptop2.data.h"
+#include "pk/textures/e7/e7dimfloor.data.h"
+#include "pk/textures/e7/e7brickfloor01.data.h"
+#include "pk/textures/e7/e7bmtrim.data.h"
+#include "pk/textures/e7/e7sbrickfloor.data.h"
+#include "pk/textures/e7/e7brnmetal.data.h"
+#include "pk/textures/e7/e7beam02_red.data.h"
+#include "pk/textures/e7/e7swindow.data.h"
+#include "pk/textures/e7/e7bigwall.data.h"
+#include "pk/textures/e7/e7panelwood.data.h"
+#include "pk/textures/e7/e7beam01.data.h"
+#include "pk/textures/gothic_floor/xstepborder5.data.h"
+#include "pk/textures/liquids/lavahell.data.h"
+#include "pk/textures/e7/e7steptop.data.h"
+#include "pk/textures/gothic_trim/metalblackwave01.data.h"
+#include "pk/textures/stone/pjrock1.data.h"
+#include "pk/models/mapobjects/timlamp/timlamp.data.h"
+#include "pk/textures/sfx/flame2.data.h"
+#include "pk/models/mapobjects/gratelamp/gratetorch2.data.h"
+#include "pk/models/mapobjects/gratelamp/gratetorch2b.data.h"
+
+#include "pk/texture.h"
 
 using vec2 = vec<2, float>;
 using vec3 = vec<3, float>;
@@ -169,14 +195,18 @@ static inline vec3 screen_transform(vec3 v)
   };
 }
 
-void global_polygon_type_1(ta_parameter_writer& writer)
+void global_polygon_type_1(ta_parameter_writer& writer,
+                           uint32_t obj_control_texture,
+                           uint32_t texture_u_v_size,
+                           uint32_t texture_control_word)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
                                         | obj_control::col_type::intensity_mode_1
                                         | obj_control::gouraud
-                                        | obj_control::shadow
+                                        | obj_control_texture
                                         ;
+
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                           | isp_tsp_instruction_word::culling_mode::no_culling
                                           ;
@@ -184,9 +214,10 @@ void global_polygon_type_1(ta_parameter_writer& writer)
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::src_alpha_instr::one
                                       | tsp_instruction_word::dst_alpha_instr::zero
+                                      | tsp_instruction_word::filter_mode::bilinear_filter
+                                      | tsp_instruction_word::texture_shading_instruction::modulate
+                                      | texture_u_v_size
                                       ;
-
-  const uint32_t texture_control_word = 0;
 
   const float a = 1.0f;
   const float r = 1.0f;
@@ -203,6 +234,26 @@ void global_polygon_type_1(ta_parameter_writer& writer)
                                         g,
                                         b
                                         );
+}
+
+void global_texture(ta_parameter_writer& writer, int ix)
+{
+  struct pk_texture * texture = &textures[ix];
+
+  uint32_t texture_u_v_size = tsp_instruction_word::texture_u_size::from_int(texture->width)
+                            | tsp_instruction_word::texture_v_size::from_int(texture->height)
+                            ;
+
+  uint32_t texture_address = texture_memory_alloc.texture.start + texture->offset * 2;
+  uint32_t texture_control_word = texture_control_word::pixel_format::_565
+                                | texture_control_word::scan_order::non_twiddled
+                                | texture_control_word::texture_address(texture_address / 8)
+                                ;
+
+  global_polygon_type_1(writer,
+                        obj_control::texture,
+                        texture_u_v_size,
+                        texture_control_word);
 }
 
 void transform_vertices(uint8_t * buf, int length, mat4x4& trans)
@@ -222,13 +273,13 @@ void transform_vertices(uint8_t * buf, int length, mat4x4& trans)
   }
 }
 
-static inline void render_tri(ta_parameter_writer& writer,
-                              vec3 ap,
-                              vec3 bp,
-                              vec3 cp,
-                              float ai,
-                              float bi,
-                              float ci)
+static inline void render_tri_type_2(ta_parameter_writer& writer,
+                                     vec3 ap,
+                                     vec3 bp,
+                                     vec3 cp,
+                                     float ai,
+                                     float bi,
+                                     float ci)
 {
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
@@ -244,6 +295,39 @@ static inline void render_tri(ta_parameter_writer& writer,
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
                                         ci);
+}
+
+static inline void render_tri_type_7(ta_parameter_writer& writer,
+                                     vec3 ap,
+                                     vec3 bp,
+                                     vec3 cp,
+                                     vec2 at,
+                                     vec2 bt,
+                                     vec2 ct,
+                                     float ai,
+                                     float bi,
+                                     float ci)
+{
+  writer.append<ta_vertex_parameter::polygon_type_7>() =
+    ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(false),
+                                        ap.x, ap.y, ap.z,
+                                        at.x, at.y,
+                                        ai,
+                                        0);
+
+  writer.append<ta_vertex_parameter::polygon_type_7>() =
+    ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(false),
+                                        bp.x, bp.y, bp.z,
+                                        bt.x, bt.y,
+                                        bi,
+                                        0);
+
+  writer.append<ta_vertex_parameter::polygon_type_7>() =
+    ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(true),
+                                        cp.x, cp.y, cp.z,
+                                        ct.x, ct.y,
+                                        ci,
+                                        0);
 }
 
 static inline float inverse_length(vec3 v)
@@ -267,21 +351,41 @@ float light_intensity(vec3 light_vec, vec3 n)
 
 void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer& writer)
 {
+  q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
   q3bsp_direntry * me = &header->direntries[LUMP_MESHVERTS];
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
 
+  q3bsp_vertex_t * vert = reinterpret_cast<q3bsp_vertex_t *>(&buf[ve->offset]);
   q3bsp_meshvert_t * meshvert = reinterpret_cast<q3bsp_meshvert_t *>(&buf[me->offset]);
   q3bsp_face_t * face = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
 
   int face_count = fe->length / (sizeof (struct q3bsp_face));
 
-  const vec3 light_vec = {20, 20, 200};
+  const vec3 light_vec = {20, 20, 20};
+
+  int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+  int last_texture = -1;
 
   for (int i = 0; i < face_count; i++) {
     int meshvert_ix = face[i].meshvert;
     q3bsp_meshvert_t * mv = &meshvert[meshvert_ix];
 
     int triangles = face[i].n_meshverts / 3;
+
+    bool has_texture = 1 &&
+                       (face[i].texture >= 0) &&
+                       (face[i].texture < textures_length) &&
+                       (textures[face[i].texture].size != 0);
+
+    if (face[i].texture != last_texture) {
+      last_texture = face[i].texture;
+      if (has_texture) {
+        global_texture(writer, face[i].texture);
+      } else {
+        global_polygon_type_1(writer, 0, 0, 0);
+      }
+    }
+
     for (int j = 0; j < triangles; j++) {
 
       int aix = mv[j * 3 + 0].offset + face[i].vertex;
@@ -297,7 +401,7 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
       }
 
       vec3 n = vertex_cache[aix].normal;
-      float i = light_intensity(light_vec, n);
+      float li = light_intensity(light_vec, n);
 
       /*
       printf("{%f %f %f} {%f %f %f} {%f %f %f}\n",
@@ -306,61 +410,50 @@ void transfer_faces(uint8_t * buf, q3bsp_header_t * header, ta_parameter_writer&
              cp.x, cp.y, cp.z);
       */
 
-      render_tri(writer,
-                 ap,
-                 bp,
-                 cp,
-                 i,
-                 i,
-                 i);
+
+      if (has_texture) {
+        float v_mul = textures[face[i].texture].v_mul;
+        vec2 at = {vert[aix].texcoord[0], vert[aix].texcoord[1] * v_mul};
+        vec2 bt = {vert[bix].texcoord[0], vert[bix].texcoord[1] * v_mul};
+        vec2 ct = {vert[cix].texcoord[0], vert[cix].texcoord[1] * v_mul};
+        //printf("{%f %f} {%f %f} {%f %f}\n", at.x, at.y, bt.x, bt.y, ct.x, ct.y);
+
+
+        render_tri_type_7(writer,
+                          ap,
+                          bp,
+                          cp,
+                          at,
+                          bt,
+                          ct,
+                          li,
+                          li,
+                          li);
+      } else {
+        render_tri_type_2(writer,
+                          ap,
+                          bp,
+                          cp,
+                          li,
+                          li,
+                          li);
+      }
     }
   }
 }
-
-/*
-  name=textures/common/caulk
-  name=textures/e7/e7walldesign01b
-  name=textures/e7/e7steptop2
-  name=noshader
-  name=textures/e7/e7dimfloor
-  name=textures/e7/e7brickfloor01
-  name=textures/e7/e7bmtrim
-  name=textures/e7/e7sbrickfloor
-  name=textures/e7/e7brnmetal
-  name=textures/common/clip
-  name=textures/e7/e7beam02_red
-  name=textures/e7/e7swindow
-  name=textures/e7/e7bigwall
-  name=textures/e7/e7panelwood
-  name=textures/e7/e7beam01
-  name=textures/gothic_floor/xstepborder5
-  name=textures/liquids/lavahell
-  name=textures/e7/e7steptop
-  name=textures/gothic_trim/metalblackwave01
-  name=textures/stone/pjrock1
-  name=textures/skies/tim_hell
-  name=textures/common/hint
-  name=models/mapobjects/timlamp/timlamp
-  name=textures/sfx/flame1side
-  name=textures/sfx/flame2
-  name=models/mapobjects/gratelamp/gratetorch2
-  name=models/mapobjects/gratelamp/gratetorch2b
-*/
 
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
-  debug_print_q3bsp(buf, header);
-  while(1);
+  //debug_print_q3bsp(buf, header);
+  //while(1);
 
   mat4x4 trans = screen_trans;
 
   q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
   transform_vertices(&buf[ve->offset], ve->length, trans);
-
-  global_polygon_type_1(writer);
 
   transfer_faces(buf, header, writer);
 
@@ -403,11 +496,56 @@ constexpr inline mat4x4 rotate_z(float t)
   return r;
 }
 
+void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
+{
+  uint32_t out_addr = (uint32_t)dst;
+  sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+  sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+
+  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffc0) / 4];
+  uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
+
+  length = (length + 31) & ~31; // round up to nearest multiple of 32
+  while (length > 0) {
+    base[0] = src32[0];
+    base[1] = src32[1];
+    base[2] = src32[2];
+    base[3] = src32[3];
+    base[4] = src32[4];
+    base[5] = src32[5];
+    base[6] = src32[6];
+    base[7] = src32[7];
+    asm volatile ("pref @%0"
+                  :                // output
+                  : "r" (&base[0]) // input
+                  : "memory");
+    length -= 32;
+    base += 8;
+    src32 += 8;
+  }
+}
+
+void transfer_textures()
+{
+  system.LMMODE0 = 0; // 64-bit address space
+  system.LMMODE1 = 0; // 64-bit address space
+
+  int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+  for (int i = 0; i < textures_length; i++) {
+    uint32_t offset = texture_memory_alloc.texture.start + textures[i].offset * 2;
+    void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
+    void * src = textures[i].start;
+    uint32_t size = textures[i].size;
+    transfer_ta_fifo_texture_memory_32byte(dst, src, size);
+  }
+}
+
 int main()
 {
   serial::init(0);
 
   interrupt_init();
+  transfer_textures();
 
   constexpr uint32_t ta_alloc = 0
                               | ta_alloc_ctrl::pt_opb::no_list
