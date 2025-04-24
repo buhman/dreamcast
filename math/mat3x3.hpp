@@ -31,6 +31,9 @@ public:
 
   inline static constexpr int length() { return 3; }
 
+  inline constexpr typename mat<3, 3, T>::row_type &
+  operator[](int i);
+
   inline constexpr typename mat<3, 3, T>::row_type const &
   operator[](int i) const;
 
@@ -59,19 +62,17 @@ inline constexpr mat<3, 3, T>::mat
 { }
 
 template <typename T>
+inline constexpr typename mat<3, 3, T>::row_type &
+mat<3, 3, T>::operator[](int i)
+{
+  return value[i];
+}
+
+template <typename T>
 inline constexpr typename mat<3, 3, T>::row_type const &
 mat<3, 3, T>::operator[](int i) const
 {
-  switch (i)
-  {
-  default: [[fallthrough]];
-  case 0:
-    return value[0];
-  case 1:
-    return value[1];
-  case 2:
-    return value[2];
-  }
+  return value[i];
 }
 
 template<typename T>
@@ -134,4 +135,52 @@ inline constexpr mat<3, 3, T> transpose(mat<3, 3, T> const& m)
     m[0][1], m[1][1], m[2][1],
     m[0][2], m[1][2], m[2][2]
   );
+}
+
+template<typename T>
+inline constexpr mat<2, 2, T> submatrix(mat<3, 3, T> const& a, int r, int c)
+{
+  mat<2, 2, T> b;
+  int row2 = 0;
+  for (int row3 = 0; row3 < 3; row3++) {
+    if (row3 == r) continue;
+    int col2 = 0;
+    for (int col3 = 0; col3 < 3; col3++) {
+      if (col3 == c) continue;
+      b[row2][col2] = a[row3][col3];
+      col2++;
+    }
+    row2++;
+  }
+  return b;
+}
+
+template<typename T>
+inline constexpr float minor(mat<3, 3, T> const& a, int r, int c)
+{
+  mat<2, 2, T> s = submatrix(a, r, c);
+  float ret = determinant(s);
+  return ret;
+}
+
+template<typename T>
+inline constexpr float cofactor(mat<3, 3, T> const& a, int r, int c)
+{
+  float m = minor(a, r, c);
+  if ((r + c) & 1)
+    return -m;
+  else
+    return m;
+}
+
+template<typename T>
+inline constexpr float determinant(mat<3, 3, T> const& a)
+{
+  float f0 = cofactor(a, 0, 0);
+  float f1 = cofactor(a, 0, 1);
+  float f2 = cofactor(a, 0, 2);
+  return
+    a[0][0] * f0 +
+    a[0][1] * f1 +
+    a[0][2] * f2;
 }

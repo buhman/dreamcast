@@ -11,6 +11,7 @@ template <typename T>
 struct vec<3, T>
 {
   union {
+    T val[3];
     struct { T x, y, z; };
     struct { T r, g, b; };
   };
@@ -20,6 +21,7 @@ struct vec<3, T>
   inline constexpr vec(T _x, T _y, T _z);
 
   constexpr inline vec<3, T> operator-() const;
+  inline constexpr T & operator[](int i);
   inline constexpr T const& operator[](int i) const;
   inline constexpr vec<3, T>& operator=(vec<3, T> const& v);
   inline constexpr vec<3, T>& operator+=(vec<3, T> const& v);
@@ -48,15 +50,15 @@ constexpr inline vec<3, T> vec<3, T>::operator-() const
 }
 
 template <typename T>
+inline constexpr T & vec<3, T>::operator[](int i)
+{
+  return val[i];
+}
+
+template <typename T>
 inline constexpr T const& vec<3, T>::operator[](int i) const
 {
-  switch(i)
-  {
-  default: [[fallthrough]];
-  case 0: return x;
-  case 1: return y;
-  case 2: return z;
-  }
+  return val[i];
 }
 
 template <typename T>

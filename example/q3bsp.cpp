@@ -36,6 +36,8 @@
 #include "math/vec2.hpp"
 #include "math/vec3.hpp"
 #include "math/vec4.hpp"
+#include "math/mat2x2.hpp"
+#include "math/mat3x3.hpp"
 #include "math/mat4x4.hpp"
 #include "math/geometry.hpp"
 
@@ -133,7 +135,7 @@ struct position_normal {
 
 static position_normal vertex_cache[16384];
 
-static inline vec3 normal_transform(mat4x4& trans, vec3 normal)
+static inline vec3 normal_transform(const mat4x4& trans, vec3 normal)
 {
   vec4 n = trans * (vec4){normal.x, normal.y, normal.z, 0.f}; // no translation component
   return {n.x, n.y, n.z};
@@ -239,7 +241,7 @@ void global_texture(ta_parameter_writer& writer, int ix)
                         texture_control_word);
 }
 
-void transform_vertices(uint8_t * buf, int length, mat4x4& trans)
+void transform_vertices(uint8_t * buf, int length, const mat4x4& trans)
 {
   q3bsp_vertex_t * vert = reinterpret_cast<q3bsp_vertex_t *>(buf);
 
@@ -440,7 +442,7 @@ void transfer_faces(ta_parameter_writer& writer)
   }
 }
 
-void transfer_icosphere(ta_parameter_writer& writer, mat4x4& screen_trans)
+void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
   const struct model * model = &icosphere_model;
   const struct object * object = model->object[0];
@@ -522,7 +524,7 @@ static inline void render_quad(ta_parameter_writer& writer,
                                         base_color);
 }
 
-void render_bounding_box(ta_parameter_writer& writer, mat4x4& trans, vec3 max, vec3 min, uint32_t color)
+void render_bounding_box(ta_parameter_writer& writer, const mat4x4& trans, vec3 max, vec3 min, uint32_t color)
 {
   vec3 a = max;
   vec3 b = min;
@@ -640,6 +642,30 @@ void render_sphere_position(ta_parameter_writer& writer)
                                 para_control::list_type::opaque);
 }
 
+void render_zero_position(ta_parameter_writer& writer, const mat4x4& screen_trans_inv)
+{
+  char __attribute__((aligned(4))) s[64] = "zero:   ";
+  for (uint32_t i = 2; i < ((sizeof (s)) - 8) / 4; i++)
+    reinterpret_cast<uint32_t *>(s)[i] = 0x20202020;
+
+  vec3 zero = {0, 0, 0};
+  vec3 pos = screen_trans_inv * zero;
+
+  int offset = 8;
+  int row = 6;
+  offset += format_float(&s[offset], pos[0], 7);
+  offset += format_float(&s[offset], pos[1], 7);
+  offset += format_float(&s[offset], pos[2], 7);
+
+  font_bitmap::transform_string(writer,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + 2 * 8, // position x
+                                16 + row * 16, // position y
+                                s, offset,
+                                para_control::list_type::opaque);
+}
+
 static int root_ix = 0;
 
 void render_ix(ta_parameter_writer& writer, int row, char * s, int ix)
@@ -705,14 +731,14 @@ void render_leaf_ix(ta_parameter_writer& writer)
   }
 }
 
-void render_bounding_box_mm(ta_parameter_writer& writer, mat4x4& trans, int mins[3], int maxs[3], uint32_t color)
+void render_bounding_box_mm(ta_parameter_writer& writer, const mat4x4& trans, int mins[3], int maxs[3], uint32_t color)
 {
   vec3 max = {(float)maxs[0], (float)maxs[1], (float)maxs[2]};
   vec3 min = {(float)mins[0], (float)mins[1], (float)mins[2]};
   render_bounding_box(writer, trans, max, min, color);
 }
 
-void render_bounding_boxes(ta_parameter_writer& writer, mat4x4& trans)
+void render_bounding_boxes(ta_parameter_writer& writer, const mat4x4& trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -760,7 +786,7 @@ bool vec3_in_bb(vec3 v, int mins[3], int maxs[3])
     v.z <= maxs[2];
 }
 
-void render_leaf_faces(ta_parameter_writer& writer, mat4x4& trans, q3bsp_leaf_t * leaf)
+void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_leaf_t * leaf)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -784,7 +810,7 @@ void render_leaf_faces(ta_parameter_writer& writer, mat4x4& trans, q3bsp_leaf_t 
   }
 }
 
-void render_sphere_bounding_box(ta_parameter_writer& writer, mat4x4& trans)
+void render_sphere_bounding_box(ta_parameter_writer& writer, const mat4x4& trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -871,12 +897,12 @@ void render_sphere_bounding_box(ta_parameter_writer& writer, mat4x4& trans)
   }
 }
 
-void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
+void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, const mat4x4& screen_trans_inv)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
-  mat4x4 trans = screen_trans;
+  const mat4x4 trans = screen_trans;
 
   q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
   transform_vertices(&buf[ve->offset], ve->length, trans);
@@ -884,9 +910,10 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
   //transfer_faces(writer);
   transfer_icosphere(writer, trans);
 
-  render_matrix(writer, trans);
+  render_matrix(writer, screen_trans_inv);
   render_leaf_ix(writer);
   render_sphere_position(writer);
+  render_zero_position(writer, screen_trans_inv);
 
   render_sphere_bounding_box(writer, trans);
 
@@ -989,7 +1016,7 @@ void transfer_textures()
 
 static bool push = false;
 
-mat4x4 update_analog(mat4x4& screen)
+mat4x4 update_analog(const mat4x4& screen)
 {
   const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
   const float y_ = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) / 127.f;
@@ -1168,6 +1195,8 @@ int main()
 
     trans = update_analog(trans);
 
+    mat4x4 trans_inv = inverse(trans);
+
     ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
 			       texture_memory_alloc.isp_tsp_parameters[ta].end,
 			       texture_memory_alloc.object_list[ta].start,
@@ -1178,7 +1207,7 @@ int main()
 			       tile_height);
 
     writer.offset = 0;
-    transfer_scene(writer, trans);
+    transfer_scene(writer, trans, trans_inv);
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_translucent_list();

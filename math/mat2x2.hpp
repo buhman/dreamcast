@@ -30,6 +30,9 @@ public:
 
   inline static constexpr int length() { return 4; }
 
+  inline constexpr typename mat<2, 2, T>::row_type &
+  operator[](int i);
+
   inline constexpr typename mat<2, 2, T>::row_type const &
   operator[](int i) const;
 
@@ -55,17 +58,17 @@ inline constexpr mat<2, 2, T>::mat
 { }
 
 template <typename T>
+inline constexpr typename mat<2, 2, T>::row_type &
+mat<2, 2, T>::operator[](int i)
+{
+  return value[i];
+}
+
+template <typename T>
 inline constexpr typename mat<2, 2, T>::row_type const &
 mat<2, 2, T>::operator[](int i) const
 {
-  switch (i)
-  {
-  default: [[fallthrough]];
-  case 0:
-    return value[0];
-  case 1:
-    return value[1];
-  }
+  return value[i];
 }
 
 template<typename T>
@@ -102,4 +105,10 @@ inline constexpr mat<2, 2, T> transpose(mat<2, 2, T> const& m)
     m[0][0], m[1][0],
     m[0][1], m[1][1]
   );
+}
+
+template<typename T>
+inline constexpr float determinant(mat<2, 2, T> const& a)
+{
+  return a[0][0] * a[1][1] - a[0][1] * a[1][0];
 }

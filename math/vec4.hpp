@@ -11,6 +11,7 @@ template <typename T>
 struct vec<4, T>
 {
   union {
+    T val[4];
     struct { T x, y, z, w; };
     struct { T a, r, g, b; };
   };
@@ -21,6 +22,7 @@ struct vec<4, T>
   inline constexpr vec(const vec<3, T>& v);
 
   constexpr inline vec<4, T> operator-() const;
+  inline constexpr T & operator[](int i);
   inline constexpr T const& operator[](int i) const;
   inline constexpr vec<4, T>& operator=(vec<4, T> const& v);
   inline constexpr vec<4, T>& operator+=(vec<4, T> const& v);
@@ -54,16 +56,15 @@ constexpr inline vec<4, T> vec<4, T>::operator-() const
 }
 
 template <typename T>
+inline constexpr T & vec<4, T>::operator[](int i)
+{
+  return val[i];
+}
+
+template <typename T>
 inline constexpr T const& vec<4, T>::operator[](int i) const
 {
-  switch(i)
-  {
-  default: [[fallthrough]];
-  case 0: return x;
-  case 1: return y;
-  case 2: return z;
-  case 3: return w;
-  }
+  return val[i];
 }
 
 template <typename T>
