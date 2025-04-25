@@ -133,6 +133,8 @@ struct position_normal {
   vec3 normal;
 };
 
+static uint8_t face_cache[16384];
+
 static position_normal vertex_cache[16384];
 
 static inline vec3 normal_transform(const mat4x4& trans, vec3 normal)
@@ -253,7 +255,7 @@ void transform_vertices(uint8_t * buf, int length, const mat4x4& trans)
 
     //printf("%f %f %f\n", v.x, v.y, v.z);
 
-    vertex_cache[i].position = screen_transform(trans * v);
+    vertex_cache[i].position = trans * v;
     vertex_cache[i].normal = normal_transform(trans, n);
   }
 }
@@ -282,6 +284,10 @@ static inline void render_tri_type_2(ta_parameter_writer& writer,
                                         ci);
 }
 
+static int type7_tri_count = 0;
+static int vis_tri_count = 0;
+static int total_tri_count = 0;
+
 static inline void render_tri_type_7(ta_parameter_writer& writer,
                                      vec3 ap,
                                      vec3 bp,
@@ -293,6 +299,8 @@ static inline void render_tri_type_7(ta_parameter_writer& writer,
                                      float bi,
                                      float ci)
 {
+  type7_tri_count += 1;
+
   writer.append<ta_vertex_parameter::polygon_type_7>() =
     ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
@@ -313,6 +321,74 @@ static inline void render_tri_type_7(ta_parameter_writer& writer,
                                         ct.x, ct.y,
                                         ci,
                                         0);
+}
+
+static inline void render_clip_tri_type_7(ta_parameter_writer& writer,
+                                          vec3 ap,
+                                          vec3 bp,
+                                          vec3 cp,
+                                          vec2 at,
+                                          vec2 bt,
+                                          vec2 ct,
+                                          float li)
+{
+  //return;
+  const vec3 plane_point = {0.f, 0.f, 1.f};
+  const vec3 plane_normal = {0.f, 0.f, 1.f};
+
+  vec3 preclip_position[] = {ap, bp, cp};
+  vec2 preclip_texture[] = {at, bt, ct};
+
+  vec3 clip_position[4];
+  vec2 clip_texture[4];
+  int output_length = geometry::clip_polygon_uv<3>(clip_position,
+                                                   clip_texture,
+                                                   plane_point,
+                                                   plane_normal,
+                                                   preclip_position,
+                                                   preclip_texture);
+
+  {
+    vec3 ap;
+    vec3 bp;
+    vec3 cp;
+    vec3 dp;
+
+    const vec2& at = clip_texture[0];
+    const vec2& bt = clip_texture[1];
+    const vec2& ct = clip_texture[2];
+    const vec2& dt = clip_texture[3];
+    if (output_length >= 3) {
+      ap = screen_transform(clip_position[0]);
+      bp = screen_transform(clip_position[1]);
+      cp = screen_transform(clip_position[2]);
+
+      render_tri_type_7(writer,
+                        ap,
+                        bp,
+                        cp,
+                        at,
+                        bt,
+                        ct,
+                        li,
+                        li,
+                        li);
+    }
+    if (output_length >= 4) {
+      dp = screen_transform(clip_position[3]);
+
+      render_tri_type_7(writer,
+                        ap,
+                        cp,
+                        dp,
+                        at,
+                        ct,
+                        dt,
+                        li,
+                        li,
+                        li);
+    }
+  }
 }
 
 static inline float inverse_length(vec3 v)
@@ -378,19 +454,14 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
     vec3 bp = vertex_cache[bix].position;
     vec3 cp = vertex_cache[cix].position;
 
-    if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
+    vis_tri_count += 1;
+
+    if (ap.z < 0 && bp.z < 0 && cp.z < 0) {
       continue;
     }
 
     vec3 n = vertex_cache[aix].normal;
     float li = light_intensity(light_vec, n);
-
-    /*
-      printf("{%f %f %f} {%f %f %f} {%f %f %f}\n",
-      ap.x, ap.y, ap.z,
-      bp.x, bp.y, bp.z,
-      cp.x, cp.y, cp.z);
-    */
 
 
     if (has_texture) {
@@ -398,28 +469,38 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
       vec2 at = {vert[aix].texcoord[0], vert[aix].texcoord[1] * v_mul};
       vec2 bt = {vert[bix].texcoord[0], vert[bix].texcoord[1] * v_mul};
       vec2 ct = {vert[cix].texcoord[0], vert[cix].texcoord[1] * v_mul};
-      //printf("{%f %f} {%f %f} {%f %f}\n", at.x, at.y, bt.x, bt.y, ct.x, ct.y);
 
+      if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
+        render_clip_tri_type_7(writer,
+                               ap,
+                               bp,
+                               cp,
+                               at,
+                               bt,
+                               ct,
+                               li);
 
-      render_tri_type_7(writer,
-                        ap,
-                        bp,
-                        cp,
-                        at,
-                        bt,
-                        ct,
+      } else {
+        render_tri_type_7(writer,
+                          screen_transform(ap),
+                          screen_transform(bp),
+                          screen_transform(cp),
+                          at,
+                          bt,
+                          ct,
+                          li,
+                          li,
+                          li);
+      }
+    } else {
+      /*
+      render_tri_type_2(writer,
+                        screen_transform(ap),
+                        screen_transform(bp),
+                        screen_transform(cp),
                         li,
                         li,
                         li);
-    } else {
-      /*
-        render_tri_type_2(writer,
-        ap,
-        bp,
-        cp,
-        li,
-        li,
-        li);
       */
     }
   }
@@ -440,6 +521,26 @@ void transfer_faces(ta_parameter_writer& writer)
   for (int i = 0; i < face_count; i++) {
     transfer_face(writer, &faces[i], &last_texture);
   }
+}
+
+int count_face_triangles()
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
+  q3bsp_face_t * faces = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
+
+  int face_count = fe->length / (sizeof (struct q3bsp_face));
+
+  int sum = 0;
+
+  for (int i = 0; i < face_count; i++) {
+    int triangles = faces[i].n_meshverts / 3;
+    sum += triangles;
+  }
+
+  return sum;
 }
 
 void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
@@ -731,6 +832,39 @@ void render_leaf_ix(ta_parameter_writer& writer)
   }
 }
 
+void render_num(ta_parameter_writer& writer, int row, char * s, int num, int offset)
+{
+  offset += unparse_base10_unsigned(&s[offset], num, 5, ' ');
+
+  font_bitmap::transform_string(writer,
+                                8,  16, // texture
+                                8,  16, // glyph
+                                16 + 50 * 8, // position x
+                                16 + row * 16, // position y
+                                s, offset,
+                                para_control::list_type::opaque);
+}
+
+void render_tris_count(ta_parameter_writer& writer)
+{
+  int offset = 18;
+  {
+    char s[32] = "total tris:       ";
+    int row = 0;
+    render_num(writer, row, s, total_tri_count, offset);
+  }
+  {
+    char s[32] = "bsp-visible tris: ";
+    int row = 1;
+    render_num(writer, row, s, vis_tri_count, offset);
+  }
+  {
+    char s[32] = "rendered tris:    ";
+    int row = 2;
+    render_num(writer, row, s, type7_tri_count, offset);
+  }
+}
+
 void render_bounding_box_mm(ta_parameter_writer& writer, const mat4x4& trans, int mins[3], int maxs[3], uint32_t color)
 {
   vec3 max = {(float)maxs[0], (float)maxs[1], (float)maxs[2]};
@@ -806,11 +940,14 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
 
   for (int i = 0; i < leaf->n_leaffaces; i++) {
     int face_ix = lf[i].face;
+    if (face_cache[face_ix] != 0)
+      continue;
+    face_cache[face_ix] = 1;
     transfer_face(writer, &faces[face_ix], &last_texture);
   }
 }
 
-void render_sphere_bounding_box(ta_parameter_writer& writer, const mat4x4& trans)
+void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, const vec3 pos)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_pk_maps_20kdm2_bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -833,14 +970,14 @@ void render_sphere_bounding_box(ta_parameter_writer& writer, const mat4x4& trans
     q3bsp_node_t * new_root = NULL;
     if (root->children[0] >= 0) {
       q3bsp_node_t * node = &nodes[root->children[0]];
-      a_inside = vec3_in_bb(sphere_position, node->mins, node->maxs);
+      a_inside = vec3_in_bb(pos, node->mins, node->maxs);
       if (a_inside) {
         new_root = node;
       }
     } else {
       int leaf_ix = -(root->children[0] + 1);
       q3bsp_leaf_t * leaf = &leafs[leaf_ix];
-      a_inside = vec3_in_bb(sphere_position, leaf->mins, leaf->maxs);
+      a_inside = vec3_in_bb(pos, leaf->mins, leaf->maxs);
       if (a_inside) {
         bb_leaf = leaf;
         break;
@@ -848,14 +985,14 @@ void render_sphere_bounding_box(ta_parameter_writer& writer, const mat4x4& trans
     }
     if (root->children[1] >= 0) {
       q3bsp_node_t * node = &nodes[root->children[1]];
-      b_inside = vec3_in_bb(sphere_position, node->mins, node->maxs);
+      b_inside = vec3_in_bb(pos, node->mins, node->maxs);
       if (b_inside) {
         new_root = node;
       }
     } else {
       int leaf_ix = -(root->children[1] + 1);
       q3bsp_leaf_t * leaf = &leafs[leaf_ix];
-      b_inside = vec3_in_bb(sphere_position, leaf->mins, leaf->maxs);
+      b_inside = vec3_in_bb(pos, leaf->mins, leaf->maxs);
       if (b_inside) {
         bb_leaf = leaf;
         break;
@@ -883,8 +1020,10 @@ void render_sphere_bounding_box(ta_parameter_writer& writer, const mat4x4& trans
     q3bsp_leaf_t * leaf = &leafs[i];
 
     //  Cluster x is visible from cluster y if the (1 << y % 8) bit of vecs[x * sz_vecs + y / 8] is set.
+    /*
     if (leaf->mins[2] > 450 && leaf->maxs[2] > 450)
       continue;
+    */
 
     int y = bb_leaf->cluster;
     int x = leaf->cluster;
@@ -907,15 +1046,23 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
   q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
   transform_vertices(&buf[ve->offset], ve->length, trans);
 
+  q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
+  int face_count = fe->length / (sizeof (struct q3bsp_face));
+
   //transfer_faces(writer);
   transfer_icosphere(writer, trans);
 
-  render_matrix(writer, screen_trans_inv);
-  render_leaf_ix(writer);
+  render_matrix(writer, screen_trans);
+  //render_leaf_ix(writer);
   render_sphere_position(writer);
-  render_zero_position(writer, screen_trans_inv);
+  //render_zero_position(writer, screen_trans_inv);
 
-  render_sphere_bounding_box(writer, trans);
+  vec3 pos = screen_trans_inv * (vec3){0, 0, 0};
+  type7_tri_count = 0;
+  vis_tri_count = 0;
+  for (int i = 0; i < face_count; i++) face_cache[i] = 0;
+  render_visible_faces(writer, trans, pos);
+  render_tris_count(writer);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -1035,13 +1182,15 @@ mat4x4 update_analog(const mat4x4& screen)
   if (ra && !la) x = -10;
   if (la && !ra) x =  10;
 
+  float y = -7 * y_;
+
   float z = 0;
   if (ua && !da) z = -10;
   if (da && !ua) z =  10;
 
   mat4x4 t = {
     1, 0, 0, x,
-    0, 1, 0, 0,
+    0, 1, 0, y,
     0, 0, 1, z,
     0, 0, 0, 1,
   };
@@ -1049,12 +1198,14 @@ mat4x4 update_analog(const mat4x4& screen)
   float yt = 0.05f * x_;
   float xt = 0.05f * y_;
 
+  /*
   mat4x4 rx = {
     1, 0, 0, 0,
     0, cos(xt), -sin(xt), 0,
     0, sin(xt), cos(xt), 0,
     0, 0, 0, 1,
   };
+  */
 
   mat4x4 ry = {
      cos(yt), 0, sin(yt), 0,
@@ -1106,7 +1257,7 @@ mat4x4 update_analog(const mat4x4& screen)
     }
   }
 
-  return rx * ry * t * screen;
+  return ry * t * screen;
 }
 
 void transfer_font()
@@ -1124,6 +1275,8 @@ void transfer_font()
 int main()
 {
   serial::init(0);
+
+  total_tri_count = count_face_triangles();
 
   interrupt_init();
   transfer_textures();
@@ -1180,11 +1333,19 @@ int main()
   int ta = 0;
   int core = 0;
 
-  mat4x4 trans = {
+  /*
+  mat4x4 trans1 = {
     1.0,  0.0,   0.000, -1123.0,
     0.0,  -0.888, -0.458,  859.0,
     0.0,  0.458, -0.888,  791.0,
     0.0,  0.000, 0.000,    1.0,
+  };
+  */
+  mat4x4 trans = {
+    1.0,   0.0,   0.0, -894.0,
+    0.0,   0.0,  -1.0,  451.0,
+    0.0,   1.0,   0.0, -465.0,
+    0.0,   0.0,   0.0,    1.0,
   };
 
   do_get_condition();
