@@ -36,10 +36,8 @@ void print_direntries(struct q3bsp_header * header)
   }
 }
 
-void print_header(void * buf)
+void print_header(struct q3bsp_header * header)
 {
-  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
-
   printf("magic: ");
   putchar(header->magic[0]);
   putchar(header->magic[1]);
@@ -51,27 +49,31 @@ void print_header(void * buf)
   print_direntries(header);
 }
 
-void print_textures(void * buf, int length)
+void print_textures(uint8_t * buf, struct q3bsp_header * header)
 {
-  q3bsp_texture_t * texture = reinterpret_cast<q3bsp_texture_t *>(buf);
+  q3bsp_direntry * te = &header->direntries[LUMP_TEXTURES];
+  q3bsp_texture_t * textures = reinterpret_cast<q3bsp_texture_t *>(&buf[te->offset]);
 
-  int count = length / (sizeof (struct q3bsp_texture));
+  int count = te->length / (sizeof (struct q3bsp_texture));
 
   for (int i = 0; i < count; i++) {
+    q3bsp_texture_t * texture = &textures[i];
     printf("texture [%d]\n", i);
-    printf("  name=%s\n", texture[i].name);
-    printf("  flags=%x\n", texture[i].flags);
-    printf("  contents=%x\n", texture[i].contents);
+    printf("  name=%s\n", texture->name);
+    printf("  flags=%x\n", texture->flags);
+    printf("  contents=%x\n", texture->contents);
   }
 }
 
-void print_models(void * buf, int length)
+void print_models(uint8_t * buf, struct q3bsp_header * header)
 {
-  q3bsp_model_t * model = reinterpret_cast<q3bsp_model_t *>(buf);
+  q3bsp_direntry * me = &header->direntries[LUMP_MODELS];
+  q3bsp_model_t * models = reinterpret_cast<q3bsp_model_t *>(&buf[me->offset]);
 
-  int count = length / (sizeof (struct q3bsp_model));
+  int count = me->length / (sizeof (struct q3bsp_model));
 
   for (int i = 0; i < count; i++) {
+    q3bsp_model_t * model = &models[i];
     printf("model [%d]\n", i);
     printf("  mins={%f, %f, %f}\n", model->mins[0], model->mins[2], model->mins[2]);
     printf("  maxs={%f, %f, %f}\n", model->maxs[0], model->maxs[2], model->maxs[2]);
@@ -82,40 +84,71 @@ void print_models(void * buf, int length)
   }
 }
 
-void print_faces(void * buf, int length)
+void print_vertexes(uint8_t * buf, struct q3bsp_header * header)
 {
-  q3bsp_face_t * face = reinterpret_cast<q3bsp_face_t *>(buf);
+  q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
+  q3bsp_vertex_t * vertexes = reinterpret_cast<q3bsp_vertex_t *>(&buf[ve->offset]);
 
-  int count = length / (sizeof (struct q3bsp_face));
+  int count = ve->length / (sizeof (struct q3bsp_vertex));
+
+  printf("vertexes count: %d\n", count);
+  for (int i = 0; i < count; i++) {
+    q3bsp_vertex_t * vertex = &vertexes[i];
+    printf("vertex [%d]: lightmapcoord=(%f %f)\n", i, vertex->lightmapcoord[0], vertex->lightmapcoord[1]);
+    //assert(vertex->lightmapcoord[0] >= 0.0 && vertex->lightmapcoord[0] <= 1.0);
+    //assert(vertex->lightmapcoord[1] >= 0.0 && vertex->lightmapcoord[1] <= 1.0);
+  }
+}
+
+void print_faces(uint8_t * buf, struct q3bsp_header * header)
+{
+  q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
+  q3bsp_face_t * faces = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
+
+  int count = fe->length / (sizeof (struct q3bsp_face));
 
   printf("faces count: %d\n", count);
   for (int i = 0; i < count; i++) {
+    q3bsp_face_t * face = &faces[i];
     printf("face [%d]\n", i);
-    printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d\n", face[i].type, face[i].n_vertexes, face[i].n_meshverts, face[i].texture);
+    printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d lightmap=%d\n", face->type, face->n_vertexes, face->n_meshverts, face->texture, face->lm_index);
   }
+}
+
+void print_lightmaps(uint8_t * buf, struct q3bsp_header * header)
+{
+  q3bsp_direntry * lme = &header->direntries[LUMP_LIGHTMAPS];
+  q3bsp_lightmap_t * lightmaps = reinterpret_cast<q3bsp_lightmap_t *>(&buf[lme->offset]);
+  int count = lme->length / (sizeof (struct q3bsp_lightmap));
+  printf("lightmaps count: %d offset: %d\n", count, lme->offset);
 }
 
 void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
 {
   // header
-  //print_header(buf);
+  //print_header(header);
 
   if (0) {
-    q3bsp_direntry * e = &header->direntries[LUMP_TEXTURES];
-    print_textures(&buf[e->offset], e->length);
+    print_textures(buf, header);
   }
 
   if (0) {
-    q3bsp_direntry * e = &header->direntries[LUMP_MODELS];
-    print_models(&buf[e->offset], e->length);
+    print_models(buf, header);
+  }
+
+  if (1) {
+    print_vertexes(buf, header);
+  }
+
+  if (1) {
+    print_faces(buf, header);
+  }
+
+  if (1) {
+    print_lightmaps(buf, header);
   }
 
   if (0) {
-    q3bsp_direntry * e = &header->direntries[LUMP_FACES];
-    print_faces(&buf[e->offset], e->length);
-  }
-
-  {
     q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
     q3bsp_face_t * faces = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
     int face_count = fe->length / (sizeof (struct q3bsp_face));
