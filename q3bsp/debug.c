@@ -128,7 +128,7 @@ void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
   // header
   //print_header(header);
 
-  if (0) {
+  if (1) {
     print_textures(buf, header);
   }
 
@@ -136,15 +136,15 @@ void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
     print_models(buf, header);
   }
 
-  if (1) {
+  if (0) {
     print_vertexes(buf, header);
   }
 
-  if (1) {
+  if (0) {
     print_faces(buf, header);
   }
 
-  if (1) {
+  if (0) {
     print_lightmaps(buf, header);
   }
 
@@ -166,7 +166,7 @@ void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
 
     for (int i = 0; i < texture_count; i++) {
       q3bsp_texture_t * texture = &textures[i];
-      printf("[%d] %s %d\n", i, texture->name, texture_uses[i]);
+      printf("[%d] %s %d %08x\n", i, texture->name, texture_uses[i], texture->flags);
     }
   }
 }

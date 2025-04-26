@@ -249,7 +249,7 @@ void global_polygon_type_4(ta_parameter_writer& writer,
                                           ;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
-                                      | tsp_instruction_word::filter_mode::point_sampled
+                                      | tsp_instruction_word::filter_mode::bilinear_filter
                                       | tsp_instruction_word::texture_shading_instruction::decal
                                       ;
 
@@ -328,7 +328,7 @@ void global_texture_lightmap(ta_parameter_writer& writer, int texture_ix, int li
                                   ;
 
   uint32_t texture_address_0 = texture_memory_alloc.texture.start + font_base + lightmap_base + texture_offset;
-  uint32_t texture_control_word_0 = texture_control_word::pixel_format::_565
+  uint32_t texture_control_word_0 = texture_control_word::pixel_format::_1555
                                   | texture_control_word::scan_order::twiddled
                                   | texture_control_word::texture_address(texture_address_0 / 8)
                                   ;
@@ -487,30 +487,38 @@ static inline void render_tri_type_13(ta_parameter_writer& writer,
                                          );
 }
 
-static inline void render_clip_tri_type_7(ta_parameter_writer& writer,
-                                          vec3 ap,
-                                          vec3 bp,
-                                          vec3 cp,
-                                          vec2 at,
-                                          vec2 bt,
-                                          vec2 ct,
-                                          float li)
+static inline void render_clip_tri_type_13(ta_parameter_writer& writer,
+                                           vec3 ap,
+                                           vec3 bp,
+                                           vec3 cp,
+                                           vec2 at0,
+                                           vec2 bt0,
+                                           vec2 ct0,
+                                           vec2 at1,
+                                           vec2 bt1,
+                                           vec2 ct1,
+                                           float li0,
+                                           float li1)
 {
   //return;
   const vec3 plane_point = {0.f, 0.f, 1.f};
   const vec3 plane_normal = {0.f, 0.f, 1.f};
 
   vec3 preclip_position[] = {ap, bp, cp};
-  vec2 preclip_texture[] = {at, bt, ct};
+  vec2 preclip_texture0[] = {at0, bt0, ct0};
+  vec2 preclip_texture1[] = {at1, bt1, ct1};
 
   vec3 clip_position[4];
-  vec2 clip_texture[4];
-  int output_length = geometry::clip_polygon_2<3>(clip_position,
-                                                  clip_texture,
+  vec2 clip_texture0[4];
+  vec2 clip_texture1[4];
+  int output_length = geometry::clip_polygon_3<3>(clip_position,
+                                                  clip_texture0,
+                                                  clip_texture1,
                                                   plane_point,
                                                   plane_normal,
                                                   preclip_position,
-                                                  preclip_texture);
+                                                  preclip_texture0,
+                                                  preclip_texture1);
 
   {
     vec3 ap;
@@ -518,35 +526,49 @@ static inline void render_clip_tri_type_7(ta_parameter_writer& writer,
     vec3 cp;
     vec3 dp;
 
-    const vec2& at = clip_texture[0];
-    const vec2& bt = clip_texture[1];
-    const vec2& ct = clip_texture[2];
-    const vec2& dt = clip_texture[3];
+    const vec2& at0 = clip_texture0[0];
+    const vec2& bt0 = clip_texture0[1];
+    const vec2& ct0 = clip_texture0[2];
+    const vec2& dt0 = clip_texture0[3];
+
+    const vec2& at1 = clip_texture1[0];
+    const vec2& bt1 = clip_texture1[1];
+    const vec2& ct1 = clip_texture1[2];
+    const vec2& dt1 = clip_texture1[3];
+
     if (output_length >= 3) {
       ap = screen_transform(clip_position[0]);
       bp = screen_transform(clip_position[1]);
       cp = screen_transform(clip_position[2]);
 
-      render_tri_type_7(writer,
-                        ap,
-                        bp,
-                        cp,
-                        at,
-                        bt,
-                        ct,
-                        li);
+      render_tri_type_13(writer,
+                         ap,
+                         bp,
+                         cp,
+                         at0,
+                         bt0,
+                         ct0,
+                         at1,
+                         bt1,
+                         ct1,
+                         li0,
+                         li1);
     }
     if (output_length >= 4) {
       dp = screen_transform(clip_position[3]);
 
-      render_tri_type_7(writer,
-                        ap,
-                        cp,
-                        dp,
-                        at,
-                        ct,
-                        dt,
-                        li);
+      render_tri_type_13(writer,
+                         ap,
+                         cp,
+                         dp,
+                         at0,
+                         ct0,
+                         dt0,
+                         at1,
+                         ct1,
+                         dt1,
+                         li0,
+                         li1);
     }
   }
 }
@@ -563,7 +585,7 @@ float light_intensity(vec3 light_vec, vec3 n)
 
   float intensity = 0.5f;
   if (n_dot_l > 0) {
-    intensity += 0.7f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
+    intensity += 0.9f * n_dot_l * (inverse_length(n) * inverse_length(light_vec));
     if (intensity > 1.0f)
       intensity = 1.0f;
   }
@@ -572,7 +594,7 @@ float light_intensity(vec3 light_vec, vec3 n)
 
 static vec3 light_vec = {20, -20, -20};
 
-static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * face, int * last_texture)
+static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * face, int * last_texture, int * last_lm_index)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -597,16 +619,16 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
 
   if (!has_texture)
     return;
-  /*
-  if (face->texture != *last_texture) {
+
+  if (face->texture != *last_texture || face->lm_index != *last_lm_index) {
     *last_texture = face->texture;
+    *last_lm_index = face->lm_index;
     if (has_texture) {
-      global_texture(writer, face->texture);
+      global_texture_lightmap(writer, face->texture, face->lm_index);
     } else {
       //global_polygon_type_1(writer, 0, 0, 0);
     }
   }
-  */
 
   for (int j = 0; j < triangles; j++) {
 
@@ -625,7 +647,8 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
     }
 
     vec3 n = vertex_cache[aix].normal;
-    float li = light_intensity(light_vec, n);
+    float li0 = light_intensity(light_vec, n);
+    const float li1 = 2.0;
 
     if (has_texture) {
       float v_mul = textures[face->texture].v_mul;
@@ -638,22 +661,22 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
       vec2 clm = {vert[cix].lightmapcoord[0], vert[cix].lightmapcoord[1]};
 
       if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
-        /*
-        render_clip_tri_type_7(writer,
-                               ap,
-                               bp,
-                               cp,
-                               at,
-                               bt,
-                               ct,
-                               li);
-        */
-      } else if (face->lm_index >= 0) {
+        render_clip_tri_type_13(writer,
+                                ap,
+                                bp,
+                                cp,
+                                at,
+                                bt,
+                                ct,
+                                alm,
+                                blm,
+                                clm,
+                                li0,
+                                li1);
+      } else {
         vec3 aps = screen_transform(ap);
         vec3 bps = screen_transform(bp);
         vec3 cps = screen_transform(cp);
-
-        global_texture_lightmap(writer, face->texture, face->lm_index);
 
         render_tri_type_13(writer,
                            aps,
@@ -665,8 +688,8 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
                            alm,
                            blm,
                            clm,
-                           li,
-                           1.0);
+                           li0,
+                           li1);
       }
     } else {
       /*
@@ -691,9 +714,10 @@ void transfer_faces(ta_parameter_writer& writer)
   int face_count = fe->length / (sizeof (struct q3bsp_face));
 
   int last_texture = -1;
+  int last_lm_index = -1;
 
   for (int i = 0; i < face_count; i++) {
-    transfer_face(writer, &faces[i], &last_texture);
+    transfer_face(writer, &faces[i], &last_texture, &last_lm_index);
   }
 }
 
@@ -1109,13 +1133,14 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
   q3bsp_leafface_t * lf = &leaffaces[leaf->leafface];
 
   int last_texture = -1;
+  int last_lm_index = -1;
 
   for (int i = 0; i < leaf->n_leaffaces; i++) {
     int face_ix = lf[i].face;
     if (face_cache[face_ix] != 0)
       continue;
     face_cache[face_ix] = 1;
-    transfer_face(writer, &faces[face_ix], &last_texture);
+    transfer_face(writer, &faces[face_ix], &last_texture, &last_lm_index);
   }
 }
 
