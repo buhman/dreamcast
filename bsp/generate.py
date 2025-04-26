@@ -1,1 +1,0 @@
-../regs/gen/generate.py

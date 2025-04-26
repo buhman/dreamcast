@@ -230,9 +230,9 @@ void global_texture(ta_parameter_writer& writer, int ix)
                             | tsp_instruction_word::texture_v_size::from_int(texture->height)
                             ;
 
-  uint32_t texture_address = texture_memory_alloc.texture.start + font_offset + texture->offset * 2;
+  uint32_t texture_address = texture_memory_alloc.texture.start + font_offset + texture->offset;
   uint32_t texture_control_word = texture_control_word::pixel_format::_565
-                                | texture_control_word::scan_order::non_twiddled
+                                | texture_control_word::scan_order::twiddled
                                 | texture_control_word::texture_address(texture_address / 8)
                                 ;
 
@@ -1152,7 +1152,7 @@ void transfer_textures()
 
   int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
   for (int i = 0; i < textures_length; i++) {
-    uint32_t offset = texture_memory_alloc.texture.start + font_offset + textures[i].offset * 2;
+    uint32_t offset = texture_memory_alloc.texture.start + font_offset + textures[i].offset;
     void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
     void * src = textures[i].start;
     uint32_t size = textures[i].size;
@@ -1325,7 +1325,7 @@ int main()
                           0xff202040);
   }
 
-  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf);
+  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   video_output::set_mode_vga();
 

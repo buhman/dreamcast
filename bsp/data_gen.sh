@@ -6,6 +6,6 @@ while read line; do
     name="${filename%.*}"
     data_name="${name}.data"
     echo $data_name
-    python ~/model_generator/color_convert.py $filename rgb565 twiddled mipmapped $data_name
+    python ~/model_generator/color_convert.py $filename rgb565 twiddled non_mipmapped $data_name
     (cd .. ; make bsp/${data_name}.h)
 done
