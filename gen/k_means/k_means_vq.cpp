@@ -1,7 +1,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstdint>
-#include <cassert>
+#include <assert.h>
 #include <ctime>
 #include <cmath>
 #include <cinttypes>
@@ -12,8 +12,8 @@
 #include "k_means_cluster.cpp"
 #include "ppm.h"
 
-#include "twiddle.hpp"
-#include "color_format.hpp"
+#include "../../twiddle.hpp"
+#include "../../color_format.hpp"
 
 void rgb_to_vectors(const uint8_t * rgb, int width, int height, double vectors[][12])
 {
@@ -187,6 +187,7 @@ int main(int argc, char * argv[])
     fprintf(stderr, "ppm parse failed\n");
     return -1;
   }
+  printf("%d %d %d\n", ppm.length, ppm.width, ppm.height);
   assert(ppm.length == ppm.width * ppm.height * 3);
 
   uint32_t random_state = time(NULL);
