@@ -92,6 +92,8 @@ static ft0::data_transfer::data_format data[4];
 uint8_t send_buf[1024] __attribute__((aligned(32)));
 uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
+constexpr void * bsp_start = &_binary_bsp_20kdm2_maps_20kdm2_bsp_start;
+
 void do_get_condition()
 {
   auto writer = maple::host_command_writer(send_buf, recv_buf);
@@ -413,7 +415,7 @@ static vec3 light_vec = {20, -20, -20};
 
 static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * face, int * last_texture)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
@@ -507,7 +509,7 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
 
 void transfer_faces(ta_parameter_writer& writer)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
@@ -524,7 +526,7 @@ void transfer_faces(ta_parameter_writer& writer)
 
 int count_face_triangles()
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
@@ -806,7 +808,7 @@ void render_ix(ta_parameter_writer& writer, int row, char * s, int ix)
 
 void render_leaf_ix(ta_parameter_writer& writer)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
   q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
   q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
@@ -873,7 +875,7 @@ void render_bounding_box_mm(ta_parameter_writer& writer, const mat4x4& trans, in
 
 void render_bounding_boxes(ta_parameter_writer& writer, const mat4x4& trans)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
@@ -921,7 +923,7 @@ bool vec3_in_bb(vec3 v, int mins[3], int maxs[3])
 
 void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_leaf_t * leaf)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   //int leafface 	First leafface for leaf.
@@ -948,7 +950,7 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
 
 void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, const vec3 pos)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
@@ -1010,7 +1012,7 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
   }
 
   assert(bb_leaf != NULL);
-  uint32_t color = 0x8000ff16;
+  //uint32_t color = 0x8000ff16;
   //render_bounding_box_mm(writer, trans, bb_leaf->maxs, bb_leaf->mins, color);
   render_leaf_faces(writer, trans, bb_leaf);
 
@@ -1028,7 +1030,7 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
     int x = leaf->cluster;
     bool visible = (visdata->vecs[x * visdata->sz_vecs + y / 8] & (1 << (y % 8))) != 0;
     if (visible) {
-      uint32_t color = 0x40ff00e6;
+      //uint32_t color = 0x40ff00e6;
       //render_bounding_box_mm(writer, trans, leaf->maxs, leaf->mins, color);
       render_leaf_faces(writer, trans, leaf);
     }
@@ -1037,7 +1039,7 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
 
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, const mat4x4& screen_trans_inv)
 {
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
 
   const mat4x4 trans = screen_trans;
@@ -1213,7 +1215,7 @@ mat4x4 update_analog(const mat4x4& screen)
     0, 0, 0, 1,
   };
 
-  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_bsp_20kdm2_maps_20kdm2_bsp_start);
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
   //q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
   //int num_leaves = le->length / (sizeof (struct q3bsp_leaf));
