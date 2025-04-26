@@ -12,6 +12,7 @@ LIB ?= $(MAKEFILE_PATH)
 include ip.mk
 
 include example/example.mk
+include example/bsp/bsp.mk
 include chess/chess.mk
 include text_editor/text_editor.mk
 
