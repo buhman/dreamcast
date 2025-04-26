@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include <cstddef>
+#include "assert.h"
 
 #include "../float_uint32.hpp"
 
@@ -83,11 +84,12 @@ constexpr uint32_t modifier_volume_vertex_parameter_control_word()
 
 struct ta_parameter_writer {
   uint8_t * buf;
+  uint32_t length;
   uint32_t offset; // in bytes
 
   template <typename T>
-  ta_parameter_writer(T * buf)
-    : buf(reinterpret_cast<uint8_t *>(buf)), offset(0)
+  ta_parameter_writer(T * buf, uint32_t length)
+    : buf(reinterpret_cast<uint8_t *>(buf)), length(length), offset(0)
   { }
 
   template <typename T>
@@ -95,6 +97,7 @@ struct ta_parameter_writer {
   {
     T& t = *reinterpret_cast<T *>(&buf[offset]);
     offset += (sizeof (T));
+    assert(offset < length);
     return t;
   }
 };

@@ -1,0 +1,8 @@
+{
+map		"katdm3"
+bots		"klesk major uriel"
+longname	"inner sanctum"
+fraglimit	10
+timelimit	20
+type		"ffa team"
+}

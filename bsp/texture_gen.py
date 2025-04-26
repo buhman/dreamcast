@@ -11,8 +11,8 @@ def read_texture_names():
     return lines
 
 def glob_and_filter(name):
-    filenames = glob(f"{name}.tga") + glob(f"{name}.jpg")
-    assert len(filenames) in {0, 1}
+    filenames = glob(f"*/{name}.tga") + glob(f"*/{name}.jpg")
+    assert len(filenames) in {0, 1}, filenames
     filename = filenames[0] if filenames else None
     return filename
 
@@ -45,7 +45,22 @@ class Texture:
     npot_size: Size
     offset: int
 
+mipmapped = False
+
+def mip_size(n):
+    if n == 0:
+        return 0
+    size = 6
+    while n > 0:
+        size += n * n * 2
+        n >>= 1
+    return size
+
+assert mip_size(256) == 0x2aab0, hex(mip_size(256))
+
 def texture_metadata():
+    global mipmapped
+
     names = read_texture_names()
     acc = 0
     for name in names:
@@ -53,6 +68,12 @@ def texture_metadata():
         w, h = image_size(filename)
         nw, nh = npot(w), npot(h)
 
+        if w > 256:
+            name = None
+            filename = None
+            w, h, nw, nh = 0, 0, 0, 0
+        elif filename:
+            print(filename)
         yield Texture(
             name,
             filename,
@@ -61,14 +82,19 @@ def texture_metadata():
             acc
         )
 
-        acc += nw * h
+        if mipmapped:
+            assert w == h and nw == w, (w, h)
+            acc += mip_size(w)
+        else:
+            acc += nw * h * 2
+    assert acc <= (0x80_0000 - 0x37_1800), acc
 
 def name_to_bin(filename):
     if filename is None:
         return None
     else:
         name, ext = path.splitext(filename)
-        return "_binary_pk_" + name.replace('/', '_').replace('.', '_') + "_data"
+        return f"_binary_bsp_" + name.replace('/', '_').replace('.', '_').replace('-', '_') + "_data"
 
 def uv_mul(texture):
     u = 0 if texture.npot_size.w == 0 else texture.real_size.w / texture.npot_size.w
@@ -96,8 +122,15 @@ def render_texture_metadatas():
         yield from render_texture_metadata(texture)
 
 def main():
+    global mipmapped
+    out_filename = sys.argv[1]
+    is_mipmapped = sys.argv[2]
+    assert is_mipmapped in {"mipmapped", "non_mipmapped"}
+    mipmapped = is_mipmapped == "mipmapped"
+
     render, out = renderer()
     render(render_texture_metadatas())
-    sys.stdout.write(out.getvalue())
+    with open(out_filename, "w") as f:
+        f.write(out.getvalue())
 
 main()
