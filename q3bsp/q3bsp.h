@@ -130,7 +130,10 @@ typedef struct q3bsp_face {
 } q3bsp_face_t;
 
 typedef struct q3bsp_lightmap {
-  uint8_t map[128][128][3];
+  union {
+    uint8_t u8[128 * 128 * 3];
+    uint8_t map[128][128][3];
+  };
 } q3bsp_lightmap_t;
 
 typedef struct q3bsp_visdata {

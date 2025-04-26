@@ -271,6 +271,7 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 	texture/wolf/wolf.data.o \
 	texture/macaw/macaw.data.o \
 	maple/maple.o \
+	sh7091/serial.o \
 	$(LIBGCC)
 
 example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/main.lds
