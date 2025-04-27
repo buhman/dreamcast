@@ -191,17 +191,17 @@
   .v_mul = 0, // 0
 },
 {
-  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame2_data_start,
-  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame2_data_size,
+  .start = (void *)0,
+  .size = (uint32_t)0,
   .offset = 1876992,
-  .width = 128,
-  .height = 256,
-  .v_mul = 1.0, // 256
+  .width = 0,
+  .height = 0,
+  .v_mul = 0, // 0
 },
 {
   .start = (void *)&_binary_bsp_20kdm2_models_mapobjects_gratelamp_gratetorch2_data_start,
   .size = (uint32_t)&_binary_bsp_20kdm2_models_mapobjects_gratelamp_gratetorch2_data_size,
-  .offset = 1942528,
+  .offset = 1876992,
   .width = 32,
   .height = 64,
   .v_mul = 1.0, // 64
@@ -209,8 +209,72 @@
 {
   .start = (void *)&_binary_bsp_20kdm2_models_mapobjects_gratelamp_gratetorch2b_data_start,
   .size = (uint32_t)&_binary_bsp_20kdm2_models_mapobjects_gratelamp_gratetorch2b_data_size,
-  .offset = 1946624,
+  .offset = 1881088,
   .width = 32,
   .height = 64,
   .v_mul = 1.0, // 64
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame1_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame1_data_size,
+  .offset = 1885184,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame2_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame2_data_size,
+  .offset = 1950720,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame3_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame3_data_size,
+  .offset = 2016256,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame4_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame4_data_size,
+  .offset = 2081792,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame5_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame5_data_size,
+  .offset = 2147328,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame6_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame6_data_size,
+  .offset = 2212864,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame7_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame7_data_size,
+  .offset = 2278400,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
+},
+{
+  .start = (void *)&_binary_bsp_20kdm2_textures_sfx_flame8_data_start,
+  .size = (uint32_t)&_binary_bsp_20kdm2_textures_sfx_flame8_data_size,
+  .offset = 2343936,
+  .width = 128,
+  .height = 256,
+  .v_mul = 1.0, // 256
 },

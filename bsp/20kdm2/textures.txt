@@ -21,7 +21,15 @@ textures/stone/pjrock1
 textures/skies/tim_hell
 textures/common/hint
 models/mapobjects/timlamp/timlamp
-textures/sfx/flame1side
-textures/sfx/flame2
+flame1side
+flame2
 models/mapobjects/gratelamp/gratetorch2
 models/mapobjects/gratelamp/gratetorch2b
+textures/sfx/flame1
+textures/sfx/flame2
+textures/sfx/flame3
+textures/sfx/flame4
+textures/sfx/flame5
+textures/sfx/flame6
+textures/sfx/flame7
+textures/sfx/flame8

@@ -35,6 +35,14 @@ BSP_20KDM2_OBJ = \
 	bsp/20kdm2/textures/sfx/flame2.data.o \
 	bsp/20kdm2/models/mapobjects/gratelamp/gratetorch2.data.o \
 	bsp/20kdm2/models/mapobjects/gratelamp/gratetorch2b.data.o \
+	bsp/20kdm2/textures/sfx/flame1.data.o \
+	bsp/20kdm2/textures/sfx/flame2.data.o \
+	bsp/20kdm2/textures/sfx/flame3.data.o \
+	bsp/20kdm2/textures/sfx/flame4.data.o \
+	bsp/20kdm2/textures/sfx/flame5.data.o \
+	bsp/20kdm2/textures/sfx/flame6.data.o \
+	bsp/20kdm2/textures/sfx/flame7.data.o \
+	bsp/20kdm2/textures/sfx/flame8.data.o \
 	$(LIBGCC)
 
 example/bsp/20kdm2.elf: LDSCRIPT = $(LIB)/main.lds

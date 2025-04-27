@@ -110,8 +110,10 @@ void print_faces(uint8_t * buf, struct q3bsp_header * header)
   printf("faces count: %d\n", count);
   for (int i = 0; i < count; i++) {
     q3bsp_face_t * face = &faces[i];
-    printf("face [%d]\n", i);
-    printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d lightmap=%d\n", face->type, face->n_vertexes, face->n_meshverts, face->texture, face->lm_index);
+    if (face->texture == 23 || face->texture == 24 || face->type == 4){
+      printf("face [%d]\n", i);
+      printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d lightmap=%d\n", face->type, face->n_vertexes, face->n_meshverts, face->texture, face->lm_index);
+    }
   }
 }
 
@@ -128,7 +130,7 @@ void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
   // header
   //print_header(header);
 
-  if (1) {
+  if (0) {
     print_textures(buf, header);
   }
 
@@ -140,7 +142,7 @@ void debug_print_q3bsp(uint8_t * buf, q3bsp_header_t * header)
     print_vertexes(buf, header);
   }
 
-  if (0) {
+  if (1) {
     print_faces(buf, header);
   }
 

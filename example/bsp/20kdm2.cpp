@@ -58,9 +58,17 @@
 #include "bsp/20kdm2/textures/gothic_trim/metalblackwave01.data.h"
 #include "bsp/20kdm2/textures/stone/pjrock1.data.h"
 #include "bsp/20kdm2/models/mapobjects/timlamp/timlamp.data.h"
-#include "bsp/20kdm2/textures/sfx/flame2.data.h"
 #include "bsp/20kdm2/models/mapobjects/gratelamp/gratetorch2.data.h"
 #include "bsp/20kdm2/models/mapobjects/gratelamp/gratetorch2b.data.h"
+
+#include "bsp/20kdm2/textures/sfx/flame1.data.h"
+#include "bsp/20kdm2/textures/sfx/flame2.data.h"
+#include "bsp/20kdm2/textures/sfx/flame3.data.h"
+#include "bsp/20kdm2/textures/sfx/flame4.data.h"
+#include "bsp/20kdm2/textures/sfx/flame5.data.h"
+#include "bsp/20kdm2/textures/sfx/flame6.data.h"
+#include "bsp/20kdm2/textures/sfx/flame7.data.h"
+#include "bsp/20kdm2/textures/sfx/flame8.data.h"
 
 #include "q3bsp/q3bsp.h"
 #include "bsp/20kdm2/maps/20kdm2.bsp.h"
@@ -170,7 +178,6 @@ void global_polygon_type_0(ta_parameter_writer& writer)
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::src_alpha_instr::src_alpha
                                       | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
-                                      | tsp_instruction_word::use_alpha
                                       ;
 
   const uint32_t texture_control_word = 0;
@@ -196,19 +203,19 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | para_control::list_type::opaque
+                                        | para_control::list_type::translucent
                                         | obj_control::col_type::intensity_mode_1
                                         | obj_control::gouraud
                                         | obj_control_texture
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                          | isp_tsp_instruction_word::culling_mode::cull_if_negative
+                                          | isp_tsp_instruction_word::culling_mode::no_culling
                                           ;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::filter_mode::bilinear_filter
-                                      | tsp_instruction_word::texture_shading_instruction::modulate
+                                      | tsp_instruction_word::texture_shading_instruction::decal
                                       | texture_u_v_size
                                       ;
 
@@ -250,7 +257,7 @@ void global_polygon_type_4(ta_parameter_writer& writer,
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::filter_mode::bilinear_filter
-                                      | tsp_instruction_word::texture_shading_instruction::decal
+                                      | tsp_instruction_word::texture_shading_instruction::modulate
                                       ;
 
   writer.append<ta_global_parameter::polygon_type_4>() =
@@ -273,12 +280,12 @@ void global_polygon_type_4(ta_parameter_writer& writer,
                                         );
 }
 
-void global_texture(ta_parameter_writer& writer, int ix)
+void global_texture(ta_parameter_writer& writer, int texture_ix)
 {
-  struct pk_texture * texture = &textures[ix];
+  struct pk_texture * texture = &textures[texture_ix];
 
   uint32_t texture_u_v_size = tsp_instruction_word::src_alpha_instr::one
-                            | tsp_instruction_word::dst_alpha_instr::zero
+                            | tsp_instruction_word::dst_alpha_instr::one
                             | tsp_instruction_word::texture_u_size::from_int(texture->width)
                             | tsp_instruction_word::texture_v_size::from_int(texture->height)
                             ;
@@ -739,6 +746,114 @@ int count_face_triangles()
   }
 
   return sum;
+}
+
+const int flame1_ix = 27;
+
+const vec3 billboard_p[] = {
+  (vec3){-1, -2, 0} * 10.f,
+  (vec3){ 1, -2, 0} * 10.f,
+  (vec3){ 1,  2, 0} * 10.f,
+  (vec3){-1,  2, 0} * 10.f,
+};
+
+const vec2 billboard_t[] = {
+  {0, 0},
+  {1, 0},
+  {1, 1},
+  {0, 1},
+};
+
+int anim_count = 0;
+int flame_ix = 0;
+
+static inline void transfer_face_billboard(ta_parameter_writer& writer, q3bsp_face_t * face)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
+  q3bsp_vertex_t * vert = reinterpret_cast<q3bsp_vertex_t *>(&buf[ve->offset]);
+
+  q3bsp_direntry * me = &header->direntries[LUMP_MESHVERTS];
+  q3bsp_meshvert_t * meshvert = reinterpret_cast<q3bsp_meshvert_t *>(&buf[me->offset]);
+
+  int meshvert_ix = face->meshvert;
+  q3bsp_meshvert_t * mv = &meshvert[meshvert_ix];
+
+  int triangles = face->n_meshverts / 3;
+
+  assert(face->texture == 23 || face->texture == 24);
+
+  float li = 1;
+
+  for (int j = 0; j < triangles; j++) {
+
+    int aix = mv[j * 3 + 0].offset + face->vertex;
+    int bix = mv[j * 3 + 1].offset + face->vertex;
+    int cix = mv[j * 3 + 2].offset + face->vertex;
+
+    vec3 ap = vertex_cache[aix].position;
+    vec3 bp = vertex_cache[bix].position;
+    vec3 cp = vertex_cache[cix].position;
+
+    vis_tri_count += 1;
+
+    if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
+      continue;
+    }
+
+    vec2 at = {vert[aix].texcoord[0], vert[aix].texcoord[1]};
+    vec2 bt = {vert[bix].texcoord[0], vert[bix].texcoord[1]};
+    vec2 ct = {vert[cix].texcoord[0], vert[cix].texcoord[1]};
+
+    render_tri_type_7(writer,
+                      screen_transform(ap),
+                      screen_transform(bp),
+                      screen_transform(cp),
+                      at,
+                      bt,
+                      ct,
+                      li);
+  }
+}
+
+void transfer_billboard(ta_parameter_writer& writer, const mat4x4& screen_trans)
+{
+  global_texture(writer, flame1_ix + flame_ix);
+
+  /*
+  const vec2& at = billboard_t[0];
+  const vec2& bt = billboard_t[1];
+  const vec2& ct = billboard_t[2];
+  const vec2& dt = billboard_t[3];
+  */
+
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
+  q3bsp_face_t * faces = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
+
+  int face_count = fe->length / (sizeof (struct q3bsp_face));
+
+  for (int i = 0; i < face_count; i++) {
+    q3bsp_face_t * face = &faces[i];
+    if (!(face->texture == 23 || face->texture == 24))
+      continue;
+
+    if (!face_cache[i])
+      continue;
+
+    transfer_face_billboard(writer, face);
+  }
+
+  if (anim_count++ > 3) {
+    flame_ix += 1;
+    if (flame_ix >= 8)
+      flame_ix = 0;
+    anim_count = 0;
+  }
 }
 
 void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
@@ -1301,6 +1416,13 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 
+  // translucent list
+  transfer_billboard(writer, trans);
+
+  writer.append<ta_global_parameter::end_of_list>() =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+
+  // modifier volume list
   transfer_modifier_volume(writer);
 
   writer.append<ta_global_parameter::end_of_list>() =
@@ -1565,20 +1687,20 @@ const int tile_width = framebuffer_width / 32;
 const int tile_height = framebuffer_height / 32;
 
 constexpr uint32_t ta_alloc = 0
-                            | ta_alloc_ctrl::pt_opb::_16x4byte
+                            | ta_alloc_ctrl::pt_opb::_32x4byte
                             | ta_alloc_ctrl::tm_opb::no_list
-                            | ta_alloc_ctrl::t_opb::no_list
-                            | ta_alloc_ctrl::om_opb::_16x4byte
+                            | ta_alloc_ctrl::t_opb::_8x4byte
+                            | ta_alloc_ctrl::om_opb::_8x4byte
                             | ta_alloc_ctrl::o_opb::no_list;
 
 constexpr int ta_cont_count = 1;
 constexpr struct opb_size opb_size[ta_cont_count] = {
   {
     .opaque = 0,
-    .opaque_modifier = 16 * 4,
-    .translucent = 0,
+    .opaque_modifier = 8 * 4,
+    .translucent = 8 * 4,
     .translucent_modifier = 0,
-    .punch_through = 16 * 4
+    .punch_through = 32 * 4
   }
 };
 
@@ -1677,6 +1799,11 @@ int main()
   holly.SOFTRESET = 0;
 
   core_init();
+
+  holly.ISP_FEED_CFG  = isp_feed_cfg::cache_size_for_translucency(0x200)
+                      | isp_feed_cfg::punch_through_chunk_size(0x040)
+                      | isp_feed_cfg::pre_sort_mode
+                      ;
 
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
