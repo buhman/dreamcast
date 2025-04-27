@@ -11,7 +11,7 @@
 #include "holly/ta_global_parameter.hpp"
 #include "holly/ta_parameter.hpp"
 #include "holly/ta_vertex_parameter.hpp"
-#include "holly/texture_memory_alloc3.hpp"
+#include "holly/texture_memory_alloc5.hpp"
 #include "holly/video_output.hpp"
 
 #include "systembus.hpp"
@@ -1584,14 +1584,17 @@ constexpr struct opb_size opb_size[ta_cont_count] = {
 
 static volatile int ta_in_use = 0;
 static volatile int core_in_use = 0;
-static volatile int next_frame;
+static volatile int next_frame = 0;
+static volatile int framebuffer_ix = 0;
+static volatile int next_frame_ix = 0;
 
 static inline void pump_events(uint32_t istnrm)
 {
   if (istnrm & istnrm::v_blank_in) {
     system.ISTNRM = istnrm::v_blank_in;
 
-    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[next_frame].start;
+    next_frame = 1;
+    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[next_frame_ix].start;
   }
 
   if (istnrm & istnrm::end_of_render_tsp) {
@@ -1599,11 +1602,22 @@ static inline void pump_events(uint32_t istnrm)
                   | istnrm::end_of_render_isp
                   | istnrm::end_of_render_video;
 
+    next_frame_ix = framebuffer_ix;
+    framebuffer_ix += 1;
+    if (framebuffer_ix >= 3) framebuffer_ix = 0;
+
     core_in_use = 0;
   }
 
   if (istnrm & istnrm::end_of_transferring_opaque_modifier_volume_list) {
     system.ISTNRM = istnrm::end_of_transferring_opaque_modifier_volume_list;
+
+    core_in_use = 1;
+    core_start_render2(texture_memory_alloc.region_array.start,
+                       texture_memory_alloc.isp_tsp_parameters.start,
+                       texture_memory_alloc.background[0].start,
+                       texture_memory_alloc.framebuffer[framebuffer_ix].start,
+                       framebuffer_width);
 
     ta_in_use = 0;
   }
@@ -1668,17 +1682,15 @@ int main()
                  | istnrm::v_blank_in
                  | istnrm::end_of_transferring_opaque_modifier_volume_list;
 
-  for (int i = 0; i < 2; i++) {
-    region_array_multipass(tile_width,
-                           tile_height,
-                           opb_size,
-                           ta_cont_count,
-                           texture_memory_alloc.region_array[i].start,
-                           texture_memory_alloc.object_list[i].start);
+  region_array_multipass(tile_width,
+                         tile_height,
+                         opb_size,
+                         ta_cont_count,
+                         texture_memory_alloc.region_array.start,
+                         texture_memory_alloc.object_list.start);
 
-    background_parameter2(texture_memory_alloc.background[i].start,
-                          0xff202040);
-  }
+  background_parameter2(texture_memory_alloc.background[0].start,
+                        0xff202040);
 
   ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
@@ -1703,30 +1715,7 @@ int main()
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
 
-  for (int i = 0; i < 2; i++) {
-    trans = update_analog(trans);
-    mat4x4 trans_inv = inverse(trans);
-    writer.offset = 0;
-    transfer_scene(writer, trans, trans_inv);
-
-    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[i].start,
-                               texture_memory_alloc.isp_tsp_parameters[i].end,
-                               texture_memory_alloc.object_list[i].start,
-                               texture_memory_alloc.object_list[i].end,
-                               opb_size[0].total(),
-                               ta_alloc,
-                               tile_width,
-                               tile_height);
-    ta_polygon_converter_writeback(writer.buf, writer.offset);
-    ta_polygon_converter_transfer(writer.buf, writer.offset);
-    while (ta_in_use);
-  }
-
-  int ta = 0;
-
   while (1) {
-    int core = !ta;
-
     maple::dma_wait_complete();
     do_get_condition();
 
@@ -1736,11 +1725,12 @@ int main()
     transfer_scene(writer, trans, trans_inv);
 
     while (ta_in_use);
+    while (core_in_use);
     ta_in_use = 1;
-    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
-                               texture_memory_alloc.isp_tsp_parameters[ta].end,
-                               texture_memory_alloc.object_list[ta].start,
-                               texture_memory_alloc.object_list[ta].end,
+    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters.start,
+                               texture_memory_alloc.isp_tsp_parameters.end,
+                               texture_memory_alloc.object_list.start,
+                               texture_memory_alloc.object_list.end,
                                opb_size[0].total(),
                                ta_alloc,
                                tile_width,
@@ -1748,16 +1738,7 @@ int main()
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
 
-    while (current_frame != core);
-    core_in_use = 1;
-    core_start_render2(texture_memory_alloc.region_array[core].start,
-                       texture_memory_alloc.isp_tsp_parameters[core].start,
-                       texture_memory_alloc.background[core].start,
-                       texture_memory_alloc.framebuffer[core].start,
-                       framebuffer_width);
-
-    ta = !ta;
-
-    next_frame = ta;
+    while (next_frame)
+    next_frame = 0;
   }
 }
