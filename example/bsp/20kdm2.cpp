@@ -1470,7 +1470,7 @@ mat4x4 update_analog(const mat4x4& screen)
     0, 0, 0, 1,
   };
 
-  float yt = 0.05f * x_;
+  float yt = -0.05f * x_;
   float xt = 0.05f * y_;
 
   /*
@@ -1547,8 +1547,108 @@ void transfer_font()
   printf("font_base %d actual %d\n", font_base, offset);
 }
 
+void vbr100()
+{
+  serial::string("vbr100\n");
+  interrupt_exception();
+}
+
+void vbr400()
+{
+  serial::string("vbr400\n");
+  interrupt_exception();
+}
+
+const int framebuffer_width = 640;
+const int framebuffer_height = 480;
+const int tile_width = framebuffer_width / 32;
+const int tile_height = framebuffer_height / 32;
+
+constexpr uint32_t ta_alloc = 0
+                            | ta_alloc_ctrl::pt_opb::_16x4byte
+                            | ta_alloc_ctrl::tm_opb::no_list
+                            | ta_alloc_ctrl::t_opb::no_list
+                            | ta_alloc_ctrl::om_opb::_16x4byte
+                            | ta_alloc_ctrl::o_opb::no_list;
+
+constexpr int ta_cont_count = 1;
+constexpr struct opb_size opb_size[ta_cont_count] = {
+  {
+    .opaque = 0,
+    .opaque_modifier = 16 * 4,
+    .translucent = 0,
+    .translucent_modifier = 0,
+    .punch_through = 16 * 4
+  }
+};
+
+static volatile int ta_in_use = 0;
+static volatile int core_in_use = 0;
+static volatile int next_frame;
+
+static inline void pump_events(uint32_t istnrm)
+{
+  if (istnrm & istnrm::v_blank_in) {
+    system.ISTNRM = istnrm::v_blank_in;
+
+    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[next_frame].start;
+  }
+
+  if (istnrm & istnrm::end_of_render_tsp) {
+    system.ISTNRM = istnrm::end_of_render_tsp
+                  | istnrm::end_of_render_isp
+                  | istnrm::end_of_render_video;
+
+    core_in_use = 0;
+  }
+
+  if (istnrm & istnrm::end_of_transferring_opaque_modifier_volume_list) {
+    system.ISTNRM = istnrm::end_of_transferring_opaque_modifier_volume_list;
+
+    ta_in_use = 0;
+  }
+}
+
+void vbr600()
+{
+  uint32_t sr;
+  asm volatile ("stc sr,%0" : "=r" (sr));
+  sr |= sh::sr::imask(15);
+  asm volatile ("ldc %0,sr" : : "r" (sr));
+  //serial::string("imask\n");
+
+  //check_pipeline();
+
+  if (sh7091.CCN.EXPEVT == 0 && sh7091.CCN.INTEVT == 0x320) {
+    uint32_t istnrm = system.ISTNRM;
+    uint32_t isterr = system.ISTERR;
+
+    if (isterr) {
+      serial::string("isterr: ");
+      serial::integer<uint32_t>(system.ISTERR);
+    }
+
+    pump_events(istnrm);
+
+    sr &= ~sh::sr::imask(15);
+    asm volatile ("ldc %0,sr" : : "r" (sr));
+
+    return;
+  }
+
+  serial::string("vbr600\n");
+  interrupt_exception();
+}
+
 int main()
 {
+  sh7091.TMU.TSTR = 0; // stop all timers
+  sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
+  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 50MHz = 5.12 μs ; underflows in ~1 hour
+  sh7091.TMU.TCOR0 = 0xffff'ffff;
+  sh7091.TMU.TCNT0 = 0xffff'ffff;
+  sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
+
   serial::init(0);
 
   total_tri_count = count_face_triangles();
@@ -1558,36 +1658,15 @@ int main()
   transfer_font();
   palette_data<3>();
 
-  constexpr uint32_t ta_alloc = 0
-                              | ta_alloc_ctrl::pt_opb::_16x4byte
-			      | ta_alloc_ctrl::tm_opb::no_list
-                              | ta_alloc_ctrl::t_opb::no_list
-                              | ta_alloc_ctrl::om_opb::_16x4byte
-                              | ta_alloc_ctrl::o_opb::no_list;
-
-  constexpr int ta_cont_count = 1;
-  constexpr struct opb_size opb_size[ta_cont_count] = {
-    {
-      .opaque = 0,
-      .opaque_modifier = 16 * 4,
-      .translucent = 0,
-      .translucent_modifier = 0,
-      .punch_through = 16 * 4
-    }
-  };
-
   holly.SOFTRESET = softreset::pipeline_soft_reset
 		  | softreset::ta_soft_reset;
   holly.SOFTRESET = 0;
 
   core_init();
 
-  system.IML6NRM = istnrm::end_of_render_tsp;
-
-  const int framebuffer_width = 640;
-  const int framebuffer_height = 480;
-  const int tile_width = framebuffer_width / 32;
-  const int tile_height = framebuffer_height / 32;
+  system.IML6NRM = istnrm::end_of_render_tsp
+                 | istnrm::v_blank_in
+                 | istnrm::end_of_transferring_opaque_modifier_volume_list;
 
   for (int i = 0; i < 2; i++) {
     region_array_multipass(tile_width,
@@ -1604,9 +1683,6 @@ int main()
   ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   video_output::set_mode_vga();
-
-  int ta = 0;
-  int core = 0;
 
   /*
   mat4x4 trans1 = {
@@ -1627,46 +1703,61 @@ int main()
 
   holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
 
+  for (int i = 0; i < 2; i++) {
+    trans = update_analog(trans);
+    mat4x4 trans_inv = inverse(trans);
+    writer.offset = 0;
+    transfer_scene(writer, trans, trans_inv);
+
+    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[i].start,
+                               texture_memory_alloc.isp_tsp_parameters[i].end,
+                               texture_memory_alloc.object_list[i].start,
+                               texture_memory_alloc.object_list[i].end,
+                               opb_size[0].total(),
+                               ta_alloc,
+                               tile_width,
+                               tile_height);
+    ta_polygon_converter_writeback(writer.buf, writer.offset);
+    ta_polygon_converter_transfer(writer.buf, writer.offset);
+    while (ta_in_use);
+  }
+
+  int ta = 0;
+
   while (1) {
+    int core = !ta;
+
     maple::dma_wait_complete();
     do_get_condition();
 
     trans = update_analog(trans);
-
     mat4x4 trans_inv = inverse(trans);
-
-    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
-			       texture_memory_alloc.isp_tsp_parameters[ta].end,
-			       texture_memory_alloc.object_list[ta].start,
-			       texture_memory_alloc.object_list[ta].end,
-			       opb_size[0].total(),
-			       ta_alloc,
-			       tile_width,
-			       tile_height);
-
     writer.offset = 0;
     transfer_scene(writer, trans, trans_inv);
+
+    while (ta_in_use);
+    ta_in_use = 1;
+    ta_polygon_converter_init2(texture_memory_alloc.isp_tsp_parameters[ta].start,
+                               texture_memory_alloc.isp_tsp_parameters[ta].end,
+                               texture_memory_alloc.object_list[ta].start,
+                               texture_memory_alloc.object_list[ta].end,
+                               opb_size[0].total(),
+                               ta_alloc,
+                               tile_width,
+                               tile_height);
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
-    //serial::integer<uint32_t>(writer.offset);
-    //serial::integer<uint32_t>(typen_tri_count);
-    //serial::string("wait_pt\n");
-    ta_wait_opaque_modifier_volume_list();
-    //ta_wait_opaque_list();
 
-    render_done = 0;
+    while (current_frame != core);
+    core_in_use = 1;
     core_start_render2(texture_memory_alloc.region_array[core].start,
                        texture_memory_alloc.isp_tsp_parameters[core].start,
                        texture_memory_alloc.background[core].start,
                        texture_memory_alloc.framebuffer[core].start,
                        framebuffer_width);
-    //serial::string("wait_render\n");
-    while (render_done == 0) {
-      asm volatile ("nop");
-    };
 
-    while (spg_status::vsync(holly.SPG_STATUS));
-    while (!spg_status::vsync(holly.SPG_STATUS));
-    holly.FB_R_SOF1 = texture_memory_alloc.framebuffer[ta].start;
+    ta = !ta;
+
+    next_frame = ta;
   }
 }

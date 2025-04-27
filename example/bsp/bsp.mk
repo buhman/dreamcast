@@ -10,7 +10,6 @@ BSP_20KDM2_OBJ = \
 	printf/printf.o \
 	printf/unparse.o \
 	printf/parse.o \
-	interrupt.o \
 	maple/maple.o \
 	font/font_bitmap.o \
 	font/verite_8x16/verite_8x16.data.o \
