@@ -32,7 +32,7 @@ constexpr uint32_t end_of_dma_aica_dma = 1 << 15;
 
 constexpr uint32_t end_of_dma_gd_dma = 1 << 14;
 
-constexpr uint32_t maple_v_blank_over_interrupt = 1 << 13;
+constexpr uint32_t maple_v_blank_over = 1 << 13;
 
 constexpr uint32_t end_of_dma_maple_dma = 1 << 12;
 
@@ -48,11 +48,11 @@ constexpr uint32_t end_of_transferring_opaque_list = 1 << 7;
 
 constexpr uint32_t end_of_transferring_yuv = 1 << 6;
 
-constexpr uint32_t h_blank_in_interrupt = 1 << 5;
+constexpr uint32_t h_blank_in = 1 << 5;
 
-constexpr uint32_t v_blank_out_interrupt = 1 << 4;
+constexpr uint32_t v_blank_out = 1 << 4;
 
-constexpr uint32_t v_blank_in_interrupt = 1 << 3;
+constexpr uint32_t v_blank_in = 1 << 3;
 
 constexpr uint32_t end_of_render_tsp = 1 << 2;
 
