@@ -1,5 +1,3 @@
-#include <tuple>
-
 #include "vec.hpp"
 
 namespace geometry {

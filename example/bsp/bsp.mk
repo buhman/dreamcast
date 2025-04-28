@@ -13,6 +13,7 @@ BSP_20KDM2_OBJ = \
 	maple/maple.o \
 	font/font_bitmap.o \
 	font/verite_8x16/verite_8x16.data.o \
+	q3bsp/q3bsp_patch.o \
 	bsp/20kdm2/maps/20kdm2.bsp.o \
 	bsp/20kdm2/textures/e7/e7walldesign01b.data.o \
 	bsp/20kdm2/textures/e7/e7steptop2.data.o \

@@ -105,15 +105,32 @@ void print_faces(uint8_t * buf, struct q3bsp_header * header)
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
   q3bsp_face_t * faces = reinterpret_cast<q3bsp_face_t *>(&buf[fe->offset]);
 
+  q3bsp_direntry * ve = &header->direntries[LUMP_VERTEXES];
+  q3bsp_vertex_t * vertexes = reinterpret_cast<q3bsp_vertex_t *>(&buf[ve->offset]);
+
   int count = fe->length / (sizeof (struct q3bsp_face));
 
-  printf("faces count: %d\n", count);
-  for (int i = 0; i < count; i++) {
-    q3bsp_face_t * face = &faces[i];
-    if (face->texture == 23 || face->texture == 24 || face->type == 4){
-      printf("face [%d]\n", i);
-      printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d lightmap=%d\n", face->type, face->n_vertexes, face->n_meshverts, face->texture, face->lm_index);
+  //printf("faces count: %d\n", count);
+  for (int face_ix = 0; face_ix < count; face_ix++) {
+    q3bsp_face_t * face = &faces[face_ix];
+    if (face->type != 2)
+      continue;
+    //printf("face [%d]\n", face_ix);
+    //printf("  type=%d n_vertexes=%d n_meshverts=%d texture=%d lightmap=%d size=(%d,%d)\n", face->type, face->n_vertexes, face->n_meshverts, face->texture, face->lm_index, face->size[0], face->size[1]);
+
+
+    //printf("[");
+    printf("(%d, %d)", face->size[0], face->size[1]);
+    /*
+    for (int i = 0 ; i < face->n_vertexes; i++) {
+      q3bsp_vertex_t * vertex = &vertexes[face->vertex + i];
+      printf("(%.00f,%.00f,%.00f)", (vertex->position[0]), (vertex->position[1]), (vertex->position[2]));
+      if (i < face->n_vertexes - 1)
+        printf(",");
     }
+    */
+    //printf("],");
+    printf("\n");
   }
 }
 

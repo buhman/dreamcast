@@ -1,3 +1,5 @@
+#pragma once
+
 #include <stdint.h>
 
 typedef struct q3bsp_direntry {
@@ -29,7 +31,7 @@ enum q3bsp_lumps {
   LUMP_LIGHTMAPS = 14,
   LUMP_LIGHTVOLS = 15,
   LUMP_VISDATA = 16,
-} q3bsp_lumps;
+};
 
 /*
 typedef struct q3bsp_entity {
@@ -96,8 +98,8 @@ typedef struct q3bsp_brushside {
 
 typedef struct q3bsp_vertex {
   float position[3];
-  float texcoord[2];
-  float lightmapcoord[2];
+  float texture[2];
+  float lightmap[2];
   float normal[3];
   uint8_t color[4];
 } q3bsp_vertex_t;
@@ -112,10 +114,17 @@ typedef struct q3bsp_effect {
   int unknown;
 } q3bsp_effect_t;
 
+enum q3bsp_face_type {
+  FACE_TYPE_POLYGON = 1,
+  FACE_TYPE_PATCH = 2,
+  FACE_TYPE_MESH = 3,
+  FACE_TYPE_BILLBOARD = 4,
+};
+
 typedef struct q3bsp_face {
   int texture;
   int effect;
-  int type;
+  int type; // enum q3bsp_face_type
   int vertex;
   int n_vertexes;
   int meshvert;

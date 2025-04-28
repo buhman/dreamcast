@@ -71,6 +71,7 @@
 #include "bsp/20kdm2/textures/sfx/flame8.data.h"
 
 #include "q3bsp/q3bsp.h"
+#include "q3bsp/q3bsp_patch.hpp"
 #include "bsp/20kdm2/maps/20kdm2.bsp.h"
 #include "bsp/20kdm2/texture.h"
 
@@ -252,7 +253,7 @@ void global_polygon_type_4(ta_parameter_writer& writer,
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
-                                          | isp_tsp_instruction_word::culling_mode::cull_if_negative
+    | isp_tsp_instruction_word::culling_mode::no_culling // cull_if_negative
                                           ;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
@@ -601,7 +602,7 @@ float light_intensity(vec3 light_vec, vec3 n)
 
 static vec3 light_vec = {20, -20, -20};
 
-static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * face, int * last_texture, int * last_lm_index)
+static inline void transfer_face_meshverts(ta_parameter_writer& writer, q3bsp_face_t * face)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -616,26 +617,6 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
   q3bsp_meshvert_t * mv = &meshvert[meshvert_ix];
 
   int triangles = face->n_meshverts / 3;
-
-  int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
-
-  bool has_texture = 1 &&
-    (face->texture >= 0) &&
-    (face->texture < textures_length) &&
-    (textures[face->texture].size != 0);
-
-  if (!has_texture)
-    return;
-
-  if (face->texture != *last_texture || face->lm_index != *last_lm_index) {
-    *last_texture = face->texture;
-    *last_lm_index = face->lm_index;
-    if (has_texture) {
-      global_texture_lightmap(writer, face->texture, face->lm_index);
-    } else {
-      //global_polygon_type_1(writer, 0, 0, 0);
-    }
-  }
 
   for (int j = 0; j < triangles; j++) {
 
@@ -657,60 +638,133 @@ static inline void transfer_face(ta_parameter_writer& writer, q3bsp_face_t * fac
     float li0 = light_intensity(light_vec, n);
     const float li1 = 2.0;
 
-    if (has_texture) {
-      float v_mul = textures[face->texture].v_mul;
-      vec2 at = {vert[aix].texcoord[0], vert[aix].texcoord[1] * v_mul};
-      vec2 bt = {vert[bix].texcoord[0], vert[bix].texcoord[1] * v_mul};
-      vec2 ct = {vert[cix].texcoord[0], vert[cix].texcoord[1] * v_mul};
+    float v_mul = textures[face->texture].v_mul;
+    vec2 at = {vert[aix].texture[0], vert[aix].texture[1] * v_mul};
+    vec2 bt = {vert[bix].texture[0], vert[bix].texture[1] * v_mul};
+    vec2 ct = {vert[cix].texture[0], vert[cix].texture[1] * v_mul};
 
-      vec2 alm = {vert[aix].lightmapcoord[0], vert[aix].lightmapcoord[1]};
-      vec2 blm = {vert[bix].lightmapcoord[0], vert[bix].lightmapcoord[1]};
-      vec2 clm = {vert[cix].lightmapcoord[0], vert[cix].lightmapcoord[1]};
+    vec2 alm = {vert[aix].lightmap[0], vert[aix].lightmap[1]};
+    vec2 blm = {vert[bix].lightmap[0], vert[bix].lightmap[1]};
+    vec2 clm = {vert[cix].lightmap[0], vert[cix].lightmap[1]};
 
-      if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
-        render_clip_tri_type_13(writer,
-                                ap,
-                                bp,
-                                cp,
-                                at,
-                                bt,
-                                ct,
-                                alm,
-                                blm,
-                                clm,
-                                li0,
-                                li1);
-      } else {
-        vec3 aps = screen_transform(ap);
-        vec3 bps = screen_transform(bp);
-        vec3 cps = screen_transform(cp);
-
-        render_tri_type_13(writer,
-                           aps,
-                           bps,
-                           cps,
-                           at,
-                           bt,
-                           ct,
-                           alm,
-                           blm,
-                           clm,
-                           li0,
-                           li1);
-      }
+    if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
+      render_clip_tri_type_13(writer,
+                              ap,
+                              bp,
+                              cp,
+                              at,
+                              bt,
+                              ct,
+                              alm,
+                              blm,
+                              clm,
+                              li0,
+                              li1);
     } else {
-      /*
-      render_tri_type_2(writer,
-                        screen_transform(ap),
-                        screen_transform(bp),
-                        screen_transform(cp),
-                        li);
-      */
+      vec3 aps = screen_transform(ap);
+      vec3 bps = screen_transform(bp);
+      vec3 cps = screen_transform(cp);
+
+      render_tri_type_13(writer,
+                         aps,
+                         bps,
+                         cps,
+                         at,
+                         bt,
+                         ct,
+                         alm,
+                         blm,
+                         clm,
+                         li0,
+                         li1);
     }
   }
 }
 
-void transfer_faces(ta_parameter_writer& writer)
+static inline void transfer_face_patch_surfaces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_face_t * face, int face_ix)
+{
+  using namespace q3bsp_patch;
+
+  patch * patch = NULL;
+  for (int i = 0; i < patch_count; i++) {
+    if (patches[i].face_ix == face_ix) {
+      patch = &patches[i];
+      break;
+    }
+  }
+  assert(patch != nullptr);
+
+  const int width = face->size[0];
+  const int height = face->size[1];
+  const int h_surfaces = (width - 1) / 2;
+  const int v_surfaces = (height - 1) / 2;
+  const int surface_count = h_surfaces * v_surfaces;
+  assert(surface_count > 0);
+
+  const vertex_plm * vertices = &patch_vertices[patch->vertex_ix];
+  const bezier::triangle * triangles = &patch_triangles[patch->triangle_ix];
+
+  const int triangle_count = surface_count * triangles_per_surface;
+  for (int i = 0; i < triangle_count; i++) {
+    vis_tri_count += 1;
+
+    const bezier::triangle * triangle = &triangles[i];
+    assert(triangle->a >= 0 && triangle->b >= 0 && triangle->c >= 0);
+    if (triangle->a == triangle->b && triangle->b == triangle->c) {
+      printf("face_ix %d %d\n", face_ix, i);
+      printf("        %d %d %d\n", triangle->a, triangle->b, triangle->c);
+      assert(false);
+    }
+
+    const vertex_plm * av = &vertices[triangle->a];
+    const vertex_plm * bv = &vertices[triangle->b];
+    const vertex_plm * cv = &vertices[triangle->c];
+
+    vec3 ap = trans * av->l;
+    vec3 bp = trans * bv->l;
+    vec3 cp = trans * cv->l;
+
+    if (ap.z < 0 || bp.z < 0 || cp.z < 0) {
+      continue;
+      //printf("cont %f %f %f\n", ap.x, ap.y, ap.z);
+    }
+    /*
+    printf("%f %f %f\n", ap.x, ap.y, ap.z);
+    printf("%f %f %f\n", bp.x, bp.y, bp.z);
+    printf("%f %f %f\n", cp.x, cp.y, cp.z);
+    */
+
+    vec3 aps = screen_transform(ap);
+    vec3 bps = screen_transform(bp);
+    vec3 cps = screen_transform(cp);
+
+    const vec2& at = av->m;
+    const vec2& bt = bv->m;
+    const vec2& ct = cv->m;
+
+    const vec2& alm = av->n;
+    const vec2& blm = bv->n;
+    const vec2& clm = cv->n;
+
+    float li0 = 1.0;
+    float li1 = 2.0;
+
+    render_tri_type_13(writer,
+                       aps,
+                       bps,
+                       cps,
+                       at,
+                       bt,
+                       ct,
+                       alm,
+                       blm,
+                       clm,
+                       li0,
+                       li1);
+  }
+}
+
+void transfer_faces(ta_parameter_writer& writer, const mat4x4& trans)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -723,8 +777,30 @@ void transfer_faces(ta_parameter_writer& writer)
   int last_texture = -1;
   int last_lm_index = -1;
 
+  const int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+
   for (int i = 0; i < face_count; i++) {
-    transfer_face(writer, &faces[i], &last_texture, &last_lm_index);
+    q3bsp_face_t * face = &faces[i];
+
+    bool has_texture =
+      (face->texture >= 0) &&
+      (face->texture < textures_length) &&
+      (textures[face->texture].size != 0);
+
+    if (!has_texture)
+      continue;
+
+    if (face->texture != last_texture || face->lm_index != last_lm_index) {
+      last_texture = face->texture;
+      last_lm_index = face->lm_index;
+
+      global_texture_lightmap(writer, face->texture, face->lm_index);
+    }
+
+    if (face->type == FACE_TYPE_POLYGON || face->type == FACE_TYPE_MESH)
+      transfer_face_meshverts(writer, face);
+    if (face->type == FACE_TYPE_PATCH)
+      transfer_face_patch_surfaces(writer, trans, face, i);
   }
 }
 
@@ -803,9 +879,9 @@ static inline void transfer_face_billboard(ta_parameter_writer& writer, q3bsp_fa
       continue;
     }
 
-    vec2 at = {vert[aix].texcoord[0], vert[aix].texcoord[1]};
-    vec2 bt = {vert[bix].texcoord[0], vert[bix].texcoord[1]};
-    vec2 ct = {vert[cix].texcoord[0], vert[cix].texcoord[1]};
+    vec2 at = {vert[aix].texture[0], vert[aix].texture[1]};
+    vec2 bt = {vert[bix].texture[0], vert[bix].texture[1]};
+    vec2 ct = {vert[cix].texture[0], vert[cix].texture[1]};
 
     render_tri_type_7(writer,
                       screen_transform(ap),
@@ -1250,12 +1326,35 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
   int last_texture = -1;
   int last_lm_index = -1;
 
+  const int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+
   for (int i = 0; i < leaf->n_leaffaces; i++) {
     int face_ix = lf[i].face;
     if (face_cache[face_ix] != 0)
       continue;
     face_cache[face_ix] = 1;
-    transfer_face(writer, &faces[face_ix], &last_texture, &last_lm_index);
+
+    q3bsp_face_t * face = &faces[face_ix];
+
+    bool has_texture =
+      (face->texture >= 0) &&
+      (face->texture < textures_length) &&
+      (textures[face->texture].size != 0);
+
+    if (!has_texture)
+      continue;
+
+    if (face->texture != last_texture || face->lm_index != last_lm_index) {
+      last_texture = face->texture;
+      last_lm_index = face->lm_index;
+
+      global_texture_lightmap(writer, face->texture, face->lm_index);
+    }
+
+    if (face->type == FACE_TYPE_POLYGON || face->type == FACE_TYPE_MESH)
+      transfer_face_meshverts(writer, face);
+    if (face->type == FACE_TYPE_PATCH)
+      transfer_face_patch_surfaces(writer, trans, face, face_ix);
   }
 }
 
@@ -1398,7 +1497,7 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
   int face_count = fe->length / (sizeof (struct q3bsp_face));
 
-  //transfer_faces(writer);
+  //transfer_faces(writer, trans);
   //transfer_icosphere(writer, trans);
 
   //render_matrix(writer, screen_trans);
@@ -1548,7 +1647,8 @@ void transfer_textures()
 
   printf("lightmap base: %d\n", lightmap_base);
 
-  int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+  const int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+
   for (int i = 0; i < textures_length; i++) {
     uint32_t offset = texture_memory_alloc.texture.start + font_base + lightmap_base + textures[i].offset;
     void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
@@ -1805,6 +1905,8 @@ int main()
                       | isp_feed_cfg::pre_sort_mode
                       ;
 
+  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
+
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
                  | istnrm::end_of_transferring_opaque_modifier_volume_list;
@@ -1838,9 +1940,10 @@ int main()
     0.0,   0.0,   0.0,    1.0,
   };
 
-  do_get_condition();
+  q3bsp_patch::triangulate_patches(bsp_start);
+  printf("patch_count %d\n", q3bsp_patch::patch_count);
 
-  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
+  do_get_condition();
 
   while (1) {
     maple::dma_wait_complete();
