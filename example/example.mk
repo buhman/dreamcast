@@ -277,6 +277,22 @@ MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ = \
 example/modifier_volume_with_two_volumes.elf: LDSCRIPT = $(LIB)/main.lds
 example/modifier_volume_with_two_volumes.elf: $(START_OBJ) $(MODIFIER_VOLUME_WITH_TWO_VOLUMES_OBJ)
 
+BLEND_OBJ = \
+	example/blend.o \
+	holly/video_output.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	texture/wolf/wolf.data.o \
+	texture/macaw/macaw.data.o \
+	maple/maple.o \
+	sh7091/serial.o \
+	$(LIBGCC)
+
+example/blend.elf: LDSCRIPT = $(LIB)/main.lds
+example/blend.elf: $(START_OBJ) $(BLEND_OBJ)
+
 HEART_OBJ = \
 	example/heart.o \
 	holly/video_output.o \
