@@ -746,7 +746,8 @@ static inline void transfer_face_patch_surfaces(ta_parameter_writer& writer, con
     const vec2& blm = bv->n;
     const vec2& clm = cv->n;
 
-    float li0 = 1.0;
+    const vec3 n = normal_transform(trans, av->o);
+    float li0 = light_intensity(light_vec, n);
     float li1 = 2.0;
 
     render_tri_type_13(writer,
@@ -1416,6 +1417,8 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
     }
     */
 
+    if (!(a_inside || b_inside))
+      return;
     assert(a_inside || b_inside);
     //assert(new_root != NULL);
     root = new_root;

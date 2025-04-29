@@ -4,11 +4,12 @@
 
 namespace bezier {
 
-template <typename T, int L, int M, int N>
-struct vec_lmn {
+template <typename T, int L, int M, int N, int O>
+struct vec_lmno {
   vec<L, T> l;
   vec<M, T> m;
   vec<N, T> n;
+  vec<O, T> o;
 };
 
 struct triangle {
@@ -17,13 +18,13 @@ struct triangle {
   int c;
 };
 
-template <typename T, int L, int M, int N>
+template <typename T, int L, int M, int N, int O>
 constexpr inline
-vec_lmn<T, L, M, N>
+vec_lmno<T, L, M, N, O>
 interpolate_quadratic(const T d,
-                      const vec<L, T>& l1, const vec<M, T>& m1, const vec<N, T>& n1,
-                      const vec<L, T>& l2, const vec<M, T>& m2, const vec<N, T>& n2,
-                      const vec<L, T>& l3, const vec<M, T>& m3, const vec<N, T>& n3)
+                      const vec<L, T>& l1, const vec<M, T>& m1, const vec<N, T>& n1, const vec<O, T>& o1,
+                      const vec<L, T>& l2, const vec<M, T>& m2, const vec<N, T>& n2, const vec<O, T>& o2,
+                      const vec<L, T>& l3, const vec<M, T>& m3, const vec<N, T>& n3, const vec<O, T>& o3)
 {
   T invd = 1.0 - d;
   T d1 = invd * invd;
@@ -45,33 +46,38 @@ interpolate_quadratic(const T d,
     n[i] = n1[i] * d1 + n2[i] * d2 + n3[i] * d3;
   };
 
-  return {l, m, n};
+  vec<O, T> o;
+  for (int i = 0; i < O; i++) {
+    o[i] = o1[i] * d1 + o2[i] * d2 + o3[i] * d3;
+  };
+
+  return {l, m, n, o};
 }
 
-template <typename T, int L, int M, int N>
+template <typename T, int L, int M, int N, int O>
 constexpr inline
-vec_lmn<T, L, M, N>
+vec_lmno<T, L, M, N, O>
 interpolate_quadratic(const T d,
-                      const vec_lmn<T, L, M, N>& va,
-                      const vec_lmn<T, L, M, N>& vb,
-                      const vec_lmn<T, L, M, N>& vc)
+                      const vec_lmno<T, L, M, N, O>& va,
+                      const vec_lmno<T, L, M, N, O>& vb,
+                      const vec_lmno<T, L, M, N, O>& vc)
 {
   return interpolate_quadratic<T>(d,
-                                  va.l, va.m, va.n,
-                                  vb.l, vb.m, vb.n,
-                                  vc.l, vc.m, vc.n);
+                                  va.l, va.m, va.n, va.o,
+                                  vb.l, vb.m, vb.n, vb.o,
+                                  vc.l, vc.m, vc.n, vc.o);
 }
 
-template <typename T, int L, int M, int N>
+template <typename T, int L, int M, int N, int O>
 constexpr inline
 void
 tessellate(const int level,
-           const vec_lmn<T, L, M, N> * control, // [9]
-           vec_lmn<T, L, M, N> * vertices,      // [2 * level * level]
+           const vec_lmno<T, L, M, N, O> * control, // [9]
+           vec_lmno<T, L, M, N, O> * vertices,      // [2 * level * level]
            triangle * triangles,
            int vertex_base = 0)
 {
-  vec_lmn<T, L, M, N> column[3][level + 1];
+  vec_lmno<T, L, M, N, O> column[3][level + 1];
 
   T inv_level = 1.0 / level;
   for (int i = 0; i <= level; i++) {

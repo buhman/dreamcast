@@ -5,8 +5,8 @@
 namespace q3bsp_patch {
   constexpr int max_patch_count = 16; // 12
   constexpr int max_surface_count = 32; // 20
-  constexpr int max_level = 3;
-  constexpr int level = 3;
+  constexpr int max_level = 5;
+  constexpr int level = 5;
 
   constexpr int max_vertices_per_surface = (max_level + 1) * (max_level + 1);
   constexpr int max_triangles_per_surface = max_level * max_level * 2;
@@ -17,7 +17,7 @@ namespace q3bsp_patch {
   void triangulate_patches(const void * bsp);
   extern int patch_count;
 
-  using vertex_plm = bezier::vec_lmn<float, 3, 2, 2>;
+  using vertex_plm = bezier::vec_lmno<float, 3, 2, 2, 3>;
 
   struct patch {
     int face_ix;

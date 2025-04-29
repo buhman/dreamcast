@@ -74,17 +74,27 @@ static int triangulate_patch(const q3bsp_vertex_t * vertexes,
       const vec2 h_l = {h->lightmap[0], h->lightmap[1]};
       const vec2 i_l = {i->lightmap[0], i->lightmap[1]};
 
+      const vec3 a_n = {a->normal[0], a->normal[1], a->normal[2]};
+      const vec3 b_n = {b->normal[0], b->normal[1], b->normal[2]};
+      const vec3 c_n = {c->normal[0], c->normal[1], c->normal[2]};
+      const vec3 d_n = {d->normal[0], d->normal[1], d->normal[2]};
+      const vec3 e_n = {e->normal[0], e->normal[1], e->normal[2]};
+      const vec3 f_n = {f->normal[0], f->normal[1], f->normal[2]};
+      const vec3 g_n = {g->normal[0], g->normal[1], g->normal[2]};
+      const vec3 h_n = {h->normal[0], h->normal[1], h->normal[2]};
+      const vec3 i_n = {i->normal[0], i->normal[1], i->normal[2]};
+
       const vertex_plm control[9] = {
-        {a_p, a_t, a_l}, {b_p, b_t, b_l}, {c_p, c_t, c_l},
-        {d_p, d_t, d_l}, {e_p, e_t, e_l}, {f_p, f_t, f_l},
-        {g_p, g_t, g_l}, {h_p, h_t, h_l}, {i_p, i_t, i_l},
+        {a_p, a_t, a_l, a_n}, {b_p, b_t, b_l, b_n}, {c_p, c_t, c_l, c_n},
+        {d_p, d_t, d_l, d_n}, {e_p, e_t, e_l, e_n}, {f_p, f_t, f_l, f_n},
+        {g_p, g_t, g_l, g_n}, {h_p, h_t, h_l, h_n}, {i_p, i_t, i_l, i_n},
       };
 
-      bezier::tessellate<float, 3, 2, 2>(level,
-                                         control,
-                                         p_vtx,
-                                         p_tri,
-                                         vertex_base);
+      bezier::tessellate<float, 3, 2, 2, 3>(level,
+                                            control,
+                                            p_vtx,
+                                            p_tri,
+                                            vertex_base);
       p_vtx += vertices_per_surface;
       p_tri += triangles_per_surface;
       vertex_base += vertices_per_surface;
