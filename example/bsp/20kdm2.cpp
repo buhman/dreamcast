@@ -1665,6 +1665,9 @@ static bool push = false;
 
 mat4x4 update_analog(const mat4x4& screen)
 {
+  const float l_ = static_cast<float>(data[0].analog_coordinate_axis[0]) * (1.f / 255.f);
+  const float r_ = static_cast<float>(data[0].analog_coordinate_axis[1]) * (1.f / 255.f);
+
   const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
   const float y_ = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) / 127.f;
 
@@ -1684,9 +1687,12 @@ mat4x4 update_analog(const mat4x4& screen)
 
   float y = -7 * y_;
 
+  /*
   float z = 0;
   if (ua && !da) z = -10;
   if (da && !ua) z =  10;
+  */
+  float z = -7.0f * r_ + 7.0f * l_;
 
   mat4x4 t = {
     1, 0, 0, x,
