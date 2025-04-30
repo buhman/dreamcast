@@ -44,6 +44,13 @@ BSP_20KDM2_OBJ = \
 	bsp/20kdm2/textures/sfx/flame6.data.o \
 	bsp/20kdm2/textures/sfx/flame7.data.o \
 	bsp/20kdm2/textures/sfx/flame8.data.o \
+	model/tavion_new/model.glm.o \
+	model/tavion_new/legs.vq.o \
+	model/tavion_new/torso.vq.o \
+	model/tavion_new/head.vq.o \
+	model/tavion_new/face.vq.o \
+	model/tavion_new/arm.vq.o \
+	model/tavion_new/hands.vq.o \
 	$(LIBGCC)
 
 example/bsp/20kdm2.elf: LDSCRIPT = $(LIB)/main.lds

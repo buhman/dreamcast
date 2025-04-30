@@ -24,6 +24,7 @@ void print_surface_hierarchy(struct mdxm_header * header)
   for (int i = 0; i < header->num_surfaces; i++) {
     printf("[%d] %s\n", i, &sh->shader[1]);
     printf("     %s\n", sh->name);
+    printf("     %d\n", sh->num_children);
     int offset = (int)(&(((mdxm_surf_hierarchy_t *)0)->child_indexes[sh->num_children]));
     sh = (mdxm_surf_hierarchy_t *)(((uint8_t *)sh) + offset);
   }
@@ -41,29 +42,35 @@ void print_surfaces(struct mdxm_header * header)
   const int surface_offset = (sizeof (mdxm_lod_t)) + (header->num_surfaces * (sizeof (mdxm_lod_surf_offset_t)));
   for (int l = 0; l < header->num_lods; l++) {
     mdxm_surface_t * surf = (mdxm_surface_t *)(((uint8_t *)lod) + surface_offset);
+    int sum = 0;
     for (int i = 0; i < header->num_surfaces; i++) {
       //printf("surf ident: %d\n", surf->ident);
       //printf("offset header: %d\n", surf->offset_header);
 
-      mdxm_vertex_t * v = (mdxm_vertex_t *) (((uint8_t *)surf) + surf->offset_verts);
-      mdxm_vertex_texture_coord_t * t = (mdxm_vertex_texture_coord_t *)&v[surf->num_verts];
-      printf("num_verts %d\n", surf->num_verts);
-      for (int j = 0; j < surf->num_verts; j++) {
-        printf("[%d] %f %f %f\n", j, v[j].position[0], v[j].position[1], v[j].position[2]);
-        printf("     %f %f %f\n", v[j].normal[0], v[j].normal[1], v[j].normal[2]);
-      }
+      if (0) {
+        mdxm_vertex_t * v = (mdxm_vertex_t *) (((uint8_t *)surf) + surf->offset_verts);
+        mdxm_vertex_texture_coord_t * t = (mdxm_vertex_texture_coord_t *)&v[surf->num_verts];
+        printf("num_verts %d\n", surf->num_verts);
+        for (int j = 0; j < surf->num_verts; j++) {
+          printf("[%d] %f %f %f\n", j, v[j].position[0], v[j].position[1], v[j].position[2]);
+          printf("     %f %f %f\n", v[j].normal[0], v[j].normal[1], v[j].normal[2]);
+        }
 
-      mdxm_triangle_t * triangles = (mdxm_triangle_t *)(((uint8_t *)surf) + surf->offset_triangles);
-      printf("num_triangles %d\n", surf->num_triangles);
-      for (int j = 0; j < surf->num_triangles; j++) {
-        printf("%d %d %d\n", triangles[j].index[0], triangles[j].index[1], triangles[j].index[2]);
+        mdxm_triangle_t * triangles = (mdxm_triangle_t *)(((uint8_t *)surf) + surf->offset_triangles);
+        printf("num_triangles %d\n", surf->num_triangles);
+        for (int j = 0; j < surf->num_triangles; j++) {
+          printf("%d %d %d\n", triangles[j].index[0], triangles[j].index[1], triangles[j].index[2]);
+        }
       }
+      sum += surf->num_triangles;
+
       // next surface
       surf = (mdxm_surface_t *)(((uint8_t *)surf) + surf->offset_end);
     }
+    printf("[%d] num_triangles: %d\n", l, surf->num_triangles);
+
     // next lod
     lod = (mdxm_lod_t *)(((uint8_t *)lod) + lod->offset_end);
-    break;
   }
 }
 

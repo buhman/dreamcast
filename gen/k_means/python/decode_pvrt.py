@@ -70,7 +70,7 @@ def decode_vq_indices(codebook, indices, width, height):
             bi = ((ty * 2) + 1) * width + ((tx * 2) + 0)
             ci = ((ty * 2) + 0) * width + ((tx * 2) + 1)
             di = ((ty * 2) + 1) * width + ((tx * 2) + 1)
-            print(width, height, ai, ty, tx)
+            #print(width, height, ai, ty, tx)
             canvas[ai] = codeword[0]
             canvas[bi] = codeword[1]
             canvas[ci] = codeword[2]

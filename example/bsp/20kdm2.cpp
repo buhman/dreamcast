@@ -75,6 +75,17 @@
 #include "bsp/20kdm2/maps/20kdm2.bsp.h"
 #include "bsp/20kdm2/texture.h"
 
+#include "mdxm/mdxm.h"
+#include "model/tavion_new/model.glm.h"
+#include "model/tavion_new/legs.vq.h"
+#include "model/tavion_new/torso.vq.h"
+#include "model/tavion_new/head.vq.h"
+#include "model/tavion_new/face.vq.h"
+#include "model/tavion_new/arm.vq.h"
+#include "model/tavion_new/hands.vq.h"
+#include "model/tavion_new/surface.h"
+#include "model/tavion_new/texture.h"
+
 #include "model/model.h"
 #include "model/icosphere/model.h"
 
@@ -94,7 +105,7 @@ using mat4x4 = mat<4, 4, float>;
 
 #define _fsrra(n) (1.0f / (__builtin_sqrtf(n)))
 
-static vec3 sphere_position = {890, 480, 450};
+static vec3 sphere_position = {890, 550, 450};
 
 static ft0::data_transfer::data_format data[4];
 
@@ -104,6 +115,8 @@ uint8_t recv_buf[1024] __attribute__((aligned(32)));
 constexpr void * bsp_start = &_binary_bsp_20kdm2_maps_20kdm2_bsp_start;
 
 uint32_t lightmap_base = 0;
+uint32_t bsp_base = 0;
+uint32_t tavion_base = 0;
 
 void do_get_condition()
 {
@@ -194,7 +207,7 @@ void global_polygon_type_0(ta_parameter_writer& writer)
 }
 
 void global_polygon_type_1(ta_parameter_writer& writer,
-                           uint32_t obj_control_texture,
+                           uint32_t para_control_obj_control,
                            uint32_t texture_u_v_size,
                            uint32_t texture_control_word,
                            const float a = 1.0f,
@@ -204,10 +217,9 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | para_control::list_type::translucent
                                         | obj_control::col_type::intensity_mode_1
                                         | obj_control::gouraud
-                                        | obj_control_texture
+                                        | para_control_obj_control
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
@@ -297,12 +309,40 @@ void global_texture(ta_parameter_writer& writer, int texture_ix)
                                 | texture_control_word::texture_address(texture_address / 8)
                                 ;
 
+  uint32_t control = para_control::list_type::translucent
+                   | obj_control::texture;
   global_polygon_type_1(writer,
-                        obj_control::texture,
+                        control,
                         texture_u_v_size,
                         texture_control_word);
 }
 
+void global_tavion_texture(ta_parameter_writer& writer, int texture_ix)
+{
+  const struct pk_texture * texture = &tavion_textures[texture_ix];
+
+  uint32_t texture_u_v_size = tsp_instruction_word::src_alpha_instr::one
+                            | tsp_instruction_word::dst_alpha_instr::zero
+                            | tsp_instruction_word::texture_u_size::from_int(texture->width)
+                            | tsp_instruction_word::texture_v_size::from_int(texture->height)
+                            ;
+
+  uint32_t texture_address = texture_memory_alloc.texture.start + font_base + lightmap_base + bsp_base + texture->offset;
+  uint32_t texture_control_word = texture_control_word::vq_compressed
+                                | texture_control_word::pixel_format::_565
+                                | texture_control_word::scan_order::twiddled
+                                | texture_control_word::texture_address(texture_address / 8)
+                                ;
+
+  uint32_t control = para_control::list_type::opaque
+                   | obj_control::texture;
+  global_polygon_type_1(writer,
+                        control,
+                        texture_u_v_size,
+                        texture_control_word);
+}
+
+/*
 void global_lightmap(ta_parameter_writer& writer, int lightmap_ix)
 {
   uint32_t texture_u_v_size = tsp_instruction_word::src_alpha_instr::one
@@ -322,6 +362,7 @@ void global_lightmap(ta_parameter_writer& writer, int lightmap_ix)
                         texture_u_v_size,
                         texture_control_word);
 }
+*/
 
 void global_texture_lightmap(ta_parameter_writer& writer, int texture_ix, int lightmap_ix)
 {
@@ -961,7 +1002,18 @@ void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
   float r = 0.9f;
   float g = 0.5f;
   float b = 0.0f;
-  global_polygon_type_1(writer, 0, 0, 0, a, r, g, b);
+  uint32_t control = para_control::list_type::opaque;
+  uint32_t texture_u_v_size = tsp_instruction_word::src_alpha_instr::one
+                            | tsp_instruction_word::dst_alpha_instr::zero;
+  uint32_t texture_control_word = 0;
+  global_polygon_type_1(writer,
+                        control,
+                        texture_u_v_size,
+                        texture_control_word,
+                        a,
+                        r,
+                        g,
+                        b);
 
   for (int i = 0; i < object->triangle_count; i++) {
     const union triangle * tri = &object->triangle[i];
@@ -980,6 +1032,97 @@ void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
                       screen_transform(cp),
                       li);
   }
+}
+
+struct mdxm_trans {
+  vec3 position;
+  vec3 normal;
+};
+
+static inline void transfer_mdxm_surface(ta_parameter_writer& writer, const mat4x4& trans, const mdxm_surface_t * surface)
+{
+  mdxm_vertex_t * v = (mdxm_vertex_t *) (((uint8_t *)surface) + surface->offset_verts);
+
+  mdxm_trans transformed[surface->num_verts];
+  for (int i = 0; i < surface->num_verts; i++) {
+    vec3 position = {v[i].position[0], v[i].position[1], v[i].position[2]};
+    vec3 normal   = {v[i].normal[0],   v[i].normal[1],   v[i].normal[2]  };
+
+    transformed[i].position = trans * position;
+    transformed[i].normal = normal_transform(trans, normal);
+  }
+
+  mdxm_triangle_t * triangles = (mdxm_triangle_t *)(((uint8_t *)surface) + surface->offset_triangles);
+  mdxm_vertex_texture_coord_t * texture = (mdxm_vertex_texture_coord_t *)&v[surface->num_verts];
+
+  for (int i = 0; i < surface->num_triangles; i++) {
+    const vec3& ap = transformed[triangles[i].index[0]].position;
+    const vec3& bp = transformed[triangles[i].index[1]].position;
+    const vec3& cp = transformed[triangles[i].index[2]].position;
+    //if (ap.z < 0 || bp.z < 0 || cp.z < 0) continue;
+
+    const vec3& n = transformed[triangles[i].index[0]].normal;
+    float li = light_intensity(light_vec, n);
+    vec2 at = {texture[triangles[i].index[0]].texture[0], texture[triangles[i].index[0]].texture[1]};
+    vec2 bt = {texture[triangles[i].index[1]].texture[0], texture[triangles[i].index[1]].texture[1]};
+    vec2 ct = {texture[triangles[i].index[2]].texture[0], texture[triangles[i].index[2]].texture[1]};
+
+    render_tri_type_7(writer,
+                      screen_transform(ap),
+                      screen_transform(bp),
+                      screen_transform(cp),
+                      at,
+                      bt,
+                      ct,
+                      li);
+  }
+}
+
+void transfer_tavion(ta_parameter_writer& writer, const mat4x4& screen_trans)
+{
+  float s = 1;
+  mat4x4 scale = {
+    s, 0, 0, 0,
+    0, -s, 0, 0,
+    0, 0, s, 0,
+    0, 0, 0, 1
+  };
+
+  mat4x4 translate = {
+    1, 0, 0, sphere_position.x,
+    0, 1, 0, sphere_position.y,
+    0, 0, 1, sphere_position.z,
+    0, 0, 0, 1
+  };
+
+  mat4x4 trans = screen_trans * translate * scale;
+
+  uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_model_tavion_new_model_glm_start);
+  mdxm_header_t * header = (mdxm_header_t *)(buf);
+  mdxm_lod_t * lod = (mdxm_lod_t *)&buf[header->offset_lods];
+  const int surface_offset = (sizeof (mdxm_lod_t)) + (header->num_surfaces * (sizeof (mdxm_lod_surf_offset_t)));
+  mdxm_surface_t * surface = (mdxm_surface_t *)(((uint8_t *)lod) + surface_offset);
+  //int count = 0;
+
+  int last_texture_ix = -1;
+
+  for (int i = 0; i < header->num_surfaces; i++) {
+    //printf("surf %d\n", i);
+    if (i > 36)
+      break;
+    if (tavion_surface[i] >= 0) {
+      int texture_ix = tavion_surface[i];
+      if (tavion_surface[i] != last_texture_ix)
+        global_tavion_texture(writer, texture_ix);
+      last_texture_ix = texture_ix;
+      //printf("mdxm %d\n", i);
+      transfer_mdxm_surface(writer, trans, surface);
+    }
+
+    // next surface
+    surface = (mdxm_surface_t *)(((uint8_t *)surface) + surface->offset_end);
+  }
+  //printf("count: %d\n", count);
 }
 
 static inline void render_quad(ta_parameter_writer& writer,
@@ -1501,34 +1644,49 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
   int face_count = fe->length / (sizeof (struct q3bsp_face));
 
   //transfer_faces(writer, trans);
-  //transfer_icosphere(writer, trans);
 
   //render_matrix(writer, screen_trans);
   //render_leaf_ix(writer);
   //render_sphere_position(writer);
   //render_zero_position(writer, screen_trans_inv);
 
-  vec3 pos = screen_trans_inv * (vec3){0, 0, 0};
-  typen_tri_count = 0;
-  vis_tri_count = 0;
-  for (int i = 0; i < face_count; i++) face_cache[i] = 0;
-  render_visible_faces(writer, trans, pos);
-  //render_tris_count(writer);
+  // opaque list
+  {
+    //transfer_icosphere(writer, trans);
+    transfer_tavion(writer, trans);
 
-  writer.append<ta_global_parameter::end_of_list>() =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+    writer.append<ta_global_parameter::end_of_list>() =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  }
+
+  // punch through list
+  {
+    vec3 pos = screen_trans_inv * (vec3){0, 0, 0};
+    typen_tri_count = 0;
+    vis_tri_count = 0;
+    for (int i = 0; i < face_count; i++) face_cache[i] = 0;
+    render_visible_faces(writer, trans, pos);
+    //render_tris_count(writer);
+
+    writer.append<ta_global_parameter::end_of_list>() =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  }
 
   // translucent list
-  transfer_billboard(writer, trans);
+  {
+    transfer_billboard(writer, trans);
 
-  writer.append<ta_global_parameter::end_of_list>() =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+    writer.append<ta_global_parameter::end_of_list>() =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  }
 
   // modifier volume list
-  transfer_modifier_volume(writer);
+  {
+    transfer_modifier_volume(writer);
 
-  writer.append<ta_global_parameter::end_of_list>() =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+    writer.append<ta_global_parameter::end_of_list>() =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  }
 
   /*
   global_polygon_type_0(writer);
@@ -1584,11 +1742,14 @@ constexpr inline mat4x4 rotate_z(float t)
 
 void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
 {
+  assert((((int)dst) & 31) == 0);
+  assert((((int)length) & 31) == 0);
+
   uint32_t out_addr = (uint32_t)dst;
   sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
   sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
 
-  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffc0) / 4];
+  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffe0) / 4];
   uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
 
   length = (length + 31) & ~31; // round up to nearest multiple of 32
@@ -1633,11 +1794,53 @@ void transfer_lightmaps()
     }
 
     uint32_t offset = texture_memory_alloc.texture.start + font_base + lightmap_base;
+    assert((offset & 31) == 0); // lightmap
     void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
     uint32_t size = 128 * 128 * 2;
     transfer_ta_fifo_texture_memory_32byte(dst, temp, size);
 
     lightmap_base += 128 * 128 * 2;
+  }
+}
+
+void transfer_bsp_textures()
+{
+  const int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+
+  bsp_base = 0;
+
+  for (int i = 0; i < textures_length; i++) {
+    uint32_t offset = texture_memory_alloc.texture.start + font_base + lightmap_base + textures[i].offset;
+    assert((offset & 31) == 0); // bsp
+    void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
+    void * src = textures[i].start;
+    uint32_t size = textures[i].size;
+    size = (size + 31) & (~31);
+    assert((size & 31) == 0);
+    assert(offset + size < 0x800000);
+    transfer_ta_fifo_texture_memory_32byte(dst, src, size);
+
+    bsp_base += (int)size;
+  }
+}
+
+void transfer_tavion_textures()
+{
+  const int textures_length = (sizeof (tavion_textures)) / (sizeof (tavion_textures[0]));
+
+  tavion_base = 0;
+
+  for (int i = 0; i < textures_length; i++) {
+    uint32_t offset = texture_memory_alloc.texture.start + font_base + lightmap_base + bsp_base + tavion_textures[i].offset;
+    assert((offset & 31) == 0); // tavion
+    void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
+    void * src = tavion_textures[i].start;
+    uint32_t size = tavion_textures[i].size;
+    size = (size + 31) & ~31;
+    assert(offset + size < 0x800000);
+    transfer_ta_fifo_texture_memory_32byte(dst, src, size);
+
+    tavion_base += (int)size;
   }
 }
 
@@ -1647,18 +1850,20 @@ void transfer_textures()
   system.LMMODE1 = 0; // 64-bit address space
 
   transfer_lightmaps();
-
   printf("lightmap base: %d\n", lightmap_base);
+  transfer_bsp_textures();
+  printf("bsp base: %d\n", bsp_base);
+  transfer_tavion_textures();
+  printf("tavion base: %d\n", tavion_base);
 
-  const int textures_length = (sizeof (textures)) / (sizeof (textures[0]));
+  int total = 8 * 1024 * 1024;
+  int used = texture_memory_alloc.texture.start
+    + font_base
+    + lightmap_base
+    + bsp_base
+    + tavion_base;
 
-  for (int i = 0; i < textures_length; i++) {
-    uint32_t offset = texture_memory_alloc.texture.start + font_base + lightmap_base + textures[i].offset;
-    void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
-    void * src = textures[i].start;
-    uint32_t size = textures[i].size;
-    transfer_ta_fifo_texture_memory_32byte(dst, src, size);
-  }
+  printf("texture memory free %d\n", total - used);
 }
 
 static bool push = false;
@@ -1727,15 +1932,21 @@ mat4x4 update_analog(const mat4x4& screen)
   q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
   q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
 
-  if (0) {
+  //printf("%d %d\n", draw_tavion_surface, tavion_surface[draw_tavion_surface]);
+  if (1) {
+    uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_model_tavion_new_model_glm_start);
+    mdxm_header_t * header = (mdxm_header_t *)(buf);
+
     if (db_x && !db_y && !push) {
       push = true;
       //leaf_ix -= 1;
       //if (leaf_ix < 0) leaf_ix = num_leaves - 1;
 
+      /*
       int ix = nodes[root_ix].children[0];
       if (ix >= 0)
         root_ix = ix;
+      */
     }
     if (db_y && !db_x && !push) {
       push = true;
@@ -1748,7 +1959,7 @@ mat4x4 update_analog(const mat4x4& screen)
     if (!db_x && !db_y) {
       push = false;
     }
-  } else {
+  } else if (0) {
     if (db_x && !db_b) {
       sphere_position.x -= 10;
     }
@@ -1800,12 +2011,12 @@ constexpr uint32_t ta_alloc = 0
                             | ta_alloc_ctrl::tm_opb::no_list
                             | ta_alloc_ctrl::t_opb::_8x4byte
                             | ta_alloc_ctrl::om_opb::_8x4byte
-                            | ta_alloc_ctrl::o_opb::no_list;
+                            | ta_alloc_ctrl::o_opb::_8x4byte;
 
 constexpr int ta_cont_count = 1;
 constexpr struct opb_size opb_size[ta_cont_count] = {
   {
-    .opaque = 0,
+    .opaque = 8 * 4,
     .opaque_modifier = 8 * 4,
     .translucent = 8 * 4,
     .translucent_modifier = 0,

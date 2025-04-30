@@ -114,6 +114,12 @@ endef
 %.bsp.o: %.bsp
 	$(BUILD_BINARY_O)
 
+%.glm.h: %.glm
+	$(BUILD_BINARY_H)
+
+%.glm.o: %.glm
+	$(BUILD_BINARY_O)
+
 %.o: %.s
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 

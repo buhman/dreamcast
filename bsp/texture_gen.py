@@ -39,43 +39,36 @@ class Size:
 
 @dataclass
 class Texture:
-    name: str
     filename: str
     real_size: Size
     npot_size: Size
     offset: int
 
-mipmapped = False
-
-def mip_size(n):
+def mip_size(n, bytes_per_pixel):
+    assert bytes_per_pixel == 2 # fixme VQ codebook size
     if n == 0:
         return 0
-    size = 6
+    size = 0 if bytes_per_pixel < 1 else 6
     while n > 0:
-        size += n * n * 2
+        size += int(n * n * bytes_per_pixel)
         n >>= 1
     return size
 
-assert mip_size(256) == 0x2aab0, hex(mip_size(256))
+assert mip_size(256, 2) == 0x2aab0, hex(mip_size(256))
 
-def texture_metadata():
-    global mipmapped
-
-    names = read_texture_names()
+def texture_metadata(filenames, mipmapped, bytes_per_pixel):
     acc = 0
-    for name in names:
-        filename = glob_and_filter(name)
+    for filename in filenames:
         w, h = image_size(filename)
         nw, nh = npot(w), npot(h)
 
-        if w > 256:
+        if w > 512:
             name = None
             filename = None
             w, h, nw, nh = 0, 0, 0, 0
         elif filename:
             print(filename)
         yield Texture(
-            name,
             filename,
             Size(w, h),
             Size(nw, nh),
@@ -84,25 +77,33 @@ def texture_metadata():
 
         if mipmapped:
             assert w == h and nw == w, (w, h)
-            acc += mip_size(w)
+            acc += mip_size(w, bytes_per_pixel)
+            assert acc % 32 == 0, (filename, acc)
         else:
-            acc += nw * h * 2
-    assert acc <= (0x80_0000 - 0x37_1800), acc
+            if w != h:
+                h = w
+            assert w == h, (w, h)
+            extra = 0 if bytes_per_pixel == 2 else 256 * 4 * 2 + 16
+            size = int(w * h * bytes_per_pixel) + extra
+            size = (size + 31) & (~31)
+            acc += size
+            assert acc % 32 == 0, (filename, acc)
+    assert acc <= (0x80_0000 - 0x38_4040), acc
 
-def name_to_bin(filename):
+def name_to_bin(prefix, suffix, filename):
     if filename is None:
         return None
     else:
         name, ext = path.splitext(filename)
-        return f"_binary_bsp_" + name.replace('/', '_').replace('.', '_').replace('-', '_') + "_data"
+        return f"_binary_" + prefix + name.replace('/', '_').replace('.', '_').replace('-', '_') + suffix
 
 def uv_mul(texture):
     u = 0 if texture.npot_size.w == 0 else texture.real_size.w / texture.npot_size.w
     v = 0 if texture.npot_size.h == 0 else texture.real_size.h / texture.npot_size.h
     return u, v
 
-def render_texture_metadata(texture):
-    name = name_to_bin(texture.filename)
+def render_texture_metadata(prefix, suffix, texture):
+    name = name_to_bin(prefix, suffix, texture.filename)
     u, v = uv_mul(texture)
     assert u == 1.0 or u == 0.0
     start = "0" if name is None else f"&{name}_start"
@@ -117,20 +118,24 @@ def render_texture_metadata(texture):
     yield f".v_mul = {v}, // {texture.real_size.h}"
     yield "},"
 
-def render_texture_metadatas():
-    for texture in texture_metadata():
-        yield from render_texture_metadata(texture)
+def render_texture_metadatas(names, mipmapped, bytes_per_pixel, prefix, suffix):
+    for texture in texture_metadata(names, mipmapped, bytes_per_pixel):
+        yield from render_texture_metadata(prefix, suffix, texture)
 
 def main():
     global mipmapped
     out_filename = sys.argv[1]
     is_mipmapped = sys.argv[2]
+    bytes_per_pixel = float(sys.argv[3])
     assert is_mipmapped in {"mipmapped", "non_mipmapped"}
     mipmapped = is_mipmapped == "mipmapped"
-
+    names = map(glob_and_filter, read_texture_names())
     render, out = renderer()
-    render(render_texture_metadatas())
+    prefix = "bsp_"
+    suffix = "_data"
+    render(render_texture_metadatas(names, mipmapped, bytes_per_pixel, prefix, suffix))
     with open(out_filename, "w") as f:
         f.write(out.getvalue())
 
-main()
+if __name__ == "__main__":
+    main()
