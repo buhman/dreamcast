@@ -182,7 +182,7 @@ static inline vec3 screen_transform(vec3 v)
 void global_polygon_type_0(ta_parameter_writer& writer)
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | para_control::list_type::opaque
+                                        | para_control::list_type::translucent
                                         | obj_control::col_type::packed_color
                                         ;
 
@@ -192,6 +192,7 @@ void global_polygon_type_0(ta_parameter_writer& writer)
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::src_alpha_instr::src_alpha
                                       | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                                      | tsp_instruction_word::use_alpha
                                       ;
 
   const uint32_t texture_control_word = 0;
@@ -213,7 +214,8 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                            const float a = 1.0f,
                            const float r = 1.0f,
                            const float g = 1.0f,
-                           const float b = 1.0f
+                           const float b = 1.0f,
+                           bool depth_always = false
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
@@ -222,7 +224,7 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                         | para_control_obj_control
                                         ;
 
-  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+  const uint32_t isp_tsp_instruction_word = ((depth_always) ? isp_tsp_instruction_word::depth_compare_mode::always : isp_tsp_instruction_word::depth_compare_mode::greater)
                                           | isp_tsp_instruction_word::culling_mode::no_culling
                                           ;
 
@@ -1013,7 +1015,8 @@ void transfer_icosphere(ta_parameter_writer& writer, const mat4x4& screen_trans)
                         a,
                         r,
                         g,
-                        b);
+                        b,
+                        true);
 
   for (int i = 0; i < object->triangle_count; i++) {
     const union triangle * tri = &object->triangle[i];
@@ -1502,6 +1505,9 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
   }
 }
 
+q3bsp_leaf_t * bb_leaf = NULL;
+q3bsp_leaf_t * mm_leaf = NULL;
+
 void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, const vec3 pos)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
@@ -1516,8 +1522,6 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
 
   q3bsp_direntry * ve = &header->direntries[LUMP_VISDATA];
   q3bsp_visdata_t * visdata = reinterpret_cast<q3bsp_visdata_t *>(&buf[ve->offset]);
-
-  q3bsp_leaf_t * bb_leaf = NULL;
 
   while (true) {
     bool a_inside;
@@ -1630,6 +1634,8 @@ void transfer_modifier_volume(ta_parameter_writer& writer)
                                          0, 480, 1);
 }
 
+void transfer_brushes(ta_parameter_writer& writer, const mat4x4& trans);
+
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, const mat4x4& screen_trans_inv)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
@@ -1643,17 +1649,10 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
   q3bsp_direntry * fe = &header->direntries[LUMP_FACES];
   int face_count = fe->length / (sizeof (struct q3bsp_face));
 
-  //transfer_faces(writer, trans);
-
-  //render_matrix(writer, screen_trans);
-  //render_leaf_ix(writer);
-  //render_sphere_position(writer);
-  //render_zero_position(writer, screen_trans_inv);
-
   // opaque list
   {
-    //transfer_icosphere(writer, trans);
-    transfer_tavion(writer, trans);
+    transfer_icosphere(writer, trans);
+    //transfer_tavion(writer, trans);
 
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -1661,7 +1660,8 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
 
   // punch through list
   {
-    vec3 pos = screen_trans_inv * (vec3){0, 0, 0};
+    //vec3 pos = screen_trans_inv * (vec3){0, 0, 0};
+    vec3 pos = sphere_position;
     typen_tri_count = 0;
     vis_tri_count = 0;
     for (int i = 0; i < face_count; i++) face_cache[i] = 0;
@@ -1674,7 +1674,11 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
 
   // translucent list
   {
+    render_bounding_box_mm(writer, trans, mm_leaf->maxs, mm_leaf->mins, 0x4000ff00);
+
     transfer_billboard(writer, trans);
+
+    transfer_brushes(writer, trans);
 
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -1687,25 +1691,9 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
   }
-
-  /*
-  global_polygon_type_0(writer);
-  render_quad(writer,
-              {0, 0, 0},
-              {0, 0, 0},
-              {0, 0, 0},
-              {0, 0, 0},
-              0);
-
-  root_ix = 1552;
-  //render_bounding_boxes(writer, trans);
-
-  writer.append<ta_global_parameter::end_of_list>() =
-    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-  */
 }
 
-uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024 * 2];
+uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024 * 3];
 
 constexpr inline mat4x4 rotate_x(float t)
 {
@@ -1933,7 +1921,7 @@ mat4x4 update_analog(const mat4x4& screen)
   q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
 
   //printf("%d %d\n", draw_tavion_surface, tavion_surface[draw_tavion_surface]);
-  if (1) {
+  if (0) {
     uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_model_tavion_new_model_glm_start);
     mdxm_header_t * header = (mdxm_header_t *)(buf);
 
@@ -1959,7 +1947,7 @@ mat4x4 update_analog(const mat4x4& screen)
     if (!db_x && !db_y) {
       push = false;
     }
-  } else if (0) {
+  } else if (1) {
     if (db_x && !db_b) {
       sphere_position.x -= 10;
     }
@@ -2096,6 +2084,257 @@ void vbr600()
   interrupt_exception();
 }
 
+/*
+  typedef struct q3bsp_plane {
+  float normal[3];
+  float dist;
+} q3bsp_plane_t;
+*/
+
+uint32_t colors[] = {
+  0xffffff,
+  0xfcf400,
+  0xff6400,
+  0xdd0202,
+  0xf10285,
+  0x4600a6,
+  0x0000d5,
+  0x00aee9,
+  0x1ab90c,
+  0x006408,
+  0x582800,
+  0x917135,
+  0xc1c1c1,
+  0x818181,
+  0x3e3efe,
+  0x000000,
+};
+uint32_t colors2[] = {
+  0x7f7f7f,
+  0x7e7a00,
+  0x7f3200,
+  0x6e0101,
+  0x780142,
+  0x230053,
+  0x00006a,
+  0x005774,
+  0x0d5c06,
+  0x003204,
+  0x2c1400,
+  0x48381a,
+  0x606060,
+  0x404040,
+  0x1f1f7f,
+  0x000000,
+};
+
+#undef static_assert
+static_assert((sizeof (colors)) / (sizeof (colors[0])) == 16);
+
+
+
+void transfer_line(ta_parameter_writer& writer, vec3 p1, vec3 p2, uint32_t base_color)
+{
+  float dy = p2.y - p1.y;
+  float dx = p2.x - p1.x;
+  float d = _fsrra(dx * dx + dy * dy) * 0.7f;
+  float dy1 = dy * d;
+  float dx1 = dx * d;
+
+  //assert(p1.z < 1);
+  //assert(p2.z < 1);
+
+  const vec3 v[4] = {
+    { p1.x +  dy1, p1.y + -dx1, p1.z },
+    { p1.x + -dy1, p1.y +  dx1, p1.z },
+    { p2.x + -dy1, p2.y +  dx1, p2.z },
+    { p2.x +  dy1, p2.y + -dx1, p2.z },
+  };
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        v[0].x, v[0].y, v[0].z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        v[1].x, v[1].y, v[1].z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
+                                        v[3].x, v[3].y, v[3].z,
+                                        base_color);
+
+  writer.append<ta_vertex_parameter::polygon_type_0>() =
+    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
+                                        v[2].x, v[2].y, v[2].z,
+                                        base_color);
+}
+
+vec3 perpendicular(vec3 n)
+{
+  int b0 = (abs(n[0]) <  abs(n[1])) && (abs(n[0]) <  abs(n[2]));
+  int b1 = (abs(n[1]) <= abs(n[0])) && (abs(n[1]) <  abs(n[2]));
+  int b2 = (abs(n[2]) <= abs(n[0])) && (abs(n[2]) <= abs(n[1]));
+
+  return cross(n, {(float)b0, (float)b1, (float)b2});
+}
+
+vec3 rodrigues_rotation(vec3 k, vec3 v, float theta)
+{
+  // k - axis of rotation
+  // v - vector to be rotated
+
+  float ct = cos(theta);
+  float st = sin(theta);
+
+  vec3 v_rot = v * ct + cross(k, v) * st + k * dot(k, v) * (1 - ct);
+
+  return v_rot;
+}
+
+void transfer_brushsides(ta_parameter_writer& writer,
+                         const mat4x4& trans,
+                         q3bsp_plane_t * planes,
+                         q3bsp_brushside_t * brushsides,
+                         int n_brushsides)
+{
+  for (int i = 0; i < n_brushsides; i++) {
+    q3bsp_brushside_t * brushside = &brushsides[i];
+    q3bsp_plane_t * plane = &planes[brushside->plane];
+
+    vec4 plane_eq = {plane->normal[0], plane->normal[1], plane->normal[2], -plane->dist};
+    vec4 pos = {sphere_position.x, sphere_position.y, sphere_position.z, 1.0f};
+    float sign = dot(plane_eq, pos);
+
+    uint32_t base_color;
+    if (sign > 0)
+      base_color = 0x50000000 | colors[i & 15];
+    else
+      base_color = 0x60000000 | 0;
+
+    vec3 a = {0, 0, 0};
+    vec3 normal = {plane->normal[0], plane->normal[1], plane->normal[2]};
+    //printf("%f %f %f\n", normal.x, normal.y, normal.z);
+    vec3 b = normal * plane->dist;
+
+    vec3 ap = trans * a;
+    vec3 bp = trans * b;
+
+    if (ap.z < 0 || bp.z < 0)
+      continue;
+
+    /*
+    transfer_line(writer,
+                  screen_transform(ap),
+                  screen_transform(bp),
+                  base_color);
+    */
+    transfer_line(writer,
+                  screen_transform(bp),
+                  screen_transform(trans * (b + normal * 100.f)),
+                  base_color);
+
+    vec3 perp = perpendicular(normal);
+
+    float scale = 500;
+    vec3 cp1 = trans * (b + (perp * scale));
+    vec3 cp2 = trans * (b + (perp * -scale));
+
+    /*
+    transfer_line(writer,
+                  screen_transform(bp),
+                  screen_transform(cp),
+                  base_color);
+    */
+
+    vec3 perp2 = rodrigues_rotation(normal, perp, pi / 2.0f);
+
+    vec3 dp1 = trans * (b + (perp2 * scale));
+    vec3 dp2 = trans * (b + (perp2 * -scale));
+
+    /*
+    transfer_line(writer,
+                  screen_transform(bp),
+                  screen_transform(dp),
+                  base_color);
+    */
+
+    render_quad(writer,
+                screen_transform(cp1),
+                screen_transform(dp1),
+                screen_transform(cp2),
+                screen_transform(dp2),
+                base_color);
+  }
+}
+
+void transfer_brushes(ta_parameter_writer& writer, const mat4x4& trans)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * br = &header->direntries[LUMP_BRUSHES];
+  q3bsp_brush_t * brushes = reinterpret_cast<q3bsp_brush_t *>(&buf[br->offset]);
+
+  q3bsp_direntry * lbr = &header->direntries[LUMP_LEAFBRUSHES];
+  q3bsp_leafbrush_t * leafbrushes = reinterpret_cast<q3bsp_leafbrush_t *>(&buf[lbr->offset]);
+
+  q3bsp_direntry * bs = &header->direntries[LUMP_BRUSHSIDES];
+  q3bsp_brushside_t * brushsides = reinterpret_cast<q3bsp_brushside_t *>(&buf[bs->offset]);
+
+  q3bsp_direntry * p = &header->direntries[LUMP_PLANES];
+  q3bsp_plane_t * planes = reinterpret_cast<q3bsp_plane_t *>(&buf[p->offset]);
+
+  q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
+  q3bsp_leaf_t * leafs = reinterpret_cast<q3bsp_leaf_t *>(&buf[le->offset]);
+
+  int brush_count = br->length / (sizeof (struct q3bsp_brush));
+
+  global_polygon_type_0(writer);
+
+  //for (int i = 0; i < brush_count; i++) {
+
+  //printf("leaf_ix %d\n", bb_leaf - leafs);
+
+  q3bsp_leaf_t * leaf = &leafs[1579];
+  leaf = bb_leaf;
+  mm_leaf = leaf;
+  q3bsp_leafbrush_t * lbs = &leafbrushes[leaf->leafbrush];
+
+  printf("n_lbs %d\n", leaf->n_leafbrushes);
+  for (int i = 0; i < leaf->n_leafbrushes; i++) {
+
+    q3bsp_brush_t * brush = &brushes[lbs[i].brush];
+    transfer_brushsides(writer,
+                        trans,
+                        planes,
+                        &brushsides[brush->brushside],
+                        brush->n_brushsides);
+    break;
+  }
+}
+
+void debug_bsp()
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * me = &header->direntries[LUMP_MODELS];
+  q3bsp_model_t * models = reinterpret_cast<q3bsp_model_t *>(&buf[me->offset]);
+
+  int model_count = me->length / (sizeof (struct q3bsp_model));
+  printf("model %d\n", model_count);
+  printf("      %d %d\n", models[0].n_faces, models[0].face);
+  const float * mins = models[0].mins;
+  const float * maxs = models[0].mins;
+  printf("      %f %f %f\n", mins[0], mins[1], mins[2]);
+  printf("      %f %f %f\n", maxs[0], maxs[1], maxs[2]);
+
+  printf("\n\n");
+}
+
 int main()
 {
   sh7091.TMU.TSTR = 0; // stop all timers
@@ -2106,6 +2345,7 @@ int main()
   sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
 
   serial::init(0);
+  debug_bsp();
 
   total_tri_count = count_face_triangles();
 
