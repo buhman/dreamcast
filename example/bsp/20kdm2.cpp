@@ -96,6 +96,9 @@
 
 #include "assert.h"
 
+#undef nullptr
+#undef static_assert
+
 constexpr int font_base = ((0x7f - 0x20) + 1) * 8 * 16 / 2;
 
 using vec2 = vec<2, float>;
@@ -1508,7 +1511,7 @@ void render_leaf_faces(ta_parameter_writer& writer, const mat4x4& trans, q3bsp_l
 q3bsp_leaf_t * bb_leaf = NULL;
 q3bsp_leaf_t * mm_leaf = NULL;
 
-void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, const vec3 pos)
+q3bsp_leaf_t * find_leaf(const vec3 pos)
 {
   uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
   q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
@@ -1519,9 +1522,6 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
   q3bsp_direntry * ne = &header->direntries[LUMP_NODES];
   q3bsp_node_t * nodes = reinterpret_cast<q3bsp_node_t *>(&buf[ne->offset]);
   q3bsp_node_t * root = &nodes[0];
-
-  q3bsp_direntry * ve = &header->direntries[LUMP_VISDATA];
-  q3bsp_visdata_t * visdata = reinterpret_cast<q3bsp_visdata_t *>(&buf[ve->offset]);
 
   while (true) {
     bool a_inside;
@@ -1538,8 +1538,7 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
       q3bsp_leaf_t * leaf = &leafs[leaf_ix];
       a_inside = vec3_in_bb(pos, leaf->mins, leaf->maxs);
       if (a_inside) {
-        bb_leaf = leaf;
-        break;
+        return leaf;
       }
     }
     if (root->children[1] >= 0) {
@@ -1553,25 +1552,33 @@ void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, cons
       q3bsp_leaf_t * leaf = &leafs[leaf_ix];
       b_inside = vec3_in_bb(pos, leaf->mins, leaf->maxs);
       if (b_inside) {
-        bb_leaf = leaf;
-        break;
+        return leaf;
       }
     }
 
-    /*
-    if (!(a_inside ^ b_inside)) {
-      printf("root_ix %d\n", root - nodes);
-    }
-    */
-
     if (!(a_inside || b_inside))
-      return;
+      return nullptr;
     assert(a_inside || b_inside);
-    //assert(new_root != NULL);
+    assert(new_root != NULL);
     root = new_root;
   }
+}
 
-  assert(bb_leaf != NULL);
+void render_visible_faces(ta_parameter_writer& writer, const mat4x4& trans, const vec3 pos)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
+  q3bsp_leaf_t * leafs = reinterpret_cast<q3bsp_leaf_t *>(&buf[le->offset]);
+
+  q3bsp_direntry * ve = &header->direntries[LUMP_VISDATA];
+  q3bsp_visdata_t * visdata = reinterpret_cast<q3bsp_visdata_t *>(&buf[ve->offset]);
+
+  bb_leaf = find_leaf(pos);
+  if (bb_leaf == NULL)
+    return;
+
   //uint32_t color = 0x8000ff16;
   //render_bounding_box_mm(writer, trans, bb_leaf->maxs, bb_leaf->mins, color);
   render_leaf_faces(writer, trans, bb_leaf);
@@ -1674,11 +1681,11 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans, con
 
   // translucent list
   {
-    render_bounding_box_mm(writer, trans, mm_leaf->maxs, mm_leaf->mins, 0x4000ff00);
+    //render_bounding_box_mm(writer, trans, mm_leaf->maxs, mm_leaf->mins, 0x4000ff00);
 
     transfer_billboard(writer, trans);
 
-    transfer_brushes(writer, trans);
+    //transfer_brushes(writer, trans);
 
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
@@ -1854,6 +1861,102 @@ void transfer_textures()
   printf("texture memory free %d\n", total - used);
 }
 
+static uint8_t brush_cache[2048];
+//static volatile int brushside_comparisons;
+
+static inline bool collision_brush(q3bsp_plane_t * planes,
+                                   q3bsp_brushside_t * brushsides,
+                                   int n_brushsides,
+                                   vec3 pos)
+{
+  for (int i = 0; i < n_brushsides; i++) {
+    q3bsp_brushside_t * brushside = &brushsides[i];
+    q3bsp_plane_t * plane = &planes[brushside->plane];
+
+    vec4 plane_eq = {plane->normal[0], plane->normal[1], plane->normal[2], -plane->dist};
+    vec4 position = {pos.x, pos.y, pos.z, 1.0f};
+    float sign = dot(plane_eq, position);
+
+    //brushside_comparisons += 1;
+
+    if (sign > 0)
+      return true;
+  }
+
+  return false;
+}
+
+static inline bool collision_leaf(q3bsp_leaf_t * leaf, vec3 pos)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+
+  q3bsp_direntry * br = &header->direntries[LUMP_BRUSHES];
+  q3bsp_brush_t * brushes = reinterpret_cast<q3bsp_brush_t *>(&buf[br->offset]);
+
+  q3bsp_direntry * lbr = &header->direntries[LUMP_LEAFBRUSHES];
+  q3bsp_leafbrush_t * leafbrushes = reinterpret_cast<q3bsp_leafbrush_t *>(&buf[lbr->offset]);
+
+  q3bsp_direntry * bs = &header->direntries[LUMP_BRUSHSIDES];
+  q3bsp_brushside_t * brushsides = reinterpret_cast<q3bsp_brushside_t *>(&buf[bs->offset]);
+
+  q3bsp_direntry * p = &header->direntries[LUMP_PLANES];
+  q3bsp_plane_t * planes = reinterpret_cast<q3bsp_plane_t *>(&buf[p->offset]);
+
+  q3bsp_leafbrush_t * lbs = &leafbrushes[leaf->leafbrush];
+  for (int i = 0; i < leaf->n_leafbrushes; i++) {
+    int brush_ix = lbs[i].brush;
+    if (brush_cache[brush_ix])
+      continue;
+    brush_cache[brush_ix] = true;
+
+    q3bsp_brush_t * brush = &brushes[brush_ix];
+    bool col = collision_brush(planes,
+                               &brushsides[brush->brushside],
+                               brush->n_brushsides,
+                               pos);
+    if (col)
+      return true;
+  }
+
+  return false;
+}
+
+bool collision(vec3 a, vec3 b)
+{
+  uint8_t * buf = reinterpret_cast<uint8_t *>(bsp_start);
+  q3bsp_header_t * header = reinterpret_cast<q3bsp_header_t *>(buf);
+  q3bsp_direntry * br = &header->direntries[LUMP_BRUSHES];
+
+  int brush_count = br->length / (sizeof (struct q3bsp_brush));
+
+  for (int i = 0; i < brush_count; i++)
+    brush_cache[i] = false;
+
+  //brushside_comparisons = 0;
+
+  q3bsp_leaf_t * a_leaf = find_leaf(a);
+  if (a_leaf == nullptr) {
+    printf("a_leaf null\n");
+    return true;
+  }
+  q3bsp_leaf_t * b_leaf = find_leaf(b);
+  if (b_leaf == nullptr) {
+    printf("b_leaf null\n");
+    return true;
+  }
+
+  if (collision_leaf(a_leaf, a))
+    return true;
+
+  if (collision_leaf(b_leaf, b))
+    return true;
+
+  //printf("brushside_comparisons: %d\n", brushside_comparisons);
+
+  return false;
+}
+
 static bool push = false;
 
 mat4x4 update_analog(const mat4x4& screen)
@@ -1922,9 +2025,6 @@ mat4x4 update_analog(const mat4x4& screen)
 
   //printf("%d %d\n", draw_tavion_surface, tavion_surface[draw_tavion_surface]);
   if (0) {
-    uint8_t * buf = reinterpret_cast<uint8_t *>(&_binary_model_tavion_new_model_glm_start);
-    mdxm_header_t * header = (mdxm_header_t *)(buf);
-
     if (db_x && !db_y && !push) {
       push = true;
       //leaf_ix -= 1;
@@ -1948,17 +2048,33 @@ mat4x4 update_analog(const mat4x4& screen)
       push = false;
     }
   } else if (1) {
+    vec3 destination = {sphere_position.x, sphere_position.y, sphere_position.z};
+
     if (db_x && !db_b) {
-      sphere_position.x -= 10;
+      destination.x -= 10;
     }
     if (db_b && !db_x) {
-      sphere_position.x += 10;
+      destination.x += 10;
     }
     if (db_y && !db_a) {
-      sphere_position.y += 10;
+      destination.y += 10;
     }
     if (db_a && !db_y) {
-      sphere_position.y -= 10;
+      destination.y -= 10;
+    }
+    if (ua && !da) {
+      destination.z += 10;
+    }
+    if (da && !ua) {
+      destination.z -= 10;
+    }
+
+    if (db_x || db_b || db_y || db_a || ua || da) {
+      if (!collision(sphere_position, destination)) {
+        sphere_position = destination;
+      } else {
+        //serial::string("collision\n");
+      }
     }
   }
 
@@ -2128,10 +2244,7 @@ uint32_t colors2[] = {
   0x000000,
 };
 
-#undef static_assert
 static_assert((sizeof (colors)) / (sizeof (colors[0])) == 16);
-
-
 
 void transfer_line(ta_parameter_writer& writer, vec3 p1, vec3 p2, uint32_t base_color)
 {
@@ -2287,10 +2400,12 @@ void transfer_brushes(ta_parameter_writer& writer, const mat4x4& trans)
   q3bsp_direntry * p = &header->direntries[LUMP_PLANES];
   q3bsp_plane_t * planes = reinterpret_cast<q3bsp_plane_t *>(&buf[p->offset]);
 
-  q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
-  q3bsp_leaf_t * leafs = reinterpret_cast<q3bsp_leaf_t *>(&buf[le->offset]);
+  //q3bsp_direntry * le = &header->direntries[LUMP_LEAFS];
+  //q3bsp_leaf_t * leafs = reinterpret_cast<q3bsp_leaf_t *>(&buf[le->offset]);
 
   int brush_count = br->length / (sizeof (struct q3bsp_brush));
+
+  //printf("brush_count %d\n", brush_count);
 
   global_polygon_type_0(writer);
 
@@ -2298,12 +2413,11 @@ void transfer_brushes(ta_parameter_writer& writer, const mat4x4& trans)
 
   //printf("leaf_ix %d\n", bb_leaf - leafs);
 
-  q3bsp_leaf_t * leaf = &leafs[1579];
-  leaf = bb_leaf;
+  q3bsp_leaf_t * leaf = bb_leaf;
   mm_leaf = leaf;
   q3bsp_leafbrush_t * lbs = &leafbrushes[leaf->leafbrush];
 
-  printf("n_lbs %d\n", leaf->n_leafbrushes);
+  //printf("n_lbs %d\n", leaf->n_leafbrushes);
   for (int i = 0; i < leaf->n_leafbrushes; i++) {
 
     q3bsp_brush_t * brush = &brushes[lbs[i].brush];
