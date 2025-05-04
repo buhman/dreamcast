@@ -1022,3 +1022,18 @@ MOD_OBJ = \
 
 example/mod.elf: LDSCRIPT = $(LIB)/main.lds
 example/mod.elf: $(START_OBJ) $(MOD_OBJ)
+
+DOOR_OBJ = \
+	example/door.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	printf/unparse.o \
+	$(LIBGCC)
+
+example/door.elf: LDSCRIPT = $(LIB)/main.lds
+example/door.elf: $(START_OBJ) $(DOOR_OBJ)
