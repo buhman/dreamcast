@@ -13,6 +13,7 @@ include ip.mk
 
 include example/example.mk
 include example/bsp/bsp.mk
+include example/aica/aica.mk
 include chess/chess.mk
 include text_editor/text_editor.mk
 

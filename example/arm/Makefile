@@ -25,6 +25,9 @@ channel.elf: start.o channel.o audio.pcm.o
 sh4_interrupt.elf: LDSCRIPT = main.lds
 sh4_interrupt.elf: start.o sh4_interrupt.o
 
+xm.elf: LDSCRIPT = main.lds
+xm.elf: start.o xm.o audio.pcm.o
+
 clean:
 	find -P \
 		-regextype posix-egrep \

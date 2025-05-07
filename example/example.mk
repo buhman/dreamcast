@@ -502,37 +502,6 @@ GDROM_JVM_BOOT_OBJ = \
 example/gdrom_jvm_boot.elf: LDSCRIPT = $(LIB)/alt.lds
 example/gdrom_jvm_boot.elf: $(START_OBJ) $(GDROM_JVM_BOOT_OBJ)
 
-
-AICA_OBJ = \
-	example/aica.o \
-	sh7091/serial.o \
-	example/arm/channel.bin.o
-
-example/aica.elf: LDSCRIPT = $(LIB)/main.lds
-example/aica.elf: $(START_OBJ) $(AICA_OBJ)
-
-AICA_GDROM_OBJ = \
-	example/aica_gdrom.o \
-	sh7091/serial.o \
-	example/arm/sh4_interrupt.bin.o
-
-example/aica_gdrom.elf: LDSCRIPT = $(LIB)/main.lds
-example/aica_gdrom.elf: $(START_OBJ) $(AICA_GDROM_OBJ)
-
-AICA_GDROM_DFT_OBJ = \
-	example/aica_gdrom_dft.o \
-	holly/core.o \
-	holly/region_array.o \
-	holly/background.o \
-	holly/ta_fifo_polygon_converter.o \
-	holly/video_output.o \
-	sh7091/serial.o \
-	example/arm/sh4_interrupt.bin.o \
-	$(LIBGCC)
-
-example/aica_gdrom_dft.elf: LDSCRIPT = $(LIB)/main.lds
-example/aica_gdrom_dft.elf: $(START_OBJ) $(AICA_GDROM_DFT_OBJ)
-
 MAC_SATURATION_OBJ = \
 	example/mac_saturation.o \
 	example/macl_saturation.o \
