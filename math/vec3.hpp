@@ -166,3 +166,9 @@ inline constexpr T magnitude(vec<3, T> const& v)
 {
   return sqrt(dot(v, v));
 }
+
+template <typename T>
+inline constexpr vec<3, T> normalize(vec<3, T> const& v)
+{
+  return v / magnitude(v);
+}

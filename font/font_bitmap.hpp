@@ -9,11 +9,13 @@ namespace font_bitmap {
 uint32_t inflate(const uint32_t pitch,
 		 const uint32_t width,
 		 const uint32_t height,
+                 const uint32_t texture_address,
 		 const uint32_t texture_width,
 		 const uint32_t texture_height,
 		 const uint8_t * src);
 
 void transform_string(ta_parameter_writer& parameter,
+                      const uint32_t texture_address,
                       const uint32_t texture_width,
                       const uint32_t texture_height,
                       const uint32_t glyph_width,

@@ -2,7 +2,6 @@
 
 #include "../holly/holly.hpp"
 #include "../holly/core_bits.hpp"
-#include "../holly/texture_memory_alloc3.hpp"
 #include "../holly/isp_tsp.hpp"
 #include "../holly/ta_parameter.hpp"
 #include "../holly/ta_global_parameter.hpp"
@@ -19,6 +18,7 @@ namespace font_bitmap {
 static inline void inflate_character(const uint32_t pitch,
                                      const uint32_t width,
                                      const uint32_t height,
+                                     const uint32_t texture_address,
                                      const uint32_t texture_width,
                                      const uint32_t texture_height,
                                      const uint8_t * src,
@@ -47,7 +47,7 @@ static inline void inflate_character(const uint32_t pitch,
     }
   }
 
-  auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_memory_alloc.texture.start / 4]);
+  auto texture = reinterpret_cast<volatile uint32_t *>(&texture_memory64[texture_address / 4]);
 
   uint8_t temp2[texture_width * texture_height / 2];
 
@@ -65,6 +65,7 @@ static inline void inflate_character(const uint32_t pitch,
 uint32_t inflate(const uint32_t pitch,
 		 const uint32_t width,
 		 const uint32_t height,
+                 const uint32_t texture_address,
 		 const uint32_t texture_width,
 		 const uint32_t texture_height,
 		 const uint8_t * src)
@@ -73,12 +74,13 @@ uint32_t inflate(const uint32_t pitch,
     inflate_character(pitch,
                       width,
                       height,
+                      texture_address,
                       texture_width,
                       texture_height,
                       src,
                       ix);
   }
-  return ((0x7f - 0x20) + 1) * texture_width * texture_height / 2;
+  return texture_address + ((0x7f - 0x20) + 1) * texture_width * texture_height / 2;
 }
 
 void palette_data()
@@ -107,6 +109,7 @@ const struct quad_vertex quad_vertices[4] = {
 constexpr uint32_t quad_length = (sizeof (quad_vertices)) / (sizeof (struct quad_vertex));
 
 void transform_string(ta_parameter_writer& parameter,
+                      const uint32_t texture_address,
                       const uint32_t texture_width,
                       const uint32_t texture_height,
                       const uint32_t glyph_width,
@@ -137,7 +140,6 @@ void transform_string(ta_parameter_writer& parameter,
     if (len < 0) {
       if (s[string_ix] == 0) break;
     } else if (string_ix >= len) break;
-    const uint32_t texture_address = texture_memory_alloc.texture.start;
     const uint32_t glyph_address = texture_address + texture_width * texture_height * (s[string_ix] - ' ') / 2;
     const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
 					| texture_control_word::scan_order::twiddled

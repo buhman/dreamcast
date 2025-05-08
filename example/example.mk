@@ -1006,3 +1006,24 @@ DOOR_OBJ = \
 
 example/door.elf: LDSCRIPT = $(LIB)/main.lds
 example/door.elf: $(START_OBJ) $(DOOR_OBJ)
+
+BUMP_OBJ = \
+	example/bump.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	texture/bump/bump.data.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	font/font_bitmap.o \
+	font/verite_8x16/verite_8x16.data.o \
+	$(LIBGCC)
+
+example/bump.elf: LDSCRIPT = $(LIB)/main.lds
+example/bump.elf: $(START_OBJ) $(BUMP_OBJ)
