@@ -4,7 +4,7 @@ GENERATED ?=
 AARCH = --isa=sh4 --little
 
 CARCH ?= -m4-single-only -ml
-CFLAGS += -mfsca -funsafe-math-optimizations -ffast-math
+CFLAGS += -mfsca -mfsrra -funsafe-math-optimizations -ffast-math
 
 OBJARCH = -O elf32-shl -B sh4
 

@@ -367,7 +367,7 @@ mat4x4 translate(vec3 t)
   };
 }
 
-//mat4x4 rodrigues(vec4 r) __attribute__ ((optimize(1)));
+mat4x4 rodrigues(vec4 r) __attribute__ ((optimize(1)));
 mat4x4 rodrigues(vec4 r)
 {
   const vec3 k = {r.y, r.z, r.w};
