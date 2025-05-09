@@ -52,39 +52,12 @@ using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
-struct polygon {
-  int a, b, c, d;
-};
-
-struct mesh {
-  const vec3 * position;
-  const int position_length;
-  const vec3 * normal;
-  const int normal_length;
-  const polygon * polygons;
-  const int polygons_length;
-  // vec2 * uv_layers[]; // support for multiple UV maps
-  // int uv_layers_length;
-};
-
-struct transform {
-  const vec3 scale;
-  const vec4 rotation;
-  const vec3 location;
-};
-
-struct object {
-  const struct mesh * mesh;
-  const transform transforms[26];
-};
-
-#include "model/door/door.h"
-
-#define _fsrra(n) (1.0f / (__builtin_sqrtf(n)))
+#include "model/blender_export.h"
+#include "model/grid.h"
 
 static ft0::data_transfer::data_format data[4];
 
-+uint8_t send_buf[1024] __attribute__((aligned(32)));
+uint8_t send_buf[1024] __attribute__((aligned(32)));
 uint8_t recv_buf[1024] __attribute__((aligned(32)));
 
 void do_get_condition()

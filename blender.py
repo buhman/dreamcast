@@ -1,10 +1,10 @@
 import bpy
 
 def render_vec3(v):
-    return f"{{{v.x}, {v.y}, {v.z}}}"
+    return f"{{{v.x:.6f}, {v.y:.6f}, {v.z:.6f}}}"
 
 def render_vec2(v):
-    return f"{{{v.x}, {v.y}}}"
+    return f"{{{v.x:.6f}, {v.y:.6f}}}"
 
 def render_mesh_vertices(f, name, vertices):
     f.write(f"const vec3 {name}_position[] = {{\n")
@@ -50,8 +50,12 @@ def render_scale(f, scale):
     f.write(f"  .scale = {s},\n")
 
 def render_rotation_axis_angle(f, r):
-    r = f"{{{r[0]}, {r[1]}, {r[2]}, {r[3]}}}"
-    f.write(f"  .rotation = {r},\n")
+    r = f"{{{r[1]:.6f}, {r[2]:.6f}, {r[3]:.6f}, {r[0]:.6f}}}"
+    f.write(f"  .rotation = {r}, // rotation_axis_angle (XYZ T)\n")
+
+def render_rotation_quaternion(f, r):
+    r = f"{{{r[1]:.6f}, {r[2]:.6f}, {r[3]:.6f}, {r[0]:.6f}}}"
+    f.write(f"  .rotation = {r}, // quaternion (XYZW)\n")
 
 def render_mesh(f, name, mesh):
     f.write(f"const vec2 * {name}_uv_layers[] = {{\n")
@@ -130,12 +134,16 @@ def export_scene(f):
         f.write("  ")
         render_scale(f, object.scale)
         f.write("  ")
-        render_rotation_axis_angle(f, object.rotation_axis_angle)
+        old_mode = object.rotation_mode
+        object.rotation_mode = 'QUATERNION'
+        #render_rotation_axis_angle(f, object.rotation_axis_angle)
+        render_rotation_quaternion(f, object.rotation_quaternion)
+        object.rotation_mode = old_mode
         f.write("  ")
         render_location(f, object.location)
 
         f.write("  },\n")
     f.write("};\n\n")
 
-with open("output.h", "w") as f:
+with open("/home/bilbo/output.h", "w") as f:
     export_scene(f)

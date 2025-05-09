@@ -78,6 +78,34 @@ inline constexpr mat<4, 4, T> rotate_axis_angle(vec<3, T> u, T t)
 }
 
 template <typename T>
+inline constexpr mat<4, 4, T> rotate_axis_angle(vec<4, T> u)
+{
+  return rotate_axis_angle({u.x, u.y, u.z}, u.w);
+}
+
+template <typename T>
+inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> v)
+{
+  T xx2 = 2 * r.x * r.x;
+  T xy2 = 2 * r.x * r.y;
+  T xz2 = 2 * r.x * r.z;
+  T xw2 = 2 * r.x * r.w;
+  T yy2 = 2 * r.y * r.y;
+  T yz2 = 2 * r.y * r.z;
+  T yw2 = 2 * r.y * r.w;
+  T zz2 = 2 * r.z * r.z;
+  T zw2 = 2 * r.z * r.w;
+
+  return {
+    1 - yy2 - zz2,      xy2 - zw2,      xz2 + yw2, 0,
+        xy2 + zw2,  1 - xx2 - zz2,      yz2 - xw2, 0,
+        xz2 - yw2,      yz2 + xw2,  1 - xx2 - yy2, 0,
+                0,              0,              0, 1,
+  };
+}
+
+
+template <typename T>
 inline constexpr vec<3, T> normal_multiply(mat<4, 4, T> m, vec<3, T> n)
 {
   vec<4, T> n4 = m * (vec<4, T>){n.x, n.y, n.z, 0.0};
