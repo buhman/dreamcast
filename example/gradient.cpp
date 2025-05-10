@@ -215,7 +215,7 @@ static inline void render_quad(ta_parameter_writer& writer,
                                vec2 ct,
                                vec2 dt)
 {
-  if (ap.z < 0 || bp.z < 0 || cp.z < 0)
+  if (ap.z < 0 || bp.z < 0 || cp.z < 0 || dp.z < 0)
     return;
 
   writer.append<ta_vertex_parameter::polygon_type_3>() =
