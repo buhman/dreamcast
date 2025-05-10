@@ -172,3 +172,9 @@ inline constexpr vec<3, T> normalize(vec<3, T> const& v)
 {
   return v / magnitude(v);
 }
+
+template <typename T>
+inline constexpr vec<3, T> reflect(vec<3, T> const& i, vec<3, T> const& n)
+{
+  return i - dot(n, i) * n * static_cast<T>(2.0);
+}

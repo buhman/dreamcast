@@ -37,6 +37,7 @@
 #include "math/mat3x3.hpp"
 #include "math/mat4x4.hpp"
 #include "math/geometry.hpp"
+#include "math/transform.hpp"
 
 #include "interrupt.hpp"
 
@@ -224,8 +225,8 @@ void global_polygon_type_1(ta_parameter_writer& writer,
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
                                       | tsp_instruction_word::texture_shading_instruction::decal
-    //| tsp_instruction_word::src_alpha_instr::one
-    //| tsp_instruction_word::dst_alpha_instr::zero
+                                      | tsp_instruction_word::src_alpha_instr::one
+                                      | tsp_instruction_word::dst_alpha_instr::zero
                                       | texture_u_v_size
                                       ;
 
@@ -246,7 +247,10 @@ static inline void render_quad(ta_parameter_writer& writer,
                                vec3 bp,
                                vec3 cp,
                                vec3 dp,
-                               float li)
+                               float ai,
+                               float bi,
+                               float ci,
+                               float di)
 {
   if (ap.z < 0 || bp.z < 0 || cp.z < 0 || dp.z < 0)
     return;
@@ -254,22 +258,22 @@ static inline void render_quad(ta_parameter_writer& writer,
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
-                                        li);
+                                        ai);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         bp.x, bp.y, bp.z,
-                                        li);
+                                        bi);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
                                         dp.x, dp.y, dp.z,
-                                        li);
+                                        di);
 
   writer.append<ta_vertex_parameter::polygon_type_2>() =
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
-                                        li);
+                                        ci);
 }
 
 static inline vec3 screen_transform(vec3 v)
@@ -285,26 +289,13 @@ static inline vec3 screen_transform(vec3 v)
   };
 }
 
-#define _fsrra(n) (1.0f / (__builtin_sqrtf(n)))
-
-static inline float inverse_length(vec3 v)
-{
-  float f = dot(v, v);
-  return _fsrra(f);
-}
-
-float light_intensity(vec3 l1, vec3 l2, vec3 n)
+float light_intensity(vec3 l1, vec3 n)
 {
   float intensity = 0.2f;
   {
     float n_dot_l = dot(n, l1);
     if (n_dot_l > 0)
       intensity += 0.9f * n_dot_l * (inverse_length(n) * inverse_length(l1));
-  }
-  {
-    float n_dot_l = dot(n, l2);
-    if (n_dot_l > 0)
-      intensity += 0.9f * n_dot_l * (inverse_length(n) * inverse_length(l2));
   }
 
   if (intensity > 1.0f)
@@ -313,13 +304,8 @@ float light_intensity(vec3 l1, vec3 l2, vec3 n)
   return intensity;
 }
 
-constexpr int animation_frames = 26;
-constexpr int ticks_per_animation_frame = 64;
-constexpr float tick_div = 1.0f / (float)ticks_per_animation_frame;
-
-void transfer_mesh(ta_parameter_writer& writer, const mat4x4& trans, const object * object, int animation_tick)
+void transfer_mesh(ta_parameter_writer& writer, const mat4x4& trans, const mesh * mesh)
 {
-  const mesh * mesh = object->mesh;
   uint32_t control = para_control::list_type::opaque;
   uint32_t texture_uv_size = 0;
   uint32_t texture_control_word = 0;
@@ -329,62 +315,79 @@ void transfer_mesh(ta_parameter_writer& writer, const mat4x4& trans, const objec
                         texture_uv_size,
                         texture_control_word);
 
-  vec3 position_cache[mesh->position_length];
-  vec3 normal_cache[mesh->normal_length];
-
-  int frame_ix0 = animation_tick / ticks_per_animation_frame;
-  int frame_ix1 = frame_ix0 + 1;
-  if (frame_ix1 >= animation_frames)
-    frame_ix1 = 0;
-
-  float lerp = (float)(animation_tick - (frame_ix0 * ticks_per_animation_frame)) * tick_div;
-
-  const transform& t0 = object->transforms[frame_ix0];
-  const transform& t1 = object->transforms[frame_ix1];
-
-  vec3 location = t0.location + ((t1.location - t0.location) * lerp);
-  vec4 rotation = t0.rotation + ((t1.rotation - t0.rotation) * lerp);
-  vec3 _scale = t0.scale + ((t1.scale - t0.scale) * lerp);
-
-  mat4x4 trans1 = trans
-    * translate(location)
-    * quaternion(rotation)
-    * scale(_scale);
-
-  for (int i = 0; i < mesh->position_length; i++) {
-    position_cache[i] = trans1 * mesh->position[i];
-    normal_cache[i] = normal_transform(trans * quaternion(rotation), mesh->normal[i]);
-  }
-
   for (int i = 0; i < mesh->polygons_length; i++) {
-    const polygon * p = &mesh->polygons[i];
+    const struct polygon * polygon = &mesh->polygons[i];
 
-    vec3 ap = screen_transform(position_cache[p->a]);
-    vec3 bp = screen_transform(position_cache[p->b]);
-    vec3 cp = screen_transform(position_cache[p->c]);
-    vec3 dp = screen_transform(position_cache[p->d]);
+    vec3 ap = trans * mesh->position[polygon->a];
+    vec3 bp = trans * mesh->position[polygon->b];
+    vec3 cp = trans * mesh->position[polygon->c];
+    vec3 dp = trans * mesh->position[polygon->d];
 
-    float li = light_intensity(light_vec, light_vec2, normal_cache[p->a]);
-    assert(li > 0);
+    vec3 light_pos = {1.2f, 1.0f, -2.0f};
+    vec3 n = normal_multiply(trans, mesh->polygon_normal[i]);
 
-    render_quad(writer, ap, bp, cp, dp, li);
+    vec3 a_light_dir = normalize(light_pos - ap);
+    vec3 b_light_dir = normalize(light_pos - bp);
+    vec3 c_light_dir = normalize(light_pos - cp);
+    vec3 d_light_dir = normalize(light_pos - dp);
+    float a_diffuse = max(dot(n, a_light_dir), 0.0f);
+    float b_diffuse = max(dot(n, b_light_dir), 0.0f);
+    float c_diffuse = max(dot(n, c_light_dir), 0.0f);
+    float d_diffuse = max(dot(n, d_light_dir), 0.0f);
+
+    vec3 view_pos = {0, 0, 0};
+    vec3 a_view_dir = normalize(view_pos - ap);
+    vec3 a_reflect_dir = reflect(-a_light_dir, n);
+    float a_spec = __builtin_powf(max(dot(a_view_dir, a_reflect_dir), 0.0f), 64.0f);
+
+    vec3 b_view_dir = normalize(view_pos - bp);
+    vec3 b_reflect_dir = reflect(-b_light_dir, n);
+    float b_spec = __builtin_powf(max(dot(b_view_dir, b_reflect_dir), 0.0f), 64.0f);
+
+    vec3 c_view_dir = normalize(view_pos - cp);
+    vec3 c_reflect_dir = reflect(-c_light_dir, n);
+    float c_spec = __builtin_powf(max(dot(c_view_dir, c_reflect_dir), 0.0f), 64.0f);
+
+    vec3 d_view_dir = normalize(view_pos - dp);
+    vec3 d_reflect_dir = reflect(-d_light_dir, n);
+    float d_spec = __builtin_powf(max(dot(d_view_dir, d_reflect_dir), 0.0f), 64.0f);
+
+    float ai = a_diffuse * 0.7 + a_spec;
+    float bi = b_diffuse * 0.7 + b_spec;
+    float ci = c_diffuse * 0.7 + c_spec;
+    float di = d_diffuse * 0.7 + d_spec;
+
+    render_quad(writer,
+                screen_transform(ap),
+                screen_transform(bp),
+                screen_transform(cp),
+                screen_transform(dp),
+                ai,
+                bi,
+                ci,
+                di);
   }
 }
 
-void transfer_scene(ta_parameter_writer& writer, const mat4x4& trans, int animation_tick)
+void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
   // opaque list
   {
-    transfer_mesh(writer, trans, &objects[0], animation_tick);
-    transfer_mesh(writer, trans, &objects[1], animation_tick);
-    transfer_mesh(writer, trans, &objects[2], animation_tick);
+    for (uint32_t i = 0; i < (sizeof (objects)) / (sizeof (objects[0])); i++) {
+      mat4x4 trans = screen_trans
+        * translate(objects[i].location)
+        * rotate_quaternion(objects[i].rotation)
+        ;
+
+      transfer_mesh(writer, trans, objects[i].mesh);
+    }
 
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
   }
 }
 
-void update_analog(mat4x4& screen, mat4x4& model)
+void update_analog(mat4x4& screen)
 {
   const float l_ = static_cast<float>(data[0].analog_coordinate_axis[0]) * (1.f / 255.f);
   const float r_ = static_cast<float>(data[0].analog_coordinate_axis[1]) * (1.f / 255.f);
@@ -404,70 +407,9 @@ void update_analog(mat4x4& screen, mat4x4& model)
 
   float y = 0;
   float z = -0.05f * r_ + 0.05f * l_;
-
-  mat4x4 t = {
-    1, 0, 0, x,
-    0, 1, 0, z,
-    0, 0, 1, y,
-    0, 0, 0, 1,
-  };
-
-  mat4x4 rx = {
-    1, 0, 0, 0,
-    0, cos(xt), -sin(xt), 0,
-    0, sin(xt), cos(xt), 0,
-    0, 0, 0, 1,
-  };
-
-  mat4x4 ry = {
-     cos(yt), 0, sin(yt), 0,
-    0, 1, 0, 0,
-    -sin(yt), 0, cos(yt), 0,
-    0, 0, 0, 1,
-  };
-
-  screen = screen * t;
-  model = model * ry * rx;
 }
 
-int format_float(char * s, float num, int pad_length)
-{
-  int offset = 0;
-  bool negative = num < 0;
-  if (negative) num = -num;
-  int32_t whole = num;
-  int digits = digits_base10(whole);
-  offset += unparse_base10_unsigned(&s[offset], whole, pad_length, ' ');
-  if (negative)
-    s[offset - (digits + 1)] = '-';
-  s[offset++] = '.';
-  int32_t fraction = (int32_t)((num - (float)whole) * 1000.0);
-  if (fraction < 0)
-    fraction = -fraction;
-  offset += unparse_base10_unsigned(&s[offset], fraction, 3, '0');
-  return offset;
-}
-
-void render_matrix(ta_parameter_writer& writer, const mat4x4& trans)
-{
-  for (int row = 0; row < 4; row++) {
-    char __attribute__((aligned(4))) s[64];
-    for (uint32_t i = 0; i < (sizeof (s)) / 4; i++)
-      reinterpret_cast<uint32_t *>(s)[i] = 0x20202020;
-
-    int offset = 0;
-    offset += format_float(&s[offset], trans[row][0], 7);
-    offset += format_float(&s[offset], trans[row][1], 7);
-    offset += format_float(&s[offset], trans[row][2], 7);
-    offset += format_float(&s[offset], trans[row][3], 7);
-
-    serial::string((uint8_t *)s, offset);
-    serial::character('\n');
-  }
-  serial::character('\n');
-}
-
-uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024 * 3];
+uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024];
 
 int main()
 {
@@ -510,39 +452,22 @@ int main()
 
   mat4x4 screen_trans = {
     1, 0, 0, 0,
-    0, 0, -1, 0,
-    0, 1, 0, 7,
-    0, 0, 0, 1,
-  };
-
-  mat4x4 model_trans = {
-    0.805, -0.577,  0.136, 0,
-    0.592,  0.773, -0.224, 0,
-    0.024,  0.262,  0.964, 0,
+    0, 1, 0, 0,
+    0, 0, 1, 4,
     0, 0, 0, 1,
   };
 
   do_get_condition();
-  int animation_tick = 0;
   while (1) {
-    if (0 && animation_tick == 0) {
-      serial::string("screen:\n");
-      render_matrix(writer, screen_trans);
-      serial::string("model:\n");
-      render_matrix(writer, model_trans);
-    }
+    screen_trans = screen_trans * rotate_x(0.005f) * rotate_z(0.005f);
 
     maple::dma_wait_complete();
     do_get_condition();
+
+    update_analog(screen_trans);
+
     writer.offset = 0;
-
-    update_analog(screen_trans, model_trans);
-    transfer_scene(writer, screen_trans * model_trans, animation_tick);
-
-    // increment tick
-    animation_tick += 1;
-    if (animation_tick >= animation_frames * ticks_per_animation_frame)
-      animation_tick = 0;
+    transfer_scene(writer, screen_trans);
 
     while (ta_in_use);
     while (core_in_use);
@@ -558,7 +483,7 @@ int main()
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
 
-    while (next_frame)
+    while (next_frame == 0);
     next_frame = 0;
   }
 }

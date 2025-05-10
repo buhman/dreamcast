@@ -120,9 +120,9 @@ const int tile_width = framebuffer_width / 32;
 const int tile_height = framebuffer_height / 32;
 
 constexpr uint32_t ta_alloc = 0
-                            | ta_alloc_ctrl::pt_opb::no_list
+                            | ta_alloc_ctrl::pt_opb::_32x4byte
                             | ta_alloc_ctrl::tm_opb::no_list
-  | ta_alloc_ctrl::t_opb::_32x4byte
+  | ta_alloc_ctrl::t_opb::no_list
                             | ta_alloc_ctrl::om_opb::no_list
   | ta_alloc_ctrl::o_opb::_32x4byte
   ;
@@ -132,9 +132,9 @@ constexpr struct opb_size opb_size[ta_cont_count] = {
   {
     .opaque = 32 * 4,
     .opaque_modifier = 0,
-    .translucent = 32 * 4,
+    .translucent = 0,
     .translucent_modifier = 0,
-    .punch_through = 0
+    .punch_through = 32 * 4
   }
 };
 
@@ -165,8 +165,8 @@ static inline void pump_events(uint32_t istnrm)
     core_in_use = 0;
   }
 
-  if (istnrm & istnrm::end_of_transferring_translucent_list) {
-    system.ISTNRM = istnrm::end_of_transferring_translucent_list;
+  if (istnrm & istnrm::end_of_transferring_punch_through_list) {
+    system.ISTNRM = istnrm::end_of_transferring_punch_through_list;
 
     core_in_use = 1;
     core_start_render2(texture_memory_alloc.region_array.start,
@@ -313,7 +313,7 @@ vec3 transform(vec3 v)
 
 void transfer_mesh(ta_parameter_writer& writer)
 {
-  uint32_t control = para_control::list_type::translucent
+  uint32_t control = para_control::list_type::punch_through
                    | obj_control::texture
     | (pcw_offset ? obj_control::offset : 0)
     ;
@@ -406,6 +406,13 @@ void render_k1k2k3q(ta_parameter_writer& writer)
   s[2] = 'f';
   s[3] = ':';
   opaque_string(writer, 0, 5, s, offset + 1);
+
+  offset = unparse_base10(&s[1], holly.PT_ALPHA_REF, 7, ' ');
+  s[0] = 'p';
+  s[1] = 't';
+  s[2] = 'a';
+  s[3] = ':';
+  opaque_string(writer, 0, 6, s, offset + 1);
 }
 
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& trans, int animation_tick)
@@ -417,7 +424,7 @@ void transfer_scene(ta_parameter_writer& writer, const mat4x4& trans, int animat
     writer.append<ta_global_parameter::end_of_list>() =
       ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
   }
-  // translucent list
+  // punch_through list
   if (1) {
     transfer_mesh(writer);
 
@@ -437,6 +444,14 @@ void update_analog(mat4x4& screen)
   int db_y = ft0::data_transfer::digital_button::y(data[0].digital_button) == 0;
   int db_a = ft0::data_transfer::digital_button::a(data[0].digital_button) == 0;
   int db_b = ft0::data_transfer::digital_button::b(data[0].digital_button) == 0;
+
+  const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
+  if (x_ > 0.5f) {
+    holly.PT_ALPHA_REF += 1;
+  }
+  if (x_ < -0.5f) {
+    holly.PT_ALPHA_REF -= 1;
+  }
 
   int start = ft0::data_transfer::digital_button::start(data[0].digital_button) == 0;
   static int last_start = 0;
@@ -603,7 +618,7 @@ int main()
 
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
-                 | istnrm::end_of_transferring_translucent_list;
+                 | istnrm::end_of_transferring_punch_through_list;
 
   while (1) {
     maple::dma_wait_complete();

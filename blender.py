@@ -66,7 +66,7 @@ def render_mesh(f, name, mesh):
     f.write(f"const mesh {name} = {{\n")
     f.write(f"  .position = {name}_position,\n")
     f.write(f"  .position_length = (sizeof ({name}_position)) / (sizeof ({name}_position[0])),\n")
-    f.write(f"  .polygon_normal = {name}_polyon_normal,\n")
+    f.write(f"  .polygon_normal = {name}_polygon_normal,\n")
     f.write(f"  .polygon_normal_length = (sizeof ({name}_polygon_normal)) / (sizeof ({name}_polygon_normal[0])),\n")
     f.write(f"  .polygons = {name}_polygons,\n")
     f.write(f"  .polygons_length = (sizeof ({name}_polygons)) / (sizeof ({name}_polygons[0])),\n")

@@ -1027,3 +1027,18 @@ BUMP_OBJ = \
 
 example/bump.elf: LDSCRIPT = $(LIB)/main.lds
 example/bump.elf: $(START_OBJ) $(BUMP_OBJ)
+
+LIGHTING_OBJ = \
+	example/lighting.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	printf/unparse.o \
+	$(LIBGCC)
+
+example/lighting.elf: LDSCRIPT = $(LIB)/main.lds
+example/lighting.elf: $(START_OBJ) $(LIGHTING_OBJ)

@@ -22,7 +22,7 @@ inline constexpr mat<4, 4, T> scale(vec<3, T> s)
   };
 }
 
-template <template T>
+template <typename T>
 inline constexpr mat<4, 4, T> rotate_x(T t)
 {
   return {
@@ -84,7 +84,7 @@ inline constexpr mat<4, 4, T> rotate_axis_angle(vec<4, T> u)
 }
 
 template <typename T>
-inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> v)
+inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> r)
 {
   T xx2 = 2 * r.x * r.x;
   T xy2 = 2 * r.x * r.y;
