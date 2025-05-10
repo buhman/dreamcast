@@ -1042,3 +1042,20 @@ LIGHTING_OBJ = \
 
 example/lighting.elf: LDSCRIPT = $(LIB)/main.lds
 example/lighting.elf: $(START_OBJ) $(LIGHTING_OBJ)
+
+LIGHTING_MAPS_OBJ = \
+	example/lighting_maps.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	printf/unparse.o \
+	texture/container/container2.data.o \
+	texture/container/container2_specular.data.o \
+	$(LIBGCC)
+
+example/lighting_maps.elf: LDSCRIPT = $(LIB)/main.lds
+example/lighting_maps.elf: $(START_OBJ) $(LIGHTING_MAPS_OBJ)
