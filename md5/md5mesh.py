@@ -16,14 +16,37 @@ class MD5MeshJoint:
 @dataclass
 class MD5MeshVert:
     vert_index: int = None
-    v
+    tex_u: float = None
+    tex_v: float = None
+    weight_index: int = None
+    weight_elem: int = None
+
+@dataclass
+class MD5MeshTri:
+    tri_index: int = None
+    vert_index1: int = None
+    vert_index2: int = None
+    vert_index3: int = None
+
+@dataclass
+class MD5MeshWeight:
+    weight_index: int = None
+    joint_index: int = None
+    weight_value: float = None
+    x_pos: float = None
+    y_pos: float = None
+    z_pos: float = None
 
 @dataclass
 class MD5MeshMesh:
     mesh_name: str = None
     shader: str = None
-    verts: list[MD5MeshVert] = None
-
+    num_verts: int = None
+    verts: list[MD5MeshVert] = field(default_factory=lambda: list())
+    num_tris: int = None
+    tris: list[MD5MeshTri] = field(default_factory=lambda: list())
+    num_weights: int = None
+    weights: list[MD5MeshWeight] = field(default_factory=lambda: list())
 
 @dataclass
 class MD5Mesh:
@@ -96,22 +119,109 @@ def parse_joints(l, ix, md5mesh):
 
     return ix
 
-def parse_mesh(l, ix, md5mesh):
+def parse_mesh_vert(line, mesh):
+    vert = MD5MeshVert()
+    tokens = line.split()
+    assert tokens[0] == "vert"
+    vert.vert_index = int(tokens[1], 10)
+    assert tokens[2] == "("
+    vert.tex_u = float(tokens[3])
+    vert.tex_v = float(tokens[4])
+    assert tokens[5] == ")"
+    vert.weight_index = int(tokens[6], 10)
+    vert.weight_elem = int(tokens[7], 10)
 
+    assert vert.vert_index == len(mesh.verts)
+    mesh.verts.append(vert)
+
+def parse_mesh_tri(line, mesh):
+    tri = MD5MeshTri()
+    tokens = line.split()
+    assert tokens[0] == "tri"
+    tri.tri_index = int(tokens[1], 10)
+    tri.vert_index1 = int(tokens[2], 10)
+    tri.vert_index2 = int(tokens[3], 10)
+    tri.vert_index3 = int(tokens[4], 10)
+
+    assert tri.tri_index == len(mesh.tris)
+    mesh.tris.append(tri)
+
+def parse_mesh_weight(line, mesh):
+    weight = MD5MeshWeight()
+    tokens = line.split()
+    assert tokens[0] == "weight"
+    weight.weight_index = int(tokens[1], 10)
+    weight.joint_index = int(tokens[2], 10)
+    weight.weight_value = float(tokens[3])
+    assert tokens[4] == "("
+    weight.x_pos = float(tokens[5])
+    weight.y_pos = float(tokens[6])
+    weight.z_pos = float(tokens[7])
+    assert tokens[8] == ")"
+
+    assert weight.weight_index == len(mesh.weights)
+    mesh.weights.append(weight)
+
+def parse_mesh(l, ix, md5mesh):
+    mesh = MD5MeshMesh()
+
+    while l[ix] != "}":
+        line = l[ix]
+        if line.startswith("shader"):
+            assert mesh.shader is None
+            _, shader = line.split()
+            assert shader.startswith('"') and shader.endswith('"')
+            mesh.shader = shader[1:-1]
+
+        elif line.startswith("numverts"):
+            assert mesh.num_verts is None
+            mesh.num_verts = int(line.removeprefix("numverts "), 10)
+
+        elif line.startswith("numtris"):
+            assert mesh.num_tris is None
+            mesh.num_tris = int(line.removeprefix("numtris "), 10)
+
+        elif line.startswith("numweights"):
+            assert mesh.num_weights is None
+            mesh.num_weights = int(line.removeprefix("numweights "), 10)
+
+        elif line.startswith("vert"):
+            parse_mesh_vert(line, mesh)
+
+        elif line.startswith("tri"):
+            parse_mesh_tri(line, mesh)
+
+        elif line.startswith("weight"):
+            parse_mesh_weight(line, mesh)
+
+        else:
+            assert False, line
+
+        ix += 1
+
+    assert mesh.num_verts == len(mesh.verts)
+    assert mesh.num_tris == len(mesh.tris)
+    assert mesh.num_weights == len(mesh.weights)
+
+    md5mesh.meshes.append(mesh)
+
+    return ix
 
 def parse_ordered_list(l, ix, md5mesh):
     assert l[ix].endswith("{"), l[ix]
-    string = l[ix].split()[0]
+    string, _ = l[ix].split()
     ix += 1
 
     if string == "joints":
         ix = parse_joints(l, ix, md5mesh)
     elif string == "mesh":
+        print("parse-mesh1", ix)
         ix = parse_mesh(l, ix, md5mesh)
+        print("parse-mesh2", ix)
     else:
         assert False, string
 
-    assert l[ix] == "}"
+    assert l[ix] == "}", l[ix]
     ix += 1
     return ix
 
