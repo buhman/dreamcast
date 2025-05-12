@@ -1059,3 +1059,23 @@ LIGHTING_MAPS_OBJ = \
 
 example/lighting_maps.elf: LDSCRIPT = $(LIB)/main.lds
 example/lighting_maps.elf: $(START_OBJ) $(LIGHTING_MAPS_OBJ)
+
+MD5_OBJ = \
+	example/md5.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	texture/container/container2.data.o \
+	texture/container/container2_specular.data.o \
+	$(LIBGCC)
+
+example/md5.elf: LDSCRIPT = $(LIB)/main.lds
+example/md5.elf: $(START_OBJ) $(MD5_OBJ)

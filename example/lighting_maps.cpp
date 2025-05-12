@@ -573,7 +573,8 @@ int main()
 
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
-                 | istnrm::end_of_transferring_opaque_list;
+                 | istnrm::end_of_transferring_opaque_list
+                 | istnrm::end_of_transferring_translucent_list;
 
   region_array_multipass(tile_width,
                          tile_height,

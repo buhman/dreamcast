@@ -3169,2515 +3169,2515 @@ struct md5_mesh_vert boblamp_0_verts[] = {
 struct md5_mesh_tri boblamp_0_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {1, 1, 3},
+    .vert_index = {0, 1, 3},
   },
   {
     .tri_index = 2,
-    .vert_index = {3, 3, 4},
+    .vert_index = {0, 3, 4},
   },
   {
     .tri_index = 3,
-    .vert_index = {4, 4, 5},
+    .vert_index = {0, 4, 5},
   },
   {
     .tri_index = 4,
-    .vert_index = {1, 1, 7},
+    .vert_index = {6, 1, 7},
   },
   {
     .tri_index = 5,
-    .vert_index = {7, 7, 8},
+    .vert_index = {6, 7, 8},
   },
   {
     .tri_index = 6,
-    .vert_index = {4, 4, 10},
+    .vert_index = {9, 4, 10},
   },
   {
     .tri_index = 7,
-    .vert_index = {10, 10, 11},
+    .vert_index = {9, 10, 11},
   },
   {
     .tri_index = 8,
-    .vert_index = {14, 14, 13},
+    .vert_index = {12, 14, 13},
   },
   {
     .tri_index = 9,
-    .vert_index = {16, 16, 15},
+    .vert_index = {13, 16, 15},
   },
   {
     .tri_index = 10,
-    .vert_index = {12, 12, 13},
+    .vert_index = {15, 12, 13},
   },
   {
     .tri_index = 11,
-    .vert_index = {19, 19, 18},
+    .vert_index = {17, 19, 18},
   },
   {
     .tri_index = 12,
-    .vert_index = {19, 19, 17},
+    .vert_index = {20, 19, 17},
   },
   {
     .tri_index = 13,
-    .vert_index = {16, 16, 22},
+    .vert_index = {21, 16, 22},
   },
   {
     .tri_index = 14,
-    .vert_index = {22, 22, 23},
+    .vert_index = {21, 22, 23},
   },
   {
     .tri_index = 15,
-    .vert_index = {21, 21, 23},
+    .vert_index = {24, 21, 23},
   },
   {
     .tri_index = 16,
-    .vert_index = {23, 23, 25},
+    .vert_index = {24, 23, 25},
   },
   {
     .tri_index = 17,
-    .vert_index = {26, 26, 19},
+    .vert_index = {20, 26, 19},
   },
   {
     .tri_index = 18,
-    .vert_index = {27, 27, 19},
+    .vert_index = {26, 27, 19},
   },
   {
     .tri_index = 19,
-    .vert_index = {12, 12, 20},
+    .vert_index = {14, 12, 20},
   },
   {
     .tri_index = 20,
-    .vert_index = {26, 26, 20},
+    .vert_index = {12, 26, 20},
   },
   {
     .tri_index = 21,
-    .vert_index = {28, 28, 16},
+    .vert_index = {21, 28, 16},
   },
   {
     .tri_index = 22,
-    .vert_index = {15, 15, 16},
+    .vert_index = {28, 15, 16},
   },
   {
     .tri_index = 23,
-    .vert_index = {28, 28, 21},
+    .vert_index = {29, 28, 21},
   },
   {
     .tri_index = 24,
-    .vert_index = {21, 21, 24},
+    .vert_index = {29, 21, 24},
   },
   {
     .tri_index = 25,
-    .vert_index = {30, 30, 27},
+    .vert_index = {26, 30, 27},
   },
   {
     .tri_index = 26,
-    .vert_index = {30, 30, 26},
+    .vert_index = {31, 30, 26},
   },
   {
     .tri_index = 27,
-    .vert_index = {31, 31, 26},
+    .vert_index = {32, 31, 26},
   },
   {
     .tri_index = 28,
-    .vert_index = {26, 26, 12},
+    .vert_index = {32, 26, 12},
   },
   {
     .tri_index = 29,
-    .vert_index = {32, 32, 12},
+    .vert_index = {33, 32, 12},
   },
   {
     .tri_index = 30,
-    .vert_index = {12, 12, 15},
+    .vert_index = {33, 12, 15},
   },
   {
     .tri_index = 31,
-    .vert_index = {33, 33, 15},
+    .vert_index = {34, 33, 15},
   },
   {
     .tri_index = 32,
-    .vert_index = {15, 15, 28},
+    .vert_index = {34, 15, 28},
   },
   {
     .tri_index = 33,
-    .vert_index = {34, 34, 28},
+    .vert_index = {29, 34, 28},
   },
   {
     .tri_index = 34,
-    .vert_index = {34, 34, 29},
+    .vert_index = {35, 34, 29},
   },
   {
     .tri_index = 35,
-    .vert_index = {37, 37, 30},
+    .vert_index = {36, 37, 30},
   },
   {
     .tri_index = 36,
-    .vert_index = {30, 30, 31},
+    .vert_index = {36, 30, 31},
   },
   {
     .tri_index = 37,
-    .vert_index = {36, 36, 31},
+    .vert_index = {38, 36, 31},
   },
   {
     .tri_index = 38,
-    .vert_index = {31, 31, 32},
+    .vert_index = {38, 31, 32},
   },
   {
     .tri_index = 39,
-    .vert_index = {38, 38, 32},
+    .vert_index = {39, 38, 32},
   },
   {
     .tri_index = 40,
-    .vert_index = {32, 32, 33},
+    .vert_index = {39, 32, 33},
   },
   {
     .tri_index = 41,
-    .vert_index = {39, 39, 33},
+    .vert_index = {40, 39, 33},
   },
   {
     .tri_index = 42,
-    .vert_index = {33, 33, 34},
+    .vert_index = {40, 33, 34},
   },
   {
     .tri_index = 43,
-    .vert_index = {40, 40, 34},
+    .vert_index = {41, 40, 34},
   },
   {
     .tri_index = 44,
-    .vert_index = {34, 34, 35},
+    .vert_index = {41, 34, 35},
   },
   {
     .tri_index = 45,
-    .vert_index = {20, 20, 42},
+    .vert_index = {14, 20, 42},
   },
   {
     .tri_index = 46,
-    .vert_index = {17, 17, 43},
+    .vert_index = {20, 17, 43},
   },
   {
     .tri_index = 47,
-    .vert_index = {42, 42, 20},
+    .vert_index = {43, 42, 20},
   },
   {
     .tri_index = 48,
-    .vert_index = {44, 44, 42},
+    .vert_index = {43, 44, 42},
   },
   {
     .tri_index = 49,
-    .vert_index = {13, 13, 14},
+    .vert_index = {45, 13, 14},
   },
   {
     .tri_index = 50,
-    .vert_index = {46, 46, 16},
+    .vert_index = {13, 46, 16},
   },
   {
     .tri_index = 51,
-    .vert_index = {13, 13, 45},
+    .vert_index = {46, 13, 45},
   },
   {
     .tri_index = 52,
-    .vert_index = {49, 49, 48},
+    .vert_index = {47, 49, 48},
   },
   {
     .tri_index = 53,
-    .vert_index = {47, 47, 48},
+    .vert_index = {50, 47, 48},
   },
   {
     .tri_index = 54,
-    .vert_index = {22, 22, 52},
+    .vert_index = {51, 22, 52},
   },
   {
     .tri_index = 55,
-    .vert_index = {22, 22, 16},
+    .vert_index = {52, 22, 16},
   },
   {
     .tri_index = 56,
-    .vert_index = {51, 51, 52},
+    .vert_index = {53, 51, 52},
   },
   {
     .tri_index = 57,
-    .vert_index = {54, 54, 51},
+    .vert_index = {53, 54, 51},
   },
   {
     .tri_index = 58,
-    .vert_index = {48, 48, 55},
+    .vert_index = {50, 48, 55},
   },
   {
     .tri_index = 59,
-    .vert_index = {48, 48, 56},
+    .vert_index = {55, 48, 56},
   },
   {
     .tri_index = 60,
-    .vert_index = {50, 50, 45},
+    .vert_index = {14, 50, 45},
   },
   {
     .tri_index = 61,
-    .vert_index = {50, 50, 55},
+    .vert_index = {45, 50, 55},
   },
   {
     .tri_index = 62,
-    .vert_index = {16, 16, 57},
+    .vert_index = {52, 16, 57},
   },
   {
     .tri_index = 63,
-    .vert_index = {16, 16, 46},
+    .vert_index = {57, 16, 46},
   },
   {
     .tri_index = 64,
-    .vert_index = {52, 52, 57},
+    .vert_index = {58, 52, 57},
   },
   {
     .tri_index = 65,
-    .vert_index = {53, 53, 52},
+    .vert_index = {58, 53, 52},
   },
   {
     .tri_index = 66,
-    .vert_index = {56, 56, 59},
+    .vert_index = {55, 56, 59},
   },
   {
     .tri_index = 67,
-    .vert_index = {55, 55, 59},
+    .vert_index = {60, 55, 59},
   },
   {
     .tri_index = 68,
-    .vert_index = {55, 55, 60},
+    .vert_index = {61, 55, 60},
   },
   {
     .tri_index = 69,
-    .vert_index = {45, 45, 55},
+    .vert_index = {61, 45, 55},
   },
   {
     .tri_index = 70,
-    .vert_index = {45, 45, 61},
+    .vert_index = {62, 45, 61},
   },
   {
     .tri_index = 71,
-    .vert_index = {46, 46, 45},
+    .vert_index = {62, 46, 45},
   },
   {
     .tri_index = 72,
-    .vert_index = {46, 46, 62},
+    .vert_index = {63, 46, 62},
   },
   {
     .tri_index = 73,
-    .vert_index = {57, 57, 46},
+    .vert_index = {63, 57, 46},
   },
   {
     .tri_index = 74,
-    .vert_index = {57, 57, 63},
+    .vert_index = {58, 57, 63},
   },
   {
     .tri_index = 75,
-    .vert_index = {58, 58, 63},
+    .vert_index = {64, 58, 63},
   },
   {
     .tri_index = 76,
-    .vert_index = {59, 59, 66},
+    .vert_index = {65, 59, 66},
   },
   {
     .tri_index = 77,
-    .vert_index = {60, 60, 59},
+    .vert_index = {65, 60, 59},
   },
   {
     .tri_index = 78,
-    .vert_index = {60, 60, 65},
+    .vert_index = {67, 60, 65},
   },
   {
     .tri_index = 79,
-    .vert_index = {61, 61, 60},
+    .vert_index = {67, 61, 60},
   },
   {
     .tri_index = 80,
-    .vert_index = {61, 61, 67},
+    .vert_index = {68, 61, 67},
   },
   {
     .tri_index = 81,
-    .vert_index = {62, 62, 61},
+    .vert_index = {68, 62, 61},
   },
   {
     .tri_index = 82,
-    .vert_index = {62, 62, 68},
+    .vert_index = {69, 62, 68},
   },
   {
     .tri_index = 83,
-    .vert_index = {63, 63, 62},
+    .vert_index = {69, 63, 62},
   },
   {
     .tri_index = 84,
-    .vert_index = {63, 63, 69},
+    .vert_index = {70, 63, 69},
   },
   {
     .tri_index = 85,
-    .vert_index = {64, 64, 63},
+    .vert_index = {70, 64, 63},
   },
   {
     .tri_index = 86,
-    .vert_index = {42, 42, 50},
+    .vert_index = {14, 42, 50},
   },
   {
     .tri_index = 87,
-    .vert_index = {50, 50, 71},
+    .vert_index = {47, 50, 71},
   },
   {
     .tri_index = 88,
-    .vert_index = {50, 50, 42},
+    .vert_index = {71, 50, 42},
   },
   {
     .tri_index = 89,
-    .vert_index = {42, 42, 44},
+    .vert_index = {71, 42, 44},
   },
   {
     .tri_index = 90,
-    .vert_index = {74, 74, 73},
+    .vert_index = {72, 74, 73},
   },
   {
     .tri_index = 91,
-    .vert_index = {77, 77, 76},
+    .vert_index = {75, 77, 76},
   },
   {
     .tri_index = 92,
-    .vert_index = {80, 80, 79},
+    .vert_index = {78, 80, 79},
   },
   {
     .tri_index = 93,
-    .vert_index = {81, 81, 72},
+    .vert_index = {73, 81, 72},
   },
   {
     .tri_index = 94,
-    .vert_index = {84, 84, 83},
+    .vert_index = {82, 84, 83},
   },
   {
     .tri_index = 95,
-    .vert_index = {87, 87, 86},
+    .vert_index = {85, 87, 86},
   },
   {
     .tri_index = 96,
-    .vert_index = {90, 90, 89},
+    .vert_index = {88, 90, 89},
   },
   {
     .tri_index = 97,
-    .vert_index = {91, 91, 90},
+    .vert_index = {88, 91, 90},
   },
   {
     .tri_index = 98,
-    .vert_index = {80, 80, 86},
+    .vert_index = {89, 80, 86},
   },
   {
     .tri_index = 99,
-    .vert_index = {90, 90, 80},
+    .vert_index = {89, 90, 80},
   },
   {
     .tri_index = 100,
-    .vert_index = {84, 84, 93},
+    .vert_index = {92, 84, 93},
   },
   {
     .tri_index = 101,
-    .vert_index = {94, 94, 84},
+    .vert_index = {92, 94, 84},
   },
   {
     .tri_index = 102,
-    .vert_index = {96, 96, 95},
+    .vert_index = {92, 96, 95},
   },
   {
     .tri_index = 103,
-    .vert_index = {93, 93, 96},
+    .vert_index = {92, 93, 96},
   },
   {
     .tri_index = 104,
-    .vert_index = {82, 82, 72},
+    .vert_index = {96, 82, 72},
   },
   {
     .tri_index = 105,
-    .vert_index = {93, 93, 82},
+    .vert_index = {96, 93, 82},
   },
   {
     .tri_index = 106,
-    .vert_index = {99, 99, 98},
+    .vert_index = {97, 99, 98},
   },
   {
     .tri_index = 107,
-    .vert_index = {100, 100, 99},
+    .vert_index = {97, 100, 99},
   },
   {
     .tri_index = 108,
-    .vert_index = {100, 100, 101},
+    .vert_index = {99, 100, 101},
   },
   {
     .tri_index = 109,
-    .vert_index = {104, 104, 103},
+    .vert_index = {102, 104, 103},
   },
   {
     .tri_index = 110,
-    .vert_index = {107, 107, 106},
+    .vert_index = {105, 107, 106},
   },
   {
     .tri_index = 111,
-    .vert_index = {102, 102, 92},
+    .vert_index = {95, 102, 92},
   },
   {
     .tri_index = 112,
-    .vert_index = {102, 102, 103},
+    .vert_index = {92, 102, 103},
   },
   {
     .tri_index = 113,
-    .vert_index = {107, 107, 88},
+    .vert_index = {108, 107, 88},
   },
   {
     .tri_index = 114,
-    .vert_index = {81, 81, 96},
+    .vert_index = {72, 81, 96},
   },
   {
     .tri_index = 115,
-    .vert_index = {90, 90, 79},
+    .vert_index = {80, 90, 79},
   },
   {
     .tri_index = 116,
-    .vert_index = {87, 87, 89},
+    .vert_index = {86, 87, 89},
   },
   {
     .tri_index = 117,
-    .vert_index = {84, 84, 82},
+    .vert_index = {93, 84, 82},
   },
   {
     .tri_index = 118,
-    .vert_index = {103, 103, 109},
+    .vert_index = {94, 103, 109},
   },
   {
     .tri_index = 119,
-    .vert_index = {94, 94, 92},
+    .vert_index = {103, 94, 92},
   },
   {
     .tri_index = 120,
-    .vert_index = {108, 108, 88},
+    .vert_index = {110, 108, 88},
   },
   {
     .tri_index = 121,
-    .vert_index = {108, 108, 110},
+    .vert_index = {111, 108, 110},
   },
   {
     .tri_index = 122,
-    .vert_index = {114, 114, 113},
+    .vert_index = {112, 114, 113},
   },
   {
     .tri_index = 123,
-    .vert_index = {113, 113, 116},
+    .vert_index = {115, 113, 116},
   },
   {
     .tri_index = 124,
-    .vert_index = {117, 117, 115},
+    .vert_index = {116, 117, 115},
   },
   {
     .tri_index = 125,
-    .vert_index = {95, 95, 118},
+    .vert_index = {102, 95, 118},
   },
   {
     .tri_index = 126,
-    .vert_index = {118, 118, 119},
+    .vert_index = {102, 118, 119},
   },
   {
     .tri_index = 127,
-    .vert_index = {122, 122, 121},
+    .vert_index = {120, 122, 121},
   },
   {
     .tri_index = 128,
-    .vert_index = {121, 121, 123},
+    .vert_index = {120, 121, 123},
   },
   {
     .tri_index = 129,
-    .vert_index = {125, 125, 122},
+    .vert_index = {124, 125, 122},
   },
   {
     .tri_index = 130,
-    .vert_index = {122, 122, 120},
+    .vert_index = {124, 122, 120},
   },
   {
     .tri_index = 131,
-    .vert_index = {106, 106, 108},
+    .vert_index = {125, 106, 108},
   },
   {
     .tri_index = 132,
-    .vert_index = {108, 108, 122},
+    .vert_index = {125, 108, 122},
   },
   {
     .tri_index = 133,
-    .vert_index = {107, 107, 108},
+    .vert_index = {106, 107, 108},
   },
   {
     .tri_index = 134,
-    .vert_index = {127, 127, 126},
+    .vert_index = {119, 127, 126},
   },
   {
     .tri_index = 135,
-    .vert_index = {102, 102, 119},
+    .vert_index = {126, 102, 119},
   },
   {
     .tri_index = 136,
-    .vert_index = {97, 97, 98},
+    .vert_index = {128, 97, 98},
   },
   {
     .tri_index = 137,
-    .vert_index = {98, 98, 129},
+    .vert_index = {128, 98, 129},
   },
   {
     .tri_index = 138,
-    .vert_index = {129, 129, 130},
+    .vert_index = {128, 129, 130},
   },
   {
     .tri_index = 139,
-    .vert_index = {129, 129, 131},
+    .vert_index = {130, 129, 131},
   },
   {
     .tri_index = 140,
-    .vert_index = {122, 122, 111},
+    .vert_index = {121, 122, 111},
   },
   {
     .tri_index = 141,
-    .vert_index = {108, 108, 111},
+    .vert_index = {122, 108, 111},
   },
   {
     .tri_index = 142,
-    .vert_index = {109, 109, 103},
+    .vert_index = {132, 109, 103},
   },
   {
     .tri_index = 143,
-    .vert_index = {133, 133, 109},
+    .vert_index = {132, 133, 109},
   },
   {
     .tri_index = 144,
-    .vert_index = {134, 134, 125},
+    .vert_index = {124, 134, 125},
   },
   {
     .tri_index = 145,
-    .vert_index = {135, 135, 128},
+    .vert_index = {130, 135, 128},
   },
   {
     .tri_index = 146,
-    .vert_index = {115, 115, 132},
+    .vert_index = {113, 115, 132},
   },
   {
     .tri_index = 147,
-    .vert_index = {112, 112, 113},
+    .vert_index = {132, 112, 113},
   },
   {
     .tri_index = 148,
-    .vert_index = {117, 117, 133},
+    .vert_index = {115, 117, 133},
   },
   {
     .tri_index = 149,
-    .vert_index = {132, 132, 115},
+    .vert_index = {133, 132, 115},
   },
   {
     .tri_index = 150,
-    .vert_index = {132, 132, 103},
+    .vert_index = {112, 132, 103},
   },
   {
     .tri_index = 151,
-    .vert_index = {104, 104, 112},
+    .vert_index = {103, 104, 112},
   },
   {
     .tri_index = 152,
-    .vert_index = {87, 87, 110},
+    .vert_index = {89, 87, 110},
   },
   {
     .tri_index = 153,
-    .vert_index = {88, 88, 89},
+    .vert_index = {110, 88, 89},
   },
   {
     .tri_index = 154,
-    .vert_index = {123, 123, 136},
+    .vert_index = {120, 123, 136},
   },
   {
     .tri_index = 155,
-    .vert_index = {124, 124, 120},
+    .vert_index = {136, 124, 120},
   },
   {
     .tri_index = 156,
-    .vert_index = {136, 136, 137},
+    .vert_index = {124, 136, 137},
   },
   {
     .tri_index = 157,
-    .vert_index = {134, 134, 124},
+    .vert_index = {137, 134, 124},
   },
   {
     .tri_index = 158,
-    .vert_index = {113, 113, 114},
+    .vert_index = {116, 113, 114},
   },
   {
     .tri_index = 159,
-    .vert_index = {138, 138, 116},
+    .vert_index = {114, 138, 116},
   },
   {
     .tri_index = 160,
-    .vert_index = {102, 102, 126},
+    .vert_index = {104, 102, 126},
   },
   {
     .tri_index = 161,
-    .vert_index = {81, 81, 118},
+    .vert_index = {96, 81, 118},
   },
   {
     .tri_index = 162,
-    .vert_index = {95, 95, 96},
+    .vert_index = {118, 95, 96},
   },
   {
     .tri_index = 163,
-    .vert_index = {107, 107, 105},
+    .vert_index = {139, 107, 105},
   },
   {
     .tri_index = 164,
-    .vert_index = {140, 140, 139},
+    .vert_index = {105, 140, 139},
   },
   {
     .tri_index = 165,
-    .vert_index = {91, 91, 107},
+    .vert_index = {141, 91, 107},
   },
   {
     .tri_index = 166,
-    .vert_index = {139, 139, 141},
+    .vert_index = {107, 139, 141},
   },
   {
     .tri_index = 167,
-    .vert_index = {90, 90, 91},
+    .vert_index = {79, 90, 91},
   },
   {
     .tri_index = 168,
-    .vert_index = {141, 141, 79},
+    .vert_index = {91, 141, 79},
   },
   {
     .tri_index = 169,
-    .vert_index = {107, 107, 91},
+    .vert_index = {88, 107, 91},
   },
   {
     .tri_index = 170,
-    .vert_index = {86, 86, 143},
+    .vert_index = {142, 86, 143},
   },
   {
     .tri_index = 171,
-    .vert_index = {86, 86, 142},
+    .vert_index = {85, 86, 142},
   },
   {
     .tri_index = 172,
-    .vert_index = {83, 83, 145},
+    .vert_index = {144, 83, 145},
   },
   {
     .tri_index = 173,
-    .vert_index = {83, 83, 144},
+    .vert_index = {82, 83, 144},
   },
   {
     .tri_index = 174,
-    .vert_index = {82, 82, 144},
+    .vert_index = {74, 82, 144},
   },
   {
     .tri_index = 175,
-    .vert_index = {73, 73, 74},
+    .vert_index = {146, 73, 74},
   },
   {
     .tri_index = 176,
-    .vert_index = {78, 78, 147},
+    .vert_index = {80, 78, 147},
   },
   {
     .tri_index = 177,
-    .vert_index = {80, 80, 147},
+    .vert_index = {143, 80, 147},
   },
   {
     .tri_index = 178,
-    .vert_index = {80, 80, 143},
+    .vert_index = {86, 80, 143},
   },
   {
     .tri_index = 179,
-    .vert_index = {150, 150, 149},
+    .vert_index = {148, 150, 149},
   },
   {
     .tri_index = 180,
-    .vert_index = {153, 153, 152},
+    .vert_index = {151, 153, 152},
   },
   {
     .tri_index = 181,
-    .vert_index = {156, 156, 155},
+    .vert_index = {154, 156, 155},
   },
   {
     .tri_index = 182,
-    .vert_index = {148, 148, 157},
+    .vert_index = {150, 148, 157},
   },
   {
     .tri_index = 183,
-    .vert_index = {160, 160, 159},
+    .vert_index = {158, 160, 159},
   },
   {
     .tri_index = 184,
-    .vert_index = {163, 163, 162},
+    .vert_index = {161, 163, 162},
   },
   {
     .tri_index = 185,
-    .vert_index = {166, 166, 165},
+    .vert_index = {164, 166, 165},
   },
   {
     .tri_index = 186,
-    .vert_index = {165, 165, 167},
+    .vert_index = {164, 165, 167},
   },
   {
     .tri_index = 187,
-    .vert_index = {166, 166, 162},
+    .vert_index = {155, 166, 162},
   },
   {
     .tri_index = 188,
-    .vert_index = {155, 155, 165},
+    .vert_index = {166, 155, 165},
   },
   {
     .tri_index = 189,
-    .vert_index = {169, 169, 159},
+    .vert_index = {168, 169, 159},
   },
   {
     .tri_index = 190,
-    .vert_index = {159, 159, 170},
+    .vert_index = {168, 159, 170},
   },
   {
     .tri_index = 191,
-    .vert_index = {172, 172, 171},
+    .vert_index = {168, 172, 171},
   },
   {
     .tri_index = 192,
-    .vert_index = {171, 171, 169},
+    .vert_index = {168, 171, 169},
   },
   {
     .tri_index = 193,
-    .vert_index = {148, 148, 158},
+    .vert_index = {171, 148, 158},
   },
   {
     .tri_index = 194,
-    .vert_index = {158, 158, 169},
+    .vert_index = {171, 158, 169},
   },
   {
     .tri_index = 195,
-    .vert_index = {175, 175, 174},
+    .vert_index = {173, 175, 174},
   },
   {
     .tri_index = 196,
-    .vert_index = {176, 176, 175},
+    .vert_index = {173, 176, 175},
   },
   {
     .tri_index = 197,
-    .vert_index = {177, 177, 176},
+    .vert_index = {173, 177, 176},
   },
   {
     .tri_index = 198,
-    .vert_index = {180, 180, 179},
+    .vert_index = {178, 180, 179},
   },
   {
     .tri_index = 199,
-    .vert_index = {183, 183, 182},
+    .vert_index = {181, 183, 182},
   },
   {
     .tri_index = 200,
-    .vert_index = {168, 168, 178},
+    .vert_index = {172, 168, 178},
   },
   {
     .tri_index = 201,
-    .vert_index = {180, 180, 178},
+    .vert_index = {168, 180, 178},
   },
   {
     .tri_index = 202,
-    .vert_index = {164, 164, 182},
+    .vert_index = {184, 164, 182},
   },
   {
     .tri_index = 203,
-    .vert_index = {171, 171, 157},
+    .vert_index = {148, 171, 157},
   },
   {
     .tri_index = 204,
-    .vert_index = {156, 156, 165},
+    .vert_index = {155, 156, 165},
   },
   {
     .tri_index = 205,
-    .vert_index = {166, 166, 161},
+    .vert_index = {162, 166, 161},
   },
   {
     .tri_index = 206,
-    .vert_index = {158, 158, 159},
+    .vert_index = {169, 158, 159},
   },
   {
     .tri_index = 207,
-    .vert_index = {185, 185, 180},
+    .vert_index = {170, 185, 180},
   },
   {
     .tri_index = 208,
-    .vert_index = {168, 168, 170},
+    .vert_index = {180, 168, 170},
   },
   {
     .tri_index = 209,
-    .vert_index = {164, 164, 184},
+    .vert_index = {186, 164, 184},
   },
   {
     .tri_index = 210,
-    .vert_index = {186, 186, 184},
+    .vert_index = {187, 186, 184},
   },
   {
     .tri_index = 211,
-    .vert_index = {190, 190, 189},
+    .vert_index = {188, 190, 189},
   },
   {
     .tri_index = 212,
-    .vert_index = {192, 192, 190},
+    .vert_index = {191, 192, 190},
   },
   {
     .tri_index = 213,
-    .vert_index = {191, 191, 193},
+    .vert_index = {192, 191, 193},
   },
   {
     .tri_index = 214,
-    .vert_index = {194, 194, 172},
+    .vert_index = {178, 194, 172},
   },
   {
     .tri_index = 215,
-    .vert_index = {195, 195, 194},
+    .vert_index = {178, 195, 194},
   },
   {
     .tri_index = 216,
-    .vert_index = {198, 198, 197},
+    .vert_index = {196, 198, 197},
   },
   {
     .tri_index = 217,
-    .vert_index = {199, 199, 198},
+    .vert_index = {196, 199, 198},
   },
   {
     .tri_index = 218,
-    .vert_index = {197, 197, 201},
+    .vert_index = {200, 197, 201},
   },
   {
     .tri_index = 219,
-    .vert_index = {196, 196, 197},
+    .vert_index = {200, 196, 197},
   },
   {
     .tri_index = 220,
-    .vert_index = {184, 184, 183},
+    .vert_index = {201, 184, 183},
   },
   {
     .tri_index = 221,
-    .vert_index = {197, 197, 184},
+    .vert_index = {201, 197, 184},
   },
   {
     .tri_index = 222,
-    .vert_index = {184, 184, 182},
+    .vert_index = {183, 184, 182},
   },
   {
     .tri_index = 223,
-    .vert_index = {203, 203, 202},
+    .vert_index = {195, 203, 202},
   },
   {
     .tri_index = 224,
-    .vert_index = {195, 195, 178},
+    .vert_index = {203, 195, 178},
   },
   {
     .tri_index = 225,
-    .vert_index = {174, 174, 175},
+    .vert_index = {204, 174, 175},
   },
   {
     .tri_index = 226,
-    .vert_index = {205, 205, 174},
+    .vert_index = {204, 205, 174},
   },
   {
     .tri_index = 227,
-    .vert_index = {206, 206, 205},
+    .vert_index = {204, 206, 205},
   },
   {
     .tri_index = 228,
-    .vert_index = {207, 207, 205},
+    .vert_index = {206, 207, 205},
   },
   {
     .tri_index = 229,
-    .vert_index = {187, 187, 197},
+    .vert_index = {198, 187, 197},
   },
   {
     .tri_index = 230,
-    .vert_index = {187, 187, 184},
+    .vert_index = {197, 187, 184},
   },
   {
     .tri_index = 231,
-    .vert_index = {180, 180, 185},
+    .vert_index = {208, 180, 185},
   },
   {
     .tri_index = 232,
-    .vert_index = {185, 185, 209},
+    .vert_index = {208, 185, 209},
   },
   {
     .tri_index = 233,
-    .vert_index = {201, 201, 210},
+    .vert_index = {200, 201, 210},
   },
   {
     .tri_index = 234,
-    .vert_index = {204, 204, 211},
+    .vert_index = {206, 204, 211},
   },
   {
     .tri_index = 235,
-    .vert_index = {208, 208, 191},
+    .vert_index = {190, 208, 191},
   },
   {
     .tri_index = 236,
-    .vert_index = {190, 190, 188},
+    .vert_index = {208, 190, 188},
   },
   {
     .tri_index = 237,
-    .vert_index = {209, 209, 193},
+    .vert_index = {191, 209, 193},
   },
   {
     .tri_index = 238,
-    .vert_index = {191, 191, 208},
+    .vert_index = {209, 191, 208},
   },
   {
     .tri_index = 239,
-    .vert_index = {180, 180, 208},
+    .vert_index = {188, 180, 208},
   },
   {
     .tri_index = 240,
-    .vert_index = {188, 188, 179},
+    .vert_index = {180, 188, 179},
   },
   {
     .tri_index = 241,
-    .vert_index = {186, 186, 161},
+    .vert_index = {166, 186, 161},
   },
   {
     .tri_index = 242,
-    .vert_index = {166, 166, 164},
+    .vert_index = {186, 166, 164},
   },
   {
     .tri_index = 243,
-    .vert_index = {212, 212, 199},
+    .vert_index = {196, 212, 199},
   },
   {
     .tri_index = 244,
-    .vert_index = {196, 196, 200},
+    .vert_index = {212, 196, 200},
   },
   {
     .tri_index = 245,
-    .vert_index = {213, 213, 212},
+    .vert_index = {200, 213, 212},
   },
   {
     .tri_index = 246,
-    .vert_index = {200, 200, 210},
+    .vert_index = {213, 200, 210},
   },
   {
     .tri_index = 247,
-    .vert_index = {189, 189, 190},
+    .vert_index = {192, 189, 190},
   },
   {
     .tri_index = 248,
-    .vert_index = {192, 192, 214},
+    .vert_index = {189, 192, 214},
   },
   {
     .tri_index = 249,
-    .vert_index = {203, 203, 178},
+    .vert_index = {179, 203, 178},
   },
   {
     .tri_index = 250,
-    .vert_index = {194, 194, 157},
+    .vert_index = {171, 194, 157},
   },
   {
     .tri_index = 251,
-    .vert_index = {171, 171, 172},
+    .vert_index = {194, 171, 172},
   },
   {
     .tri_index = 252,
-    .vert_index = {181, 181, 182},
+    .vert_index = {215, 181, 182},
   },
   {
     .tri_index = 253,
-    .vert_index = {215, 215, 216},
+    .vert_index = {181, 215, 216},
   },
   {
     .tri_index = 254,
-    .vert_index = {182, 182, 167},
+    .vert_index = {217, 182, 167},
   },
   {
     .tri_index = 255,
-    .vert_index = {217, 217, 215},
+    .vert_index = {182, 217, 215},
   },
   {
     .tri_index = 256,
-    .vert_index = {167, 167, 165},
+    .vert_index = {156, 167, 165},
   },
   {
     .tri_index = 257,
-    .vert_index = {156, 156, 217},
+    .vert_index = {167, 156, 217},
   },
   {
     .tri_index = 258,
-    .vert_index = {167, 167, 182},
+    .vert_index = {164, 167, 182},
   },
   {
     .tri_index = 259,
-    .vert_index = {219, 219, 162},
+    .vert_index = {218, 219, 162},
   },
   {
     .tri_index = 260,
-    .vert_index = {218, 218, 162},
+    .vert_index = {163, 218, 162},
   },
   {
     .tri_index = 261,
-    .vert_index = {221, 221, 160},
+    .vert_index = {220, 221, 160},
   },
   {
     .tri_index = 262,
-    .vert_index = {220, 220, 160},
+    .vert_index = {158, 220, 160},
   },
   {
     .tri_index = 263,
-    .vert_index = {220, 220, 158},
+    .vert_index = {149, 220, 158},
   },
   {
     .tri_index = 264,
-    .vert_index = {149, 149, 150},
+    .vert_index = {222, 149, 150},
   },
   {
     .tri_index = 265,
-    .vert_index = {223, 223, 154},
+    .vert_index = {155, 223, 154},
   },
   {
     .tri_index = 266,
-    .vert_index = {223, 223, 155},
+    .vert_index = {219, 223, 155},
   },
   {
     .tri_index = 267,
-    .vert_index = {219, 219, 155},
+    .vert_index = {162, 219, 155},
   },
   {
     .tri_index = 268,
-    .vert_index = {226, 226, 225},
+    .vert_index = {224, 226, 225},
   },
   {
     .tri_index = 269,
-    .vert_index = {225, 225, 227},
+    .vert_index = {224, 225, 227},
   },
   {
     .tri_index = 270,
-    .vert_index = {230, 230, 229},
+    .vert_index = {228, 230, 229},
   },
   {
     .tri_index = 271,
-    .vert_index = {229, 229, 231},
+    .vert_index = {228, 229, 231},
   },
   {
     .tri_index = 272,
-    .vert_index = {234, 234, 233},
+    .vert_index = {232, 234, 233},
   },
   {
     .tri_index = 273,
-    .vert_index = {233, 233, 235},
+    .vert_index = {232, 233, 235},
   },
   {
     .tri_index = 274,
-    .vert_index = {238, 238, 237},
+    .vert_index = {236, 238, 237},
   },
   {
     .tri_index = 275,
-    .vert_index = {237, 237, 239},
+    .vert_index = {236, 237, 239},
   },
   {
     .tri_index = 276,
-    .vert_index = {241, 241, 240},
+    .vert_index = {235, 241, 240},
   },
   {
     .tri_index = 277,
-    .vert_index = {240, 240, 242},
+    .vert_index = {235, 240, 242},
   },
   {
     .tri_index = 278,
-    .vert_index = {244, 244, 243},
+    .vert_index = {238, 244, 243},
   },
   {
     .tri_index = 279,
-    .vert_index = {243, 243, 245},
+    .vert_index = {238, 243, 245},
   },
   {
     .tri_index = 280,
-    .vert_index = {233, 233, 246},
+    .vert_index = {235, 233, 246},
   },
   {
     .tri_index = 281,
-    .vert_index = {246, 246, 241},
+    .vert_index = {235, 246, 241},
   },
   {
     .tri_index = 282,
-    .vert_index = {245, 245, 247},
+    .vert_index = {238, 245, 247},
   },
   {
     .tri_index = 283,
-    .vert_index = {247, 247, 237},
+    .vert_index = {238, 247, 237},
   },
   {
     .tri_index = 284,
-    .vert_index = {250, 250, 249},
+    .vert_index = {248, 250, 249},
   },
   {
     .tri_index = 285,
-    .vert_index = {249, 249, 251},
+    .vert_index = {248, 249, 251},
   },
   {
     .tri_index = 286,
-    .vert_index = {254, 254, 253},
+    .vert_index = {252, 254, 253},
   },
   {
     .tri_index = 287,
-    .vert_index = {253, 253, 255},
+    .vert_index = {252, 253, 255},
   },
   {
     .tri_index = 288,
-    .vert_index = {257, 257, 255},
+    .vert_index = {256, 257, 255},
   },
   {
     .tri_index = 289,
-    .vert_index = {255, 255, 258},
+    .vert_index = {256, 255, 258},
   },
   {
     .tri_index = 290,
-    .vert_index = {260, 260, 250},
+    .vert_index = {259, 260, 250},
   },
   {
     .tri_index = 291,
-    .vert_index = {250, 250, 257},
+    .vert_index = {259, 250, 257},
   },
   {
     .tri_index = 292,
-    .vert_index = {261, 261, 249},
+    .vert_index = {260, 261, 249},
   },
   {
     .tri_index = 293,
-    .vert_index = {249, 249, 250},
+    .vert_index = {260, 249, 250},
   },
   {
     .tri_index = 294,
-    .vert_index = {255, 255, 253},
+    .vert_index = {258, 255, 253},
   },
   {
     .tri_index = 295,
-    .vert_index = {253, 253, 262},
+    .vert_index = {258, 253, 262},
   },
   {
     .tri_index = 296,
-    .vert_index = {264, 264, 261},
+    .vert_index = {263, 264, 261},
   },
   {
     .tri_index = 297,
-    .vert_index = {261, 261, 260},
+    .vert_index = {263, 261, 260},
   },
   {
     .tri_index = 298,
-    .vert_index = {258, 258, 262},
+    .vert_index = {265, 258, 262},
   },
   {
     .tri_index = 299,
-    .vert_index = {262, 262, 266},
+    .vert_index = {265, 262, 266},
   },
   {
     .tri_index = 300,
-    .vert_index = {269, 269, 268},
+    .vert_index = {267, 269, 268},
   },
   {
     .tri_index = 301,
-    .vert_index = {268, 268, 270},
+    .vert_index = {267, 268, 270},
   },
   {
     .tri_index = 302,
-    .vert_index = {273, 273, 272},
+    .vert_index = {271, 273, 272},
   },
   {
     .tri_index = 303,
-    .vert_index = {272, 272, 274},
+    .vert_index = {271, 272, 274},
   },
   {
     .tri_index = 304,
-    .vert_index = {250, 250, 248},
+    .vert_index = {257, 250, 248},
   },
   {
     .tri_index = 305,
-    .vert_index = {248, 248, 275},
+    .vert_index = {257, 248, 275},
   },
   {
     .tri_index = 306,
-    .vert_index = {275, 275, 252},
+    .vert_index = {257, 275, 252},
   },
   {
     .tri_index = 307,
-    .vert_index = {252, 252, 255},
+    .vert_index = {257, 252, 255},
   },
   {
     .tri_index = 308,
-    .vert_index = {278, 278, 277},
+    .vert_index = {276, 278, 277},
   },
   {
     .tri_index = 309,
-    .vert_index = {277, 277, 279},
+    .vert_index = {276, 277, 279},
   },
   {
     .tri_index = 310,
-    .vert_index = {282, 282, 281},
+    .vert_index = {280, 282, 281},
   },
   {
     .tri_index = 311,
-    .vert_index = {281, 281, 283},
+    .vert_index = {280, 281, 283},
   },
   {
     .tri_index = 312,
-    .vert_index = {280, 280, 283},
+    .vert_index = {284, 280, 283},
   },
   {
     .tri_index = 313,
-    .vert_index = {283, 283, 285},
+    .vert_index = {284, 283, 285},
   },
   {
     .tri_index = 314,
-    .vert_index = {287, 287, 278},
+    .vert_index = {286, 287, 278},
   },
   {
     .tri_index = 315,
-    .vert_index = {278, 278, 276},
+    .vert_index = {286, 278, 276},
   },
   {
     .tri_index = 316,
-    .vert_index = {289, 289, 229},
+    .vert_index = {288, 289, 229},
   },
   {
     .tri_index = 317,
-    .vert_index = {229, 229, 230},
+    .vert_index = {288, 229, 230},
   },
   {
     .tri_index = 318,
-    .vert_index = {226, 226, 224},
+    .vert_index = {290, 226, 224},
   },
   {
     .tri_index = 319,
-    .vert_index = {224, 224, 291},
+    .vert_index = {290, 224, 291},
   },
   {
     .tri_index = 320,
-    .vert_index = {294, 294, 293},
+    .vert_index = {292, 294, 293},
   },
   {
     .tri_index = 321,
-    .vert_index = {297, 297, 296},
+    .vert_index = {295, 297, 296},
   },
   {
     .tri_index = 322,
-    .vert_index = {297, 297, 299},
+    .vert_index = {298, 297, 299},
   },
   {
     .tri_index = 323,
-    .vert_index = {300, 300, 298},
+    .vert_index = {299, 300, 298},
   },
   {
     .tri_index = 324,
-    .vert_index = {298, 298, 300},
+    .vert_index = {301, 298, 300},
   },
   {
     .tri_index = 325,
-    .vert_index = {297, 297, 295},
+    .vert_index = {299, 297, 295},
   },
   {
     .tri_index = 326,
-    .vert_index = {300, 300, 302},
+    .vert_index = {301, 300, 302},
   },
   {
     .tri_index = 327,
-    .vert_index = {304, 304, 303},
+    .vert_index = {292, 304, 303},
   },
   {
     .tri_index = 328,
-    .vert_index = {303, 303, 304},
+    .vert_index = {305, 303, 304},
   },
   {
     .tri_index = 329,
-    .vert_index = {305, 305, 304},
+    .vert_index = {306, 305, 304},
   },
   {
     .tri_index = 330,
-    .vert_index = {307, 307, 294},
+    .vert_index = {292, 307, 294},
   },
   {
     .tri_index = 331,
-    .vert_index = {308, 308, 294},
+    .vert_index = {307, 308, 294},
   },
   {
     .tri_index = 332,
-    .vert_index = {309, 309, 308},
+    .vert_index = {307, 309, 308},
   },
   {
     .tri_index = 333,
-    .vert_index = {312, 312, 311},
+    .vert_index = {310, 312, 311},
   },
   {
     .tri_index = 334,
-    .vert_index = {312, 312, 313},
+    .vert_index = {311, 312, 313},
   },
   {
     .tri_index = 335,
-    .vert_index = {310, 310, 315},
+    .vert_index = {314, 310, 315},
   },
   {
     .tri_index = 336,
-    .vert_index = {310, 310, 311},
+    .vert_index = {315, 310, 311},
   },
   {
     .tri_index = 337,
-    .vert_index = {317, 317, 316},
+    .vert_index = {314, 317, 316},
   },
   {
     .tri_index = 338,
-    .vert_index = {315, 315, 317},
+    .vert_index = {314, 315, 317},
   },
   {
     .tri_index = 339,
-    .vert_index = {312, 312, 310},
+    .vert_index = {307, 312, 310},
   },
   {
     .tri_index = 340,
-    .vert_index = {292, 292, 312},
+    .vert_index = {307, 292, 312},
   },
   {
     .tri_index = 341,
-    .vert_index = {310, 310, 314},
+    .vert_index = {309, 310, 314},
   },
   {
     .tri_index = 342,
-    .vert_index = {307, 307, 310},
+    .vert_index = {309, 307, 310},
   },
   {
     .tri_index = 343,
-    .vert_index = {314, 314, 316},
+    .vert_index = {318, 314, 316},
   },
   {
     .tri_index = 344,
-    .vert_index = {309, 309, 314},
+    .vert_index = {318, 309, 314},
   },
   {
     .tri_index = 345,
-    .vert_index = {321, 321, 320},
+    .vert_index = {319, 321, 320},
   },
   {
     .tri_index = 346,
-    .vert_index = {321, 321, 322},
+    .vert_index = {320, 321, 322},
   },
   {
     .tri_index = 347,
-    .vert_index = {319, 319, 320},
+    .vert_index = {301, 319, 320},
   },
   {
     .tri_index = 348,
-    .vert_index = {301, 301, 302},
+    .vert_index = {319, 301, 302},
   },
   {
     .tri_index = 349,
-    .vert_index = {309, 309, 323},
+    .vert_index = {308, 309, 323},
   },
   {
     .tri_index = 350,
-    .vert_index = {309, 309, 318},
+    .vert_index = {323, 309, 318},
   },
   {
     .tri_index = 351,
-    .vert_index = {324, 324, 292},
+    .vert_index = {303, 324, 292},
   },
   {
     .tri_index = 352,
-    .vert_index = {324, 324, 313},
+    .vert_index = {312, 324, 313},
   },
   {
     .tri_index = 353,
-    .vert_index = {324, 324, 325},
+    .vert_index = {313, 324, 325},
   },
   {
     .tri_index = 354,
-    .vert_index = {324, 324, 303},
+    .vert_index = {326, 324, 303},
   },
   {
     .tri_index = 355,
-    .vert_index = {304, 304, 292},
+    .vert_index = {327, 304, 292},
   },
   {
     .tri_index = 356,
-    .vert_index = {293, 293, 327},
+    .vert_index = {292, 293, 327},
   },
   {
     .tri_index = 357,
-    .vert_index = {330, 330, 329},
+    .vert_index = {328, 330, 329},
   },
   {
     .tri_index = 358,
-    .vert_index = {328, 328, 331},
+    .vert_index = {330, 328, 331},
   },
   {
     .tri_index = 359,
-    .vert_index = {330, 330, 331},
+    .vert_index = {332, 330, 331},
   },
   {
     .tri_index = 360,
-    .vert_index = {333, 333, 330},
+    .vert_index = {332, 333, 330},
   },
   {
     .tri_index = 361,
-    .vert_index = {324, 324, 312},
+    .vert_index = {292, 324, 312},
   },
   {
     .tri_index = 362,
-    .vert_index = {336, 336, 335},
+    .vert_index = {334, 336, 335},
   },
   {
     .tri_index = 363,
-    .vert_index = {335, 335, 337},
+    .vert_index = {334, 335, 337},
   },
   {
     .tri_index = 364,
-    .vert_index = {339, 339, 336},
+    .vert_index = {338, 339, 336},
   },
   {
     .tri_index = 365,
-    .vert_index = {336, 336, 334},
+    .vert_index = {338, 336, 334},
   },
   {
     .tri_index = 366,
-    .vert_index = {301, 301, 339},
+    .vert_index = {338, 301, 339},
   },
   {
     .tri_index = 367,
-    .vert_index = {301, 301, 338},
+    .vert_index = {298, 301, 338},
   },
   {
     .tri_index = 368,
-    .vert_index = {334, 334, 337},
+    .vert_index = {340, 334, 337},
   },
   {
     .tri_index = 369,
-    .vert_index = {337, 337, 341},
+    .vert_index = {340, 337, 341},
   },
   {
     .tri_index = 370,
-    .vert_index = {338, 338, 334},
+    .vert_index = {342, 338, 334},
   },
   {
     .tri_index = 371,
-    .vert_index = {334, 334, 340},
+    .vert_index = {342, 334, 340},
   },
   {
     .tri_index = 372,
-    .vert_index = {298, 298, 338},
+    .vert_index = {342, 298, 338},
   },
   {
     .tri_index = 373,
-    .vert_index = {298, 298, 342},
+    .vert_index = {297, 298, 342},
   },
   {
     .tri_index = 374,
-    .vert_index = {329, 329, 344},
+    .vert_index = {343, 329, 344},
   },
   {
     .tri_index = 375,
-    .vert_index = {343, 343, 328},
+    .vert_index = {329, 343, 328},
   },
   {
     .tri_index = 376,
-    .vert_index = {340, 340, 341},
+    .vert_index = {345, 340, 341},
   },
   {
     .tri_index = 377,
-    .vert_index = {340, 340, 345},
+    .vert_index = {346, 340, 345},
   },
   {
     .tri_index = 378,
-    .vert_index = {342, 342, 340},
+    .vert_index = {347, 342, 340},
   },
   {
     .tri_index = 379,
-    .vert_index = {340, 340, 346},
+    .vert_index = {347, 340, 346},
   },
   {
     .tri_index = 380,
-    .vert_index = {297, 297, 342},
+    .vert_index = {347, 297, 342},
   },
   {
     .tri_index = 381,
-    .vert_index = {297, 297, 347},
+    .vert_index = {296, 297, 347},
   },
   {
     .tri_index = 382,
-    .vert_index = {304, 304, 348},
+    .vert_index = {306, 304, 348},
   },
   {
     .tri_index = 383,
-    .vert_index = {333, 333, 332},
+    .vert_index = {349, 333, 332},
   },
   {
     .tri_index = 384,
-    .vert_index = {327, 327, 348},
+    .vert_index = {304, 327, 348},
   },
   {
     .tri_index = 385,
-    .vert_index = {352, 352, 351},
+    .vert_index = {350, 352, 351},
   },
   {
     .tri_index = 386,
-    .vert_index = {355, 355, 354},
+    .vert_index = {353, 355, 354},
   },
   {
     .tri_index = 387,
-    .vert_index = {357, 357, 354},
+    .vert_index = {356, 357, 354},
   },
   {
     .tri_index = 388,
-    .vert_index = {356, 356, 358},
+    .vert_index = {357, 356, 358},
   },
   {
     .tri_index = 389,
-    .vert_index = {358, 358, 356},
+    .vert_index = {359, 358, 356},
   },
   {
     .tri_index = 390,
-    .vert_index = {353, 353, 354},
+    .vert_index = {357, 353, 354},
   },
   {
     .tri_index = 391,
-    .vert_index = {360, 360, 358},
+    .vert_index = {359, 360, 358},
   },
   {
     .tri_index = 392,
-    .vert_index = {362, 362, 361},
+    .vert_index = {350, 362, 361},
   },
   {
     .tri_index = 393,
-    .vert_index = {361, 361, 362},
+    .vert_index = {363, 361, 362},
   },
   {
     .tri_index = 394,
-    .vert_index = {361, 361, 363},
+    .vert_index = {364, 361, 363},
   },
   {
     .tri_index = 395,
-    .vert_index = {351, 351, 365},
+    .vert_index = {350, 351, 365},
   },
   {
     .tri_index = 396,
-    .vert_index = {351, 351, 366},
+    .vert_index = {365, 351, 366},
   },
   {
     .tri_index = 397,
-    .vert_index = {366, 366, 367},
+    .vert_index = {365, 366, 367},
   },
   {
     .tri_index = 398,
-    .vert_index = {370, 370, 369},
+    .vert_index = {368, 370, 369},
   },
   {
     .tri_index = 399,
-    .vert_index = {371, 371, 369},
+    .vert_index = {370, 371, 369},
   },
   {
     .tri_index = 400,
-    .vert_index = {373, 373, 368},
+    .vert_index = {372, 373, 368},
   },
   {
     .tri_index = 401,
-    .vert_index = {370, 370, 368},
+    .vert_index = {373, 370, 368},
   },
   {
     .tri_index = 402,
-    .vert_index = {375, 375, 374},
+    .vert_index = {372, 375, 374},
   },
   {
     .tri_index = 403,
-    .vert_index = {374, 374, 373},
+    .vert_index = {372, 374, 373},
   },
   {
     .tri_index = 404,
-    .vert_index = {368, 368, 369},
+    .vert_index = {365, 368, 369},
   },
   {
     .tri_index = 405,
-    .vert_index = {369, 369, 350},
+    .vert_index = {365, 369, 350},
   },
   {
     .tri_index = 406,
-    .vert_index = {372, 372, 368},
+    .vert_index = {367, 372, 368},
   },
   {
     .tri_index = 407,
-    .vert_index = {368, 368, 365},
+    .vert_index = {367, 368, 365},
   },
   {
     .tri_index = 408,
-    .vert_index = {375, 375, 372},
+    .vert_index = {376, 375, 372},
   },
   {
     .tri_index = 409,
-    .vert_index = {372, 372, 367},
+    .vert_index = {376, 372, 367},
   },
   {
     .tri_index = 410,
-    .vert_index = {379, 379, 378},
+    .vert_index = {377, 379, 378},
   },
   {
     .tri_index = 411,
-    .vert_index = {380, 380, 378},
+    .vert_index = {379, 380, 378},
   },
   {
     .tri_index = 412,
-    .vert_index = {379, 379, 377},
+    .vert_index = {359, 379, 377},
   },
   {
     .tri_index = 413,
-    .vert_index = {360, 360, 359},
+    .vert_index = {377, 360, 359},
   },
   {
     .tri_index = 414,
-    .vert_index = {381, 381, 367},
+    .vert_index = {366, 381, 367},
   },
   {
     .tri_index = 415,
-    .vert_index = {376, 376, 367},
+    .vert_index = {381, 376, 367},
   },
   {
     .tri_index = 416,
-    .vert_index = {350, 350, 382},
+    .vert_index = {362, 350, 382},
   },
   {
     .tri_index = 417,
-    .vert_index = {371, 371, 382},
+    .vert_index = {369, 371, 382},
   },
   {
     .tri_index = 418,
-    .vert_index = {383, 383, 382},
+    .vert_index = {371, 383, 382},
   },
   {
     .tri_index = 419,
-    .vert_index = {362, 362, 382},
+    .vert_index = {384, 362, 382},
   },
   {
     .tri_index = 420,
-    .vert_index = {350, 350, 361},
+    .vert_index = {385, 350, 361},
   },
   {
     .tri_index = 421,
-    .vert_index = {385, 385, 352},
+    .vert_index = {350, 385, 352},
   },
   {
     .tri_index = 422,
-    .vert_index = {388, 388, 387},
+    .vert_index = {386, 388, 387},
   },
   {
     .tri_index = 423,
-    .vert_index = {389, 389, 386},
+    .vert_index = {387, 389, 386},
   },
   {
     .tri_index = 424,
-    .vert_index = {389, 389, 387},
+    .vert_index = {390, 389, 387},
   },
   {
     .tri_index = 425,
-    .vert_index = {387, 387, 391},
+    .vert_index = {390, 387, 391},
   },
   {
     .tri_index = 426,
-    .vert_index = {369, 369, 382},
+    .vert_index = {350, 369, 382},
   },
   {
     .tri_index = 427,
-    .vert_index = {394, 394, 393},
+    .vert_index = {392, 394, 393},
   },
   {
     .tri_index = 428,
-    .vert_index = {395, 395, 394},
+    .vert_index = {392, 395, 394},
   },
   {
     .tri_index = 429,
-    .vert_index = {393, 393, 397},
+    .vert_index = {396, 393, 397},
   },
   {
     .tri_index = 430,
-    .vert_index = {392, 392, 393},
+    .vert_index = {396, 392, 393},
   },
   {
     .tri_index = 431,
-    .vert_index = {397, 397, 359},
+    .vert_index = {396, 397, 359},
   },
   {
     .tri_index = 432,
-    .vert_index = {396, 396, 359},
+    .vert_index = {356, 396, 359},
   },
   {
     .tri_index = 433,
-    .vert_index = {395, 395, 392},
+    .vert_index = {398, 395, 392},
   },
   {
     .tri_index = 434,
-    .vert_index = {399, 399, 395},
+    .vert_index = {398, 399, 395},
   },
   {
     .tri_index = 435,
-    .vert_index = {392, 392, 396},
+    .vert_index = {400, 392, 396},
   },
   {
     .tri_index = 436,
-    .vert_index = {398, 398, 392},
+    .vert_index = {400, 398, 392},
   },
   {
     .tri_index = 437,
-    .vert_index = {396, 396, 356},
+    .vert_index = {400, 396, 356},
   },
   {
     .tri_index = 438,
-    .vert_index = {400, 400, 356},
+    .vert_index = {354, 400, 356},
   },
   {
     .tri_index = 439,
-    .vert_index = {402, 402, 388},
+    .vert_index = {401, 402, 388},
   },
   {
     .tri_index = 440,
-    .vert_index = {386, 386, 401},
+    .vert_index = {388, 386, 401},
   },
   {
     .tri_index = 441,
-    .vert_index = {399, 399, 398},
+    .vert_index = {403, 399, 398},
   },
   {
     .tri_index = 442,
-    .vert_index = {403, 403, 398},
+    .vert_index = {404, 403, 398},
   },
   {
     .tri_index = 443,
-    .vert_index = {398, 398, 400},
+    .vert_index = {405, 398, 400},
   },
   {
     .tri_index = 444,
-    .vert_index = {404, 404, 398},
+    .vert_index = {405, 404, 398},
   },
   {
     .tri_index = 445,
-    .vert_index = {400, 400, 354},
+    .vert_index = {405, 400, 354},
   },
   {
     .tri_index = 446,
-    .vert_index = {405, 405, 354},
+    .vert_index = {355, 405, 354},
   },
   {
     .tri_index = 447,
-    .vert_index = {406, 406, 361},
+    .vert_index = {364, 406, 361},
   },
   {
     .tri_index = 448,
-    .vert_index = {390, 390, 391},
+    .vert_index = {407, 390, 391},
   },
   {
     .tri_index = 449,
-    .vert_index = {406, 406, 385},
+    .vert_index = {361, 406, 385},
   },
   {
     .tri_index = 450,
-    .vert_index = {269, 269, 408},
+    .vert_index = {268, 269, 408},
   },
   {
     .tri_index = 451,
-    .vert_index = {411, 411, 410},
+    .vert_index = {409, 411, 410},
   },
   {
     .tri_index = 452,
-    .vert_index = {410, 410, 412},
+    .vert_index = {409, 410, 412},
   },
   {
     .tri_index = 453,
-    .vert_index = {409, 409, 412},
+    .vert_index = {413, 409, 412},
   },
   {
     .tri_index = 454,
-    .vert_index = {415, 415, 414},
+    .vert_index = {291, 415, 414},
   },
   {
     .tri_index = 455,
-    .vert_index = {291, 291, 414},
+    .vert_index = {290, 291, 414},
   },
   {
     .tri_index = 456,
-    .vert_index = {414, 414, 416},
+    .vert_index = {290, 414, 416},
   },
   {
     .tri_index = 457,
-    .vert_index = {290, 290, 416},
+    .vert_index = {417, 290, 416},
   },
   {
     .tri_index = 458,
-    .vert_index = {416, 416, 418},
+    .vert_index = {417, 416, 418},
   },
   {
     .tri_index = 459,
-    .vert_index = {417, 417, 418},
+    .vert_index = {411, 417, 418},
   },
   {
     .tri_index = 460,
-    .vert_index = {418, 418, 410},
+    .vert_index = {411, 418, 410},
   },
   {
     .tri_index = 461,
-    .vert_index = {285, 285, 411},
+    .vert_index = {284, 285, 411},
   },
   {
     .tri_index = 462,
-    .vert_index = {411, 411, 409},
+    .vert_index = {284, 411, 409},
   },
   {
     .tri_index = 463,
-    .vert_index = {284, 284, 409},
+    .vert_index = {413, 284, 409},
   },
   {
     .tri_index = 464,
-    .vert_index = {290, 290, 417},
+    .vert_index = {408, 290, 417},
   },
   {
     .tri_index = 465,
-    .vert_index = {408, 408, 417},
+    .vert_index = {285, 408, 417},
   },
   {
     .tri_index = 466,
-    .vert_index = {417, 417, 411},
+    .vert_index = {285, 417, 411},
   },
   {
     .tri_index = 467,
-    .vert_index = {280, 280, 284},
+    .vert_index = {419, 280, 284},
   },
   {
     .tri_index = 468,
-    .vert_index = {284, 284, 413},
+    .vert_index = {419, 284, 413},
   },
   {
     .tri_index = 469,
-    .vert_index = {226, 226, 290},
+    .vert_index = {269, 226, 290},
   },
   {
     .tri_index = 470,
-    .vert_index = {290, 290, 408},
+    .vert_index = {269, 290, 408},
   },
   {
     .tri_index = 471,
-    .vert_index = {268, 268, 408},
+    .vert_index = {285, 268, 408},
   },
   {
     .tri_index = 472,
-    .vert_index = {268, 268, 285},
+    .vert_index = {283, 268, 285},
   },
   {
     .tri_index = 473,
-    .vert_index = {282, 282, 280},
+    .vert_index = {420, 282, 280},
   },
   {
     .tri_index = 474,
-    .vert_index = {280, 280, 419},
+    .vert_index = {420, 280, 419},
   },
   {
     .tri_index = 475,
-    .vert_index = {225, 225, 226},
+    .vert_index = {267, 225, 226},
   },
   {
     .tri_index = 476,
-    .vert_index = {226, 226, 269},
+    .vert_index = {267, 226, 269},
   },
   {
     .tri_index = 477,
-    .vert_index = {270, 270, 268},
+    .vert_index = {281, 270, 268},
   },
   {
     .tri_index = 478,
-    .vert_index = {268, 268, 283},
+    .vert_index = {281, 268, 283},
   },
   {
     .tri_index = 479,
-    .vert_index = {421, 421, 274},
+    .vert_index = {272, 421, 274},
   },
   {
     .tri_index = 480,
-    .vert_index = {424, 424, 423},
+    .vert_index = {422, 424, 423},
   },
   {
     .tri_index = 481,
-    .vert_index = {425, 425, 424},
+    .vert_index = {422, 425, 424},
   },
   {
     .tri_index = 482,
-    .vert_index = {425, 425, 422},
+    .vert_index = {426, 425, 422},
   },
   {
     .tri_index = 483,
-    .vert_index = {428, 428, 427},
+    .vert_index = {289, 428, 427},
   },
   {
     .tri_index = 484,
-    .vert_index = {428, 428, 289},
+    .vert_index = {288, 428, 289},
   },
   {
     .tri_index = 485,
-    .vert_index = {429, 429, 428},
+    .vert_index = {288, 429, 428},
   },
   {
     .tri_index = 486,
-    .vert_index = {429, 429, 288},
+    .vert_index = {430, 429, 288},
   },
   {
     .tri_index = 487,
-    .vert_index = {431, 431, 429},
+    .vert_index = {430, 431, 429},
   },
   {
     .tri_index = 488,
-    .vert_index = {431, 431, 430},
+    .vert_index = {423, 431, 430},
   },
   {
     .tri_index = 489,
-    .vert_index = {424, 424, 431},
+    .vert_index = {423, 424, 431},
   },
   {
     .tri_index = 490,
-    .vert_index = {423, 423, 287},
+    .vert_index = {286, 423, 287},
   },
   {
     .tri_index = 491,
-    .vert_index = {422, 422, 423},
+    .vert_index = {286, 422, 423},
   },
   {
     .tri_index = 492,
-    .vert_index = {422, 422, 286},
+    .vert_index = {426, 422, 286},
   },
   {
     .tri_index = 493,
-    .vert_index = {430, 430, 288},
+    .vert_index = {421, 430, 288},
   },
   {
     .tri_index = 494,
-    .vert_index = {430, 430, 421},
+    .vert_index = {287, 430, 421},
   },
   {
     .tri_index = 495,
-    .vert_index = {423, 423, 430},
+    .vert_index = {287, 423, 430},
   },
   {
     .tri_index = 496,
-    .vert_index = {286, 286, 276},
+    .vert_index = {432, 286, 276},
   },
   {
     .tri_index = 497,
-    .vert_index = {426, 426, 286},
+    .vert_index = {432, 426, 286},
   },
   {
     .tri_index = 498,
-    .vert_index = {288, 288, 230},
+    .vert_index = {274, 288, 230},
   },
   {
     .tri_index = 499,
-    .vert_index = {421, 421, 288},
+    .vert_index = {274, 421, 288},
   },
   {
     .tri_index = 500,
-    .vert_index = {421, 421, 272},
+    .vert_index = {287, 421, 272},
   },
   {
     .tri_index = 501,
-    .vert_index = {287, 287, 272},
+    .vert_index = {278, 287, 272},
   },
   {
     .tri_index = 502,
-    .vert_index = {276, 276, 279},
+    .vert_index = {433, 276, 279},
   },
   {
     .tri_index = 503,
-    .vert_index = {432, 432, 276},
+    .vert_index = {433, 432, 276},
   },
   {
     .tri_index = 504,
-    .vert_index = {230, 230, 228},
+    .vert_index = {271, 230, 228},
   },
   {
     .tri_index = 505,
-    .vert_index = {274, 274, 230},
+    .vert_index = {271, 274, 230},
   },
   {
     .tri_index = 506,
-    .vert_index = {272, 272, 273},
+    .vert_index = {277, 272, 273},
   },
   {
     .tri_index = 507,
-    .vert_index = {278, 278, 272},
+    .vert_index = {277, 278, 272},
   },
   {
     .tri_index = 508,
-    .vert_index = {436, 436, 435},
+    .vert_index = {434, 436, 435},
   },
   {
     .tri_index = 509,
-    .vert_index = {437, 437, 436},
+    .vert_index = {434, 437, 436},
   },
   {
     .tri_index = 510,
-    .vert_index = {438, 438, 434},
+    .vert_index = {435, 438, 434},
   },
   {
     .tri_index = 511,
-    .vert_index = {441, 441, 440},
+    .vert_index = {439, 441, 440},
   },
   {
     .tri_index = 512,
-    .vert_index = {442, 442, 438},
+    .vert_index = {439, 442, 438},
   },
   {
     .tri_index = 513,
-    .vert_index = {440, 440, 442},
+    .vert_index = {439, 440, 442},
   },
   {
     .tri_index = 514,
-    .vert_index = {445, 445, 444},
+    .vert_index = {443, 445, 444},
   },
   {
     .tri_index = 515,
-    .vert_index = {446, 446, 445},
+    .vert_index = {443, 446, 445},
   },
   {
     .tri_index = 516,
-    .vert_index = {438, 438, 435},
+    .vert_index = {439, 438, 435},
   },
   {
     .tri_index = 517,
-    .vert_index = {447, 447, 436},
+    .vert_index = {437, 447, 436},
   },
   {
     .tri_index = 518,
-    .vert_index = {448, 448, 447},
+    .vert_index = {437, 448, 447},
   },
   {
     .tri_index = 519,
-    .vert_index = {451, 451, 450},
+    .vert_index = {449, 451, 450},
   },
   {
     .tri_index = 520,
-    .vert_index = {454, 454, 453},
+    .vert_index = {452, 454, 453},
   },
   {
     .tri_index = 521,
-    .vert_index = {452, 452, 455},
+    .vert_index = {454, 452, 455},
   },
   {
     .tri_index = 522,
-    .vert_index = {235, 235, 242},
+    .vert_index = {456, 235, 242},
   },
   {
     .tri_index = 523,
-    .vert_index = {456, 456, 232},
+    .vert_index = {235, 456, 232},
   },
   {
     .tri_index = 524,
-    .vert_index = {450, 450, 457},
+    .vert_index = {241, 450, 457},
   },
   {
     .tri_index = 525,
-    .vert_index = {240, 240, 241},
+    .vert_index = {457, 240, 241},
   },
   {
     .tri_index = 526,
-    .vert_index = {256, 256, 459},
+    .vert_index = {458, 256, 459},
   },
   {
     .tri_index = 527,
-    .vert_index = {460, 460, 458},
+    .vert_index = {459, 460, 458},
   },
   {
     .tri_index = 528,
-    .vert_index = {258, 258, 265},
+    .vert_index = {256, 258, 265},
   },
   {
     .tri_index = 529,
-    .vert_index = {459, 459, 256},
+    .vert_index = {265, 459, 256},
   },
   {
     .tri_index = 530,
-    .vert_index = {455, 455, 452},
+    .vert_index = {262, 455, 452},
   },
   {
     .tri_index = 531,
-    .vert_index = {266, 266, 262},
+    .vert_index = {452, 266, 262},
   },
   {
     .tri_index = 532,
-    .vert_index = {462, 462, 454},
+    .vert_index = {461, 462, 454},
   },
   {
     .tri_index = 533,
-    .vert_index = {455, 455, 461},
+    .vert_index = {454, 455, 461},
   },
   {
     .tri_index = 534,
-    .vert_index = {449, 449, 450},
+    .vert_index = {246, 449, 450},
   },
   {
     .tri_index = 535,
-    .vert_index = {241, 241, 246},
+    .vert_index = {450, 241, 246},
   },
   {
     .tri_index = 536,
-    .vert_index = {257, 257, 256},
+    .vert_index = {458, 257, 256},
   },
   {
     .tri_index = 537,
-    .vert_index = {461, 461, 455},
+    .vert_index = {253, 461, 455},
   },
   {
     .tri_index = 538,
-    .vert_index = {262, 262, 253},
+    .vert_index = {455, 262, 253},
   },
   {
     .tri_index = 539,
-    .vert_index = {5, 5, 463},
+    .vert_index = {252, 5, 463},
   },
   {
     .tri_index = 540,
-    .vert_index = {252, 252, 463},
+    .vert_index = {446, 252, 463},
   },
   {
     .tri_index = 541,
-    .vert_index = {254, 254, 252},
+    .vert_index = {446, 254, 252},
   },
   {
     .tri_index = 542,
-    .vert_index = {254, 254, 446},
+    .vert_index = {443, 254, 446},
   },
   {
     .tri_index = 543,
-    .vert_index = {254, 254, 443},
+    .vert_index = {461, 254, 443},
   },
   {
     .tri_index = 544,
-    .vert_index = {253, 253, 254},
+    .vert_index = {461, 253, 254},
   },
   {
     .tri_index = 545,
-    .vert_index = {444, 444, 462},
+    .vert_index = {461, 444, 462},
   },
   {
     .tri_index = 546,
-    .vert_index = {443, 443, 444},
+    .vert_index = {461, 443, 444},
   },
   {
     .tri_index = 547,
-    .vert_index = {434, 434, 464},
+    .vert_index = {437, 434, 464},
   },
   {
     .tri_index = 548,
-    .vert_index = {465, 465, 464},
+    .vert_index = {434, 465, 464},
   },
   {
     .tri_index = 549,
-    .vert_index = {438, 438, 465},
+    .vert_index = {434, 438, 465},
   },
   {
     .tri_index = 550,
-    .vert_index = {465, 465, 438},
+    .vert_index = {442, 465, 438},
   },
   {
     .tri_index = 551,
-    .vert_index = {467, 467, 465},
+    .vert_index = {466, 467, 465},
   },
   {
     .tri_index = 552,
-    .vert_index = {465, 465, 442},
+    .vert_index = {466, 465, 442},
   },
   {
     .tri_index = 553,
-    .vert_index = {466, 466, 442},
+    .vert_index = {440, 466, 442},
   },
   {
     .tri_index = 554,
-    .vert_index = {233, 233, 440},
+    .vert_index = {246, 233, 440},
   },
   {
     .tri_index = 555,
-    .vert_index = {233, 233, 466},
+    .vert_index = {440, 233, 466},
   },
   {
     .tri_index = 556,
-    .vert_index = {234, 234, 467},
+    .vert_index = {466, 234, 467},
   },
   {
     .tri_index = 557,
-    .vert_index = {233, 233, 234},
+    .vert_index = {466, 233, 234},
   },
   {
     .tri_index = 558,
-    .vert_index = {246, 246, 440},
+    .vert_index = {449, 246, 440},
   },
   {
     .tri_index = 559,
-    .vert_index = {440, 440, 441},
+    .vert_index = {449, 440, 441},
   },
   {
     .tri_index = 560,
-    .vert_index = {5, 5, 252},
+    .vert_index = {0, 5, 252},
   },
   {
     .tri_index = 561,
-    .vert_index = {252, 252, 275},
+    .vert_index = {0, 252, 275},
   },
   {
     .tri_index = 562,
-    .vert_index = {9, 9, 463},
+    .vert_index = {4, 9, 463},
   },
   {
     .tri_index = 563,
-    .vert_index = {463, 463, 5},
+    .vert_index = {4, 463, 5},
   },
   {
     .tri_index = 564,
-    .vert_index = {10, 10, 4},
+    .vert_index = {468, 10, 4},
   },
   {
     .tri_index = 565,
-    .vert_index = {4, 4, 3},
+    .vert_index = {468, 4, 3},
   },
   {
     .tri_index = 566,
-    .vert_index = {464, 464, 469},
+    .vert_index = {437, 464, 469},
   },
   {
     .tri_index = 567,
-    .vert_index = {469, 469, 448},
+    .vert_index = {437, 469, 448},
   },
   {
     .tri_index = 568,
-    .vert_index = {435, 435, 436},
+    .vert_index = {470, 435, 436},
   },
   {
     .tri_index = 569,
-    .vert_index = {436, 436, 471},
+    .vert_index = {470, 436, 471},
   },
   {
     .tri_index = 570,
-    .vert_index = {470, 470, 472},
+    .vert_index = {435, 470, 472},
   },
   {
     .tri_index = 571,
-    .vert_index = {473, 473, 441},
+    .vert_index = {439, 473, 441},
   },
   {
     .tri_index = 572,
-    .vert_index = {472, 472, 474},
+    .vert_index = {439, 472, 474},
   },
   {
     .tri_index = 573,
-    .vert_index = {474, 474, 473},
+    .vert_index = {439, 474, 473},
   },
   {
     .tri_index = 574,
-    .vert_index = {477, 477, 476},
+    .vert_index = {475, 477, 476},
   },
   {
     .tri_index = 575,
-    .vert_index = {476, 476, 478},
+    .vert_index = {475, 476, 478},
   },
   {
     .tri_index = 576,
-    .vert_index = {435, 435, 472},
+    .vert_index = {439, 435, 472},
   },
   {
     .tri_index = 577,
-    .vert_index = {436, 436, 447},
+    .vert_index = {471, 436, 447},
   },
   {
     .tri_index = 578,
-    .vert_index = {447, 447, 479},
+    .vert_index = {471, 447, 479},
   },
   {
     .tri_index = 579,
-    .vert_index = {480, 480, 451},
+    .vert_index = {449, 480, 451},
   },
   {
     .tri_index = 580,
-    .vert_index = {482, 482, 236},
+    .vert_index = {481, 482, 236},
   },
   {
     .tri_index = 581,
-    .vert_index = {483, 483, 481},
+    .vert_index = {236, 483, 481},
   },
   {
     .tri_index = 582,
-    .vert_index = {244, 244, 238},
+    .vert_index = {482, 244, 238},
   },
   {
     .tri_index = 583,
-    .vert_index = {236, 236, 482},
+    .vert_index = {238, 236, 482},
   },
   {
     .tri_index = 584,
-    .vert_index = {484, 484, 480},
+    .vert_index = {245, 484, 480},
   },
   {
     .tri_index = 585,
-    .vert_index = {245, 245, 243},
+    .vert_index = {484, 245, 243},
   },
   {
     .tri_index = 586,
-    .vert_index = {485, 485, 259},
+    .vert_index = {458, 485, 259},
   },
   {
     .tri_index = 587,
-    .vert_index = {458, 458, 486},
+    .vert_index = {485, 458, 486},
   },
   {
     .tri_index = 588,
-    .vert_index = {263, 263, 260},
+    .vert_index = {259, 263, 260},
   },
   {
     .tri_index = 589,
-    .vert_index = {259, 259, 485},
+    .vert_index = {263, 259, 485},
   },
   {
     .tri_index = 590,
-    .vert_index = {481, 481, 483},
+    .vert_index = {261, 481, 483},
   },
   {
     .tri_index = 591,
-    .vert_index = {261, 261, 264},
+    .vert_index = {481, 261, 264},
   },
   {
     .tri_index = 592,
-    .vert_index = {236, 236, 239},
+    .vert_index = {487, 236, 239},
   },
   {
     .tri_index = 593,
-    .vert_index = {487, 487, 483},
+    .vert_index = {236, 487, 483},
   },
   {
     .tri_index = 594,
-    .vert_index = {480, 480, 449},
+    .vert_index = {247, 480, 449},
   },
   {
     .tri_index = 595,
-    .vert_index = {247, 247, 245},
+    .vert_index = {480, 247, 245},
   },
   {
     .tri_index = 596,
-    .vert_index = {259, 259, 257},
+    .vert_index = {458, 259, 257},
   },
   {
     .tri_index = 597,
-    .vert_index = {483, 483, 487},
+    .vert_index = {249, 483, 487},
   },
   {
     .tri_index = 598,
-    .vert_index = {249, 249, 261},
+    .vert_index = {483, 249, 261},
   },
   {
     .tri_index = 599,
-    .vert_index = {488, 488, 2},
+    .vert_index = {248, 488, 2},
   },
   {
     .tri_index = 600,
-    .vert_index = {488, 488, 248},
+    .vert_index = {489, 488, 248},
   },
   {
     .tri_index = 601,
-    .vert_index = {248, 248, 251},
+    .vert_index = {489, 248, 251},
   },
   {
     .tri_index = 602,
-    .vert_index = {478, 478, 490},
+    .vert_index = {475, 478, 490},
   },
   {
     .tri_index = 603,
-    .vert_index = {475, 475, 490},
+    .vert_index = {487, 475, 490},
   },
   {
     .tri_index = 604,
-    .vert_index = {490, 490, 249},
+    .vert_index = {487, 490, 249},
   },
   {
     .tri_index = 605,
-    .vert_index = {239, 239, 477},
+    .vert_index = {487, 239, 477},
   },
   {
     .tri_index = 606,
-    .vert_index = {477, 477, 475},
+    .vert_index = {487, 477, 475},
   },
   {
     .tri_index = 607,
-    .vert_index = {491, 491, 470},
+    .vert_index = {471, 491, 470},
   },
   {
     .tri_index = 608,
-    .vert_index = {491, 491, 476},
+    .vert_index = {470, 491, 476},
   },
   {
     .tri_index = 609,
-    .vert_index = {476, 476, 472},
+    .vert_index = {470, 476, 472},
   },
   {
     .tri_index = 610,
-    .vert_index = {472, 472, 476},
+    .vert_index = {474, 472, 476},
   },
   {
     .tri_index = 611,
-    .vert_index = {476, 476, 477},
+    .vert_index = {492, 476, 477},
   },
   {
     .tri_index = 612,
-    .vert_index = {474, 474, 476},
+    .vert_index = {492, 474, 476},
   },
   {
     .tri_index = 613,
-    .vert_index = {474, 474, 492},
+    .vert_index = {473, 474, 492},
   },
   {
     .tri_index = 614,
-    .vert_index = {473, 473, 237},
+    .vert_index = {247, 473, 237},
   },
   {
     .tri_index = 615,
-    .vert_index = {492, 492, 237},
+    .vert_index = {473, 492, 237},
   },
   {
     .tri_index = 616,
-    .vert_index = {492, 492, 477},
+    .vert_index = {239, 492, 477},
   },
   {
     .tri_index = 617,
-    .vert_index = {237, 237, 492},
+    .vert_index = {239, 237, 492},
   },
   {
     .tri_index = 618,
-    .vert_index = {473, 473, 247},
+    .vert_index = {449, 473, 247},
   },
   {
     .tri_index = 619,
-    .vert_index = {441, 441, 473},
+    .vert_index = {449, 441, 473},
   },
   {
     .tri_index = 620,
-    .vert_index = {248, 248, 2},
+    .vert_index = {0, 248, 2},
   },
   {
     .tri_index = 621,
-    .vert_index = {275, 275, 248},
+    .vert_index = {0, 275, 248},
   },
   {
     .tri_index = 622,
-    .vert_index = {488, 488, 7},
+    .vert_index = {1, 488, 7},
   },
   {
     .tri_index = 623,
-    .vert_index = {2, 2, 488},
+    .vert_index = {1, 2, 488},
   },
   {
     .tri_index = 624,
-    .vert_index = {1, 1, 6},
+    .vert_index = {468, 1, 6},
   },
   {
     .tri_index = 625,
-    .vert_index = {3, 3, 1},
+    .vert_index = {468, 3, 1},
   },
   {
     .tri_index = 626,
-    .vert_index = {493, 493, 491},
+    .vert_index = {471, 493, 491},
   },
   {
     .tri_index = 627,
-    .vert_index = {479, 479, 493},
+    .vert_index = {471, 479, 493},
   },
 };
 
@@ -11552,711 +11552,711 @@ struct md5_mesh_vert boblamp_1_verts[] = {
 struct md5_mesh_tri boblamp_1_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {0, 0, 1},
+    .vert_index = {3, 0, 1},
   },
   {
     .tri_index = 2,
-    .vert_index = {6, 6, 5},
+    .vert_index = {4, 6, 5},
   },
   {
     .tri_index = 3,
-    .vert_index = {6, 6, 4},
+    .vert_index = {7, 6, 4},
   },
   {
     .tri_index = 4,
-    .vert_index = {10, 10, 9},
+    .vert_index = {8, 10, 9},
   },
   {
     .tri_index = 5,
-    .vert_index = {8, 8, 11},
+    .vert_index = {10, 8, 11},
   },
   {
     .tri_index = 6,
-    .vert_index = {12, 12, 10},
+    .vert_index = {11, 12, 10},
   },
   {
     .tri_index = 7,
-    .vert_index = {9, 9, 10},
+    .vert_index = {13, 9, 10},
   },
   {
     .tri_index = 8,
-    .vert_index = {10, 10, 12},
+    .vert_index = {13, 10, 12},
   },
   {
     .tri_index = 9,
-    .vert_index = {14, 14, 13},
+    .vert_index = {12, 14, 13},
   },
   {
     .tri_index = 10,
-    .vert_index = {17, 17, 16},
+    .vert_index = {15, 17, 16},
   },
   {
     .tri_index = 11,
-    .vert_index = {11, 11, 15},
+    .vert_index = {16, 11, 15},
   },
   {
     .tri_index = 12,
-    .vert_index = {16, 16, 12},
+    .vert_index = {11, 16, 12},
   },
   {
     .tri_index = 13,
-    .vert_index = {16, 16, 17},
+    .vert_index = {18, 16, 17},
   },
   {
     .tri_index = 14,
-    .vert_index = {12, 12, 16},
+    .vert_index = {18, 12, 16},
   },
   {
     .tri_index = 15,
-    .vert_index = {18, 18, 14},
+    .vert_index = {12, 18, 14},
   },
   {
     .tri_index = 16,
-    .vert_index = {21, 21, 20},
+    .vert_index = {19, 21, 20},
   },
   {
     .tri_index = 17,
-    .vert_index = {19, 19, 22},
+    .vert_index = {21, 19, 22},
   },
   {
     .tri_index = 18,
-    .vert_index = {25, 25, 24},
+    .vert_index = {23, 25, 24},
   },
   {
     .tri_index = 19,
-    .vert_index = {25, 25, 23},
+    .vert_index = {26, 25, 23},
   },
   {
     .tri_index = 20,
-    .vert_index = {29, 29, 28},
+    .vert_index = {27, 29, 28},
   },
   {
     .tri_index = 21,
-    .vert_index = {30, 30, 27},
+    .vert_index = {28, 30, 27},
   },
   {
     .tri_index = 22,
-    .vert_index = {32, 32, 31},
+    .vert_index = {28, 32, 31},
   },
   {
     .tri_index = 23,
-    .vert_index = {32, 32, 33},
+    .vert_index = {31, 32, 33},
   },
   {
     .tri_index = 24,
-    .vert_index = {34, 34, 31},
+    .vert_index = {33, 34, 31},
   },
   {
     .tri_index = 25,
-    .vert_index = {28, 28, 31},
+    .vert_index = {35, 28, 31},
   },
   {
     .tri_index = 26,
-    .vert_index = {31, 31, 34},
+    .vert_index = {36, 31, 34},
   },
   {
     .tri_index = 27,
-    .vert_index = {36, 36, 35},
+    .vert_index = {31, 36, 35},
   },
   {
     .tri_index = 28,
-    .vert_index = {38, 38, 37},
+    .vert_index = {29, 38, 37},
   },
   {
     .tri_index = 29,
-    .vert_index = {27, 27, 38},
+    .vert_index = {29, 27, 38},
   },
   {
     .tri_index = 30,
-    .vert_index = {27, 27, 30},
+    .vert_index = {38, 27, 30},
   },
   {
     .tri_index = 31,
-    .vert_index = {41, 41, 40},
+    .vert_index = {39, 41, 40},
   },
   {
     .tri_index = 32,
-    .vert_index = {39, 39, 40},
+    .vert_index = {42, 39, 40},
   },
   {
     .tri_index = 33,
-    .vert_index = {43, 43, 39},
+    .vert_index = {42, 43, 39},
   },
   {
     .tri_index = 34,
-    .vert_index = {40, 40, 44},
+    .vert_index = {42, 40, 44},
   },
   {
     .tri_index = 35,
-    .vert_index = {46, 46, 45},
+    .vert_index = {44, 46, 45},
   },
   {
     .tri_index = 36,
-    .vert_index = {45, 45, 42},
+    .vert_index = {44, 45, 42},
   },
   {
     .tri_index = 37,
-    .vert_index = {3, 3, 48},
+    .vert_index = {47, 3, 48},
   },
   {
     .tri_index = 38,
-    .vert_index = {47, 47, 45},
+    .vert_index = {3, 47, 45},
   },
   {
     .tri_index = 39,
-    .vert_index = {45, 45, 47},
+    .vert_index = {42, 45, 47},
   },
   {
     .tri_index = 40,
-    .vert_index = {43, 43, 42},
+    .vert_index = {47, 43, 42},
   },
   {
     .tri_index = 41,
-    .vert_index = {1, 1, 48},
+    .vert_index = {3, 1, 48},
   },
   {
     .tri_index = 42,
-    .vert_index = {21, 21, 50},
+    .vert_index = {49, 21, 50},
   },
   {
     .tri_index = 43,
-    .vert_index = {51, 51, 49},
+    .vert_index = {50, 51, 49},
   },
   {
     .tri_index = 44,
-    .vert_index = {51, 51, 50},
+    .vert_index = {28, 51, 50},
   },
   {
     .tri_index = 45,
-    .vert_index = {28, 28, 35},
+    .vert_index = {51, 28, 35},
   },
   {
     .tri_index = 46,
-    .vert_index = {52, 52, 35},
+    .vert_index = {36, 52, 35},
   },
   {
     .tri_index = 47,
-    .vert_index = {51, 51, 35},
+    .vert_index = {52, 51, 35},
   },
   {
     .tri_index = 48,
-    .vert_index = {50, 50, 53},
+    .vert_index = {28, 50, 53},
   },
   {
     .tri_index = 49,
-    .vert_index = {53, 53, 44},
+    .vert_index = {28, 53, 44},
   },
   {
     .tri_index = 50,
-    .vert_index = {44, 44, 54},
+    .vert_index = {28, 44, 54},
   },
   {
     .tri_index = 51,
-    .vert_index = {55, 55, 2},
+    .vert_index = {53, 55, 2},
   },
   {
     .tri_index = 52,
-    .vert_index = {53, 53, 46},
+    .vert_index = {44, 53, 46},
   },
   {
     .tri_index = 53,
-    .vert_index = {46, 46, 0},
+    .vert_index = {45, 46, 0},
   },
   {
     .tri_index = 54,
-    .vert_index = {45, 45, 0},
+    .vert_index = {3, 45, 0},
   },
   {
     .tri_index = 55,
-    .vert_index = {21, 21, 49},
+    .vert_index = {20, 21, 49},
   },
   {
     .tri_index = 56,
-    .vert_index = {41, 41, 56},
+    .vert_index = {54, 41, 56},
   },
   {
     .tri_index = 57,
-    .vert_index = {30, 30, 54},
+    .vert_index = {57, 30, 54},
   },
   {
     .tri_index = 58,
-    .vert_index = {46, 46, 2},
+    .vert_index = {0, 46, 2},
   },
   {
     .tri_index = 59,
-    .vert_index = {53, 53, 2},
+    .vert_index = {46, 53, 2},
   },
   {
     .tri_index = 60,
-    .vert_index = {57, 57, 54},
+    .vert_index = {56, 57, 54},
   },
   {
     .tri_index = 61,
-    .vert_index = {51, 51, 52},
+    .vert_index = {58, 51, 52},
   },
   {
     .tri_index = 62,
-    .vert_index = {2, 2, 55},
+    .vert_index = {1, 2, 55},
   },
   {
     .tri_index = 63,
-    .vert_index = {54, 54, 40},
+    .vert_index = {41, 54, 40},
   },
   {
     .tri_index = 64,
-    .vert_index = {54, 54, 44},
+    .vert_index = {40, 54, 44},
   },
   {
     .tri_index = 65,
-    .vert_index = {50, 50, 21},
+    .vert_index = {55, 50, 21},
   },
   {
     .tri_index = 66,
-    .vert_index = {1, 1, 55},
+    .vert_index = {22, 1, 55},
   },
   {
     .tri_index = 67,
-    .vert_index = {59, 59, 51},
+    .vert_index = {58, 59, 51},
   },
   {
     .tri_index = 68,
-    .vert_index = {30, 30, 28},
+    .vert_index = {54, 30, 28},
   },
   {
     .tri_index = 69,
-    .vert_index = {53, 53, 50},
+    .vert_index = {55, 53, 50},
   },
   {
     .tri_index = 70,
-    .vert_index = {1, 1, 22},
+    .vert_index = {60, 1, 22},
   },
   {
     .tri_index = 71,
-    .vert_index = {22, 22, 55},
+    .vert_index = {21, 22, 55},
   },
   {
     .tri_index = 72,
-    .vert_index = {1, 1, 60},
+    .vert_index = {61, 1, 60},
   },
   {
     .tri_index = 73,
-    .vert_index = {48, 48, 1},
+    .vert_index = {61, 48, 1},
   },
   {
     .tri_index = 74,
-    .vert_index = {64, 64, 63},
+    .vert_index = {62, 64, 63},
   },
   {
     .tri_index = 75,
-    .vert_index = {49, 49, 63},
+    .vert_index = {64, 49, 63},
   },
   {
     .tri_index = 76,
-    .vert_index = {64, 64, 20},
+    .vert_index = {49, 64, 20},
   },
   {
     .tri_index = 77,
-    .vert_index = {60, 60, 22},
+    .vert_index = {65, 60, 22},
   },
   {
     .tri_index = 78,
-    .vert_index = {19, 19, 65},
+    .vert_index = {22, 19, 65},
   },
   {
     .tri_index = 79,
-    .vert_index = {67, 67, 60},
+    .vert_index = {66, 67, 60},
   },
   {
     .tri_index = 80,
-    .vert_index = {65, 65, 66},
+    .vert_index = {60, 65, 66},
   },
   {
     .tri_index = 81,
-    .vert_index = {68, 68, 61},
+    .vert_index = {60, 68, 61},
   },
   {
     .tri_index = 82,
-    .vert_index = {60, 60, 67},
+    .vert_index = {68, 60, 67},
   },
   {
     .tri_index = 83,
-    .vert_index = {49, 49, 59},
+    .vert_index = {63, 49, 59},
   },
   {
     .tri_index = 84,
-    .vert_index = {59, 59, 49},
+    .vert_index = {51, 59, 49},
   },
   {
     .tri_index = 85,
-    .vert_index = {62, 62, 70},
+    .vert_index = {69, 62, 70},
   },
   {
     .tri_index = 86,
-    .vert_index = {69, 69, 64},
+    .vert_index = {62, 69, 64},
   },
   {
     .tri_index = 87,
-    .vert_index = {71, 71, 69},
+    .vert_index = {70, 71, 69},
   },
   {
     .tri_index = 88,
-    .vert_index = {70, 70, 72},
+    .vert_index = {71, 70, 72},
   },
   {
     .tri_index = 89,
-    .vert_index = {74, 74, 23},
+    .vert_index = {73, 74, 23},
   },
   {
     .tri_index = 90,
-    .vert_index = {66, 66, 65},
+    .vert_index = {71, 66, 65},
   },
   {
     .tri_index = 91,
-    .vert_index = {73, 73, 23},
+    .vert_index = {24, 73, 23},
   },
   {
     .tri_index = 92,
-    .vert_index = {65, 65, 19},
+    .vert_index = {71, 65, 19},
   },
   {
     .tri_index = 93,
-    .vert_index = {69, 69, 71},
+    .vert_index = {19, 69, 71},
   },
   {
     .tri_index = 94,
-    .vert_index = {19, 19, 20},
+    .vert_index = {69, 19, 20},
   },
   {
     .tri_index = 95,
-    .vert_index = {64, 64, 69},
+    .vert_index = {20, 64, 69},
   },
   {
     .tri_index = 96,
-    .vert_index = {77, 77, 76},
+    .vert_index = {75, 77, 76},
   },
   {
     .tri_index = 97,
-    .vert_index = {78, 78, 77},
+    .vert_index = {75, 78, 77},
   },
   {
     .tri_index = 98,
-    .vert_index = {80, 80, 79},
+    .vert_index = {23, 80, 79},
   },
   {
     .tri_index = 99,
-    .vert_index = {23, 23, 79},
+    .vert_index = {26, 23, 79},
   },
   {
     .tri_index = 100,
-    .vert_index = {83, 83, 82},
+    .vert_index = {81, 83, 82},
   },
   {
     .tri_index = 101,
-    .vert_index = {81, 81, 84},
+    .vert_index = {83, 81, 84},
   },
   {
     .tri_index = 102,
-    .vert_index = {86, 86, 85},
+    .vert_index = {83, 86, 85},
   },
   {
     .tri_index = 103,
-    .vert_index = {33, 33, 85},
+    .vert_index = {86, 33, 85},
   },
   {
     .tri_index = 104,
-    .vert_index = {86, 86, 34},
+    .vert_index = {33, 86, 34},
   },
   {
     .tri_index = 105,
-    .vert_index = {86, 86, 83},
+    .vert_index = {87, 86, 83},
   },
   {
     .tri_index = 106,
-    .vert_index = {34, 34, 86},
+    .vert_index = {36, 34, 86},
   },
   {
     .tri_index = 107,
-    .vert_index = {87, 87, 36},
+    .vert_index = {86, 87, 36},
   },
   {
     .tri_index = 108,
-    .vert_index = {82, 82, 37},
+    .vert_index = {38, 82, 37},
   },
   {
     .tri_index = 109,
-    .vert_index = {81, 81, 82},
+    .vert_index = {38, 81, 82},
   },
   {
     .tri_index = 110,
-    .vert_index = {84, 84, 81},
+    .vert_index = {38, 84, 81},
   },
   {
     .tri_index = 111,
-    .vert_index = {38, 38, 30},
+    .vert_index = {84, 38, 30},
   },
   {
     .tri_index = 112,
-    .vert_index = {88, 88, 41},
+    .vert_index = {39, 88, 41},
   },
   {
     .tri_index = 113,
-    .vert_index = {88, 88, 39},
+    .vert_index = {89, 88, 39},
   },
   {
     .tri_index = 114,
-    .vert_index = {39, 39, 43},
+    .vert_index = {89, 39, 43},
   },
   {
     .tri_index = 115,
-    .vert_index = {90, 90, 88},
+    .vert_index = {89, 90, 88},
   },
   {
     .tri_index = 116,
-    .vert_index = {92, 92, 91},
+    .vert_index = {90, 92, 91},
   },
   {
     .tri_index = 117,
-    .vert_index = {89, 89, 92},
+    .vert_index = {90, 89, 92},
   },
   {
     .tri_index = 118,
-    .vert_index = {48, 48, 7},
+    .vert_index = {47, 48, 7},
   },
   {
     .tri_index = 119,
-    .vert_index = {92, 92, 47},
+    .vert_index = {7, 92, 47},
   },
   {
     .tri_index = 120,
-    .vert_index = {47, 47, 92},
+    .vert_index = {89, 47, 92},
   },
   {
     .tri_index = 121,
-    .vert_index = {89, 89, 43},
+    .vert_index = {47, 89, 43},
   },
   {
     .tri_index = 122,
-    .vert_index = {48, 48, 6},
+    .vert_index = {7, 48, 6},
   },
   {
     .tri_index = 123,
-    .vert_index = {94, 94, 75},
+    .vert_index = {93, 94, 75},
   },
   {
     .tri_index = 124,
-    .vert_index = {93, 93, 95},
+    .vert_index = {94, 93, 95},
   },
   {
     .tri_index = 125,
-    .vert_index = {94, 94, 95},
+    .vert_index = {83, 94, 95},
   },
   {
     .tri_index = 126,
-    .vert_index = {87, 87, 83},
+    .vert_index = {95, 87, 83},
   },
   {
     .tri_index = 127,
-    .vert_index = {95, 95, 52},
+    .vert_index = {87, 95, 52},
   },
   {
     .tri_index = 128,
-    .vert_index = {87, 87, 52},
+    .vert_index = {36, 87, 52},
   },
   {
     .tri_index = 129,
-    .vert_index = {96, 96, 94},
+    .vert_index = {83, 96, 94},
   },
   {
     .tri_index = 130,
-    .vert_index = {90, 90, 96},
+    .vert_index = {83, 90, 96},
   },
   {
     .tri_index = 131,
-    .vert_index = {97, 97, 90},
+    .vert_index = {83, 97, 90},
   },
   {
     .tri_index = 132,
-    .vert_index = {5, 5, 98},
+    .vert_index = {96, 5, 98},
   },
   {
     .tri_index = 133,
-    .vert_index = {91, 91, 96},
+    .vert_index = {90, 91, 96},
   },
   {
     .tri_index = 134,
-    .vert_index = {4, 4, 91},
+    .vert_index = {92, 4, 91},
   },
   {
     .tri_index = 135,
-    .vert_index = {4, 4, 92},
+    .vert_index = {7, 4, 92},
   },
   {
     .tri_index = 136,
-    .vert_index = {93, 93, 75},
+    .vert_index = {76, 93, 75},
   },
   {
     .tri_index = 137,
-    .vert_index = {56, 56, 41},
+    .vert_index = {97, 56, 41},
   },
   {
     .tri_index = 138,
-    .vert_index = {97, 97, 84},
+    .vert_index = {57, 97, 84},
   },
   {
     .tri_index = 139,
-    .vert_index = {5, 5, 91},
+    .vert_index = {4, 5, 91},
   },
   {
     .tri_index = 140,
-    .vert_index = {5, 5, 96},
+    .vert_index = {91, 5, 96},
   },
   {
     .tri_index = 141,
-    .vert_index = {97, 97, 57},
+    .vert_index = {56, 97, 57},
   },
   {
     .tri_index = 142,
-    .vert_index = {52, 52, 95},
+    .vert_index = {58, 52, 95},
   },
   {
     .tri_index = 143,
-    .vert_index = {98, 98, 5},
+    .vert_index = {6, 98, 5},
   },
   {
     .tri_index = 144,
-    .vert_index = {88, 88, 97},
+    .vert_index = {41, 88, 97},
   },
   {
     .tri_index = 145,
-    .vert_index = {90, 90, 97},
+    .vert_index = {88, 90, 97},
   },
   {
     .tri_index = 146,
-    .vert_index = {75, 75, 94},
+    .vert_index = {98, 75, 94},
   },
   {
     .tri_index = 147,
-    .vert_index = {98, 98, 6},
+    .vert_index = {78, 98, 6},
   },
   {
     .tri_index = 148,
-    .vert_index = {95, 95, 59},
+    .vert_index = {58, 95, 59},
   },
   {
     .tri_index = 149,
-    .vert_index = {83, 83, 84},
+    .vert_index = {97, 83, 84},
   },
   {
     .tri_index = 150,
-    .vert_index = {94, 94, 96},
+    .vert_index = {98, 94, 96},
   },
   {
     .tri_index = 151,
-    .vert_index = {78, 78, 6},
+    .vert_index = {99, 78, 6},
   },
   {
     .tri_index = 152,
-    .vert_index = {98, 98, 78},
+    .vert_index = {75, 98, 78},
   },
   {
     .tri_index = 153,
-    .vert_index = {99, 99, 6},
+    .vert_index = {61, 99, 6},
   },
   {
     .tri_index = 154,
-    .vert_index = {6, 6, 48},
+    .vert_index = {61, 6, 48},
   },
   {
     .tri_index = 155,
-    .vert_index = {63, 63, 101},
+    .vert_index = {100, 63, 101},
   },
   {
     .tri_index = 156,
-    .vert_index = {63, 63, 93},
+    .vert_index = {101, 63, 93},
   },
   {
     .tri_index = 157,
-    .vert_index = {93, 93, 76},
+    .vert_index = {101, 93, 76},
   },
   {
     .tri_index = 158,
-    .vert_index = {78, 78, 99},
+    .vert_index = {102, 78, 99},
   },
   {
     .tri_index = 159,
-    .vert_index = {102, 102, 77},
+    .vert_index = {78, 102, 77},
   },
   {
     .tri_index = 160,
-    .vert_index = {99, 99, 104},
+    .vert_index = {103, 99, 104},
   },
   {
     .tri_index = 161,
-    .vert_index = {103, 103, 102},
+    .vert_index = {99, 103, 102},
   },
   {
     .tri_index = 162,
-    .vert_index = {61, 61, 68},
+    .vert_index = {99, 61, 68},
   },
   {
     .tri_index = 163,
-    .vert_index = {104, 104, 99},
+    .vert_index = {68, 104, 99},
   },
   {
     .tri_index = 164,
-    .vert_index = {59, 59, 93},
+    .vert_index = {63, 59, 93},
   },
   {
     .tri_index = 165,
-    .vert_index = {93, 93, 59},
+    .vert_index = {95, 93, 59},
   },
   {
     .tri_index = 166,
-    .vert_index = {106, 106, 100},
+    .vert_index = {105, 106, 100},
   },
   {
     .tri_index = 167,
-    .vert_index = {101, 101, 105},
+    .vert_index = {100, 101, 105},
   },
   {
     .tri_index = 168,
-    .vert_index = {105, 105, 107},
+    .vert_index = {106, 105, 107},
   },
   {
     .tri_index = 169,
-    .vert_index = {108, 108, 106},
+    .vert_index = {107, 108, 106},
   },
   {
     .tri_index = 170,
-    .vert_index = {23, 23, 74},
+    .vert_index = {109, 23, 74},
   },
   {
     .tri_index = 171,
-    .vert_index = {102, 102, 103},
+    .vert_index = {107, 102, 103},
   },
   {
     .tri_index = 172,
-    .vert_index = {23, 23, 109},
+    .vert_index = {80, 23, 109},
   },
   {
     .tri_index = 173,
-    .vert_index = {77, 77, 102},
+    .vert_index = {107, 77, 102},
   },
   {
     .tri_index = 174,
-    .vert_index = {107, 107, 105},
+    .vert_index = {77, 107, 105},
   },
   {
     .tri_index = 175,
-    .vert_index = {105, 105, 76},
+    .vert_index = {77, 105, 76},
   },
   {
     .tri_index = 176,
-    .vert_index = {105, 105, 101},
+    .vert_index = {76, 105, 101},
   },
 };
 
@@ -14069,315 +14069,315 @@ struct md5_mesh_vert boblamp_2_verts[] = {
 struct md5_mesh_tri boblamp_2_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {1, 1, 3},
+    .vert_index = {0, 1, 3},
   },
   {
     .tri_index = 2,
-    .vert_index = {6, 6, 5},
+    .vert_index = {4, 6, 5},
   },
   {
     .tri_index = 3,
-    .vert_index = {4, 4, 7},
+    .vert_index = {6, 4, 7},
   },
   {
     .tri_index = 4,
-    .vert_index = {10, 10, 9},
+    .vert_index = {8, 10, 9},
   },
   {
     .tri_index = 5,
-    .vert_index = {9, 9, 11},
+    .vert_index = {8, 9, 11},
   },
   {
     .tri_index = 6,
-    .vert_index = {14, 14, 13},
+    .vert_index = {12, 14, 13},
   },
   {
     .tri_index = 7,
-    .vert_index = {14, 14, 16},
+    .vert_index = {15, 14, 16},
   },
   {
     .tri_index = 8,
-    .vert_index = {19, 19, 18},
+    .vert_index = {17, 19, 18},
   },
   {
     .tri_index = 9,
-    .vert_index = {22, 22, 21},
+    .vert_index = {20, 22, 21},
   },
   {
     .tri_index = 10,
-    .vert_index = {21, 21, 23},
+    .vert_index = {20, 21, 23},
   },
   {
     .tri_index = 11,
-    .vert_index = {26, 26, 25},
+    .vert_index = {24, 26, 25},
   },
   {
     .tri_index = 12,
-    .vert_index = {25, 25, 27},
+    .vert_index = {24, 25, 27},
   },
   {
     .tri_index = 13,
-    .vert_index = {30, 30, 29},
+    .vert_index = {28, 30, 29},
   },
   {
     .tri_index = 14,
-    .vert_index = {29, 29, 31},
+    .vert_index = {28, 29, 31},
   },
   {
     .tri_index = 15,
-    .vert_index = {34, 34, 33},
+    .vert_index = {32, 34, 33},
   },
   {
     .tri_index = 16,
-    .vert_index = {35, 35, 32},
+    .vert_index = {33, 35, 32},
   },
   {
     .tri_index = 17,
-    .vert_index = {37, 37, 36},
+    .vert_index = {34, 37, 36},
   },
   {
     .tri_index = 18,
-    .vert_index = {33, 33, 34},
+    .vert_index = {36, 33, 34},
   },
   {
     .tri_index = 19,
-    .vert_index = {39, 39, 38},
+    .vert_index = {37, 39, 38},
   },
   {
     .tri_index = 20,
-    .vert_index = {36, 36, 37},
+    .vert_index = {38, 36, 37},
   },
   {
     .tri_index = 21,
-    .vert_index = {41, 41, 40},
+    .vert_index = {39, 41, 40},
   },
   {
     .tri_index = 22,
-    .vert_index = {38, 38, 39},
+    .vert_index = {40, 38, 39},
   },
   {
     .tri_index = 23,
-    .vert_index = {43, 43, 42},
+    .vert_index = {41, 43, 42},
   },
   {
     .tri_index = 24,
-    .vert_index = {40, 40, 41},
+    .vert_index = {42, 40, 41},
   },
   {
     .tri_index = 25,
-    .vert_index = {45, 45, 44},
+    .vert_index = {32, 45, 44},
   },
   {
     .tri_index = 26,
-    .vert_index = {32, 32, 35},
+    .vert_index = {45, 32, 35},
   },
   {
     .tri_index = 27,
-    .vert_index = {47, 47, 46},
+    .vert_index = {44, 47, 46},
   },
   {
     .tri_index = 28,
-    .vert_index = {44, 44, 45},
+    .vert_index = {47, 44, 45},
   },
   {
     .tri_index = 29,
-    .vert_index = {49, 49, 48},
+    .vert_index = {46, 49, 48},
   },
   {
     .tri_index = 30,
-    .vert_index = {46, 46, 47},
+    .vert_index = {49, 46, 47},
   },
   {
     .tri_index = 31,
-    .vert_index = {51, 51, 50},
+    .vert_index = {48, 51, 50},
   },
   {
     .tri_index = 32,
-    .vert_index = {48, 48, 49},
+    .vert_index = {51, 48, 49},
   },
   {
     .tri_index = 33,
-    .vert_index = {50, 50, 42},
+    .vert_index = {43, 50, 42},
   },
   {
     .tri_index = 34,
-    .vert_index = {50, 50, 51},
+    .vert_index = {42, 50, 51},
   },
   {
     .tri_index = 35,
-    .vert_index = {54, 54, 53},
+    .vert_index = {52, 54, 53},
   },
   {
     .tri_index = 36,
-    .vert_index = {53, 53, 55},
+    .vert_index = {52, 53, 55},
   },
   {
     .tri_index = 37,
-    .vert_index = {57, 57, 56},
+    .vert_index = {52, 57, 56},
   },
   {
     .tri_index = 38,
-    .vert_index = {56, 56, 54},
+    .vert_index = {52, 56, 54},
   },
   {
     .tri_index = 39,
-    .vert_index = {60, 60, 59},
+    .vert_index = {58, 60, 59},
   },
   {
     .tri_index = 40,
-    .vert_index = {58, 58, 59},
+    .vert_index = {61, 58, 59},
   },
   {
     .tri_index = 41,
-    .vert_index = {64, 64, 63},
+    .vert_index = {62, 64, 63},
   },
   {
     .tri_index = 42,
-    .vert_index = {63, 63, 65},
+    .vert_index = {62, 63, 65},
   },
   {
     .tri_index = 43,
-    .vert_index = {65, 65, 66},
+    .vert_index = {62, 65, 66},
   },
   {
     .tri_index = 44,
-    .vert_index = {68, 68, 67},
+    .vert_index = {65, 68, 67},
   },
   {
     .tri_index = 45,
-    .vert_index = {65, 65, 67},
+    .vert_index = {66, 65, 67},
   },
   {
     .tri_index = 46,
-    .vert_index = {69, 69, 67},
+    .vert_index = {68, 69, 67},
   },
   {
     .tri_index = 47,
-    .vert_index = {60, 60, 58},
+    .vert_index = {70, 60, 58},
   },
   {
     .tri_index = 48,
-    .vert_index = {58, 58, 71},
+    .vert_index = {70, 58, 71},
   },
   {
     .tri_index = 49,
-    .vert_index = {70, 70, 71},
+    .vert_index = {72, 70, 71},
   },
   {
     .tri_index = 50,
-    .vert_index = {71, 71, 73},
+    .vert_index = {72, 71, 73},
   },
   {
     .tri_index = 51,
-    .vert_index = {72, 72, 73},
+    .vert_index = {74, 72, 73},
   },
   {
     .tri_index = 52,
-    .vert_index = {73, 73, 75},
+    .vert_index = {74, 73, 75},
   },
   {
     .tri_index = 53,
-    .vert_index = {74, 74, 77},
+    .vert_index = {76, 74, 77},
   },
   {
     .tri_index = 54,
-    .vert_index = {75, 75, 77},
+    .vert_index = {74, 75, 77},
   },
   {
     .tri_index = 55,
-    .vert_index = {76, 76, 77},
+    .vert_index = {53, 76, 77},
   },
   {
     .tri_index = 56,
-    .vert_index = {77, 77, 55},
+    .vert_index = {53, 77, 55},
   },
   {
     .tri_index = 57,
-    .vert_index = {79, 79, 61},
+    .vert_index = {78, 79, 61},
   },
   {
     .tri_index = 58,
-    .vert_index = {61, 61, 59},
+    .vert_index = {78, 61, 59},
   },
   {
     .tri_index = 59,
-    .vert_index = {56, 56, 57},
+    .vert_index = {78, 56, 57},
   },
   {
     .tri_index = 60,
-    .vert_index = {57, 57, 79},
+    .vert_index = {78, 57, 79},
   },
   {
     .tri_index = 61,
-    .vert_index = {63, 63, 64},
+    .vert_index = {69, 63, 64},
   },
   {
     .tri_index = 62,
-    .vert_index = {68, 68, 63},
+    .vert_index = {69, 68, 63},
   },
   {
     .tri_index = 63,
-    .vert_index = {64, 64, 77},
+    .vert_index = {75, 64, 77},
   },
   {
     .tri_index = 64,
-    .vert_index = {75, 75, 73},
+    .vert_index = {69, 75, 73},
   },
   {
     .tri_index = 65,
-    .vert_index = {64, 64, 75},
+    .vert_index = {69, 64, 75},
   },
   {
     .tri_index = 66,
-    .vert_index = {69, 69, 73},
+    .vert_index = {71, 69, 73},
   },
   {
     .tri_index = 67,
-    .vert_index = {71, 71, 58},
+    .vert_index = {67, 71, 58},
   },
   {
     .tri_index = 68,
-    .vert_index = {69, 69, 71},
+    .vert_index = {67, 69, 71},
   },
   {
     .tri_index = 69,
-    .vert_index = {62, 62, 52},
+    .vert_index = {55, 62, 52},
   },
   {
     .tri_index = 70,
-    .vert_index = {55, 55, 77},
+    .vert_index = {64, 55, 77},
   },
   {
     .tri_index = 71,
-    .vert_index = {62, 62, 55},
+    .vert_index = {64, 62, 55},
   },
   {
     .tri_index = 72,
-    .vert_index = {52, 52, 62},
+    .vert_index = {57, 52, 62},
   },
   {
     .tri_index = 73,
-    .vert_index = {57, 57, 66},
+    .vert_index = {79, 57, 66},
   },
   {
     .tri_index = 74,
-    .vert_index = {66, 66, 57},
+    .vert_index = {62, 66, 57},
   },
   {
     .tri_index = 75,
-    .vert_index = {61, 61, 79},
+    .vert_index = {66, 61, 79},
   },
   {
     .tri_index = 76,
-    .vert_index = {67, 67, 58},
+    .vert_index = {61, 67, 58},
   },
   {
     .tri_index = 77,
-    .vert_index = {67, 67, 61},
+    .vert_index = {66, 67, 61},
   },
 };
 
@@ -14978,67 +14978,67 @@ struct md5_mesh_vert boblamp_3_verts[] = {
 struct md5_mesh_tri boblamp_3_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {0, 0, 3},
+    .vert_index = {2, 0, 3},
   },
   {
     .tri_index = 2,
-    .vert_index = {6, 6, 5},
+    .vert_index = {4, 6, 5},
   },
   {
     .tri_index = 3,
-    .vert_index = {5, 5, 7},
+    .vert_index = {4, 5, 7},
   },
   {
     .tri_index = 4,
-    .vert_index = {4, 4, 7},
+    .vert_index = {8, 4, 7},
   },
   {
     .tri_index = 5,
-    .vert_index = {7, 7, 9},
+    .vert_index = {8, 7, 9},
   },
   {
     .tri_index = 6,
-    .vert_index = {8, 8, 9},
+    .vert_index = {10, 8, 9},
   },
   {
     .tri_index = 7,
-    .vert_index = {9, 9, 11},
+    .vert_index = {10, 9, 11},
   },
   {
     .tri_index = 8,
-    .vert_index = {10, 10, 11},
+    .vert_index = {12, 10, 11},
   },
   {
     .tri_index = 9,
-    .vert_index = {11, 11, 13},
+    .vert_index = {12, 11, 13},
   },
   {
     .tri_index = 10,
-    .vert_index = {16, 16, 15},
+    .vert_index = {14, 16, 15},
   },
   {
     .tri_index = 11,
-    .vert_index = {15, 15, 17},
+    .vert_index = {14, 15, 17},
   },
   {
     .tri_index = 12,
-    .vert_index = {14, 14, 17},
+    .vert_index = {3, 14, 17},
   },
   {
     .tri_index = 13,
-    .vert_index = {17, 17, 2},
+    .vert_index = {3, 17, 2},
   },
   {
     .tri_index = 14,
-    .vert_index = {0, 0, 1},
+    .vert_index = {6, 0, 1},
   },
   {
     .tri_index = 15,
-    .vert_index = {6, 6, 1},
+    .vert_index = {5, 6, 1},
   },
 };
 
@@ -15387,91 +15387,91 @@ struct md5_mesh_vert boblamp_4_verts[] = {
 struct md5_mesh_tri boblamp_4_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {5, 5, 4},
+    .vert_index = {3, 5, 4},
   },
   {
     .tri_index = 2,
-    .vert_index = {8, 8, 7},
+    .vert_index = {6, 8, 7},
   },
   {
     .tri_index = 3,
-    .vert_index = {6, 6, 9},
+    .vert_index = {8, 6, 9},
   },
   {
     .tri_index = 4,
-    .vert_index = {4, 4, 2},
+    .vert_index = {10, 4, 2},
   },
   {
     .tri_index = 5,
-    .vert_index = {2, 2, 11},
+    .vert_index = {10, 2, 11},
   },
   {
     .tri_index = 6,
-    .vert_index = {14, 14, 13},
+    .vert_index = {12, 14, 13},
   },
   {
     .tri_index = 7,
-    .vert_index = {16, 16, 15},
+    .vert_index = {14, 16, 15},
   },
   {
     .tri_index = 8,
-    .vert_index = {18, 18, 17},
+    .vert_index = {14, 18, 17},
   },
   {
     .tri_index = 9,
-    .vert_index = {20, 20, 19},
+    .vert_index = {14, 20, 19},
   },
   {
     .tri_index = 10,
-    .vert_index = {22, 22, 21},
+    .vert_index = {14, 22, 21},
   },
   {
     .tri_index = 11,
-    .vert_index = {24, 24, 23},
+    .vert_index = {14, 24, 23},
   },
   {
     .tri_index = 12,
-    .vert_index = {26, 26, 25},
+    .vert_index = {14, 26, 25},
   },
   {
     .tri_index = 13,
-    .vert_index = {28, 28, 27},
+    .vert_index = {14, 28, 27},
   },
   {
     .tri_index = 14,
-    .vert_index = {31, 31, 30},
+    .vert_index = {29, 31, 30},
   },
   {
     .tri_index = 15,
-    .vert_index = {32, 32, 31},
+    .vert_index = {29, 32, 31},
   },
   {
     .tri_index = 16,
-    .vert_index = {33, 33, 32},
+    .vert_index = {29, 33, 32},
   },
   {
     .tri_index = 17,
-    .vert_index = {34, 34, 33},
+    .vert_index = {29, 34, 33},
   },
   {
     .tri_index = 18,
-    .vert_index = {35, 35, 34},
+    .vert_index = {29, 35, 34},
   },
   {
     .tri_index = 19,
-    .vert_index = {36, 36, 35},
+    .vert_index = {29, 36, 35},
   },
   {
     .tri_index = 20,
-    .vert_index = {37, 37, 36},
+    .vert_index = {29, 37, 36},
   },
   {
     .tri_index = 21,
-    .vert_index = {30, 30, 37},
+    .vert_index = {29, 30, 37},
   },
 };
 
@@ -16522,427 +16522,427 @@ struct md5_mesh_vert boblamp_5_verts[] = {
 struct md5_mesh_tri boblamp_5_tris[] = {
   {
     .tri_index = 0,
-    .vert_index = {2, 2, 1},
+    .vert_index = {0, 2, 1},
   },
   {
     .tri_index = 1,
-    .vert_index = {1, 1, 3},
+    .vert_index = {0, 1, 3},
   },
   {
     .tri_index = 2,
-    .vert_index = {6, 6, 5},
+    .vert_index = {4, 6, 5},
   },
   {
     .tri_index = 3,
-    .vert_index = {4, 4, 7},
+    .vert_index = {6, 4, 7},
   },
   {
     .tri_index = 4,
-    .vert_index = {10, 10, 9},
+    .vert_index = {8, 10, 9},
   },
   {
     .tri_index = 5,
-    .vert_index = {8, 8, 11},
+    .vert_index = {10, 8, 11},
   },
   {
     .tri_index = 6,
-    .vert_index = {14, 14, 13},
+    .vert_index = {12, 14, 13},
   },
   {
     .tri_index = 7,
-    .vert_index = {12, 12, 15},
+    .vert_index = {14, 12, 15},
   },
   {
     .tri_index = 8,
-    .vert_index = {18, 18, 17},
+    .vert_index = {16, 18, 17},
   },
   {
     .tri_index = 9,
-    .vert_index = {16, 16, 19},
+    .vert_index = {18, 16, 19},
   },
   {
     .tri_index = 10,
-    .vert_index = {22, 22, 21},
+    .vert_index = {20, 22, 21},
   },
   {
     .tri_index = 11,
-    .vert_index = {20, 20, 23},
+    .vert_index = {22, 20, 23},
   },
   {
     .tri_index = 12,
-    .vert_index = {0, 0, 25},
+    .vert_index = {24, 0, 25},
   },
   {
     .tri_index = 13,
-    .vert_index = {24, 24, 2},
+    .vert_index = {0, 24, 2},
   },
   {
     .tri_index = 14,
-    .vert_index = {26, 26, 8},
+    .vert_index = {9, 26, 8},
   },
   {
     .tri_index = 15,
-    .vert_index = {9, 9, 27},
+    .vert_index = {26, 9, 27},
   },
   {
     .tri_index = 16,
-    .vert_index = {19, 19, 28},
+    .vert_index = {18, 19, 28},
   },
   {
     .tri_index = 17,
-    .vert_index = {29, 29, 18},
+    .vert_index = {28, 29, 18},
   },
   {
     .tri_index = 18,
-    .vert_index = {30, 30, 11},
+    .vert_index = {26, 30, 11},
   },
   {
     .tri_index = 19,
-    .vert_index = {8, 8, 26},
+    .vert_index = {11, 8, 26},
   },
   {
     .tri_index = 20,
-    .vert_index = {23, 23, 20},
+    .vert_index = {31, 23, 20},
   },
   {
     .tri_index = 21,
-    .vert_index = {32, 32, 31},
+    .vert_index = {20, 32, 31},
   },
   {
     .tri_index = 22,
-    .vert_index = {33, 33, 10},
+    .vert_index = {11, 33, 10},
   },
   {
     .tri_index = 23,
-    .vert_index = {11, 11, 34},
+    .vert_index = {33, 11, 34},
   },
   {
     .tri_index = 24,
-    .vert_index = {36, 36, 32},
+    .vert_index = {35, 36, 32},
   },
   {
     .tri_index = 25,
-    .vert_index = {35, 35, 37},
+    .vert_index = {36, 35, 37},
   },
   {
     .tri_index = 26,
-    .vert_index = {4, 4, 29},
+    .vert_index = {28, 4, 29},
   },
   {
     .tri_index = 27,
-    .vert_index = {28, 28, 7},
+    .vert_index = {4, 28, 7},
   },
   {
     .tri_index = 28,
-    .vert_index = {38, 38, 9},
+    .vert_index = {10, 38, 9},
   },
   {
     .tri_index = 29,
-    .vert_index = {10, 10, 33},
+    .vert_index = {38, 10, 33},
   },
   {
     .tri_index = 30,
-    .vert_index = {13, 13, 24},
+    .vert_index = {12, 13, 24},
   },
   {
     .tri_index = 31,
-    .vert_index = {25, 25, 12},
+    .vert_index = {24, 25, 12},
   },
   {
     .tri_index = 32,
-    .vert_index = {37, 37, 35},
+    .vert_index = {39, 37, 35},
   },
   {
     .tri_index = 33,
-    .vert_index = {21, 21, 39},
+    .vert_index = {35, 21, 39},
   },
   {
     .tri_index = 34,
-    .vert_index = {42, 42, 41},
+    .vert_index = {40, 42, 41},
   },
   {
     .tri_index = 35,
-    .vert_index = {40, 40, 43},
+    .vert_index = {42, 40, 43},
   },
   {
     .tri_index = 36,
-    .vert_index = {46, 46, 45},
+    .vert_index = {44, 46, 45},
   },
   {
     .tri_index = 37,
-    .vert_index = {44, 44, 47},
+    .vert_index = {46, 44, 47},
   },
   {
     .tri_index = 38,
-    .vert_index = {49, 49, 48},
+    .vert_index = {41, 49, 48},
   },
   {
     .tri_index = 39,
-    .vert_index = {51, 51, 50},
+    .vert_index = {44, 51, 50},
   },
   {
     .tri_index = 40,
-    .vert_index = {53, 53, 52},
+    .vert_index = {45, 53, 52},
   },
   {
     .tri_index = 41,
-    .vert_index = {55, 55, 54},
+    .vert_index = {40, 55, 54},
   },
   {
     .tri_index = 42,
-    .vert_index = {44, 44, 56},
+    .vert_index = {51, 44, 56},
   },
   {
     .tri_index = 43,
-    .vert_index = {47, 47, 44},
+    .vert_index = {50, 47, 44},
   },
   {
     .tri_index = 44,
-    .vert_index = {41, 41, 57},
+    .vert_index = {49, 41, 57},
   },
   {
     .tri_index = 45,
-    .vert_index = {41, 41, 42},
+    .vert_index = {57, 41, 42},
   },
   {
     .tri_index = 46,
-    .vert_index = {40, 40, 58},
+    .vert_index = {55, 40, 58},
   },
   {
     .tri_index = 47,
-    .vert_index = {43, 43, 40},
+    .vert_index = {54, 43, 40},
   },
   {
     .tri_index = 48,
-    .vert_index = {45, 45, 59},
+    .vert_index = {53, 45, 59},
   },
   {
     .tri_index = 49,
-    .vert_index = {45, 45, 46},
+    .vert_index = {59, 45, 46},
   },
   {
     .tri_index = 50,
-    .vert_index = {43, 43, 60},
+    .vert_index = {42, 43, 60},
   },
   {
     .tri_index = 51,
-    .vert_index = {42, 42, 60},
+    .vert_index = {57, 42, 60},
   },
   {
     .tri_index = 52,
-    .vert_index = {43, 43, 54},
+    .vert_index = {60, 43, 54},
   },
   {
     .tri_index = 53,
-    .vert_index = {46, 46, 47},
+    .vert_index = {61, 46, 47},
   },
   {
     .tri_index = 54,
-    .vert_index = {61, 61, 59},
+    .vert_index = {46, 61, 59},
   },
   {
     .tri_index = 55,
-    .vert_index = {47, 47, 50},
+    .vert_index = {61, 47, 50},
   },
   {
     .tri_index = 56,
-    .vert_index = {64, 64, 63},
+    .vert_index = {62, 64, 63},
   },
   {
     .tri_index = 57,
-    .vert_index = {65, 65, 64},
+    .vert_index = {62, 65, 64},
   },
   {
     .tri_index = 58,
-    .vert_index = {67, 67, 65},
+    .vert_index = {66, 67, 65},
   },
   {
     .tri_index = 59,
-    .vert_index = {68, 68, 67},
+    .vert_index = {66, 68, 67},
   },
   {
     .tri_index = 60,
-    .vert_index = {63, 63, 64},
+    .vert_index = {69, 63, 64},
   },
   {
     .tri_index = 61,
-    .vert_index = {64, 64, 65},
+    .vert_index = {69, 64, 65},
   },
   {
     .tri_index = 62,
-    .vert_index = {65, 65, 67},
+    .vert_index = {70, 65, 67},
   },
   {
     .tri_index = 63,
-    .vert_index = {67, 67, 68},
+    .vert_index = {70, 67, 68},
   },
   {
     .tri_index = 64,
-    .vert_index = {73, 73, 72},
+    .vert_index = {71, 73, 72},
   },
   {
     .tri_index = 65,
-    .vert_index = {74, 74, 73},
+    .vert_index = {71, 74, 73},
   },
   {
     .tri_index = 66,
-    .vert_index = {76, 76, 75},
+    .vert_index = {72, 76, 75},
   },
   {
     .tri_index = 67,
-    .vert_index = {72, 72, 73},
+    .vert_index = {76, 72, 73},
   },
   {
     .tri_index = 68,
-    .vert_index = {79, 79, 78},
+    .vert_index = {77, 79, 78},
   },
   {
     .tri_index = 69,
-    .vert_index = {77, 77, 80},
+    .vert_index = {79, 77, 80},
   },
   {
     .tri_index = 70,
-    .vert_index = {81, 81, 79},
+    .vert_index = {80, 81, 79},
   },
   {
     .tri_index = 71,
-    .vert_index = {80, 80, 82},
+    .vert_index = {81, 80, 82},
   },
   {
     .tri_index = 72,
-    .vert_index = {83, 83, 73},
+    .vert_index = {74, 83, 73},
   },
   {
     .tri_index = 73,
-    .vert_index = {84, 84, 83},
+    .vert_index = {74, 84, 83},
   },
   {
     .tri_index = 74,
-    .vert_index = {85, 85, 76},
+    .vert_index = {73, 85, 76},
   },
   {
     .tri_index = 75,
-    .vert_index = {73, 73, 83},
+    .vert_index = {85, 73, 83},
   },
   {
     .tri_index = 76,
-    .vert_index = {80, 80, 87},
+    .vert_index = {86, 80, 87},
   },
   {
     .tri_index = 77,
-    .vert_index = {86, 86, 82},
+    .vert_index = {80, 86, 82},
   },
   {
     .tri_index = 78,
-    .vert_index = {77, 77, 88},
+    .vert_index = {87, 77, 88},
   },
   {
     .tri_index = 79,
-    .vert_index = {87, 87, 80},
+    .vert_index = {77, 87, 80},
   },
   {
     .tri_index = 80,
-    .vert_index = {91, 91, 90},
+    .vert_index = {89, 91, 90},
   },
   {
     .tri_index = 81,
-    .vert_index = {91, 91, 89},
+    .vert_index = {92, 91, 89},
   },
   {
     .tri_index = 82,
-    .vert_index = {95, 95, 94},
+    .vert_index = {93, 95, 94},
   },
   {
     .tri_index = 83,
-    .vert_index = {93, 93, 96},
+    .vert_index = {95, 93, 96},
   },
   {
     .tri_index = 84,
-    .vert_index = {99, 99, 98},
+    .vert_index = {97, 99, 98},
   },
   {
     .tri_index = 85,
-    .vert_index = {100, 100, 99},
+    .vert_index = {97, 100, 99},
   },
   {
     .tri_index = 86,
-    .vert_index = {103, 103, 102},
+    .vert_index = {101, 103, 102},
   },
   {
     .tri_index = 87,
-    .vert_index = {101, 101, 104},
+    .vert_index = {103, 101, 104},
   },
   {
     .tri_index = 88,
-    .vert_index = {107, 107, 106},
+    .vert_index = {105, 107, 106},
   },
   {
     .tri_index = 89,
-    .vert_index = {107, 107, 105},
+    .vert_index = {108, 107, 105},
   },
   {
     .tri_index = 90,
-    .vert_index = {111, 111, 110},
+    .vert_index = {109, 111, 110},
   },
   {
     .tri_index = 91,
-    .vert_index = {109, 109, 112},
+    .vert_index = {111, 109, 112},
   },
   {
     .tri_index = 92,
-    .vert_index = {115, 115, 114},
+    .vert_index = {113, 115, 114},
   },
   {
     .tri_index = 93,
-    .vert_index = {113, 113, 116},
+    .vert_index = {115, 113, 116},
   },
   {
     .tri_index = 94,
-    .vert_index = {119, 119, 118},
+    .vert_index = {117, 119, 118},
   },
   {
     .tri_index = 95,
-    .vert_index = {117, 117, 120},
+    .vert_index = {119, 117, 120},
   },
   {
     .tri_index = 96,
-    .vert_index = {123, 123, 122},
+    .vert_index = {121, 123, 122},
   },
   {
     .tri_index = 97,
-    .vert_index = {121, 121, 124},
+    .vert_index = {123, 121, 124},
   },
   {
     .tri_index = 98,
-    .vert_index = {127, 127, 126},
+    .vert_index = {125, 127, 126},
   },
   {
     .tri_index = 99,
-    .vert_index = {128, 128, 125},
+    .vert_index = {126, 128, 125},
   },
   {
     .tri_index = 100,
-    .vert_index = {131, 131, 130},
+    .vert_index = {129, 131, 130},
   },
   {
     .tri_index = 101,
-    .vert_index = {129, 129, 132},
+    .vert_index = {131, 129, 132},
   },
   {
     .tri_index = 102,
-    .vert_index = {125, 125, 128},
+    .vert_index = {130, 125, 128},
   },
   {
     .tri_index = 103,
-    .vert_index = {130, 130, 133},
+    .vert_index = {125, 130, 133},
   },
   {
     .tri_index = 104,
-    .vert_index = {132, 132, 129},
+    .vert_index = {134, 132, 129},
   },
   {
     .tri_index = 105,
-    .vert_index = {126, 126, 134},
+    .vert_index = {129, 126, 134},
   },
 };
 

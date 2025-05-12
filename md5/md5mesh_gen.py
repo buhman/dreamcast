@@ -37,7 +37,7 @@ def render_md5_mesh_vert(vert):
 
 def render_md5_mesh_tri(tri):
     yield f".tri_index = {tri.tri_index},"
-    vi = f"{{{tri.vert_index2}, {tri.vert_index2}, {tri.vert_index3}}}"
+    vi = f"{{{tri.vert_index1}, {tri.vert_index2}, {tri.vert_index3}}}"
     yield f".vert_index = {vi},"
 
 def render_md5_mesh_weight(weight):
