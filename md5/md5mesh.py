@@ -11,7 +11,7 @@ class MD5MeshJoint:
     z_pos: float = None
     x_orient: float = None
     y_orient: float = None
-    y_orient: float = None
+    z_orient: float = None
 
 @dataclass
 class MD5MeshVert:
@@ -215,9 +215,7 @@ def parse_ordered_list(l, ix, md5mesh):
     if string == "joints":
         ix = parse_joints(l, ix, md5mesh)
     elif string == "mesh":
-        print("parse-mesh1", ix)
         ix = parse_mesh(l, ix, md5mesh)
-        print("parse-mesh2", ix)
     else:
         assert False, string
 
@@ -233,12 +231,11 @@ def parse_file(l):
     while ix < len(l):
         ix = parse_ordered_list(l, ix, md5mesh)
 
-    pprint(md5mesh)
+    return md5mesh
 
 if __name__ == "__main__":
     with open(sys.argv[1], 'r') as f:
         buf = f.read()
-
     l = [i.strip() for i in buf.split('\n') if i.strip()]
-
-    parse_file(l)
+    md5mesh = parse_file(l)
+    pprint(md5mesh)
