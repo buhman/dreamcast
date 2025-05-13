@@ -2,6 +2,8 @@ from generate import renderer
 from math import sqrt
 import sys
 import md5mesh
+from os import path
+from PIL import Image
 
 def vec2(a, b):
     return f"{{{a:.6f}, {b:.6f}}}"
@@ -18,6 +20,13 @@ def unit_quaternion_w(x, y, z):
         return 0.0
     else:
         return -sqrt(t)
+
+def sanitize_name(name):
+    return name.replace("-", "_").replace("/", "_").replace(".", "_")
+
+def shader_to_data_name(shader):
+    name = path.splitext(shader)[0]
+    return sanitize_name(name)
 
 def render_md5_mesh_joint(joint):
     yield f'.bone_name = "{joint.bone_name}",'
@@ -48,7 +57,8 @@ def render_md5_mesh_weight(weight):
     yield f".pos = {pos},"
 
 def render_md5_mesh_mesh(prefix, i, mesh):
-    yield f'.shader = "{mesh.shader}",'
+    name = shader_to_data_name(mesh.shader)
+    yield f'.shader = &{prefix}_{name}, // {mesh.shader}'
     yield f".num_verts = {mesh.num_verts},"
     yield f".verts = {prefix}_{i}_verts,"
     yield f".num_tris = {mesh.num_tris},"
@@ -94,11 +104,46 @@ def render_md5_mesh_joints(prefix, joints):
         yield "},"
     yield "};"
 
-def render_md5_mesh_meshes(prefix, meshes):
+offset = None
+
+def render_shader(prefix, dirname, shader):
+    global offset
+    name = shader_to_data_name(shader)
+    dir = sanitize_name(dirname)
+    filename = path.join(dirname, shader)
+    with Image.open(filename) as im:
+        width, height = im.size
+
+    yield f"struct md5_shader {prefix}_{name} = {{"
+    yield f".start = (void *)&_binary_{dir}_{name}_data_start,"
+    yield f".size = (int)&_binary_{dir}_{name}_data_size,"
+    yield f".width = {width},"
+    yield f".height = {height},"
+    yield f".offset = {offset},"
+    yield "};"
+
+    offset += width * height * 2
+
+def render_md5_mesh_shaders(prefix, dirname, meshes):
+    global offset
+    offset = 0
+
+    shaders = set(mesh.shader for mesh in meshes)
+    for shader in shaders:
+        yield from render_shader(prefix, dirname, shader)
+    yield f"struct md5_shader * {prefix}_shaders[] = {{"
+    for shader in shaders:
+        name = shader_to_data_name(shader)
+        yield f"&{prefix}_{name},"
+    yield "};"
+
+def render_md5_mesh_meshes(prefix, dirname, meshes):
     for i, mesh in enumerate(meshes):
         yield from render_md5_mesh_verts(prefix, i, mesh.verts)
         yield from render_md5_mesh_tris(prefix, i, mesh.tris)
         yield from render_md5_mesh_weights(prefix, i, mesh.weights)
+
+    yield from render_md5_mesh_shaders(prefix, dirname, meshes)
 
     yield f"struct md5_mesh_mesh {prefix}_meshes[] = {{"
     for i, mesh in enumerate(meshes):
@@ -107,23 +152,28 @@ def render_md5_mesh_meshes(prefix, meshes):
         yield "},"
     yield "};"
 
-def render_mesh(prefix, m):
+def render_mesh(prefix, dirname, m):
     yield from render_md5_mesh_joints(prefix, m.joints)
-    yield from render_md5_mesh_meshes(prefix, m.meshes)
+    yield from render_md5_mesh_meshes(prefix, dirname, m.meshes)
 
     yield f"struct md5_mesh {prefix}_mesh = {{"
     yield from render_md5_mesh(prefix, m)
     yield "};"
 
-def render_all(prefix, m):
-    yield from render_mesh(prefix, m)
+def render_all(prefix, dirname, m):
+    yield from render_mesh(prefix, dirname, m)
 
 if __name__ == "__main__":
-    with open(sys.argv[1], 'r') as f:
+    filename = sys.argv[1]
+    prefix = sys.argv[2]
+
+    dirname = path.split(filename)[0]
+
+    with open(filename, 'r') as f:
         buf = f.read()
     l = [i.strip() for i in buf.split('\n') if i.strip()]
     m = md5mesh.parse_file(l)
 
     render, out = renderer()
-    render(render_all(sys.argv[2], m))
+    render(render_all(prefix, dirname, m))
     sys.stdout.write(out.getvalue())

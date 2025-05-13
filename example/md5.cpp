@@ -47,6 +47,11 @@ using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
+#include "model/boblamp/guard1_body.data.h"
+#include "model/boblamp/guard1_face.data.h"
+#include "model/boblamp/guard1_helmet.data.h"
+#include "model/boblamp/iron_grill.data.h"
+#include "model/boblamp/round_grill.data.h"
 #include "md5/md5mesh.h"
 #include "md5/md5anim.h"
 #include "model/boblamp/boblamp_mesh.h"
@@ -241,6 +246,9 @@ void transfer_triangle(ta_parameter_writer& writer,
                        vec3 ap,
                        vec3 bp,
                        vec3 cp,
+                       vec2 at,
+                       vec2 bt,
+                       vec2 ct,
                        vec3 ac,
                        vec3 bc,
                        vec3 cc
@@ -249,23 +257,29 @@ void transfer_triangle(ta_parameter_writer& writer,
   if (ap.z < 0 || bp.z < 0 || cp.z < 0)
     return;
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_5>() =
+    ta_vertex_parameter::polygon_type_5(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
+                                        at.x, at.y,
                                         1.0,
-                                        ac.x, ac.y, ac.z);
+                                        ac.x, ac.y, ac.z,
+                                        0, 0, 0, 0);
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_5>() =
+    ta_vertex_parameter::polygon_type_5(polygon_vertex_parameter_control_word(false),
                                         bp.x, bp.y, bp.z,
+                                        bt.x, bt.y,
                                         1.0,
-                                        bc.x, bc.y, bc.z);
+                                        bc.x, bc.y, bc.z,
+                                        0, 0, 0, 0);
 
-  writer.append<ta_vertex_parameter::polygon_type_1>() =
-    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(true),
+  writer.append<ta_vertex_parameter::polygon_type_5>() =
+    ta_vertex_parameter::polygon_type_5(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
+                                        ct.x, ct.y,
                                         1.0,
-                                        cc.x, cc.y, cc.z);
+                                        cc.x, cc.y, cc.z,
+                                        0, 0, 0, 0);
 }
 
 vec4 quaternion_normalize(vec4 q)
@@ -403,7 +417,7 @@ vec3 vertex_weight_color(const md5_mesh_joint * joints,
     }
   }
 
-  return {0.0, 0.0, 1.0};
+  return {1.0, 1.0, 1.0};
 }
 
 static inline vec3 screen_transform(vec3 v)
@@ -469,6 +483,9 @@ void transfer_mesh(ta_parameter_writer& writer,
                       screen_transform(ap),
                       screen_transform(bp),
                       screen_transform(cp),
+                      av->tex,
+                      bv->tex,
+                      cv->tex,
                       ac * a_diffuse,
                       bc * b_diffuse,
                       cc * c_diffuse
@@ -476,20 +493,29 @@ void transfer_mesh(ta_parameter_writer& writer,
   }
 }
 
-void transfer_scene(ta_parameter_writer& writer,
-                    const mat4x4& screen_trans)
+void global_polygon(ta_parameter_writer& writer, const md5_shader * shader)
 {
-  uint32_t control = para_control::list_type::opaque;
+  uint32_t control = para_control::list_type::opaque
+                   | obj_control::texture;
   uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                 | tsp_instruction_word::dst_alpha_instr::zero
                                 | tsp_instruction_word::fog_control::no_fog
-                                | tsp_instruction_word::texture_shading_instruction::decal;
-  uint32_t texture_control_word = 0;
+                                | tsp_instruction_word::texture_shading_instruction::modulate
+                                | tsp_instruction_word::texture_u_size::from_int(shader->width)
+                                | tsp_instruction_word::texture_v_size::from_int(shader->height);
+  uint32_t texture_address = texture_memory_alloc.texture.start + shader->offset;
+  uint32_t texture_control_word = texture_control_word::pixel_format::_565
+                                | texture_control_word::scan_order::twiddled
+                                | texture_control_word::texture_address(texture_address / 8);
   global_polygon_type_0(writer,
                         control,
                         tsp_instruction_word,
                         texture_control_word);
+}
 
+void transfer_scene(ta_parameter_writer& writer,
+                    const mat4x4& screen_trans)
+{
   int frame_ix0 = animation_tick / ticks_per_animation_frame;
   int frame_ix1 = frame_ix0 + 1;
   if (frame_ix1 >= animation_frames)
@@ -500,8 +526,13 @@ void transfer_scene(ta_parameter_writer& writer,
   float lerp = (float)(animation_tick - (frame_ix0 * ticks_per_animation_frame)) * tick_div;
   interpolate_skeleton(anim->num_joints, skeleton0, skeleton1, lerp);
 
+  const md5_shader * last_shader = NULL;
+
   for (int i = 0; i < boblamp_mesh.num_meshes; i++) {
-    transfer_mesh(writer, screen_trans, boblamp_mesh.joints, &boblamp_mesh.meshes[i]);
+    const md5_mesh_mesh * mesh = &boblamp_mesh.meshes[i];
+    if (last_shader != mesh->shader)
+      global_polygon(writer, mesh->shader);
+    transfer_mesh(writer, screen_trans, boblamp_mesh.joints, mesh);
   }
 
   writer.append<ta_global_parameter::end_of_list>() =
@@ -554,6 +585,57 @@ void update_maple(struct md5_mesh * m, struct md5_anim * a)
   last_da = da;
 }
 
+void transfer_ta_fifo_texture_memory_32byte(void * dst, const void * src, int length)
+{
+  assert((((int)dst) & 31) == 0);
+  assert((((int)length) & 31) == 0);
+
+  uint32_t out_addr = (uint32_t)dst;
+  sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+  sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+
+  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffe0) / 4];
+  const uint32_t * src32 = reinterpret_cast<const uint32_t *>(src);
+
+  length = (length + 31) & ~31; // round up to nearest multiple of 32
+  while (length > 0) {
+    base[0] = src32[0];
+    base[1] = src32[1];
+    base[2] = src32[2];
+    base[3] = src32[3];
+    base[4] = src32[4];
+    base[5] = src32[5];
+    base[6] = src32[6];
+    base[7] = src32[7];
+    asm volatile ("pref @%0"
+                  :                // output
+                  : "r" (&base[0]) // input
+                  : "memory");
+    length -= 32;
+    base += 8;
+    src32 += 8;
+  }
+}
+
+void transfer_boblamp_textures()
+{
+  for (uint32_t i = 0; i < (sizeof (boblamp_shaders)) / (sizeof (boblamp_shaders[0])); i++) {
+    const md5_shader * shader = boblamp_shaders[i];
+
+    uint32_t offset = texture_memory_alloc.texture.start + shader->offset;
+    void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
+    transfer_ta_fifo_texture_memory_32byte(dst, shader->start, shader->size);
+  }
+}
+
+void transfer_textures()
+{
+  system.LMMODE0 = 0; // 64-bit address space
+  system.LMMODE1 = 0; // 64-bit address space
+
+  transfer_boblamp_textures();
+}
+
 uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024];
 
 int main()
@@ -591,6 +673,8 @@ int main()
   background_parameter2(texture_memory_alloc.background[0].start,
                         0xff202040);
 
+  transfer_textures();
+
   ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   video_output::set_mode_vga();
@@ -612,7 +696,7 @@ int main()
     do_get_condition();
     update_maple(&boblamp_mesh, &boblamp_anim);
 
-    //screen_trans = screen_trans * rotate_z(0.01f);
+    screen_trans = screen_trans * rotate_z(0.003f);
 
     writer.offset = 0;
     transfer_scene(writer, screen_trans);

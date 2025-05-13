@@ -30,8 +30,16 @@ struct md5_mesh_weight {
   const vec3 pos;
 };
 
+struct md5_shader {
+  const void * start;
+  const int size;
+  const int width;
+  const int height;
+  const int offset;
+};
+
 struct md5_mesh_mesh {
-  const char * shader;
+  const md5_shader * shader;
   const int num_verts;
   const md5_mesh_vert * verts;
   const int num_tris;

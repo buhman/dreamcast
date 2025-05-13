@@ -17759,9 +17759,57 @@ struct md5_mesh_weight boblamp_5_weights[] = {
   },
 };
 
+struct md5_shader boblamp_guard1_helmet = {
+  .start = (void *)&_binary_model_boblamp_guard1_helmet_data_start,
+  .size = (int)&_binary_model_boblamp_guard1_helmet_data_size,
+  .width = 256,
+  .height = 256,
+  .offset = 0,
+};
+
+struct md5_shader boblamp_round_grill = {
+  .start = (void *)&_binary_model_boblamp_round_grill_data_start,
+  .size = (int)&_binary_model_boblamp_round_grill_data_size,
+  .width = 256,
+  .height = 256,
+  .offset = 131072,
+};
+
+struct md5_shader boblamp_iron_grill = {
+  .start = (void *)&_binary_model_boblamp_iron_grill_data_start,
+  .size = (int)&_binary_model_boblamp_iron_grill_data_size,
+  .width = 256,
+  .height = 256,
+  .offset = 262144,
+};
+
+struct md5_shader boblamp_guard1_face = {
+  .start = (void *)&_binary_model_boblamp_guard1_face_data_start,
+  .size = (int)&_binary_model_boblamp_guard1_face_data_size,
+  .width = 512,
+  .height = 256,
+  .offset = 393216,
+};
+
+struct md5_shader boblamp_guard1_body = {
+  .start = (void *)&_binary_model_boblamp_guard1_body_data_start,
+  .size = (int)&_binary_model_boblamp_guard1_body_data_size,
+  .width = 512,
+  .height = 512,
+  .offset = 655360,
+};
+
+struct md5_shader * boblamp_shaders[] = {
+  &boblamp_guard1_helmet,
+  &boblamp_round_grill,
+  &boblamp_iron_grill,
+  &boblamp_guard1_face,
+  &boblamp_guard1_body,
+};
+
 struct md5_mesh_mesh boblamp_meshes[] = {
   {
-    .shader = "guard1_body.tga",
+    .shader = &boblamp_guard1_body, // guard1_body.tga
     .num_verts = 494,
     .verts = boblamp_0_verts,
     .num_tris = 628,
@@ -17770,7 +17818,7 @@ struct md5_mesh_mesh boblamp_meshes[] = {
     .weights = boblamp_0_weights,
   },
   {
-    .shader = "guard1_face.tga",
+    .shader = &boblamp_guard1_face, // guard1_face.tga
     .num_verts = 110,
     .verts = boblamp_1_verts,
     .num_tris = 177,
@@ -17779,7 +17827,7 @@ struct md5_mesh_mesh boblamp_meshes[] = {
     .weights = boblamp_1_weights,
   },
   {
-    .shader = "guard1_helmet.tga",
+    .shader = &boblamp_guard1_helmet, // guard1_helmet.tga
     .num_verts = 80,
     .verts = boblamp_2_verts,
     .num_tris = 78,
@@ -17788,7 +17836,7 @@ struct md5_mesh_mesh boblamp_meshes[] = {
     .weights = boblamp_2_weights,
   },
   {
-    .shader = "iron_grill.tga",
+    .shader = &boblamp_iron_grill, // iron_grill.tga
     .num_verts = 18,
     .verts = boblamp_3_verts,
     .num_tris = 16,
@@ -17797,7 +17845,7 @@ struct md5_mesh_mesh boblamp_meshes[] = {
     .weights = boblamp_3_weights,
   },
   {
-    .shader = "round_grill.tga",
+    .shader = &boblamp_round_grill, // round_grill.tga
     .num_verts = 38,
     .verts = boblamp_4_verts,
     .num_tris = 22,
@@ -17806,7 +17854,7 @@ struct md5_mesh_mesh boblamp_meshes[] = {
     .weights = boblamp_4_weights,
   },
   {
-    .shader = "guard1_body.tga",
+    .shader = &boblamp_guard1_body, // guard1_body.tga
     .num_verts = 135,
     .verts = boblamp_5_verts,
     .num_tris = 106,

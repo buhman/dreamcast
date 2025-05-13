@@ -28,5 +28,5 @@ constexpr texture_memory_alloc texture_memory_alloc = {
   .background         = {{0x1c2000, 0x1c2020},
                          {0x5c2000, 0x5c2020}},
   // 64-bit addresses
-  .texture            =  {0x384040, 0x800000}
+  .texture            =  {0x384080, 0x800000}
 };
