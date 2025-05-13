@@ -54,6 +54,11 @@ using mat4x4 = mat<4, 4, float>;
 
 static int joint_ix_sel = 0;
 
+static int animation_tick = 0;
+static int animation_frames = 0;
+constexpr int ticks_per_animation_frame = 3;
+constexpr float tick_div = 1.0f / (float)ticks_per_animation_frame;
+
 static ft0::data_transfer::data_format data[4];
 
 uint8_t send_buf[1024] __attribute__((aligned(32)));
@@ -307,6 +312,65 @@ vec3 quaternion_rotate_point(vec4 q, vec3 v)
   return (vec3){qv.x, qv.y, qv.z};
 }
 
+static inline float quaternion_unit_w(vec4 q)
+{
+  float t = 1.0 - (q.x * q.x) - (q.y * q.y) - (q.z * q.z);
+  if (t < 0.0)
+    return 0.0;
+  else
+    return -sqrt(t);
+}
+
+struct pos_orient {
+  vec3 pos;
+  vec4 orient;
+};
+
+pos_orient skeleton0[64];
+pos_orient skeleton1[64];
+
+void build_skeleton(const md5_anim * anim, int frame_ix, pos_orient * skeleton)
+{
+  for (int i = 0; i < anim->num_joints; i++) {
+    md5_anim_base_frame * base_frame = &anim->base_frame[i];
+
+    vec3 pos = base_frame->pos;
+    vec4 orient = base_frame->orient;
+
+    float * frame = anim->frame[frame_ix];
+
+    md5_anim_hierarchy * hierarchy = &anim->hierarchy[i];
+    assert(hierarchy->flags == 0b111111);
+    pos.x = frame[hierarchy->start_index + 0];
+    pos.y = frame[hierarchy->start_index + 1];
+    pos.z = frame[hierarchy->start_index + 2];
+    orient.x = frame[hierarchy->start_index + 3];
+    orient.y = frame[hierarchy->start_index + 4];
+    orient.z = frame[hierarchy->start_index + 5];
+    orient.w = quaternion_unit_w(orient);
+
+    if (hierarchy->parent_index >= 0) {
+      pos_orient * parent = &skeleton[hierarchy->parent_index];
+      vec3 rpos = quaternion_rotate_point(parent->orient, pos);
+      pos = rpos + parent->pos;
+
+      orient = quaternion_mul_quaternion(parent->orient, orient);
+      orient = quaternion_normalize(orient);
+    }
+
+    skeleton[i].pos = pos;
+    skeleton[i].orient = orient;
+  }
+}
+
+void interpolate_skeleton(int length, pos_orient * a, pos_orient * b, float lerp)
+{
+  for (int i = 0; i < length; i++) {
+    a[i].pos = a[i].pos + (b[i].pos - a[i].pos) * lerp;
+    a[i].orient = a[i].orient + (b[i].orient - a[i].orient) * lerp;
+  }
+}
+
 vec3 vertex_weights(const md5_mesh_joint * joints,
                     const md5_mesh_mesh * mesh,
                     const md5_mesh_vert * v)
@@ -317,7 +381,8 @@ vec3 vertex_weights(const md5_mesh_joint * joints,
 
   for (int i = 0; i < v->weight_elem; i++) {
     const md5_mesh_weight * weight = &weights[i];
-    const md5_mesh_joint * joint = &joints[weight->joint_index];
+    //const md5_mesh_joint * joint = &joints[weight->joint_index];
+    pos_orient * joint = &skeleton0[weight->joint_index];
     vec3 rv = quaternion_rotate_point(joint->orient, weight->pos);
     sum += (joint->pos + rv) * weight->weight_value;
   }
@@ -425,6 +490,16 @@ void transfer_scene(ta_parameter_writer& writer,
                         tsp_instruction_word,
                         texture_control_word);
 
+  int frame_ix0 = animation_tick / ticks_per_animation_frame;
+  int frame_ix1 = frame_ix0 + 1;
+  if (frame_ix1 >= animation_frames)
+    frame_ix1 = 0;
+  md5_anim * anim = &boblamp_anim;
+  build_skeleton(anim, frame_ix0, skeleton0);
+  build_skeleton(anim, frame_ix1, skeleton1);
+  float lerp = (float)(animation_tick - (frame_ix0 * ticks_per_animation_frame)) * tick_div;
+  interpolate_skeleton(anim->num_joints, skeleton0, skeleton1, lerp);
+
   for (int i = 0; i < boblamp_mesh.num_meshes; i++) {
     transfer_mesh(writer, screen_trans, boblamp_mesh.joints, &boblamp_mesh.meshes[i]);
   }
@@ -433,13 +508,17 @@ void transfer_scene(ta_parameter_writer& writer,
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 }
 
-void update_maple(struct md5_mesh * m)
+void update_maple(struct md5_mesh * m, struct md5_anim * a)
 {
   int ra = ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0;
   int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
+  int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
+  int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
 
   static int last_ra = 0;
   static int last_la = 0;
+  static int last_ua = 0;
+  static int last_da = 0;
 
   if (ra && last_ra == 0) {
     joint_ix_sel += 1;
@@ -454,8 +533,25 @@ void update_maple(struct md5_mesh * m)
       joint_ix_sel = m->num_joints - 1;
   }
 
+  /*
+  if (ua && last_ua == 0) {
+    frame_ix_sel += 1;
+    printf("frame_ix_sel: %d\n", frame_ix_sel);
+    if (frame_ix_sel >= a->num_frames)
+      frame_ix_sel = 0;
+  }
+  if (da && last_da == 0) {
+    frame_ix_sel -= 1;
+    printf("frame_ix_sel: %d\n", frame_ix_sel);
+    if (frame_ix_sel < 0)
+      frame_ix_sel = a->num_frames - 1;
+  }
+  */
+
   last_ra = ra;
   last_la = la;
+  last_ua = ua;
+  last_da = da;
 }
 
 uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024];
@@ -508,13 +604,15 @@ int main()
 
   screen_trans = translate((vec3){0, 30, 0}) * screen_trans;
 
+  animation_tick = 0;
+  animation_frames = boblamp_anim.num_frames;
   do_get_condition();
   while (1) {
     maple::dma_wait_complete();
     do_get_condition();
-    update_maple(&boblamp_mesh);
+    update_maple(&boblamp_mesh, &boblamp_anim);
 
-    screen_trans = screen_trans * rotate_z(0.01f);
+    //screen_trans = screen_trans * rotate_z(0.01f);
 
     writer.offset = 0;
     transfer_scene(writer, screen_trans);
@@ -533,5 +631,10 @@ int main()
     ta_polygon_converter_transfer(writer.buf, writer.offset);
     while (next_frame == 0);
     next_frame = 0;
+
+    // increment tick
+    animation_tick += 1;
+    if (animation_tick >= animation_frames * ticks_per_animation_frame)
+      animation_tick = 0;
   }
 }
