@@ -50,6 +50,7 @@ using mat4x4 = mat<4, 4, float>;
 #include "md5/md5.h"
 #include "model/boblamp/boblamp.h"
 
+static int joint_ix_sel = 0;
 
 static ft0::data_transfer::data_format data[4];
 
@@ -199,7 +200,7 @@ void vbr600()
   interrupt_exception();
 }
 
-void global_polygon_type_1(ta_parameter_writer& writer,
+void global_polygon_type_0(ta_parameter_writer& writer,
                            uint32_t para_control_obj_control,
                            uint32_t tsp_instruction_word,
                            uint32_t texture_control_word,
@@ -210,7 +211,7 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
-                                        | obj_control::col_type::intensity_mode_1
+                                        | obj_control::col_type::floating_color
                                         | obj_control::gouraud
                                         | para_control_obj_control
                                         ;
@@ -219,15 +220,13 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                           | isp_tsp_instruction_word::culling_mode::no_culling
                                           ;
 
-  writer.append<ta_global_parameter::polygon_type_1>() =
-    ta_global_parameter::polygon_type_1(parameter_control_word,
+  writer.append<ta_global_parameter::polygon_type_0>() =
+    ta_global_parameter::polygon_type_0(parameter_control_word,
                                         isp_tsp_instruction_word,
                                         tsp_instruction_word,
                                         texture_control_word,
-                                        a,
-                                        r,
-                                        g,
-                                        b
+                                        0,
+                                        0
                                         );
 }
 
@@ -235,28 +234,31 @@ void transfer_triangle(ta_parameter_writer& writer,
                        vec3 ap,
                        vec3 bp,
                        vec3 cp,
-                       float ai,
-                       float bi,
-                       float ci
+                       vec3 ac,
+                       vec3 bc,
+                       vec3 cc
                        )
 {
   if (ap.z < 0 || bp.z < 0 || cp.z < 0)
     return;
 
-  writer.append<ta_vertex_parameter::polygon_type_2>() =
-    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_1>() =
+    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
                                         ap.x, ap.y, ap.z,
-                                        ai);
+                                        1.0,
+                                        ac.x, ac.y, ac.z);
 
-  writer.append<ta_vertex_parameter::polygon_type_2>() =
-    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(false),
+  writer.append<ta_vertex_parameter::polygon_type_1>() =
+    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(false),
                                         bp.x, bp.y, bp.z,
-                                        bi);
+                                        1.0,
+                                        bc.x, bc.y, bc.z);
 
-  writer.append<ta_vertex_parameter::polygon_type_2>() =
-    ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
+  writer.append<ta_vertex_parameter::polygon_type_1>() =
+    ta_vertex_parameter::polygon_type_1(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
-                                        ci);
+                                        1.0,
+                                        cc.x, cc.y, cc.z);
 }
 
 vec4 quaternion_normalize(vec4 q)
@@ -321,6 +323,22 @@ vec3 vertex_weights(const md5_mesh_joint * joints,
   return sum;
 }
 
+vec3 vertex_weight_color(const md5_mesh_joint * joints,
+                         const md5_mesh_mesh * mesh,
+                         const md5_mesh_vert * v)
+{
+  const md5_mesh_weight * weights = &mesh->weights[v->weight_index];
+
+  for (int i = 0; i < v->weight_elem; i++) {
+    const md5_mesh_weight * weight = &weights[i];
+    if (weight->joint_index == joint_ix_sel) {
+      return {weight->weight_value, 1.0f - weight->weight_value, 0.0};
+    }
+  }
+
+  return {0.0, 0.0, 1.0};
+}
+
 static inline vec3 screen_transform(vec3 v)
 {
   float x2 = 640 / 2.0;
@@ -376,13 +394,18 @@ void transfer_mesh(ta_parameter_writer& writer,
     float b_diffuse = max(dot(n, b_light_dir), 0.0f);
     float c_diffuse = max(dot(n, c_light_dir), 0.0f);
 
+    vec3 ac = vertex_weight_color(joints, mesh, av);
+    vec3 bc = vertex_weight_color(joints, mesh, bv);
+    vec3 cc = vertex_weight_color(joints, mesh, cv);
+
     transfer_triangle(writer,
                       screen_transform(ap),
                       screen_transform(bp),
                       screen_transform(cp),
-                      a_diffuse,
-                      b_diffuse,
-                      c_diffuse);
+                      ac * a_diffuse,
+                      bc * b_diffuse,
+                      cc * c_diffuse
+                      );
   }
 }
 
@@ -395,7 +418,7 @@ void transfer_scene(ta_parameter_writer& writer,
                                 | tsp_instruction_word::fog_control::no_fog
                                 | tsp_instruction_word::texture_shading_instruction::decal;
   uint32_t texture_control_word = 0;
-  global_polygon_type_1(writer,
+  global_polygon_type_0(writer,
                         control,
                         tsp_instruction_word,
                         texture_control_word);
@@ -406,6 +429,31 @@ void transfer_scene(ta_parameter_writer& writer,
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+}
+
+void update_maple(struct md5_mesh * m)
+{
+  int ra = ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0;
+  int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
+
+  static int last_ra = 0;
+  static int last_la = 0;
+
+  if (ra && last_ra == 0) {
+    joint_ix_sel += 1;
+    printf("joint_ix_sel: %d\n", joint_ix_sel);
+    if (joint_ix_sel >= m->num_joints)
+      joint_ix_sel = 0;
+  }
+  if (la && last_la == 0) {
+    joint_ix_sel -= 1;
+    printf("joint_ix_sel: %d\n", joint_ix_sel);
+    if (joint_ix_sel < 0)
+      joint_ix_sel = m->num_joints - 1;
+  }
+
+  last_ra = ra;
+  last_la = la;
 }
 
 uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024];
@@ -462,6 +510,7 @@ int main()
   while (1) {
     maple::dma_wait_complete();
     do_get_condition();
+    update_maple(&boblamp_mesh);
 
     screen_trans = screen_trans * rotate_z(0.01f);
 
