@@ -47,8 +47,10 @@ using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
 using mat4x4 = mat<4, 4, float>;
 
-#include "md5/md5.h"
-#include "model/boblamp/boblamp.h"
+#include "md5/md5mesh.h"
+#include "md5/md5anim.h"
+#include "model/boblamp/boblamp_mesh.h"
+#include "model/boblamp/boblamp_anim.h"
 
 static int joint_ix_sel = 0;
 
