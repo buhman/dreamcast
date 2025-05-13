@@ -1075,6 +1075,11 @@ MD5_OBJ = \
 	printf/parse.o \
 	texture/container/container2.data.o \
 	texture/container/container2_specular.data.o \
+	model/boblamp/guard1_body.data.o \
+	model/boblamp/guard1_face.data.o \
+	model/boblamp/guard1_helmet.data.o \
+	model/boblamp/iron_grill.data.o \
+	model/boblamp/round_grill.data.o \
 	$(LIBGCC)
 
 example/md5.elf: LDSCRIPT = $(LIB)/main.lds

@@ -555,7 +555,7 @@ void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
   sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
   sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
 
-  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffc0) / 4];
+  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffe0) / 4];
   uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
 
   length = (length + 31) & ~31; // round up to nearest multiple of 32
