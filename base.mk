@@ -123,6 +123,12 @@ endef
 %.glm.o: %.glm
 	$(BUILD_BINARY_O)
 
+%.xm.h: %.xm
+	$(BUILD_BINARY_H)
+
+%.xm.o: %.xm
+	$(BUILD_BINARY_O)
+
 %.o: %.s
 	$(AS) $(AARCH) $(AFLAGS) $(DEBUG) $< -o $@
 

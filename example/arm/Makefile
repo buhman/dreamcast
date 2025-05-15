@@ -2,7 +2,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 DIR := $(dir $(MAKEFILE_PATH))
 
 LIB ?= .
-OPT ?= -O3
+OPT ?= -O1
 GENERATED ?=
 
 AARCH = -march=armv4 -mlittle-endian
@@ -26,7 +26,7 @@ sh4_interrupt.elf: LDSCRIPT = main.lds
 sh4_interrupt.elf: start.o sh4_interrupt.o
 
 xm.elf: LDSCRIPT = main.lds
-xm.elf: start.o xm.o audio.pcm.o
+xm.elf: start.o xm.o ../../xm/milkypack01.xm.o
 
 clean:
 	find -P \

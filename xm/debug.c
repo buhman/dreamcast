@@ -161,6 +161,8 @@ int debug_pattern_headers(void * buf)
 {
   xm_header_t * header = (xm_header_t *)buf;
   int pattern_header_offset = s32(&header->header_size) + (offsetof (struct xm_header, header_size));
+  printf("pattern number of patterns: %08x\n", s16(&header->number_of_patterns));
+  printf("pattern header offset: %08x\n", pattern_header_offset);
 
   for (int i = 0; i < s16(&header->number_of_patterns); i++) {
     xm_pattern_header_t * pattern_header = (xm_pattern_header_t *)(((ptrdiff_t)buf) + pattern_header_offset);
@@ -172,6 +174,7 @@ int debug_pattern_headers(void * buf)
     printf("  packed_pattern_data_size: %d\n", s16(&pattern_header->packed_pattern_data_size));
     //debug_pattern(pattern_header);
     pattern_header_offset += s32(&pattern_header->pattern_header_length) + s16(&pattern_header->packed_pattern_data_size);
+    printf("pattern header offset: %08x\n", pattern_header_offset);
   }
   return pattern_header_offset;
 }
@@ -303,6 +306,8 @@ int debug_instruments(void * buf, int offset)
       offset = debug_samples(buf, offset, i, s16(&instrument_header->number_of_samples));
     }
   }
+
+  return offset;
 }
 
 int main(int argc, const char *argv[])
@@ -318,5 +323,6 @@ int main(int argc, const char *argv[])
 
   debug_header(buf);
   int end_of_patterns = debug_pattern_headers(buf);
-  debug_instruments(buf, end_of_patterns);
+  int end_of_instruments = debug_instruments(buf, end_of_patterns);
+  printf("end_of_instruments: %08x\n", end_of_instruments);
 }

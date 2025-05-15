@@ -38,5 +38,13 @@ void main()
   serial::string("mrwinh: ");
   wait();
   serial::integer<uint8_t>(aica_sound.common.MRWINH());
-  while (1);
+  int last_dram = -1;
+  while (1) {
+    wait();
+    int read = aica_wave_memory[0];
+    if (read != last_dram) {
+      serial::integer<uint32_t>(read);
+    }
+    last_dram = read;
+  };
 }
