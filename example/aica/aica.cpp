@@ -35,10 +35,10 @@ void main()
 
   wait(); aica_sound.common.afsel_mslc_mobuf = aica::afsel_mslc_mobuf::MSLC(0);
   serial::string("mrwinh: ");
-  wait_read();
+  wait();
   serial::integer<uint8_t>(aica_sound.common.MRWINH());
   while (1) {
-    wait_read();
+    wait();
     serial::string("sgc: ");
     serial::integer<uint8_t>(aica_sound.common.SGC(), ' ');
     serial::string("; ca: ");

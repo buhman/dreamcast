@@ -9,7 +9,8 @@ example/aica/aica.elf: $(START_OBJ) $(AICA_OBJ)
 AICA_XM_OBJ = \
 	example/aica/aica_xm.o \
 	sh7091/serial.o \
-	example/arm/xm.bin.o
+	example/arm/xm.bin.o \
+	example/arm/channel.bin.o
 
 example/aica/aica_xm.elf: LDSCRIPT = $(LIB)/main.lds
 example/aica/aica_xm.elf: $(START_OBJ) $(AICA_XM_OBJ)

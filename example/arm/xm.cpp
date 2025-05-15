@@ -11,8 +11,11 @@ struct xm_state {
   xm_header_t * header;
   xm_pattern_header_t * pattern_header[max_patterns];
   xm_instrument_header_t * instrument_header[max_instruments];
-  xm_sample_header_t * sample_header; // array
+  xm_sample_header_t * sample_header[max_instruments]; // array
+  int sample_data_address[max_instruments];
 };
+
+uint8_t __attribute__((aligned(2))) sample_data[512 * 1024];
 
 static xm_state xm = {0};
 
@@ -30,26 +33,72 @@ int s32(void * buf)
   return v;
 }
 
-int xm_samples_init(int buf, int offset, int number_of_samples)
-{
-  xm_sample_header_t * sample_header[number_of_samples];
-  for (int i = 0; i < number_of_samples; i++) {
-    sample_header[i] = (xm_sample_header_t *)(buf + offset);
-    offset += (sizeof (xm_sample_header_t));
-  }
-
-  for (int i = 0; i < number_of_samples; i++) {
-    offset += s32(&sample_header[i]->sample_length);
-  }
-  return offset;
-}
-
 void print(int i)
 {
   for (int i = 0; i < 100000; i++) {
     asm volatile ("nop");
   }
   dram[0] = i;
+}
+
+int unpack_sample(int buf, int offset, int sample_ix, xm_sample_header_t * sample_header, int sample_data_ix)
+{
+  int size = s32(&sample_header->sample_length);
+  if (sample_header->type & (1 << 4)) { // 16-bit samples
+    int num_samples = size / 2;
+    int old = 0;
+    volatile int16_t * out = (volatile int16_t *)(&sample_data[sample_data_ix]);
+    print((int)out);
+    int16_t * in = (int16_t *)(buf + offset);
+    for (int i = 0; i < num_samples; i++) {
+      old += s16(&in[i]);
+      while (((uint16_t)out[i]) != ((uint16_t)old)) {
+        out[i] = old;
+        print((uint16_t)old);
+        print((uint16_t)out[i]);
+      }
+    }
+  } else { // 8-bit
+    int num_samples = size;
+    int old = 0;
+    volatile int8_t * out = (volatile int8_t *)(&sample_data[sample_data_ix]);
+    int8_t * in = (int8_t *)(buf + offset);
+    for (int i = 0; i < num_samples; i++) {
+      old += in[i];
+      out[i] = old;
+    }
+  }
+
+  if (size & 1) {
+    size += 1;
+  }
+
+  return size;
+}
+
+static int sample_data_ix;
+
+int xm_samples_init(int buf, int offset, int instrument_ix, int number_of_samples)
+{
+  xm_sample_header_t * sample_header[number_of_samples];
+  xm.sample_header[instrument_ix] = (xm_sample_header_t *)(buf + offset);
+  for (int i = 0; i < number_of_samples; i++) {
+    sample_header[i] = (xm_sample_header_t *)(buf + offset);
+    offset += (sizeof (xm_sample_header_t));
+  }
+
+  if (number_of_samples > 0) {
+    print(instrument_ix);
+    print(sample_data_ix);
+  }
+  for (int i = 0; i < number_of_samples; i++) {
+    if (s32(&sample_header[i]->sample_length) > 0) {
+      xm.sample_data_address[instrument_ix] = (int)(&sample_data[sample_data_ix]);
+      sample_data_ix += unpack_sample(buf, offset, instrument_ix, sample_header[i], sample_data_ix);
+    }
+    offset += s32(&sample_header[i]->sample_length);
+  }
+  return offset;
 }
 
 void xm_init()
@@ -74,6 +123,8 @@ void xm_init()
     print(offset);
   }
 
+  print(0xaaaaaaaa);
+  sample_data_ix = 0;
   int number_of_instruments = s16(&xm.header->number_of_instruments);
   for (int i = 0; i < number_of_instruments; i++) {
     xm_instrument_header_t * instrument_header = (xm_instrument_header_t *)(buf + offset);
@@ -82,7 +133,7 @@ void xm_init()
     offset += s32(&instrument_header->instrument_size);
 
     int number_of_samples = s16(&instrument_header->number_of_samples);
-    offset = xm_samples_init(buf, offset, number_of_samples);
+    offset = xm_samples_init(buf, offset, i, number_of_samples);
   }
 
   print(0x11223344);
@@ -112,7 +163,7 @@ void main()
   aica_sound.channel[0].RR(0x0);
   aica_sound.channel[0].AR(0x1f);
 
-  aica_sound.channel[0].OCT(0);
+  aica_sound.channel[0].OCT(-1);
   aica_sound.channel[0].FNS(0);
   aica_sound.channel[0].DISDL(0xf);
   aica_sound.channel[0].DIPAN(0x0);
@@ -128,17 +179,26 @@ void main()
     | aica::mono_mem8mb_dac18b_ver_mvol::MVOL(0xf) // 15/15 volume
     ;
 
-  uint32_t segment = 0;
-
   constexpr uint32_t timer_a_interrupt = (1 << 6);
   aica_sound.common.scire = timer_a_interrupt;
-  bool started = 0;
 
   xm_init();
 
+  print(xm.sample_data_address[0]);
+  aica_sound.channel[0].SA(xm.sample_data_address[0]);
+  int lsa = xm.sample_header[0]->sample_loop_start / 2;
+  int lea = xm.sample_header[0]->sample_loop_length / 2;
+  print(lsa);
+  print(lea);
+  aica_sound.channel[0].LSA(lsa);
+  aica_sound.channel[0].LEA(lsa + lea);
+  aica_sound.channel[0].KYONB(1);
+  aica_sound.channel[0].KYONEX(1);
+
   while (1) {
+    /*
     if (!started || (aica_sound.common.SCIPD() & timer_a_interrupt)) {
-      //aica_sound.channel[0].SA(next_sa);
+      aica_sound.channel[0].SA();
       aica_sound.common.tactl_tima =
           aica::tactl_tima::TACTL(0)  // increment once every 128 samples
         | aica::tactl_tima::TIMA(256 - 128) // interrupt after 128 counts
@@ -148,5 +208,6 @@ void main()
 
       aica_sound.common.scire = timer_a_interrupt;
     }
+    */
   }
 }
