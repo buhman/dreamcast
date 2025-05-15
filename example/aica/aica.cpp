@@ -9,11 +9,6 @@ extern void * _binary_size __asm("_binary_example_arm_channel_bin_size");
 
 void wait()
 {
-  while (ffst::aica_internal_write_buffer(system.FFST));
-}
-
-void wait_read()
-{
   uint32_t ffst = system.FFST;
   while ( ffst::holly_cpu_if_block_internal_write_buffer(ffst)
 	| ffst::holly_g2_if_block_internal_write_buffer(ffst)

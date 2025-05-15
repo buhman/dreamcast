@@ -69,6 +69,9 @@ endef
 %.bin.o: %.bin
 	$(BUILD_BINARY_O)
 
+%.bin.h: %.bin
+	$(BUILD_BINARY_H)
+
 %.pcm.o: %.pcm
 	$(BUILD_BINARY_O)
 
