@@ -47,7 +47,7 @@ void main()
 
   uint32_t segment = 0;
 
-  dram[0] = 0x11223344;
+  dram[0] = 0x11229944;
   dram[1] = sine_addr;
   constexpr uint32_t timer_a_interrupt = (1 << 6);
   aica_sound.common.scire = timer_a_interrupt;

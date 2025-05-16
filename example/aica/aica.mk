@@ -9,8 +9,12 @@ example/aica/aica.elf: $(START_OBJ) $(AICA_OBJ)
 AICA_XM_OBJ = \
 	example/aica/aica_xm.o \
 	sh7091/serial.o \
-	example/arm/xm.bin.o \
-	example/arm/channel.bin.o
+	example/arm/channel.bin.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	xm/milkypack01.xm.o
 
 example/aica/aica_xm.elf: LDSCRIPT = $(LIB)/main.lds
 example/aica/aica_xm.elf: $(START_OBJ) $(AICA_XM_OBJ)
