@@ -9,7 +9,6 @@ example/aica/aica.elf: $(START_OBJ) $(AICA_OBJ)
 AICA_XM_OBJ = \
 	example/aica/aica_xm.o \
 	sh7091/serial.o \
-	example/arm/channel.bin.o \
 	sh7091/c_serial.o \
 	printf/printf.o \
 	printf/unparse.o \

@@ -168,6 +168,8 @@ void g2_aica_dma(uint32_t g2_address, uint32_t system_address, int length)
                     | dmaor::dme::operation_enabled_on_all_channels; /* DMAC master enable */
 
 
+  g2_if.ADEN = 0; // disable G2-AICA-DMA
+
   g2_if.G2APRO = 0x4659007f; // disable protection
 
   g2_if.ADSTAG = dma_address_mask & g2_address; // G2 address
@@ -175,8 +177,8 @@ void g2_aica_dma(uint32_t g2_address, uint32_t system_address, int length)
   g2_if.ADLEN = length;
   g2_if.ADDIR = 0; // from root bus to G2 device
   g2_if.ADTSEL = 0; // CPU controlled trigger
-  g2_if.ADEN = 1; // enable G2-DMA
-  g2_if.ADST = 1; // start G2-DMA
+  g2_if.ADEN = 1; // enable G2-AICA-DMA
+  g2_if.ADST = 1; // start G2-AICA-DMA
 }
 
 void g2_aica_dma_wait_complete()
@@ -186,6 +188,189 @@ void g2_aica_dma_wait_complete()
   system.ISTNRM = istnrm::end_of_dma_aica_dma;
   assert(g2_if.ADST == 0);
 }
+
+void writeback(void const * const buf, uint32_t size)
+{
+  uint8_t const * const buf8 = reinterpret_cast<uint8_t const * const>(buf);
+
+  for (uint32_t i = 0; i < size / (32); i++) {
+    asm volatile ("ocbwb @%0"
+		  :                          // output
+		  : "r" (&buf8[i * 32]) // input
+                  : "memory"
+		  );
+  }
+}
+
+static xm_pattern_format_t column[8];
+
+void debug_pattern_format(int note_ix, xm_pattern_format_t * pf)
+{
+  /*
+  printf("note[%d]\n", note_ix);
+  printf("  note: %d\n", pf->note);
+  printf("  instrument: %d\n", pf->instrument);
+  printf("  volume_column_byte: %d\n", pf->volume_column_byte);
+  printf("  effect_type: %d\n", pf->effect_type);
+  printf("  effect_parameter: %d\n", pf->effect_parameter);
+  */
+  column[note_ix & 7].note = pf->note;
+  column[note_ix & 7].instrument = pf->instrument;
+  column[note_ix & 7].volume_column_byte = pf->volume_column_byte;
+  column[note_ix & 7].effect_type = pf->effect_type;
+  column[note_ix & 7].effect_parameter = pf->effect_parameter;
+
+  if ((note_ix & 7) == 7) {
+    printf("%3d |", note_ix / 8);
+    for (int i = 0; i < 8; i++)
+      printf(" n:%2d i:%2d |",
+             column[i].note, column[i].instrument);
+    printf("\n");
+  }
+}
+
+void debug_pattern(xm_pattern_header_t * pattern_header, int pattern_ix)
+{
+  uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
+  int ix = pattern_ix;
+  int note_ix = 0;
+  int end = s16(&pattern_header->packed_pattern_data_size);
+  while (ix < end) {
+    int p = pattern[ix];
+    if (p & 0x80) {
+      ix += 1;
+      xm_pattern_format_t pf = {};
+      if (p & (1 << 0))
+        pf.note = pattern[ix++];
+      if (p & (1 << 1))
+        pf.instrument = pattern[ix++];
+      if (p & (1 << 2))
+        pf.volume_column_byte = pattern[ix++];
+      if (p & (1 << 3))
+        pf.effect_type = pattern[ix++];
+      if (p & (1 << 4))
+        pf.effect_parameter = pattern[ix++];
+      debug_pattern_format(note_ix, &pf);
+    } else {
+      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[ix];
+      debug_pattern_format(note_ix, pf);
+      ix += 5;
+    }
+    note_ix += 1;
+  }
+  assert(ix == s16(&pattern_header->packed_pattern_data_size));
+}
+
+void debug_pattern1(xm_pattern_header_t * pattern_header, int pattern_ix, int len, int& note_ix)
+{
+  uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
+  int ix = pattern_ix;
+  int end = note_ix + len;
+  while (note_ix < end) {
+    int p = pattern[ix];
+    if (p & 0x80) {
+      ix += 1;
+      xm_pattern_format_t pf = {};
+      if (p & (1 << 0))
+        pf.note = pattern[ix++];
+      if (p & (1 << 1))
+        pf.instrument = pattern[ix++];
+      if (p & (1 << 2))
+        pf.volume_column_byte = pattern[ix++];
+      if (p & (1 << 3))
+        pf.effect_type = pattern[ix++];
+      if (p & (1 << 4))
+        pf.effect_parameter = pattern[ix++];
+      debug_pattern_format(note_ix, &pf);
+    } else {
+      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[ix];
+      debug_pattern_format(note_ix, pf);
+      ix += 5;
+    }
+    note_ix += 1;
+  }
+}
+
+uint16_t
+note_to_oct_fns(const int8_t note)
+{
+  static const uint16_t _cent_to_fns[] = {
+    0x0,
+    0x3d,
+    0x7d,
+    0xc2,
+    0x10a,
+    0x157,
+    0x1a8,
+    0x1fe,
+    0x25a,
+    0x2ba,
+    0x321,
+    0x38d,
+  };
+
+  const int8_t a440_note = note - 42;
+  const int8_t a440_note_d = (a440_note < 0) ? a440_note - 11 : a440_note;
+  const int8_t div12 = a440_note_d / static_cast<int8_t>(12);
+  const int8_t mod12 = a440_note % static_cast<int8_t>(12);
+
+  const uint16_t oct = div12;
+  const uint16_t cent = (a440_note < 0) ? 12 + mod12 : mod12;
+  const uint16_t fns = _cent_to_fns[cent];
+
+  return aica::oct_fns::OCT(oct - 3) | aica::oct_fns::FNS(fns);
+}
+
+void pattern_note(int ch, xm_pattern_format_t * pf, int rekey)
+{
+  if (pf->note == 97) {
+    if (!rekey) {
+      wait(); aica_sound.channel[ch].KYONB(0);
+    }
+  } else if (pf->note != 0 && pf->instrument != 0) {
+    if (rekey) {
+      wait(); aica_sound.channel[ch].KYONB(0);
+    } else {
+      wait(); aica_sound.channel[ch].SA(xm.sample_data_offset[pf->instrument - 1]);
+      int lsa = xm.sample_header[pf->instrument - 1]->sample_loop_start / 2;
+      int lea = xm.sample_header[pf->instrument - 1]->sample_loop_length / 2;
+      wait(); aica_sound.channel[ch].LSA(lsa);
+      wait(); aica_sound.channel[ch].LEA(lsa + lea);
+      wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note);
+      wait(); aica_sound.channel[ch].KYONB(1);
+    }
+  }
+}
+
+int pattern_channels(xm_pattern_header_t * pattern_header, int pattern_ix, int rekey)
+{
+  uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
+
+  for (int i = 0; i < 8; i++) {
+    int p = pattern[pattern_ix];
+    if (p & 0x80) {
+      pattern_ix += 1;
+      xm_pattern_format_t pf = {};
+      if (p & (1 << 0))
+        pf.note = pattern[pattern_ix++];
+      if (p & (1 << 1))
+        pf.instrument = pattern[pattern_ix++];
+      if (p & (1 << 2))
+        pf.volume_column_byte = pattern[pattern_ix++];
+      if (p & (1 << 3))
+        pf.effect_type = pattern[pattern_ix++];
+      if (p & (1 << 4))
+        pf.effect_parameter = pattern[pattern_ix++];
+      pattern_note(i, &pf, rekey);
+    } else {
+      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[pattern_ix];
+      pattern_note(i, pf, rekey);
+      pattern_ix += 5;
+    }
+  }
+  return pattern_ix;
+}
+
 
 uint8_t __attribute__((aligned(32))) zero[0x28c0] = {};
 
@@ -212,18 +397,30 @@ void main()
          xm.sample_data_offset[0],
          s32(&xm.sample_header[0]->sample_length));
 
+  printf("i[1] start %d size %d\n",
+         xm.sample_data_offset[1],
+         s32(&xm.sample_header[1]->sample_length));
+
   for (int i = 0; i < 16; i++) {
     serial::hexlify(&sample_data[i * 16], 16);
   }
 
   printf("transfer %08x %08x %d\n", (int)aica_wave_memory, (int)sample_data, sample_data_ix);
   // wave memory
-  g2_aica_dma((int)aica_wave_memory, (int)sample_data, (sample_data_ix + 31) & (~31));
-  g2_aica_dma_wait_complete();
-  g2_aica_dma((int)aica_wave_memory, (int)sample_data, (sample_data_ix + 31) & (~31));
-  g2_aica_dma_wait_complete();
 
-  /*
+  int size = (sample_data_ix + 31) & (~31);
+  writeback(sample_data, size);
+  system.ISTERR = 0xffffffff;
+  g2_aica_dma((int)aica_wave_memory, (int)sample_data, size);
+  g2_aica_dma_wait_complete();
+  printf("sar0 %08x\n", sh7091.DMAC.SAR0);
+  printf("dar0 %08x\n", sh7091.DMAC.DAR0);
+  printf("dmatcr0 %08x\n", sh7091.DMAC.DMATCR0);
+  printf("chcr0 %08x\n", sh7091.DMAC.CHCR0);
+  printf("isterr %08x\n", system.ISTERR);
+  //g2_aica_dma((int)aica_wave_memory, (int)sample_data, size);
+  //g2_aica_dma_wait_complete();
+
   for (int i = 0; i < 16; i++) {
     volatile uint8_t * s = &((volatile uint8_t*)aica_wave_memory)[i * 16];
     for (int j = 0; j < 16; j++) {
@@ -233,7 +430,6 @@ void main()
     }
     serial::character('\n');
   }
-  */
 
   sh7091.TMU.TSTR = 0; // stop all timers
   sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
@@ -244,25 +440,26 @@ void main()
 
   wait(); aica_sound.common.dmea0_mrwinh = aica::dmea0_mrwinh::MRWINH(0b0001);
 
-  /*
-  wait(); aica_sound.channel[0].KYONB(1);
-  wait(); aica_sound.channel[0].LPCTL(1);
-  wait(); aica_sound.channel[0].PCMS(0);
-  wait(); aica_sound.channel[0].LSA(0);
-  wait(); aica_sound.channel[0].LEA(44100);
-  wait(); aica_sound.channel[0].D2R(0x0);
-  wait(); aica_sound.channel[0].D1R(0x0);
-  wait(); aica_sound.channel[0].RR(0x0);
-  wait(); aica_sound.channel[0].AR(0x1f);
+  for (int i = 0; i < 8; i++) {
+    wait(); aica_sound.channel[i].KYONB(0);
+    wait(); aica_sound.channel[i].LPCTL(1);
+    wait(); aica_sound.channel[i].PCMS(0);
+    wait(); aica_sound.channel[i].LSA(0);
+    wait(); aica_sound.channel[i].LEA(0);
+    wait(); aica_sound.channel[i].D2R(0xa);
+    wait(); aica_sound.channel[i].D1R(0xa);
+    wait(); aica_sound.channel[i].RR(0xa);
+    wait(); aica_sound.channel[i].AR(0x1f);
 
-  wait(); aica_sound.channel[0].OCT(-3);
-  wait(); aica_sound.channel[0].FNS(0);
-  wait(); aica_sound.channel[0].DISDL(0xf);
-  wait(); aica_sound.channel[0].DIPAN(0x0);
+    wait(); aica_sound.channel[i].OCT(0);
+    wait(); aica_sound.channel[i].FNS(0);
+    wait(); aica_sound.channel[i].DISDL(0xf);
+    wait(); aica_sound.channel[i].DIPAN(0x0);
 
-  wait(); aica_sound.channel[0].Q(0b00100);
-  wait(); aica_sound.channel[0].TL(0);
-  wait(); aica_sound.channel[0].LPOFF(1);
+    wait(); aica_sound.channel[i].Q(0b00100);
+    wait(); aica_sound.channel[i].TL(0);
+    wait(); aica_sound.channel[i].LPOFF(1);
+  }
 
   wait(); aica_sound.common.mono_mem8mb_dac18b_ver_mvol =
       aica::mono_mem8mb_dac18b_ver_mvol::MONO(0)   // enable panpots
@@ -277,10 +474,46 @@ void main()
   printf("sa %d lsa %d lea %d\n", xm.sample_data_offset[0], lsa, lsa + lea);
   wait(); aica_sound.channel[0].LSA(lsa);
   wait(); aica_sound.channel[0].LEA(lsa + lea);
-  wait(); aica_sound.channel[0].KYONB(1);
-  wait(); aica_sound.channel[0].KYONEX(1);
-  */
+  //wait(); aica_sound.channel[0].KYONB(1);
+  //wait(); aica_sound.channel[0].KYONEX(1);
+
+  int tick = 0;
+
+  //debug_pattern(xm.pattern_header[12], 0);
+
+  int ix_ix = 0;
+  int pattern_ix = 0;
+  int note_ix = 0;
+
+  printf("pattern %d\n", ix_ix);
 
   while (1) {
+    xm_pattern_header_t * pattern_header = xm.pattern_header[ix_ix];
+    int pattern_data_size = s16(&pattern_header->packed_pattern_data_size);
+
+    int start = sh7091.TMU.TCNT0;
+    int end = sh7091.TMU.TCNT0;
+    while ((start - end) < 30000) {
+      end = sh7091.TMU.TCNT0;
+    }
+
+    debug_pattern1(pattern_header, pattern_ix, 8, note_ix);
+    pattern_channels(pattern_header, pattern_ix, true); // rekey
+    wait(); aica_sound.channel[0].KYONEX(1);
+    pattern_ix = pattern_channels(pattern_header, pattern_ix, false);
+    wait(); aica_sound.channel[0].KYONEX(1);
+
+    if (pattern_ix >= pattern_data_size) {
+      note_ix = 0;
+      pattern_ix = 0;
+      ix_ix += 1;
+      if (ix_ix >= 0xe)
+        ix_ix = 0;
+      printf("pattern %d\n", ix_ix);
+    }
+
+    tick += 1;
   }
+
+  while (1);
 }

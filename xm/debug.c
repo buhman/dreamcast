@@ -323,6 +323,7 @@ int main(int argc, const char *argv[])
 
   debug_header(buf);
   int end_of_patterns = debug_pattern_headers(buf);
+  printf("end_of_patterns: %d\n", end_of_patterns);
   int end_of_instruments = debug_instruments(buf, end_of_patterns);
-  printf("end_of_instruments: %08x\n", end_of_instruments);
+  printf("end_of_instruments: %d\n", end_of_instruments);
 }
