@@ -40,13 +40,11 @@ constexpr uint32_t strip_length = (sizeof (strip_vertices)) / (sizeof (struct ve
 static float theta = 0;
 constexpr float half_degree = 0.01745329f / 2.f;
 
-uint32_t transform(uint32_t * ta_parameter_buf,
-		   const vertex * strip_vertices,
-		   const uint32_t strip_length,
-		   const uint32_t render_pass)
+void transform(ta_parameter_writer& writer,
+               const vertex * strip_vertices,
+               const uint32_t strip_length,
+               const uint32_t render_pass)
 {
-  auto parameter = ta_parameter_writer(ta_parameter_buf);
-
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
 					  | isp_tsp_instruction_word::culling_mode::no_culling;
 
@@ -68,7 +66,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 					| texture_control_word::scan_order::non_twiddled
 					| texture_control_word::texture_address(texture_address / 8);
 
-    parameter.append<ta_global_parameter::polygon_type_0>() =
+    writer.append<ta_global_parameter::polygon_type_0>() =
       ta_global_parameter::polygon_type_0(parameter_control_word,
 					  isp_tsp_instruction_word,
 					  tsp_instruction_word,
@@ -90,7 +88,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 
     const uint32_t texture_control_word = 0;
 
-    parameter.append<ta_global_parameter::polygon_type_0>() =
+    writer.append<ta_global_parameter::polygon_type_0>() =
       ta_global_parameter::polygon_type_0(parameter_control_word,
 					  isp_tsp_instruction_word,
 					  tsp_instruction_word,
@@ -117,7 +115,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
     y += 240.f;
     z = 1.f / (z + 10.f);
 
-    parameter.append<ta_vertex_parameter::polygon_type_3>() =
+    writer.append<ta_vertex_parameter::polygon_type_3>() =
       ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(end_of_strip),
 					  x, y, z,
 					  strip_vertices[i].u,
@@ -127,9 +125,7 @@ uint32_t transform(uint32_t * ta_parameter_buf,
 					  );
   }
 
-  parameter.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
-
-  return parameter.offset;
+  writer.append<ta_global_parameter::end_of_list>() = ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 }
 
 void init_texture_memory(const struct opb_size * opb_size, uint32_t render_passes)
@@ -144,7 +140,7 @@ void init_texture_memory(const struct opb_size * opb_size, uint32_t render_passe
   background_parameter(0xff00ff00);
 }
 
-uint32_t _ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4];
+uint32_t ta_parameter_buf[((32 * (strip_length + 2)) + 32) / 4] __attribute__((aligned(32)));
 
 void copy_macaw_texture()
 {
@@ -165,10 +161,6 @@ void main()
 {
   video_output::set_mode_vga();
   copy_macaw_texture();
-
-  // The address of `ta_parameter_buf` must be a multiple of 32 bytes.
-  // This is mandatory for ch2-dma to the ta fifo polygon converter.
-  uint32_t * ta_parameter_buf = align_32byte(_ta_parameter_buf);
 
   constexpr uint32_t ta_alloc[2] =
     { ta_alloc_ctrl::pt_opb::no_list
@@ -210,7 +202,8 @@ void main()
   constexpr uint32_t tiles = (640 / 32) * (480 / 32);
 
   uint32_t frame_ix = 0;
-  uint32_t ta_parameter_size;
+
+  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   while (true) {
     // first render pass
@@ -218,15 +211,19 @@ void main()
 			      ta_alloc[0],
 			      640 / 32,
 			      480 / 32);
-    ta_parameter_size = transform(ta_parameter_buf, strip_vertices, strip_length, 0);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
+    writer.offset = 0;
+    transform(writer, strip_vertices, strip_length, 0);
+    ta_polygon_converter_writeback(writer.buf, writer.offset);
+    ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_opaque_list();
 
     // second render pass
     ta_polygon_converter_cont(opb_size[0].total() * tiles,
 			      ta_alloc[1]);
-    ta_parameter_size = transform(ta_parameter_buf, strip_vertices, strip_length, 1);
-    ta_polygon_converter_transfer(ta_parameter_buf, ta_parameter_size);
+    writer.offset = 0;
+    transform(writer, strip_vertices, strip_length, 1);
+    ta_polygon_converter_writeback(writer.buf, writer.offset);
+    ta_polygon_converter_transfer(writer.buf, writer.offset);
     ta_wait_translucent_list();
 
     core_start_render(frame_ix);
