@@ -556,7 +556,7 @@ constexpr vec2 plane[] = {
   {  0,  1},
 };
 
-void transfer_ss_plane(ta_parameter_writer& writer)
+void transfer_ss_plane(ta_parameter_writer& writer, vec3 c)
 {
   uint32_t control = para_control::list_type::translucent
                    | obj_control::texture;
@@ -596,8 +596,6 @@ void transfer_ss_plane(ta_parameter_writer& writer)
   constexpr vec2 bt = plane[1] * tscale;
   constexpr vec2 ct = plane[2] * tscale;
   constexpr vec2 dt = plane[3] * tscale;
-
-  constexpr vec3 c = {1.0, 1.0, 1.0};
 
   transfer_quad_textured(writer,
                          ap, bp, cp, dp,
@@ -678,6 +676,13 @@ vec3 color_point(const mat4x4& trans, const vec3& base_color, const vec3& positi
 
 void transfer_scene1(ta_parameter_writer& writer, const mat4x4& trans)
 {
+  vec3 zero = {0, 0, 0};
+
+  transfer_mesh<color_identity, screen_transform1>(writer, trans, &objects[0], zero);
+  for (int i = 1; i < 6; i++) {
+    transfer_mesh<color_identity, screen_transform1>(writer, trans, &objects[i], zero);
+  }
+
   for (int i = 0; i < 4; i++) {
     transfer_mesh<color_identity, screen_transform1>(writer, trans, &objects[6 + i], colors[i]);
   }
@@ -688,7 +693,7 @@ void transfer_scene1(ta_parameter_writer& writer, const mat4x4& trans)
 
 void transfer_scene2(ta_parameter_writer& writer, const mat4x4& trans)
 {
-  transfer_ss_plane(writer);
+  transfer_ss_plane(writer, colors[3]);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
