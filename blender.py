@@ -66,6 +66,8 @@ def render_mesh(f, name, mesh):
     f.write(f"const mesh {name} = {{\n")
     f.write(f"  .position = {name}_position,\n")
     f.write(f"  .position_length = (sizeof ({name}_position)) / (sizeof ({name}_position[0])),\n")
+    f.write(f"  .normal = {name}_normal,\n")
+    f.write(f"  .normal_length = (sizeof ({name}_normal)) / (sizeof ({name}_normal[0])),\n")
     f.write(f"  .polygon_normal = {name}_polygon_normal,\n")
     f.write(f"  .polygon_normal_length = (sizeof ({name}_polygon_normal)) / (sizeof ({name}_polygon_normal[0])),\n")
     f.write(f"  .polygons = {name}_polygons,\n")
@@ -77,11 +79,22 @@ def render_mesh(f, name, mesh):
 def translate_name(name):
     return name.replace(".", "_").replace("-", "_")
 
-def export_scene(f):
-    meshes = set()
+def mesh_objects(objects):
+    for object in objects:
+        if object.type == "MESH":
+            yield object
 
-    for object in bpy.context.scene.objects:
-        #mesh = c.to_mesh()
+def mesh_meshes(objects):
+    mesh_names = set()
+    for object in mesh_objects(objects):
+        mesh = object.data
+        if mesh.name in mesh_names:
+            continue
+        mesh_names.add(mesh.name)
+        yield mesh
+
+def export_meshes(f):
+    for mesh in mesh_meshes(bpy.context.scene.objects):
         #mesh.vertex_normals
         #mesh.vertex_colors
         #mesh.vertices
@@ -90,17 +103,12 @@ def export_scene(f):
         #mesh.polygon_normals
         #mesh.name
 
-        mesh = object.to_mesh()
-        if mesh.name in meshes:
-            continue
-        meshes.add(mesh.name)
-
         mesh_name = "mesh_" + translate_name(mesh.name)
 
         render_mesh_vertices(f, mesh_name, mesh.vertices)
         for layer_name, layer in mesh.uv_layers.items():
             render_uv_map(f, mesh_name, layer_name, layer.uv)
-        #render_vertex_normals(f, mesh_name, mesh.vertices)
+        render_vertex_normals(f, mesh_name, mesh.vertices)
         render_polygon_normals(f, mesh_name, mesh.polygon_normals)
         render_polygons(f, mesh_name, mesh.polygons)
 
@@ -114,8 +122,14 @@ def export_scene(f):
         # v.normal
         # v.index
 
+def mesh_objects_sorted(objects):
+    def key(o):
+        return (o.data.name, o.name)
+    return sorted(mesh_objects(objects), key=key)
+
+def export_objects(f):
     f.write("const struct object objects[] = {\n")
-    for object in bpy.context.scene.objects:
+    for object in mesh_objects_sorted(bpy.context.scene.objects):
         #object.rotation_mode = 'AXIS_ANGLE'
         #object.name
         #object.rotation_axis_angle
@@ -131,19 +145,20 @@ def export_scene(f):
         f.write("  ")
         f.write(f"  .mesh = &{obj_mesh_name},\n")
 
+        location, rotation, scale = object.matrix_world.decompose()
         f.write("  ")
-        render_scale(f, object.scale)
+        render_scale(f, scale)
         f.write("  ")
-        old_mode = object.rotation_mode
-        object.rotation_mode = 'QUATERNION'
-        #render_rotation_axis_angle(f, object.rotation_axis_angle)
-        render_rotation_quaternion(f, object.rotation_quaternion)
-        object.rotation_mode = old_mode
+        render_rotation_quaternion(f, rotation)
         f.write("  ")
-        render_location(f, object.location)
+        render_location(f, location)
 
         f.write("  },\n")
     f.write("};\n\n")
+
+def export_scene(f):
+    export_meshes(f)
+    export_objects(f)
 
 with open("/home/bilbo/output.h", "w") as f:
     export_scene(f)

@@ -1250,6 +1250,7 @@ void render_matrix(ta_parameter_writer& writer, const mat4x4& trans)
     offset += format_float(&s[offset], trans[row][3], 7);
 
     font_bitmap::transform_string(writer,
+                                  texture_memory_alloc.texture.start,
                                   8,  16, // texture
                                   8,  16, // glyph
                                   16 + 2 * 8, // position x
@@ -1272,6 +1273,7 @@ void render_sphere_position(ta_parameter_writer& writer)
   offset += format_float(&s[offset], sphere_position[2], 7);
 
   font_bitmap::transform_string(writer,
+                                texture_memory_alloc.texture.start,
                                 8,  16, // texture
                                 8,  16, // glyph
                                 16 + 2 * 8, // position x
@@ -1296,6 +1298,7 @@ void render_zero_position(ta_parameter_writer& writer, const mat4x4& screen_tran
   offset += format_float(&s[offset], pos[2], 7);
 
   font_bitmap::transform_string(writer,
+                                texture_memory_alloc.texture.start,
                                 8,  16, // texture
                                 8,  16, // glyph
                                 16 + 2 * 8, // position x
@@ -1334,6 +1337,7 @@ void render_ix(ta_parameter_writer& writer, int row, char * s, int ix)
   }
 
   font_bitmap::transform_string(writer,
+                                texture_memory_alloc.texture.start,
                                 8,  16, // texture
                                 8,  16, // glyph
                                 16 + 50 * 8, // position x
@@ -1374,6 +1378,7 @@ void render_num(ta_parameter_writer& writer, int row, char * s, int num, int off
   offset += unparse_base10_unsigned(&s[offset], num, 5, ' ');
 
   font_bitmap::transform_string(writer,
+                                texture_memory_alloc.texture.start,
                                 8,  16, // texture
                                 8,  16, // glyph
                                 16 + 50 * 8, // position x
@@ -2087,6 +2092,7 @@ void transfer_font()
   uint32_t offset = font_bitmap::inflate(1,  // pitch
                                          8,  // width
                                          16, // height
+                                         texture_memory_alloc.texture.start,
                                          8,  // texture_width
                                          16, // texture_height
                                          src);
@@ -2542,7 +2548,7 @@ int main()
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
 
-    while (next_frame)
+    while (next_frame == 0);
     next_frame = 0;
   }
 }

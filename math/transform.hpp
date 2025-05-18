@@ -97,13 +97,12 @@ inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> r)
   T zw2 = 2 * r.z * r.w;
 
   return {
-    1 - yy2 - zz2,      xy2 - zw2,      xz2 + yw2, 0,
-        xy2 + zw2,  1 - xx2 - zz2,      yz2 - xw2, 0,
-        xz2 - yw2,      yz2 + xw2,  1 - xx2 - yy2, 0,
-                0,              0,              0, 1,
+    1 - yy2 - zz2,      xy2 - zw2,      xz2 + yw2,   0,
+        xy2 + zw2,  1 - xx2 - zz2,      yz2 - xw2,   0,
+        xz2 - yw2,      yz2 + xw2,  1 - xx2 - yy2,   0,
+                0,              0,              0,   1,
   };
 }
-
 
 template <typename T>
 inline constexpr vec<3, T> normal_multiply(mat<4, 4, T> m, vec<3, T> n)

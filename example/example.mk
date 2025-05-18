@@ -82,7 +82,8 @@ MACAW_MULTIPASS_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
-	texture/macaw/macaw.data.o
+	texture/macaw/macaw.data.o \
+	sh7091/serial.o
 
 example/macaw_multipass.elf: LDSCRIPT = $(LIB)/main.lds
 example/macaw_multipass.elf: $(START_OBJ) $(MACAW_MULTIPASS_OBJ)
@@ -1084,3 +1085,24 @@ MD5_OBJ = \
 
 example/md5.elf: LDSCRIPT = $(LIB)/main.lds
 example/md5.elf: $(START_OBJ) $(MD5_OBJ)
+
+BLOOM_OBJ = \
+	example/bloom.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	gauss.o \
+	model/bloom_scene/wood.data.o \
+	model/bloom_scene/container2.data.o \
+	$(LIBGCC)
+
+example/bloom.elf: LDSCRIPT = $(LIB)/main.lds
+example/bloom.elf: $(START_OBJ) $(BLOOM_OBJ)

@@ -5,8 +5,8 @@ struct polygon {
 struct mesh {
   const vec3 * position;
   const int position_length;
-  //const vec3 * normal;
-  //const int normal_length;
+  const vec3 * normal;
+  const int normal_length;
   const vec3 * polygon_normal;
   const int polygon_normal_length;
   const polygon * polygons;

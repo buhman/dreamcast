@@ -89,8 +89,8 @@ void core_start_render2(uint32_t region_array_start,
 			uint32_t isp_tsp_parameters_start,
 			uint32_t background_start,
 			uint32_t frame_address,
-			uint32_t frame_width      // in pixels
-			)
+			uint32_t frame_width,      // in pixels
+                        uint32_t dither)
 {
   holly.REGION_BASE = region_array_start;
   holly.PARAM_BASE = isp_tsp_parameters_start;
@@ -101,7 +101,7 @@ void core_start_render2(uint32_t region_array_start,
                       | isp_backgnd_t::skip(1);
   holly.ISP_BACKGND_D = _i(1.f/100000.f);
 
-  holly.FB_W_CTRL = fb_w_ctrl::fb_dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+  holly.FB_W_CTRL = dither | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
   constexpr uint32_t bytes_per_pixel = 2;
   holly.FB_W_LINESTRIDE = (frame_width * bytes_per_pixel) / 8;
 

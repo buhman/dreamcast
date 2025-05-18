@@ -215,11 +215,7 @@ void vbr600()
 void global_polygon_type_0(ta_parameter_writer& writer,
                            uint32_t para_control_obj_control,
                            uint32_t tsp_instruction_word,
-                           uint32_t texture_control_word,
-                           const float a = 1.0f,
-                           const float r = 1.0f,
-                           const float g = 1.0f,
-                           const float b = 1.0f
+                           uint32_t texture_control_word
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume

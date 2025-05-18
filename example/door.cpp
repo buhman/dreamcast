@@ -647,7 +647,7 @@ int main()
     ta_polygon_converter_writeback(writer.buf, writer.offset);
     ta_polygon_converter_transfer(writer.buf, writer.offset);
 
-    while (next_frame)
+    while (next_frame == 0);
     next_frame = 0;
   }
 }
