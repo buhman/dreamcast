@@ -177,7 +177,7 @@ constexpr uint32_t ta_alloc[ta_cont_count] = {
   {
       ta_alloc_ctrl::pt_opb::no_list
     | ta_alloc_ctrl::tm_opb::no_list
-          | ta_alloc_ctrl::t_opb::_8x4byte
+    | ta_alloc_ctrl::t_opb::_8x4byte
     | ta_alloc_ctrl::om_opb::no_list
     | ta_alloc_ctrl::o_opb::_32x4byte,
   },
@@ -508,8 +508,8 @@ void transfer_mesh_textured(ta_parameter_writer& writer,
     * rotate_quaternion(object->rotation)
     * scale(object->scale);
 
-  mat4x4 trans_n = trans
-    * rotate_quaternion(object->rotation);
+  //mat4x4 trans_n = trans
+  //* rotate_quaternion(object->rotation);
 
   for (int i = 0; i < mesh->position_length; i++) {
     vec3 p = trans_p * mesh->position[i];
@@ -521,7 +521,7 @@ void transfer_mesh_textured(ta_parameter_writer& writer,
   for (int i = 0; i < mesh->polygons_length; i++) {
     const polygon * p = &mesh->polygons[i];
 
-    vec3 normal = normalize(normal_multiply(trans_n, mesh->polygon_normal[i]));
+    //vec3 normal = normalize(normal_multiply(trans_n, mesh->polygon_normal[i]));
 
     vec3 ap = FS(position_cache[p->a]);
     vec3 bp = FS(position_cache[p->b]);
@@ -875,20 +875,6 @@ int main()
 {
   serial::init(0);
 
-  const vec3 * position = mesh_containercubemesh_position;
-  const polygon * polygon = mesh_containercubemesh_polygons;
-  const vec3 * normal = mesh_containercubemesh_polygon_normal;
-  for (int i = 0; i < 4; i++) {
-    printf("p (%f %f %f) (%f %f %f) (%f %f %f) (%f %f %f)\n",
-           position[polygon[i].a].x, position[polygon[i].a].y, position[polygon[i].a].z,
-           position[polygon[i].b].x, position[polygon[i].b].y, position[polygon[i].b].z,
-           position[polygon[i].c].x, position[polygon[i].c].y, position[polygon[i].c].z,
-           position[polygon[i].d].x, position[polygon[i].d].y, position[polygon[i].d].z
-           );
-    printf("n (%f %f %f)\n",
-           normal[i].x, normal[i].y, normal[i].z);
-  }
-
   interrupt_init();
   dma_init();
   transfer_textures();
@@ -918,7 +904,8 @@ int main()
                          &opb_size[1],
                          1,
                          texture_memory_alloc.region_array.start + tile_param[1].region_array_offset,
-                         texture_memory_alloc.object_list.start);
+                         texture_memory_alloc.object_list.start,
+                         REGION_ARRAY__PRE_SORT);
 
   background_parameter2(texture_memory_alloc.background[0].start,
                         0xff000000);

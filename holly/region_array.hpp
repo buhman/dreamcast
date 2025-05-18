@@ -52,4 +52,5 @@ void region_array_multipass(const uint32_t width,  // in tile units (1 tile unit
                             const struct opb_size * opb_size,
                             const uint32_t num_render_passes,
 			    const uint32_t region_array_start,
-			    const uint32_t object_list_start);
+			    const uint32_t object_list_start,
+                            const uint32_t pre_sort = 0);

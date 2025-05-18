@@ -117,12 +117,15 @@ void region_array2(const uint32_t width,  // in tile units (1 tile unit = 32 pix
   }
 }
 
+#include "printf/printf.h"
+
 void region_array_multipass(const uint32_t width,  // in tile units (1 tile unit = 32 pixels)
                             const uint32_t height, // in tile units (1 tile unit = 32 pixels)
                             const struct opb_size * opb_size,
                             const uint32_t num_render_passes,
 			    const uint32_t region_array_start,
-			    const uint32_t object_list_start)
+			    const uint32_t object_list_start,
+                            const uint32_t pre_sort)
 {
   auto region_array = reinterpret_cast<volatile region_array_entry *>
     (&texture_memory32[region_array_start / 4]);
@@ -142,6 +145,8 @@ void region_array_multipass(const uint32_t width,  // in tile units (1 tile unit
       for (uint32_t pass = 0; pass < num_render_passes; pass++) {
         region_array[ix].tile = REGION_ARRAY__TILE_Y_POSITION(y)
                               | REGION_ARRAY__TILE_X_POSITION(x);
+
+        region_array[ix].tile |= pre_sort;
 
         if (pass == (num_render_passes - 1) && y == (height - 1) && x == (width - 1))
           region_array[ix].tile |= REGION_ARRAY__LAST_REGION;
