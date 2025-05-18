@@ -1106,3 +1106,26 @@ BLOOM_OBJ = \
 
 example/bloom.elf: LDSCRIPT = $(LIB)/main.lds
 example/bloom.elf: $(START_OBJ) $(BLOOM_OBJ)
+
+BLOOM_LIGHTMAP_OBJ = \
+	example/bloom_lightmap.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	gauss.o \
+	model/bloom_lightmap/container2.vq.o \
+	model/bloom_lightmap/container_lightmap.vq.o \
+	model/bloom_lightmap/floor_lightmap.vq.o \
+	model/bloom_lightmap/wood.vq.o \
+	$(LIBGCC)
+
+example/bloom_lightmap.elf: LDSCRIPT = $(LIB)/main.lds
+example/bloom_lightmap.elf: $(START_OBJ) $(BLOOM_LIGHTMAP_OBJ)
