@@ -37,20 +37,6 @@
 #include "math/mat4x4.hpp"
 #include "math/math.hpp"
 
-#define assert(b)                                                       \
-  do {                                                                  \
-    if (!(b)) {                                                         \
-      serial::string(__FILE__);                                         \
-      serial::character(':');                                           \
-      serial::integer<uint32_t>(__LINE__, ' ');                         \
-      serial::string(__func__);                                         \
-      serial::string(": assertion failed: ");                           \
-      serial::string(#b);                                               \
-      serial::character('\n');                                          \
-      while (1);                                                        \
-    }                                                                   \
-  } while (0);
-
 using vec2 = vec<2, float>;
 using vec3 = vec<3, float>;
 using vec4 = vec<4, float>;
@@ -1082,7 +1068,7 @@ void main()
                           0xff202040);
   }
 
-  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf);
+  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   int ta = 0;
   int core = 0;
