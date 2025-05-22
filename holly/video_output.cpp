@@ -31,7 +31,7 @@ void set_framebuffer_resolution(const uint32_t x_size, const uint32_t y_size)
                   | fb_y_clip::fb_y_clip_min(0);
 
   holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
-                  | fb_r_size::fb_y_size(y_size - 3)
+                  | fb_r_size::fb_y_size(y_size - 1)
                   | fb_r_size::fb_x_size((x_size * 16) / 32 - 1);
 }
 
