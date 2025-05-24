@@ -174,15 +174,17 @@ void _printf(const char * format, ...)
         case FORMAT_FLOAT:
           {
             double num = va_arg(args, double);
+            if (num < 0) {
+              print_char('-');
+              num = -num;
+            }
             char s[20];
             int32_t whole = num;
-            int offset = unparse_base10(s, whole, ft.pad_length, ft.fill_char);
+            int offset = unparse_base10_unsigned(s, whole, ft.pad_length, ft.fill_char);
             print_string(s, offset);
             print_char('.');
             int32_t fraction = (int32_t)((num - (float)whole) * 1000.0);
-            if (fraction < 0)
-              fraction = -fraction;
-            offset = unparse_base10(s, fraction, 0, 0);
+            offset = unparse_base10_unsigned(s, fraction, 0, 0);
             print_string(s, offset);
           }
           break;
