@@ -1129,3 +1129,21 @@ BLOOM_LIGHTMAP_OBJ = \
 
 example/bloom_lightmap.elf: LDSCRIPT = $(LIB)/main.lds
 example/bloom_lightmap.elf: $(START_OBJ) $(BLOOM_LIGHTMAP_OBJ)
+
+MODIFIER_VOLUME_HOLE_OBJ = \
+	example/modifier_volume_hole.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	$(LIBGCC)
+
+example/modifier_volume_hole.elf: LDSCRIPT = $(LIB)/main.lds
+example/modifier_volume_hole.elf: $(START_OBJ) $(MODIFIER_VOLUME_HOLE_OBJ)
