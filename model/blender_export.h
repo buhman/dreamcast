@@ -1,5 +1,13 @@
 struct polygon {
   int a, b, c, d;
+  int material_index;
+  int uv_index;
+};
+
+struct mesh_material {
+  int width;
+  int height;
+  int offset;
 };
 
 struct mesh {
@@ -13,6 +21,8 @@ struct mesh {
   const int polygons_length;
   const vec2 ** uv_layers;
   const int uv_layers_length;
+  const mesh_material * materials;
+  const int materials_length;
 };
 
 struct object {
@@ -20,4 +30,10 @@ struct object {
   const vec3 scale;
   const vec4 rotation;
   const vec3 location;
+};
+
+struct material {
+  void * start;
+  int size;
+  int offset;
 };

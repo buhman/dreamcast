@@ -1,4 +1,5 @@
 import bpy
+from os import path
 
 def render_vec3(v):
     return f"{{{v.x:.6f}, {v.y:.6f}, {v.z:.6f}}}"
@@ -24,18 +25,25 @@ def render_polygon_normals(f, name, polygon_normals):
         f.write(f"  {render_vec3(normal.vector)},\n")
     f.write("};\n\n")
 
+def sort_by_material(polygons):
+    return sorted(polygons, key=lambda p: p.material_index)
+
 def render_polygons(f, name, polygons):
     f.write(f"const polygon {name}_polygons[] = {{\n")
-    for i, polygon in enumerate(polygons):
-        s = ", ".join(map(str, polygon.vertices))
-        c = "// " if len(polygon.vertices) != 4 else ""
 
-        f.write(f"  {c}{{{s}}},\n")
+    uv_ix = 0
+    for i, polygon in enumerate(polygons):
+        indices = [*polygon.vertices, polygon.material_index, uv_ix]
+        uv_ix += len(polygon.vertices)
+        s = ", ".join(map(str, indices))
+        if len(polygon.vertices) == 4:
+            f.write(f"  {{{s}}},\n")
+        else:
+            f.write(f"  {{0, 0, 0, 0, -1}}, // {{{s}}}\n")
     f.write("};\n\n")
 
 def render_uv_map(f, name, name2, uvm):
     f.write(f"const vec2 {name}_{name2}_uvmap[] = {{\n")
-    print(uvm)
     for uv in uvm:
         s = render_vec2(uv.vector)
         f.write(f"  {s},\n")
@@ -74,6 +82,8 @@ def render_mesh(f, name, mesh):
     f.write(f"  .polygons_length = (sizeof ({name}_polygons)) / (sizeof ({name}_polygons[0])),\n")
     f.write(f"  .uv_layers = {name}_uv_layers,\n")
     f.write(f"  .uv_layers_length = (sizeof ({name}_uv_layers)) / (sizeof ({name}_uv_layers[0])),\n")
+    f.write(f"  .materials = {name}_materials,\n")
+    f.write(f"  .materials_length = (sizeof ({name}_materials)) / (sizeof ({name}_materials[0])),\n")
     f.write( "};\n\n")
 
 def translate_name(name):
@@ -81,6 +91,8 @@ def translate_name(name):
 
 def mesh_objects(objects):
     for object in objects:
+        if object.hide_get():
+            continue
         if object.type == "MESH":
             yield object
 
@@ -92,6 +104,58 @@ def mesh_meshes(objects):
             continue
         mesh_names.add(mesh.name)
         yield mesh
+
+def get_texture(material):
+    assert material.use_nodes, material.name
+    for node in material.node_tree.nodes:
+        if node.type == "TEX_IMAGE":
+            return node.image
+
+_offset = 0
+texture_offsets = {}
+prefix = "textures_"
+
+def get_texture_offset(image):
+    global _offset
+    if image.name in texture_offsets:
+        value = texture_offsets[image.name]
+        return value
+    value = _offset
+    texture_offsets[image.name] = value
+    width, height = image.size
+    _offset += width * height // 4 + 256 * 4 * 2
+    return value
+
+def texture_data_name(name):
+    name = path.splitext(name)[0]
+    name = translate_name(name)
+    return f"{prefix}{name}_vq"
+
+def render_mesh_materials(f, name, materials):
+    f.write(f"const mesh_material {name}_materials[] = {{\n")
+    for material in materials:
+        image = get_texture(material)
+        assert image is not None, material.name
+        f.write(f"  {{ // {material.name} {image.name}\n")
+        width, height = image.size
+        offset = get_texture_offset(image)
+        f.write(f"    .width = {width},\n")
+        f.write(f"    .height = {height},\n")
+        f.write(f"    .offset = {offset},\n")
+        f.write("  },\n")
+    f.write("};\n")
+
+def render_materials(f):
+    f.write("const material materials[] = {\n")
+    for image_name, offset in texture_offsets.items():
+        name = texture_data_name(image_name)
+        print(image_name)
+        f.write("  {\n")
+        f.write(f"    .start = (void *)&_binary_{name}_start,\n")
+        f.write(f"    .size = (int)&_binary_{name}_size,\n")
+        f.write(f"    .offset = {offset},\n")
+        f.write("  },\n")
+    f.write("};\n");
 
 def export_meshes(f):
     for mesh in mesh_meshes(bpy.context.scene.objects):
@@ -111,7 +175,7 @@ def export_meshes(f):
         render_vertex_normals(f, mesh_name, mesh.vertices)
         render_polygon_normals(f, mesh_name, mesh.polygon_normals)
         render_polygons(f, mesh_name, mesh.polygons)
-
+        render_mesh_materials(f, mesh_name, mesh.materials)
 
         render_mesh(f, mesh_name, mesh);
 
@@ -128,8 +192,9 @@ def mesh_objects_sorted(objects):
     return sorted(mesh_objects(objects), key=key)
 
 def export_objects(f):
-    f.write("const struct object objects[] = {\n")
+    f.write("const object objects[] = {\n")
     for object in mesh_objects_sorted(bpy.context.scene.objects):
+
         #object.rotation_mode = 'AXIS_ANGLE'
         #object.name
         #object.rotation_axis_angle
@@ -159,6 +224,8 @@ def export_objects(f):
 def export_scene(f):
     export_meshes(f)
     export_objects(f)
+    render_materials(f)
 
 with open("/home/bilbo/output.h", "w") as f:
+    offset = 0
     export_scene(f)
