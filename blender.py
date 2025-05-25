@@ -1,5 +1,17 @@
 import bpy
 from os import path
+from collections import defaultdict
+
+def sprint(*text):
+    screen = bpy.data.screens['Scripting']
+    for area in screen.areas:
+        if area.type != "CONSOLE":
+            continue
+        override = {'screen': screen, 'area': area}
+        with bpy.context.temp_override(**override):
+            bpy.ops.console.scrollback_append(text=" ".join(map(str, text)))
+
+print = sprint
 
 def render_vec3(v):
     return f"{{{v.x:.6f}, {v.y:.6f}, {v.z:.6f}}}"
@@ -40,6 +52,23 @@ def render_polygons(f, name, polygons):
             f.write(f"  {{{s}}},\n")
         else:
             f.write(f"  {{0, 0, 0, 0, -1}}, // {{{s}}}\n")
+    f.write("};\n\n")
+
+def render_polygon_edge_pairs(f, name, polygons):
+    by_edge = defaultdict(list)
+    for i, polygon in enumerate(polygons):
+        for edge in polygon.edge_keys:
+            by_edge[frozenset(edge)].append(i)
+
+    f.write(f"const edge_polygon {name}_edge_polygons[] = {{\n")
+    if all(len(p) == 2 for p in by_edge.values()):
+        for edge, polygons in by_edge.items():
+            edges = sorted(list(edge))
+            assert len(edges) == 2, edges
+            assert len(polygons) == 2, polygons
+            f.write(f"  {{{{{edges[0]}, {edges[1]}}}, {{{polygons[0]}, {polygons[1]}}}}},\n")
+    else:
+        f.write("// non-solid polygon\n")
     f.write("};\n\n")
 
 def render_uv_map(f, name, name2, uvm):
@@ -84,21 +113,29 @@ def render_mesh(f, name, mesh):
     f.write(f"  .uv_layers_length = (sizeof ({name}_uv_layers)) / (sizeof ({name}_uv_layers[0])),\n")
     f.write(f"  .materials = {name}_materials,\n")
     f.write(f"  .materials_length = (sizeof ({name}_materials)) / (sizeof ({name}_materials[0])),\n")
+    f.write(f"  .edge_polygons = {name}_edge_polygons,\n");
+    f.write(f"  .edge_polygons_length = (sizeof ({name}_edge_polygons)) / (sizeof ({name}_edge_polygons[0])),\n")
     f.write( "};\n\n")
 
 def translate_name(name):
     return name.replace(".", "_").replace("-", "_")
 
-def mesh_objects(objects):
-    for object in objects:
-        if object.hide_get():
+def mesh_objects(collections):
+    objects = set()
+    for collection in collections:
+        if collection.hide_render:
             continue
-        if object.type == "MESH":
-            yield object
+        for object in collection.objects:
+            assert object.name not in objects, object.name
+            objects.add(object.name)
+            if object.hide_render:
+                continue
+            if object.type == "MESH":
+                yield object
 
-def mesh_meshes(objects):
+def mesh_meshes(collections):
     mesh_names = set()
-    for object in mesh_objects(objects):
+    for object in mesh_objects(collections):
         mesh = object.data
         if mesh.name in mesh_names:
             continue
@@ -135,30 +172,31 @@ def render_mesh_materials(f, name, materials):
     f.write(f"const mesh_material {name}_materials[] = {{\n")
     for material in materials:
         image = get_texture(material)
-        assert image is not None, material.name
-        f.write(f"  {{ // {material.name} {image.name}\n")
-        width, height = image.size
-        offset = get_texture_offset(image)
-        f.write(f"    .width = {width},\n")
-        f.write(f"    .height = {height},\n")
-        f.write(f"    .offset = {offset},\n")
-        f.write("  },\n")
+        if image is not None:
+            f.write(f"  {{ // {material.name} {image.name}\n")
+            width, height = image.size
+            offset = get_texture_offset(image)
+            f.write(f"    .width = {width},\n")
+            f.write(f"    .height = {height},\n")
+            f.write(f"    .offset = {offset},\n")
+            f.write("  },\n")
+        else:
+            f.write("  {},\n")
     f.write("};\n")
 
 def render_materials(f):
     f.write("const material materials[] = {\n")
     for image_name, offset in texture_offsets.items():
         name = texture_data_name(image_name)
-        print(image_name)
         f.write("  {\n")
         f.write(f"    .start = (void *)&_binary_{name}_start,\n")
         f.write(f"    .size = (int)&_binary_{name}_size,\n")
         f.write(f"    .offset = {offset},\n")
         f.write("  },\n")
-    f.write("};\n");
+    f.write("};\n\n");
 
 def export_meshes(f):
-    for mesh in mesh_meshes(bpy.context.scene.objects):
+    for mesh in mesh_meshes(bpy.data.collections):
         #mesh.vertex_normals
         #mesh.vertex_colors
         #mesh.vertices
@@ -175,6 +213,7 @@ def export_meshes(f):
         render_vertex_normals(f, mesh_name, mesh.vertices)
         render_polygon_normals(f, mesh_name, mesh.polygon_normals)
         render_polygons(f, mesh_name, mesh.polygons)
+        render_polygon_edge_pairs(f, mesh_name, mesh.polygons)
         render_mesh_materials(f, mesh_name, mesh.materials)
 
         render_mesh(f, mesh_name, mesh);
@@ -193,7 +232,7 @@ def mesh_objects_sorted(objects):
 
 def export_objects(f):
     f.write("const object objects[] = {\n")
-    for object in mesh_objects_sorted(bpy.context.scene.objects):
+    for object in mesh_objects_sorted(bpy.data.collections):
 
         #object.rotation_mode = 'AXIS_ANGLE'
         #object.name
@@ -226,6 +265,7 @@ def export_scene(f):
     export_objects(f)
     render_materials(f)
 
-with open("/home/bilbo/output.h", "w") as f:
+home = path.expanduser('~')
+with open(path.join(home, "output.h"), "w") as f:
     offset = 0
     export_scene(f)
