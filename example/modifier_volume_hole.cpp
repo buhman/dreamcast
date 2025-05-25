@@ -48,7 +48,8 @@ using mat4x4 = mat<4, 4, float>;
 #include "assert.h"
 
 #include "model/blender_export.h"
-#include "model/modifier_volume_test/closed_volume.h"
+//#include "model/modifier_volume_test/closed_volume.h"
+#include "model/modifier_volume_test/open_volume.h"
 
 void vbr100()
 {
@@ -71,14 +72,14 @@ constexpr uint32_t ta_alloc = 0
                             | ta_alloc_ctrl::pt_opb::no_list
                             | ta_alloc_ctrl::tm_opb::no_list
                             | ta_alloc_ctrl::t_opb::no_list
-                            | ta_alloc_ctrl::om_opb::no_list
+                            | ta_alloc_ctrl::om_opb::_32x4byte
                             | ta_alloc_ctrl::o_opb::_32x4byte;
 
 constexpr int ta_cont_count = 1;
 constexpr struct opb_size opb_size[ta_cont_count] = {
   {
     .opaque = 32 * 4,
-    .opaque_modifier = 0,
+    .opaque_modifier = 32 * 4,
     .translucent = 0,
     .translucent_modifier = 0,
     .punch_through = 0
@@ -197,13 +198,14 @@ void do_get_condition()
 }
 
 static inline void global_polygon(ta_parameter_writer& writer,
-                                  uint32_t list)
+                                  uint32_t list,
+                                  float mod)
 {
    uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                    | list
                                    | obj_control::col_type::intensity_mode_1
                                    | obj_control::gouraud
-     //| obj_control::shadow
+                                   | obj_control::shadow
                                    ;
 
    uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
@@ -217,10 +219,10 @@ static inline void global_polygon(ta_parameter_writer& writer,
 
    uint32_t texture_control_word = 0;
 
-   float a = 1.0f;
-   float r = 1.0f;
-   float g = 1.0f;
-   float b = 1.0f;
+   float a = 1.0f * mod;
+   float r = 1.0f * mod;
+   float g = 1.0f * mod;
+   float b = 1.0f * mod;
 
   writer.append<ta_global_parameter::polygon_type_1>() =
     ta_global_parameter::polygon_type_1(parameter_control_word,
@@ -232,6 +234,20 @@ static inline void global_polygon(ta_parameter_writer& writer,
                                         g,
                                         b
                                         );
+}
+
+static inline void global_polygon_modifier_volume(ta_parameter_writer& writer)
+{
+   uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                   | para_control::list_type::opaque_modifier_volume
+                                   ;
+
+   uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::normal_polygon
+                                     | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  writer.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(parameter_control_word,
+                                         isp_tsp_instruction_word);
 }
 
 static inline void render_quad(ta_parameter_writer& writer,
@@ -263,6 +279,44 @@ static inline void render_quad(ta_parameter_writer& writer,
     ta_vertex_parameter::polygon_type_2(polygon_vertex_parameter_control_word(true),
                                         cp.x, cp.y, cp.z,
                                         ci);
+}
+
+static inline void global_last_in_volume(ta_parameter_writer& writer)
+{
+  const uint32_t last_parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                             | para_control::list_type::opaque_modifier_volume
+                                             | obj_control::volume::modifier_volume::last_in_volume;
+
+  const uint32_t last_isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::inside_last_polygon
+                                               | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  writer.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(last_parameter_control_word,
+                                         last_isp_tsp_instruction_word);
+}
+
+static inline void render_quad_modifier_volume(ta_parameter_writer& writer,
+                                               vec3 ap,
+                                               vec3 bp,
+                                               vec3 cp,
+                                               vec3 dp,
+                                               bool last_tri)
+{
+  writer.append<ta_vertex_parameter::modifier_volume>() =
+    ta_vertex_parameter::modifier_volume(modifier_volume_vertex_parameter_control_word(),
+                                         ap.x, ap.y, ap.z,
+                                         bp.x, bp.y, bp.z,
+                                         dp.x, dp.y, dp.z);
+
+  if (last_tri) {
+    global_last_in_volume(writer);
+  }
+
+  writer.append<ta_vertex_parameter::modifier_volume>() =
+    ta_vertex_parameter::modifier_volume(modifier_volume_vertex_parameter_control_word(),
+                                         bp.x, bp.y, bp.z,
+                                         dp.x, dp.y, dp.z,
+                                         cp.x, cp.y, cp.z);
 }
 
 static inline vec3 screen_transform(vec3 v)
@@ -302,9 +356,32 @@ static inline void render_polygon(ta_parameter_writer& writer,
               ai, bi, ci, di);
 }
 
+static inline void render_polygon_modifier_volume(ta_parameter_writer& writer,
+                                                  const polygon * polygon,
+                                                  const vec3 * position,
+                                                  bool last)
+{
+  vec3 ap = position[polygon->a];
+  vec3 bp = position[polygon->b];
+  vec3 cp = position[polygon->c];
+  vec3 dp = position[polygon->d];
+
+  if (ap.z < 0 || bp.z < 0 || cp.z < 0 || dp.z < 0) {
+    return;
+  }
+
+  render_quad_modifier_volume(writer,
+                              screen_transform(ap),
+                              screen_transform(bp),
+                              screen_transform(cp),
+                              screen_transform(dp),
+                              last);
+}
+
 void render_blender_object(ta_parameter_writer& writer,
                            const mat4x4& screen_trans,
-                           const object * object)
+                           const object * object,
+                           float mod)
 {
   const mat4x4 trans = screen_trans
     * translate(object->location)
@@ -319,7 +396,8 @@ void render_blender_object(ta_parameter_writer& writer,
   }
 
   global_polygon(writer,
-                 para_control::list_type::opaque);
+                 para_control::list_type::opaque,
+                 mod);
 
   for (int i = 0; i < mesh->polygons_length; i++) {
     const polygon * polygon = &mesh->polygons[i];
@@ -327,13 +405,46 @@ void render_blender_object(ta_parameter_writer& writer,
   }
 }
 
+void render_blender_object_modifier_volume(ta_parameter_writer& writer,
+                                           const mat4x4& screen_trans,
+                                           const object * object)
+{
+  const mat4x4 trans = screen_trans
+    * translate(object->location)
+    * scale(object->scale)
+    * rotate_quaternion(object->rotation);
+
+  const mesh * mesh = object->mesh;
+
+  vec3 position[mesh->position_length];
+  for (int i = 0; i < mesh->position_length; i++) {
+    position[i] = trans * mesh->position[i];
+  }
+
+  global_polygon_modifier_volume(writer);
+
+  for (int i = 0; i < mesh->polygons_length; i++) {
+    bool last = i == (mesh->polygons_length - 1);
+    const polygon * polygon = &mesh->polygons[i];
+    render_polygon_modifier_volume(writer, polygon, position, last);
+  }
+}
+
 void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
 {
+  // opaque modifier
+  {
+    render_blender_object_modifier_volume(writer, screen_trans, &objects[0]);
+
+    // end of opaque list
+    writer.append<ta_global_parameter::end_of_list>() =
+      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+  }
+
   // opaque
   {
-    for (uint32_t i = 0; i < (sizeof (objects)) / (sizeof (objects[0])); i++) {
-      render_blender_object(writer, screen_trans, &objects[i]);
-    }
+    //render_blender_object(writer, screen_trans, &objects[0], 0.5f);
+    render_blender_object(writer, screen_trans, &objects[1], 1.0f);
 
     // end of opaque list
     writer.append<ta_global_parameter::end_of_list>() =
@@ -439,7 +550,7 @@ void main()
     while (next_frame == 0);
     next_frame = 0;
 
-    if ((frame++ % 60) == 0) {
+    if (0 && (frame++ % 60) == 0) {
       const mat4x4& t = screen_trans;
       printf("\n");
       printf("%f %f %f %f\n", t[0][0], t[0][1], t[0][2], t[0][3]);
