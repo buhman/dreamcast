@@ -71,12 +71,12 @@ void edge_loop_graph(const mesh * mesh,
   }
 }
 
-int next_neighbor(const graph& graph, int ix)
+int graph_next_neighbor(const graph& g, int ix)
 {
-  if (graph.a == ix)
-    return graph.b;
+  if (g.a == ix)
+    return g.b;
   else
-    return graph.a;
+    return g.a;
 }
 
 int edge_loop_inner(const mesh * mesh,
@@ -95,10 +95,9 @@ int edge_loop_inner(const mesh * mesh,
   while (true) {
     visited_edge_indices[ix] = true;
 
-    int edge_index = edge_indices[ix];
-    const edge& e = mesh->edge_polygons[edge_index].edge;
-    int next_ix_a = next_neighbor(graph[e.a], ix);
-    int next_ix_b = next_neighbor(graph[e.b], ix);
+    const edge& e = mesh->edge_polygons[edge_indices[ix]].edge;
+    int next_ix_a = graph_next_neighbor(graph[e.a], ix);
+    int next_ix_b = graph_next_neighbor(graph[e.b], ix);
     if (visited_edge_indices[next_ix_a] == false) {
       edge_loop[edge_loop_ix] = e.a;
       edge_loop_ix += 1;
@@ -160,8 +159,7 @@ static inline vec3 cast_ray(const vec3 light,
   return start + (normalize(ray) * 7.f);
 }
 
-void shadow_volume_mesh_rays(const vec3 light,
-                             const vec3 * position,
+void shadow_volume_mesh_rays(const vec3 * position,
                              const vec3 * cast_position,
                              const int * edge_loop,
                              const int edge_loop_length,
@@ -184,8 +182,7 @@ void shadow_volume_mesh_rays(const vec3 light,
   }
 }
 
-void shadow_volume_end_caps(const vec3 light,
-                            const vec3 * position,
+void shadow_volume_end_caps(const vec3 * position,
                             const vec3 * cast_position,
                             const mesh * mesh,
                             const float * indicators,
@@ -232,13 +229,13 @@ void shadow_volume_mesh(const vec3 light,
   const int max_edge_loops = 2;
   int edge_loops[edge_indices_length];
   int edge_loop_lengths[max_edge_loops];
-  int loop_count = edge_loop(mesh,
-                             edge_indices,
-                             edge_indices_length,
-                             graph,
-                             edge_loops,
-                             edge_loop_lengths,
-                             max_edge_loops);
+  int edge_loop_count = edge_loop(mesh,
+                                  edge_indices,
+                                  edge_indices_length,
+                                  graph,
+                                  edge_loops,
+                                  edge_loop_lengths,
+                                  max_edge_loops);
 
 
   vec3 cast_position[mesh->position_length];
@@ -246,8 +243,7 @@ void shadow_volume_mesh(const vec3 light,
     cast_position[i] = cast_ray(light, position[i]);
   }
 
-  shadow_volume_end_caps(light,
-                         position,
+  shadow_volume_end_caps(position,
                          cast_position,
                          mesh,
                          indicators,
@@ -255,11 +251,10 @@ void shadow_volume_mesh(const vec3 light,
 
   // edge_loops contains position indices
   int edge_loop_ix = 0;
-  for (int i = 0; i < loop_count; i++) {
+  for (int i = 0; i < edge_loop_count; i++) {
     int edge_loop_length = edge_loop_lengths[i];
     int * edge_loop = &edge_loops[edge_loop_ix];
-    shadow_volume_mesh_rays(light,
-                            position,
+    shadow_volume_mesh_rays(position,
                             cast_position,
                             edge_loop,
                             edge_loop_length,
@@ -269,7 +264,7 @@ void shadow_volume_mesh(const vec3 light,
 
   if (0) {
     int edge_loop_ix = 0;
-    for (int i = 0; i < loop_count; i++) {
+    for (int i = 0; i < edge_loop_count; i++) {
       int length = edge_loop_lengths[i];
       printf("loop %d: %d\n", i, length);
       for (int j = 0; j < length; j++) {
