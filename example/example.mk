@@ -1147,3 +1147,22 @@ MODIFIER_VOLUME_HOLE_OBJ = \
 
 example/modifier_volume_hole.elf: LDSCRIPT = $(LIB)/main.lds
 example/modifier_volume_hole.elf: $(START_OBJ) $(MODIFIER_VOLUME_HOLE_OBJ)
+
+SHADOW_VOLUME_OBJ = \
+	example/shadow_volume.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	shadow_volume.o \
+	$(LIBGCC)
+
+example/shadow_volume.elf: LDSCRIPT = $(LIB)/main.lds
+example/shadow_volume.elf: $(START_OBJ) $(SHADOW_VOLUME_OBJ)

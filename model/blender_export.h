@@ -1,3 +1,5 @@
+#pragma once
+
 struct polygon {
   int a, b, c, d;
   int material_index;
@@ -8,6 +10,19 @@ struct mesh_material {
   int width;
   int height;
   int offset;
+};
+
+struct edge {
+  int a; // vertices index
+  int b; // vertices index
+};
+
+struct edge_polygon {
+  struct edge edge;
+  struct {
+    int a;
+    int b;
+  } polygon_index; // polygon indices
 };
 
 struct mesh {
@@ -23,6 +38,8 @@ struct mesh {
   const int uv_layers_length;
   const mesh_material * materials;
   const int materials_length;
+  const edge_polygon * edge_polygons;
+  const int edge_polygons_length;
 };
 
 struct object {
