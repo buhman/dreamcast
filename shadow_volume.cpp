@@ -163,6 +163,7 @@ void shadow_volume_mesh_rays(const vec3 * position,
                              const vec3 * cast_position,
                              const int * edge_loop,
                              const int edge_loop_length,
+                             bool last_edge_loop,
                              void(*render_quad)(vec3 a, vec3 b, vec3 c, vec3 d, bool l))
 {
   for (int i = 0; i < edge_loop_length; i++) {
@@ -177,7 +178,7 @@ void shadow_volume_mesh_rays(const vec3 * position,
     vec3 c = cast_position[i2];
     vec3 d = cast_position[i1];
 
-    bool last_in_volume = (i == (edge_loop_length - 1));
+    bool last_in_volume = last_edge_loop && (i == (edge_loop_length - 1));
     render_quad(a, b, c, d, last_in_volume);
   }
 }
@@ -254,10 +255,12 @@ void shadow_volume_mesh(const vec3 light,
   for (int i = 0; i < edge_loop_count; i++) {
     int edge_loop_length = edge_loop_lengths[i];
     int * edge_loop = &edge_loops[edge_loop_ix];
+    bool last = i == (edge_loop_count - 1);
     shadow_volume_mesh_rays(position,
                             cast_position,
                             edge_loop,
                             edge_loop_length,
+                            last,
                             render_quad);
     edge_loop_ix += edge_loop_length;
   }
