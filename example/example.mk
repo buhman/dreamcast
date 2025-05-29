@@ -1185,7 +1185,7 @@ SCANNER_OBJ = \
 	model/scanner/Bones.data.o \
 	model/scanner/Dino.data.o \
 	model/scanner/powervr.data.o \
-	model/scanner/Scanner.data.o \
+	model/scanner/smoke.data.o \
 	model/scanner/Surface.data.o \
 	$(LIBGCC)
 

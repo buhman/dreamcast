@@ -45,7 +45,8 @@
 #include "model/scanner/Bones.data.h"
 #include "model/scanner/Dino.data.h"
 #include "model/scanner/powervr.data.h"
-#include "model/scanner/Scanner.data.h"
+//#include "model/scanner/Scanner.data.h"
+#include "model/scanner/smoke.data.h"
 #include "model/scanner/Surface.data.h"
 
 struct material {
@@ -77,6 +78,7 @@ const material materials[] = {
     .offset = 262144,
     .dimension = 256,
   },
+  /*
   [Mt_SCANNER] = // 131072 model/scanner/Scanner.data
   {
     .start = (void *)&_binary_model_scanner_Scanner_data_start,
@@ -84,18 +86,26 @@ const material materials[] = {
     .offset = 393216,
     .dimension = 256,
   },
+  */
+  [Mt_SCANNER] = // 524288 model/scanner/smoke.data
+  {
+    .start = (void *)&_binary_model_scanner_smoke_data_start,
+    .size = (uint32_t)&_binary_model_scanner_smoke_data_size,
+    .offset = 393216,
+    .dimension = 512,
+  },
   [Mt_LOGO] = // 524288 model/scanner/powervr.data
   {
     .start = (void *)&_binary_model_scanner_powervr_data_start,
     .size = (uint32_t)&_binary_model_scanner_powervr_data_size,
-    .offset = 524288,
+    .offset = 917504,
     .dimension = 512,
   },
   [Mt_BACKGROUND] = // 131072 model/scanner/Back.data
   {
     .start = (void *)&_binary_model_scanner_Back_data_start,
     .size = (uint32_t)&_binary_model_scanner_Back_data_size,
-    .offset = 1048576,
+    .offset = 1441792,
     .dimension = 256,
   },
 };
@@ -159,18 +169,19 @@ const int tile_height = framebuffer_height / 32;
 
 constexpr uint32_t ta_alloc = 0
                             | ta_alloc_ctrl::pt_opb::no_list
-                            | ta_alloc_ctrl::tm_opb::no_list
-                            | ta_alloc_ctrl::t_opb::no_list
-      | ta_alloc_ctrl::om_opb::_32x4byte
-                            | ta_alloc_ctrl::o_opb::_32x4byte;
+  | ta_alloc_ctrl::tm_opb::_32x4byte
+  | ta_alloc_ctrl::t_opb::_32x4byte
+  //| ta_alloc_ctrl::om_opb::_32x4byte
+  | ta_alloc_ctrl::o_opb::_32x4byte
+  ;
 
 constexpr int ta_cont_count = 1;
 constexpr struct opb_size opb_size[ta_cont_count] = {
   {
     .opaque = 32 * 4,
-    .opaque_modifier = 32 * 4,
-    .translucent = 0,
-    .translucent_modifier = 0,
+    //.opaque_modifier = 32 * 4,
+    .translucent = 32 * 4,
+    .translucent_modifier = 32 * 4,
     .punch_through = 0
   }
 };
@@ -229,7 +240,10 @@ void vbr600()
 
     if (isterr) {
       serial::string("isterr: ");
-      serial::integer<uint32_t>(system.ISTERR);
+      serial::integer<uint32_t>(isterr);
+      if (isterr & 1) {
+        system.ISTERR = 1;
+      }
     }
 
     pump_events(istnrm);
@@ -247,10 +261,7 @@ void vbr600()
 void global_polygon_type_1(ta_parameter_writer& writer,
                            uint32_t para_control_obj_control,
                            uint32_t nMaterial,
-                           const float a = 1.0f,
-                           const float r = 1.0f,
-                           const float g = 1.0f,
-                           const float b = 1.0f
+                           float a
                            )
 {
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
@@ -261,24 +272,39 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                         ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater_or_equal
-                                          | isp_tsp_instruction_word::culling_mode::no_culling
+                                          | isp_tsp_instruction_word::culling_mode::cull_if_negative
                                           | tsp_instruction_word::filter_mode::bilinear_filter
                                           ;
 
   const material& m = materials[nMaterial];
 
-  const uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
-                                      | tsp_instruction_word::texture_shading_instruction::decal
-                                      | tsp_instruction_word::src_alpha_instr::one
-                                      | tsp_instruction_word::dst_alpha_instr::zero
-                                      | tsp_instruction_word::texture_u_size::from_int(m.dimension)
-                                      | tsp_instruction_word::texture_v_size::from_int(m.dimension)
-                                      ;
+  uint32_t blending;
+  if (a == 1.0f) {
+    blending = tsp_instruction_word::src_alpha_instr::one
+             | tsp_instruction_word::dst_alpha_instr::zero
+             | tsp_instruction_word::texture_shading_instruction::modulate
+             ;
+  } else {
+    blending = tsp_instruction_word::src_alpha_instr::src_alpha
+             | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+             | tsp_instruction_word::use_alpha
+             | tsp_instruction_word::texture_shading_instruction::modulate_alpha
+             ;
+  }
+  uint32_t tsp_instruction_word = tsp_instruction_word::fog_control::no_fog
+                                | blending
+                                | tsp_instruction_word::texture_u_size::from_int(m.dimension)
+                                | tsp_instruction_word::texture_v_size::from_int(m.dimension)
+                                ;
 
   uint32_t texture_address = texture_memory_alloc.texture.start + m.offset;
   uint32_t texture_control_word = texture_control_word::pixel_format::_565
                                 | texture_control_word::scan_order::twiddled
                                 | texture_control_word::texture_address(texture_address / 8);
+
+  const float r = 1.0f;
+  const float g = 1.0f;
+  const float b = 1.0f;
 
   writer.append<ta_global_parameter::polygon_type_1>() =
     ta_global_parameter::polygon_type_1(parameter_control_word,
@@ -292,6 +318,111 @@ void global_polygon_type_1(ta_parameter_writer& writer,
                                         );
 }
 
+void global_polygon_type_4(ta_parameter_writer& writer,
+                           uint32_t para_control_obj_control,
+                           uint32_t nMaterial,
+                           float a
+                           )
+{
+  const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                        | obj_control::col_type::intensity_mode_1
+                                        | obj_control::gouraud
+                                        | obj_control::texture
+                                        | para_control_obj_control
+    | obj_control::volume::polygon::with_two_volumes
+    | obj_control::shadow
+                                        ;
+
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater_or_equal
+                                          | isp_tsp_instruction_word::culling_mode::no_culling
+                                          | tsp_instruction_word::filter_mode::bilinear_filter
+                                          ;
+
+  const material& m = materials[nMaterial];
+
+  const uint32_t tsp_instruction_word_0 = tsp_instruction_word::fog_control::no_fog
+                                        | tsp_instruction_word::texture_shading_instruction::modulate
+                                        | tsp_instruction_word::src_alpha_instr::one
+                                        | tsp_instruction_word::dst_alpha_instr::zero
+                                        | tsp_instruction_word::texture_u_size::from_int(m.dimension)
+                                        | tsp_instruction_word::texture_v_size::from_int(m.dimension)
+                                        ;
+
+  const uint32_t tsp_instruction_word_1 = tsp_instruction_word::fog_control::no_fog
+                                        | tsp_instruction_word::texture_shading_instruction::modulate_alpha
+                                        | tsp_instruction_word::src_alpha_instr::src_alpha
+                                        | tsp_instruction_word::dst_alpha_instr::inverse_src_alpha
+                                        | tsp_instruction_word::use_alpha
+                                        | tsp_instruction_word::texture_u_size::from_int(m.dimension)
+                                        | tsp_instruction_word::texture_v_size::from_int(m.dimension)
+                                        ;
+
+  uint32_t texture_address = texture_memory_alloc.texture.start + m.offset;
+  uint32_t texture_control_word = texture_control_word::pixel_format::_565
+                                | texture_control_word::scan_order::twiddled
+                                | texture_control_word::texture_address(texture_address / 8);
+  uint32_t texture_control_word_0 = texture_control_word;
+  uint32_t texture_control_word_1 = texture_control_word;
+
+
+  const float a_0 = 1.0f;
+  const float r_0 = 1.0f;
+  const float g_0 = 1.0f;
+  const float b_0 = 1.0f;
+
+  const float a_1 = 0.5f;
+  const float r_1 = 0.5f;
+  const float g_1 = 0.5f;
+  const float b_1 = 0.5f;
+
+  writer.append<ta_global_parameter::polygon_type_4>() =
+    ta_global_parameter::polygon_type_4(parameter_control_word,
+                                        isp_tsp_instruction_word,
+                                        tsp_instruction_word_0,
+                                        texture_control_word_0,
+                                        tsp_instruction_word_1,
+                                        texture_control_word_1,
+                                        0, // data_size_for_sort_dma
+                                        0, // next_address_for_sort_dma
+                                        a_0,
+                                        r_0,
+                                        g_0,
+                                        b_0,
+                                        a_1,
+                                        r_1,
+                                        g_1,
+                                        b_1
+                                        );
+}
+
+void global_polygon_modifier_volume(ta_parameter_writer& writer, uint32_t control)
+{
+   uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                   | control
+                                   ;
+
+   uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::normal_polygon
+                                     | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  writer.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(parameter_control_word,
+                                         isp_tsp_instruction_word);
+}
+
+void global_polygon_modifier_volume_last_in_volume(ta_parameter_writer& writer, uint32_t control)
+{
+  const uint32_t last_parameter_control_word = para_control::para_type::polygon_or_modifier_volume
+                                             | control
+                                             | obj_control::volume::modifier_volume::last_in_volume;
+
+  const uint32_t last_isp_tsp_instruction_word = isp_tsp_instruction_word::volume_instruction::inside_last_polygon
+                                               | isp_tsp_instruction_word::culling_mode::no_culling;
+
+  writer.append<ta_global_parameter::modifier_volume>() =
+    ta_global_parameter::modifier_volume(last_parameter_control_word,
+                                         last_isp_tsp_instruction_word);
+}
+
 static inline vec3 screen_transform(vec3 v)
 {
   float dim = 480; // * 2.0;
@@ -301,17 +432,6 @@ static inline vec3 screen_transform(vec3 v)
     v.y / (1.f * v.z) * dim + 480 / 2.0f,
     1 / v.z,
   };
-}
-
-static uint32_t random = 0x12345678;
-
-uint32_t xorshift()
-{
-  uint32_t x = random;
-  x ^= x << 13;
-  x ^= x >> 17;
-  x ^= x << 5;
-  return random = x;
 }
 
 #define fsrra(n) (1.0f / (sqrt(n)))
@@ -370,7 +490,15 @@ void transfer_line(ta_parameter_writer& writer, vec3 p1, vec3 p2)
 
 const vec3 _light = {10, 5, 10};
 
-void transfer_mesh(ta_parameter_writer& writer, const mat4x4& screen_trans, const Struct_Mesh& mesh)
+template <void (*global_polygon_type_N)(ta_parameter_writer&, uint32_t, uint32_t, float) = global_polygon_type_1, bool two_volumes = false>
+void transfer_mesh(ta_parameter_writer& writer,
+                   ta_parameter_writer& mv_writer,
+                   const mat4x4& screen_trans,
+                   const Struct_Mesh& mesh,
+                   uint32_t control,
+                   uint32_t mv_control,
+                   bool modifier_volume,
+                   float a = 1.0f)
 {
   vec3 position[mesh.nNumVertex];
   static_assert((sizeof (vec3)) == 3 * 4);
@@ -393,44 +521,115 @@ void transfer_mesh(ta_parameter_writer& writer, const mat4x4& screen_trans, cons
     position[i] = screen_transform(pos);
   }
 
-  int ix = 0;
+  if (1) {
+    global_polygon_type_N(writer,
+                          control,
+                          mesh.nMaterial,
+                          a);
 
-  global_polygon_type_1(writer,
-                        para_control::list_type::opaque,
-                        mesh.nMaterial);
+    int ix = 0;
 
-  for (int i = 0; i < (int)mesh.nNumStrips; i++) {
-    int strip_length = mesh.pStripLength[i];
+    for (int i = 0; i < (int)mesh.nNumStrips; i++) {
+      int strip_length = mesh.pStripLength[i];
 
-    for (int j = 0; j < (strip_length + 2); j++) {
-      int vertex_ix = mesh.pStrips[ix];
-      vec3 p = position[vertex_ix];
-      float li = intensity[vertex_ix];
-      vec2 t = *(vec2 *)(&mesh.pUV[vertex_ix * 2]);
-      ix += 1;
+      for (int j = 0; j < (strip_length + 2); j++) {
+        int vertex_ix = mesh.pStrips[ix];
+        vec3 p = position[vertex_ix];
+        float li = intensity[vertex_ix];
+        vec2 t = *(vec2 *)(&mesh.pUV[vertex_ix * 2]);
+        ix += 1;
 
-      bool end_of_strip = (j == (strip_length + 1));
-      writer.append<ta_vertex_parameter::polygon_type_7>() =
-        ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(end_of_strip),
-                                            p.x, p.y, p.z,
-                                            t.x, t.y,
-                                            li, 0);
+        bool end_of_strip = (j == (strip_length + 1));
+        if constexpr (two_volumes) {
+          writer.append<ta_vertex_parameter::polygon_type_13>() =
+            ta_vertex_parameter::polygon_type_13(polygon_vertex_parameter_control_word(end_of_strip),
+                                                 p.x, p.y, p.z,
+                                                 t.x, t.y,
+                                                 li, 0,
+                                                 t.x, t.y,
+                                                 li, 0);
+        } else {
+          writer.append<ta_vertex_parameter::polygon_type_7>() =
+            ta_vertex_parameter::polygon_type_7(polygon_vertex_parameter_control_word(end_of_strip),
+                                                p.x, p.y, p.z,
+                                                t.x, t.y,
+                                                li, 0);
+        }
+      }
+    }
+  }
 
+  if (modifier_volume) {
+    global_polygon_modifier_volume(mv_writer, mv_control);
+
+    for (int i = 0; i < (int)mesh.nNumFaces; i++) {
+      int a_ix = mesh.pFaces[i * 3 + 0];
+      int b_ix = mesh.pFaces[i * 3 + 1];
+      int c_ix = mesh.pFaces[i * 3 + 2];
+
+      vec3 ap = position[a_ix];
+      vec3 bp = position[b_ix];
+      vec3 cp = position[c_ix];
+
+      if (i == ((int)mesh.nNumFaces - 1)) {
+        global_polygon_modifier_volume_last_in_volume(mv_writer, mv_control);
+      }
+
+      mv_writer.append<ta_vertex_parameter::modifier_volume>() =
+        ta_vertex_parameter::modifier_volume(modifier_volume_vertex_parameter_control_word(),
+                                             ap.x, ap.y, ap.z,
+                                             bp.x, bp.y, bp.z,
+                                             cp.x, cp.y, cp.z);
     }
   }
 }
 
-void transfer_scene(ta_parameter_writer& writer, const mat4x4& screen_trans)
+void transfer_scene(ta_parameter_writer& op_writer,
+                    ta_parameter_writer& tl_writer,
+                    ta_parameter_writer& tl_mv_writer,
+                    const mat4x4& screen_trans)
 {
   // opaque list
   {
     for (int i = 0; i < NUM_MESHES; i++) {
-      transfer_mesh(writer, screen_trans, Mesh[i]);
+      if (i == M_SCANNER) {
+        transfer_mesh<global_polygon_type_1>(tl_writer,
+                                             tl_mv_writer,
+                                             screen_trans,
+                                             Mesh[i],
+                                             para_control::list_type::translucent,
+                                             para_control::list_type::translucent_modifier_volume,
+                                             true, // modifier volume
+                                             0.5f);
+      } else if (i == M_DINOSKIN) {
+        transfer_mesh<global_polygon_type_4, true>(tl_writer,
+                                                   tl_mv_writer,
+                                                   screen_trans,
+                                                   Mesh[i],
+                                                   para_control::list_type::translucent | obj_control::shadow,
+                                                   para_control::list_type::translucent_modifier_volume,
+                                                   false); // modifier volume
+      } else {
+        transfer_mesh<global_polygon_type_1>(op_writer,
+                                             op_writer,
+                                             screen_trans,
+                                             Mesh[i],
+                                             para_control::list_type::opaque,
+                                             para_control::list_type::opaque_modifier_volume,
+                                             false); // modifier volume
+      }
     }
-
-    writer.append<ta_global_parameter::end_of_list>() =
-      ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
   }
+
+
+  op_writer.append<ta_global_parameter::end_of_list>() =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+
+  tl_writer.append<ta_global_parameter::end_of_list>() =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
+
+  tl_mv_writer.append<ta_global_parameter::end_of_list>() =
+    ta_global_parameter::end_of_list(para_control::para_type::end_of_list);
 }
 
 mat4x4 update_analog(mat4x4& screen_trans)
@@ -502,8 +701,9 @@ void transfer_textures()
   transfer_scene_textures();
 }
 
-uint8_t __attribute__((aligned(32))) ta_parameter_buf1[1024 * 1024 * 2];
+uint8_t __attribute__((aligned(32))) ta_parameter_buf1[1024 * 1024];
 uint8_t __attribute__((aligned(32))) ta_parameter_buf2[1024 * 1024];
+uint8_t __attribute__((aligned(32))) ta_parameter_buf3[1024 * 1024];
 
 int main()
 {
@@ -526,8 +726,7 @@ int main()
 
   transfer_textures();
 
-  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::intensity_volume_mode
-                       | fpu_shad_scale::scale_factor_for_shadows(128);
+  holly.FPU_SHAD_SCALE = fpu_shad_scale::simple_shadow_enable::parameter_selection_volume_mode;
 
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
@@ -543,15 +742,16 @@ int main()
   background_parameter2(texture_memory_alloc.background[0].start,
                         0xff202040);
 
-  ta_parameter_writer tl_writer = ta_parameter_writer(ta_parameter_buf1, (sizeof (ta_parameter_buf1)));
-  ta_parameter_writer sv_writer = ta_parameter_writer(ta_parameter_buf2, (sizeof (ta_parameter_buf2)));
+  ta_parameter_writer op_writer = ta_parameter_writer(ta_parameter_buf1, (sizeof (ta_parameter_buf1)));
+  ta_parameter_writer tl_writer = ta_parameter_writer(ta_parameter_buf2, (sizeof (ta_parameter_buf2)));
+  ta_parameter_writer tl_mv_writer = ta_parameter_writer(ta_parameter_buf3, (sizeof (ta_parameter_buf3)));
 
   video_output::set_mode_vga();
 
   mat4x4 screen_trans = {
     1, 0, 0, 0,
     0, -1, 0, 0,
-    0, 0, 1, 160,
+    0, 0, 1, 190,
     0, 0, 0, 1,
   };
 
@@ -562,9 +762,13 @@ int main()
 
     screen_trans = update_analog(screen_trans);
 
+    op_writer.offset = 0;
     tl_writer.offset = 0;
-    sv_writer.offset = 0;
-    transfer_scene(tl_writer, screen_trans);
+    tl_mv_writer.offset = 0;
+    transfer_scene(op_writer,
+                   tl_writer,
+                   tl_mv_writer,
+                   screen_trans);
 
     while (ta_in_use);
     while (core_in_use);
@@ -577,9 +781,18 @@ int main()
                                ta_alloc,
                                tile_width,
                                tile_height);
+    ta_polygon_converter_writeback(tl_mv_writer.buf, tl_mv_writer.offset);
+    ta_polygon_converter_transfer(tl_mv_writer.buf, tl_mv_writer.offset);
+    ta_wait_translucent_modifier_volume_list();
+
     ta_polygon_converter_writeback(tl_writer.buf, tl_writer.offset);
     ta_polygon_converter_transfer(tl_writer.buf, tl_writer.offset);
+    ta_wait_translucent_list();
 
+    ta_polygon_converter_writeback(op_writer.buf, op_writer.offset);
+    ta_polygon_converter_transfer(op_writer.buf, op_writer.offset);
+
+    int count = 0;
     while (next_frame == 0);
     next_frame = 0;
   }

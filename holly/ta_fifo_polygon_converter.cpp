@@ -170,6 +170,13 @@ void ta_wait_translucent_list()
   system.ISTNRM = istnrm::end_of_transferring_translucent_list;
 }
 
+void ta_wait_translucent_modifier_volume_list()
+{
+  while ((system.ISTNRM & istnrm::end_of_transferring_translucent_modifier_volume_list) == 0);
+
+  system.ISTNRM = istnrm::end_of_transferring_translucent_modifier_volume_list;
+}
+
 void ta_wait_punch_through_list()
 {
   while ((system.ISTNRM & istnrm::end_of_transferring_punch_through_list) == 0);
