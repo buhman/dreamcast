@@ -1167,8 +1167,8 @@ SHADOW_VOLUME_OBJ = \
 example/shadow_volume.elf: LDSCRIPT = $(LIB)/main.lds
 example/shadow_volume.elf: $(START_OBJ) $(SHADOW_VOLUME_OBJ)
 
-SHADOW_VOLUME2_OBJ = \
-	example/shadow_volume2.o \
+SCANNER_OBJ = \
+	example/scanner.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
@@ -1180,8 +1180,14 @@ SHADOW_VOLUME2_OBJ = \
 	printf/printf.o \
 	printf/unparse.o \
 	printf/parse.o \
-	shadow_volume.o \
+	model/scanner/Dino.data.o \
+	model/scanner/Back.data.o \
+	model/scanner/Bones.data.o \
+	model/scanner/Dino.data.o \
+	model/scanner/powervr.data.o \
+	model/scanner/Scanner.data.o \
+	model/scanner/Surface.data.o \
 	$(LIBGCC)
 
-example/shadow_volume2.elf: LDSCRIPT = $(LIB)/main.lds
-example/shadow_volume2.elf: $(START_OBJ) $(SHADOW_VOLUME2_OBJ)
+example/scanner.elf: LDSCRIPT = $(LIB)/main.lds
+example/scanner.elf: $(START_OBJ) $(SCANNER_OBJ)

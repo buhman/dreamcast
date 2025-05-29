@@ -16,5 +16,6 @@ include example/bsp/bsp.mk
 include example/aica/aica.mk
 include chess/chess.mk
 include text_editor/text_editor.mk
+include assets.mk
 
 .PHONY: phony
