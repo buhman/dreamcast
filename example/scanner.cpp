@@ -45,6 +45,7 @@
 #include "model/scanner/Bones.data.h"
 #include "model/scanner/Dino.data.h"
 #include "model/scanner/powervr.data.h"
+#include "model/scanner/powervr_imr.data.h"
 //#include "model/scanner/Scanner.data.h"
 #include "model/scanner/smoke.data.h"
 #include "model/scanner/Surface.data.h"
@@ -55,6 +56,8 @@ struct material {
   uint32_t offset;
   int dimension;
 };
+
+#define Mt_LOGO2 (Mt_BACKGROUND + 1)
 
 const material materials[] = {
   [Mt_DINOSAUR] = // 131072 model/scanner/Dino.data
@@ -108,7 +111,16 @@ const material materials[] = {
     .offset = 1441792,
     .dimension = 256,
   },
+  [Mt_LOGO2] = // 524288 model/scanner/powervr_imr.data
+  {
+    .start = (void *)&_binary_model_scanner_powervr_imr_data_start,
+    .size = (uint32_t)&_binary_model_scanner_powervr_imr_data_size,
+    .offset = 1572864,
+    .dimension = 512,
+  },
 };
+
+static bool flip_logo = false;
 
 static ft0::data_transfer::data_format data[4];
 
@@ -171,7 +183,7 @@ constexpr uint32_t ta_alloc = 0
                             | ta_alloc_ctrl::pt_opb::no_list
   | ta_alloc_ctrl::tm_opb::_32x4byte
   | ta_alloc_ctrl::t_opb::_32x4byte
-  //| ta_alloc_ctrl::om_opb::_32x4byte
+  | ta_alloc_ctrl::om_opb::no_list
   | ta_alloc_ctrl::o_opb::_32x4byte
   ;
 
@@ -179,7 +191,7 @@ constexpr int ta_cont_count = 1;
 constexpr struct opb_size opb_size[ta_cont_count] = {
   {
     .opaque = 32 * 4,
-    //.opaque_modifier = 32 * 4,
+    .opaque_modifier = 0,
     .translucent = 32 * 4,
     .translucent_modifier = 32 * 4,
     .punch_through = 0
@@ -217,11 +229,9 @@ static inline void pump_events(uint32_t istnrm)
     system.ISTNRM = istnrm::end_of_transferring_opaque_list;
 
     core_in_use = 1;
-    core_start_render2(texture_memory_alloc.region_array.start,
-                       texture_memory_alloc.isp_tsp_parameters.start,
-                       texture_memory_alloc.background[0].start,
-                       texture_memory_alloc.framebuffer[framebuffer_ix].start,
-                       framebuffer_width);
+
+    holly.FB_W_SOF1 = texture_memory_alloc.framebuffer[framebuffer_ix].start;
+    holly.STARTRENDER = 1;
 
     ta_in_use = 0;
   }
@@ -425,7 +435,7 @@ void global_polygon_modifier_volume_last_in_volume(ta_parameter_writer& writer, 
 
 static inline vec3 screen_transform(vec3 v)
 {
-  float dim = 480; // * 2.0;
+  float dim = 480 / 2; // * 2.0;
 
   return {
     v.x / (1.f * v.z) * dim + 640 / 2.0f,
@@ -522,10 +532,17 @@ void transfer_mesh(ta_parameter_writer& writer,
   }
 
   if (1) {
-    global_polygon_type_N(writer,
-                          control,
-                          mesh.nMaterial,
-                          a);
+    if (mesh.nMaterial == Mt_LOGO && flip_logo) {
+      global_polygon_type_N(writer,
+                            control,
+                            Mt_LOGO2,
+                            a);
+    } else {
+      global_polygon_type_N(writer,
+                            control,
+                            mesh.nMaterial,
+                            a);
+    }
 
     int ix = 0;
 
@@ -587,15 +604,20 @@ void transfer_mesh(ta_parameter_writer& writer,
 void transfer_scene(ta_parameter_writer& op_writer,
                     ta_parameter_writer& tl_writer,
                     ta_parameter_writer& tl_mv_writer,
-                    const mat4x4& screen_trans)
+                    const mat4x4& screen_trans,
+                    int tick)
 {
   // opaque list
   {
     for (int i = 0; i < NUM_MESHES; i++) {
       if (i == M_SCANNER) {
+        float x = sin((float)tick * 0.01f) * 100.f;
+
+        mat4x4 trans = translate((vec3){0, 0, x}) * rotate_x(sin(tick * 0.001f) * 9.f);
+
         transfer_mesh<global_polygon_type_1>(tl_writer,
                                              tl_mv_writer,
-                                             screen_trans,
+                                             screen_trans * trans,
                                              Mesh[i],
                                              para_control::list_type::translucent,
                                              para_control::list_type::translucent_modifier_volume,
@@ -609,6 +631,8 @@ void transfer_scene(ta_parameter_writer& op_writer,
                                                    para_control::list_type::translucent | obj_control::shadow,
                                                    para_control::list_type::translucent_modifier_volume,
                                                    false); // modifier volume
+      } else if (i == M_BACKGROUND) {
+        // do nothing
       } else {
         transfer_mesh<global_polygon_type_1>(op_writer,
                                              op_writer,
@@ -640,6 +664,14 @@ mat4x4 update_analog(mat4x4& screen_trans)
   const float x_ = static_cast<float>(data[0].analog_coordinate_axis[2] - 0x80) / 127.f;
   const float y_ = static_cast<float>(data[0].analog_coordinate_axis[3] - 0x80) / 127.f;
 
+  int start = ft0::data_transfer::digital_button::start(data[0].digital_button) == 0;
+  static int last_start = 0;
+
+  if (start && (start != last_start)) {
+    flip_logo = !flip_logo;
+  }
+  last_start = start;
+
   float y = -0.05f * x_;
   float x = 0.05f * y_;
 
@@ -647,7 +679,7 @@ mat4x4 update_analog(mat4x4& screen_trans)
 
   return translate((vec3){0, 0, z}) *
     screen_trans *
-    rotate_x(x) *
+    //rotate_x(x) *
     rotate_y(y);
 }
 
@@ -739,8 +771,12 @@ int main()
                          texture_memory_alloc.region_array.start,
                          texture_memory_alloc.object_list.start);
 
-  background_parameter2(texture_memory_alloc.background[0].start,
-                        0xff202040);
+  uint32_t texture_address = texture_memory_alloc.texture.start + materials[Mt_BACKGROUND].offset;
+  background_parameter_textured(texture_memory_alloc.background[0].start,
+                                materials[Mt_BACKGROUND].dimension,
+                                materials[Mt_BACKGROUND].dimension,
+                                texture_address
+                                );
 
   ta_parameter_writer op_writer = ta_parameter_writer(ta_parameter_buf1, (sizeof (ta_parameter_buf1)));
   ta_parameter_writer tl_writer = ta_parameter_writer(ta_parameter_buf2, (sizeof (ta_parameter_buf2)));
@@ -748,12 +784,34 @@ int main()
 
   video_output::set_mode_vga();
 
+  {
+    uint32_t region_array_start = texture_memory_alloc.region_array.start;
+    uint32_t isp_tsp_parameters_start = texture_memory_alloc.isp_tsp_parameters.start;
+    uint32_t background_start = texture_memory_alloc.background[0].start;
+
+    holly.REGION_BASE = region_array_start;
+    holly.PARAM_BASE = isp_tsp_parameters_start;
+
+    uint32_t background_offset = background_start - isp_tsp_parameters_start;
+    holly.ISP_BACKGND_T = isp_backgnd_t::tag_address(background_offset / 4)
+                        | isp_backgnd_t::tag_offset(0)
+                        | isp_backgnd_t::skip(3);
+    holly.ISP_BACKGND_D = _i(1.f/100000.f);
+
+    holly.FB_W_CTRL = fb_w_ctrl::fb_dither
+                    | fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+    uint32_t bytes_per_pixel = 2;
+    holly.FB_W_LINESTRIDE = (framebuffer_width * bytes_per_pixel) / 8;
+  }
+
   mat4x4 screen_trans = {
     1, 0, 0, 0,
     0, -1, 0, 0,
     0, 0, 1, 190,
     0, 0, 0, 1,
   };
+
+  int tick = 0;
 
   do_get_condition();
   while (1) {
@@ -768,7 +826,10 @@ int main()
     transfer_scene(op_writer,
                    tl_writer,
                    tl_mv_writer,
-                   screen_trans);
+                   screen_trans,
+                   tick);
+
+    tick += 1;
 
     while (ta_in_use);
     while (core_in_use);
