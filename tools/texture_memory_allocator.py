@@ -1,5 +1,11 @@
 import struct
 
+# make ./example/memory_map.bin
+# ./tools/ftdi_transfer ./example/memory_map.bin
+# ./tools/dump_texture_memory.sh
+
+# sha256sum
+# cf5070b1fdfa26ecb527c86afaf046553b09ad677a88ef569a2b802790ccde03
 with open("texture_memory_write_64_read_32.bin", "rb") as f:
     buf = memoryview(f.read())
 
@@ -11,17 +17,20 @@ lookup = [
 #    print(f"{n:08x}")
 
 allocations = {
-    "isp_tsp_parameters" : (0x11_c000  , 32 ),
-    "object_list"        : (0x09_6000  , 32 ),
+    "isp_tsp_parameters0" : (0x11_c000  , 32 ),
+    "isp_tsp_parameters1" : (0x11_c000  , 32 ),
 
-    "region_array"       : (0x01_0000  , 0  ),
-    "framebuffer0"       : (0x09_6000  , 0  ),
+    "object_list0"        : (0x04_b000  , 32 ),
+    "object_list1"        : (0x04_b000  , 32 ),
 
-    "framebuffer1"       : (0x09_6000  , 0  ),
-    "framebuffer2"       : (0x09_6000  , 0  ),
+    "region_array0"       : (0x01_0000  , 0  ),
+    "region_array1"       : (0x01_0000  , 0  ),
 
-    "background0"        : (0x00_0040  , 32 ),
-    "background1"        : (0x00_0040  , 32 ),
+    "framebuffer0"        : (0x01_4000  , 0  ),
+    "framebuffer1"        : (0x01_4000  , 0  ),
+
+    "background0"         : (0x00_0040  , 32 ),
+    "background1"         : (0x00_0040  , 32 ),
 }
 
 def gen_allocations():

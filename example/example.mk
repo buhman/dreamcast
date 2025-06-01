@@ -1192,3 +1192,23 @@ SCANNER_OBJ = \
 
 example/scanner.elf: LDSCRIPT = $(LIB)/main.lds
 example/scanner.elf: $(START_OBJ) $(SCANNER_OBJ)
+
+STRIP_BUFFER_OBJ = \
+	example/strip_buffer.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	font/verite_8x16/verite_8x16.data.o \
+	font/font_bitmap.o \
+	$(LIBGCC)
+
+example/strip_buffer.elf: LDSCRIPT = $(LIB)/main.lds
+example/strip_buffer.elf: $(START_OBJ) $(STRIP_BUFFER_OBJ)
