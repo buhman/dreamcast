@@ -1212,3 +1212,26 @@ STRIP_BUFFER_OBJ = \
 
 example/strip_buffer.elf: LDSCRIPT = $(LIB)/main.lds
 example/strip_buffer.elf: $(START_OBJ) $(STRIP_BUFFER_OBJ)
+
+GAME_OF_LIFE_OBJ = \
+	example/game_of_life.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	texture/game_of_life/dead.data.o \
+	texture/game_of_life/live1.data.o \
+	texture/game_of_life/live2.data.o \
+	texture/game_of_life/live3.data.o \
+	texture/game_of_life/live4.data.o \
+	$(LIBGCC)
+
+example/game_of_life.elf: LDSCRIPT = $(LIB)/main.lds
+example/game_of_life.elf: $(START_OBJ) $(GAME_OF_LIFE_OBJ)

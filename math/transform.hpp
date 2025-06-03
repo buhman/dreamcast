@@ -66,7 +66,7 @@ inline constexpr mat<4, 4, T> rotate_axis_angle(vec<3, T> u, T t)
   T xy = u.x * u.y;
   T xz = u.x * u.z;
   T yy = u.y * u.y;
-  T yz = u.z * u.z;
+  T yz = u.y * u.z;
   T zz = u.z * u.z;
 
   return {
@@ -102,6 +102,26 @@ inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> r)
         xz2 - yw2,      yz2 + xw2,  1 - xx2 - yy2,   0,
                 0,              0,              0,   1,
   };
+}
+
+template <typename T>
+inline constexpr mat<4, 4, T> look_at(vec<3, T> eye, vec<3, T> center, vec<3, T> up)
+{
+  vec3 z = normalize(eye - center);
+  vec3 y = up;
+  vec3 x = cross(y, z);
+  y = cross(z, x);
+  x = normalize(x);
+  y = normalize(y);
+
+  mat<4, 4, T> mat = {
+    x.x, x.y, x.z, -dot(x, eye),
+    y.x, y.y, y.z, -dot(y, eye),
+    z.x, z.y, z.z, -dot(z, eye),
+      0,   0,   0,            1,
+  };
+
+  return mat;
 }
 
 template <typename T>

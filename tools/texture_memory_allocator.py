@@ -16,6 +16,7 @@ lookup = [
 #for n in lookup:
 #    print(f"{n:08x}")
 
+"""
 allocations = {
     "isp_tsp_parameters0" : (0x11_c000  , 32 ),
     "isp_tsp_parameters1" : (0x11_c000  , 32 ),
@@ -31,6 +32,21 @@ allocations = {
 
     "background0"         : (0x00_0040  , 32 ),
     "background1"         : (0x00_0040  , 32 ),
+}
+"""
+
+allocations = {
+    "isp_tsp_parameters" : (0x21_c000  , 32 ),
+    "object_list"        : (0x09_6000  , 32 ),
+
+    "region_array"       : (0x01_0000  , 0  ),
+    "framebuffer0"       : (0x09_6000  , 0  ),
+
+    "framebuffer1"       : (0x09_6000  , 0  ),
+    "framebuffer2"       : (0x09_6000  , 0  ),
+
+    "background0"        : (0x00_0040  , 32 ),
+    "background1"        : (0x00_0040  , 32 ),
 }
 
 def gen_allocations():
