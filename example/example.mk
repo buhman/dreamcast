@@ -1235,3 +1235,25 @@ GAME_OF_LIFE_OBJ = \
 
 example/game_of_life.elf: LDSCRIPT = $(LIB)/main.lds
 example/game_of_life.elf: $(START_OBJ) $(GAME_OF_LIFE_OBJ)
+
+CARS_OBJ = \
+	example/cars.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	model/cars/Wall_bricks_13_512px.data.o \
+	model/cars/garbage_truck/GarbageTruck.data.o \
+	model/cars/compact_classic/gulf_blue.data.o \
+	model/cars/compact_classic/jupiter_grey.data.o \
+	$(LIBGCC)
+
+example/cars.elf: LDSCRIPT = $(LIB)/main.lds
+example/cars.elf: $(START_OBJ) $(CARS_OBJ)

@@ -44,13 +44,13 @@ struct mesh {
 
 struct object {
   const struct mesh * mesh;
-  const vec3 scale;
-  const vec4 rotation;
-  const vec3 location;
+  vec3 scale;
+  vec4 rotation;
+  vec3 location;
 };
 
 struct material {
-  void * start;
-  int size;
-  int offset;
+  const void * start;
+  const int size;
+  const int offset;
 };

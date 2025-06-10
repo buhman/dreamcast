@@ -107,9 +107,9 @@ inline constexpr mat<4, 4, T> rotate_quaternion(vec<4, T> r)
 template <typename T>
 inline constexpr mat<4, 4, T> look_at(vec<3, T> eye, vec<3, T> center, vec<3, T> up)
 {
-  vec3 z = normalize(eye - center);
-  vec3 y = up;
-  vec3 x = cross(y, z);
+  vec<3, T> z = normalize(eye - center);
+  vec<3, T> y = up;
+  vec<3, T> x = cross(y, z);
   y = cross(z, x);
   x = normalize(x);
   y = normalize(y);

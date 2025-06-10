@@ -97,7 +97,7 @@ def render_rotation_quaternion(f, r):
 def render_mesh(f, name, mesh):
     f.write(f"const vec2 * {name}_uv_layers[] = {{\n")
     for layer_name in mesh.uv_layers.keys():
-        f.write(f"  {name}_{layer_name}_uvmap,\n");
+        f.write(f"  {name}_{translate_name(layer_name)}_uvmap,\n");
     f.write( "};\n\n")
 
     f.write(f"const mesh {name} = {{\n")
@@ -118,7 +118,7 @@ def render_mesh(f, name, mesh):
     f.write( "};\n\n")
 
 def translate_name(name):
-    return name.replace(".", "_").replace("-", "_")
+    return name.replace(".", "_").replace("-", "_").replace(" ", "_")
 
 def mesh_objects(collections):
     objects = set()
@@ -150,7 +150,7 @@ def get_texture(material):
 
 _offset = 0
 texture_offsets = {}
-prefix = "textures_"
+prefix = "model_cars_"
 
 def get_texture_offset(image):
     global _offset
@@ -160,13 +160,13 @@ def get_texture_offset(image):
     value = _offset
     texture_offsets[image.name] = value
     width, height = image.size
-    _offset += width * height // 4 + 256 * 4 * 2
+    _offset += width * height * 2
     return value
 
 def texture_data_name(name):
     name = path.splitext(name)[0]
     name = translate_name(name)
-    return f"{prefix}{name}_vq"
+    return f"{prefix}{name}_data"
 
 def render_mesh_materials(f, name, materials):
     f.write(f"const mesh_material {name}_materials[] = {{\n")
@@ -209,7 +209,7 @@ def export_meshes(f):
 
         render_mesh_vertices(f, mesh_name, mesh.vertices)
         for layer_name, layer in mesh.uv_layers.items():
-            render_uv_map(f, mesh_name, layer_name, layer.uv)
+            render_uv_map(f, mesh_name, translate_name(layer_name), layer.uv)
         render_vertex_normals(f, mesh_name, mesh.vertices)
         render_polygon_normals(f, mesh_name, mesh.polygon_normals)
         render_polygons(f, mesh_name, mesh.polygons)
