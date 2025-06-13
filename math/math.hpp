@@ -39,13 +39,13 @@ constexpr float abs(const float n) noexcept
 constexpr float pi = 3.141592653589793;
 
 template <typename T>
-inline constexpr float max(const T a, const T b) noexcept
+inline constexpr T max(const T a, const T b) noexcept
 {
   return (a > b) ? a : b;
 }
 
 template <typename T>
-inline constexpr float min(const T a, const T b) noexcept
+inline constexpr T min(const T a, const T b) noexcept
 {
   return (a < b) ? a : b;
 }

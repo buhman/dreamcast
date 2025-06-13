@@ -137,8 +137,10 @@ inline constexpr vec<3, T> operator/(vec<3, T> const& v1, T const& scalar)
 template <typename T>
 inline constexpr T dot(vec<3, T> const& v1, vec<3, T> const& v2)
 {
-  vec<3, T> tmp(v1 * v2);
-  return tmp.x + tmp.y + tmp.z;
+  return
+    v1.x * v2.x +
+    v1.y * v2.y +
+    v1.z * v2.z;
 }
 
 template <typename T>
@@ -159,22 +161,4 @@ template <typename T, typename U>
 inline constexpr vec<3, U> functor1(U (&func) (T const& x), vec<3, T> const& v)
 {
   return vec<3, U>(func(v.x), func(v.y), func(v.z));
-}
-
-template <typename T>
-inline constexpr T magnitude(vec<3, T> const& v)
-{
-  return sqrt(dot(v, v));
-}
-
-template <typename T>
-inline constexpr vec<3, T> normalize(vec<3, T> const& v)
-{
-  return v / magnitude(v);
-}
-
-template <typename T>
-inline constexpr vec<3, T> reflect(vec<3, T> const& i, vec<3, T> const& n)
-{
-  return i - dot(n, i) * n * static_cast<T>(2.0);
 }
