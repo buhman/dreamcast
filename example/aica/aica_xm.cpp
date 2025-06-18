@@ -29,6 +29,17 @@ struct xm_state {
 
 xm_state xm = {0};
 
+struct interpreter_state {
+  int tick_rate;
+  int ticks_per_line;
+  int tick;
+  int pattern_break;
+  int pattern_index;
+  int line_index; // within the current pattern (for debugging)
+  int note_offset; // within the current pattern
+  int next_note_offset;
+};
+
 void print_u8(int8_t * chars, int length, const char * end)
 {
   for (int i = 0; i < length; i++) {
@@ -59,7 +70,7 @@ int s32(void * buf)
   return v;
 }
 
-uint8_t __attribute__((aligned(32))) sample_data[512 * 1024];
+uint8_t __attribute__((aligned(32))) sample_data[1024 * 1024];
 int sample_data_ix;
 
 int unpack_sample(int buf, int offset, xm_sample_header_t * sample_header)
@@ -202,95 +213,6 @@ void writeback(void const * const buf, uint32_t size)
   }
 }
 
-static xm_pattern_format_t column[8];
-
-void debug_pattern_format(int note_ix, xm_pattern_format_t * pf)
-{
-  /*
-  printf("note[%d]\n", note_ix);
-  printf("  note: %d\n", pf->note);
-  printf("  instrument: %d\n", pf->instrument);
-  printf("  volume_column_byte: %d\n", pf->volume_column_byte);
-  printf("  effect_type: %d\n", pf->effect_type);
-  printf("  effect_parameter: %d\n", pf->effect_parameter);
-  */
-  column[note_ix & 7].note = pf->note;
-  column[note_ix & 7].instrument = pf->instrument;
-  column[note_ix & 7].volume_column_byte = pf->volume_column_byte;
-  column[note_ix & 7].effect_type = pf->effect_type;
-  column[note_ix & 7].effect_parameter = pf->effect_parameter;
-
-  if ((note_ix & 7) == 7) {
-    printf("%3d |", note_ix / 8);
-    for (int i = 0; i < 8; i++)
-      printf(" n:%2d i:%2d |",
-             column[i].note, column[i].instrument);
-    printf("\n");
-  }
-}
-
-void debug_pattern(xm_pattern_header_t * pattern_header, int pattern_ix)
-{
-  uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
-  int ix = pattern_ix;
-  int note_ix = 0;
-  int end = s16(&pattern_header->packed_pattern_data_size);
-  while (ix < end) {
-    int p = pattern[ix];
-    if (p & 0x80) {
-      ix += 1;
-      xm_pattern_format_t pf = {};
-      if (p & (1 << 0))
-        pf.note = pattern[ix++];
-      if (p & (1 << 1))
-        pf.instrument = pattern[ix++];
-      if (p & (1 << 2))
-        pf.volume_column_byte = pattern[ix++];
-      if (p & (1 << 3))
-        pf.effect_type = pattern[ix++];
-      if (p & (1 << 4))
-        pf.effect_parameter = pattern[ix++];
-      debug_pattern_format(note_ix, &pf);
-    } else {
-      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[ix];
-      debug_pattern_format(note_ix, pf);
-      ix += 5;
-    }
-    note_ix += 1;
-  }
-  assert(ix == s16(&pattern_header->packed_pattern_data_size));
-}
-
-void debug_pattern1(xm_pattern_header_t * pattern_header, int pattern_ix, int len, int& note_ix)
-{
-  uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
-  int ix = pattern_ix;
-  int end = note_ix + len;
-  while (note_ix < end) {
-    int p = pattern[ix];
-    if (p & 0x80) {
-      ix += 1;
-      xm_pattern_format_t pf = {};
-      if (p & (1 << 0))
-        pf.note = pattern[ix++];
-      if (p & (1 << 1))
-        pf.instrument = pattern[ix++];
-      if (p & (1 << 2))
-        pf.volume_column_byte = pattern[ix++];
-      if (p & (1 << 3))
-        pf.effect_type = pattern[ix++];
-      if (p & (1 << 4))
-        pf.effect_parameter = pattern[ix++];
-      debug_pattern_format(note_ix, &pf);
-    } else {
-      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[ix];
-      debug_pattern_format(note_ix, pf);
-      ix += 5;
-    }
-    note_ix += 1;
-  }
-}
-
 uint16_t
 note_to_oct_fns(const int8_t note)
 {
@@ -318,59 +240,120 @@ note_to_oct_fns(const int8_t note)
   const uint16_t cent = (a440_note < 0) ? 12 + mod12 : mod12;
   const uint16_t fns = _cent_to_fns[cent];
 
-  return aica::oct_fns::OCT(oct - 3) | aica::oct_fns::FNS(fns);
+  return aica::oct_fns::OCT(oct - 1) | aica::oct_fns::FNS(fns);
 }
 
-void pattern_note(int ch, xm_pattern_format_t * pf, int rekey)
+void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 {
-  if (pf->note == 97) {
-    if (!rekey) {
-      wait(); aica_sound.channel[ch].KYONB(0);
-    }
-  } else if (pf->note != 0 && pf->instrument != 0) {
-    if (rekey) {
-      wait(); aica_sound.channel[ch].KYONB(0);
-    } else {
-      wait(); aica_sound.channel[ch].SA(xm.sample_data_offset[pf->instrument - 1]);
-      int lsa = xm.sample_header[pf->instrument - 1]->sample_loop_start / 2;
-      int lea = xm.sample_header[pf->instrument - 1]->sample_loop_length / 2;
-      wait(); aica_sound.channel[ch].LSA(lsa);
-      wait(); aica_sound.channel[ch].LEA(lsa + lea);
-      wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note);
-      wait(); aica_sound.channel[ch].KYONB(1);
-    }
+  static xm_pattern_format_t column[8];
+  /*
+  printf("note[%d]\n", note_ix);
+  printf("  note: %d\n", pf->note);
+  printf("  instrument: %d\n", pf->instrument);
+  printf("  volume_column_byte: %d\n", pf->volume_column_byte);
+  printf("  effect_type: %d\n", pf->effect_type);
+  printf("  effect_parameter: %d\n", pf->effect_parameter);
+  */
+  column[ch].note = pf->note;
+  column[ch].instrument = pf->instrument;
+  column[ch].volume_column_byte = pf->volume_column_byte;
+  column[ch].effect_type = pf->effect_type;
+  column[ch].effect_parameter = pf->effect_parameter;
+
+  if (ch == 7) {
+    printf("%3d %3d |", state.pattern_index, state.line_index);
+    for (int i = 0; i < 8; i++)
+      printf(" n:%2d i:%2d e:%2x,%2x |",
+             column[i].note,
+             column[i].instrument,
+             column[i].effect_type,
+             column[i].effect_parameter);
+    printf("\n");
   }
 }
 
-int pattern_channels(xm_pattern_header_t * pattern_header, int pattern_ix, int rekey)
+void play_note_effect(interpreter_state& state, int ch, xm_pattern_format_t * pf)
+{
+  switch (pf->effect_type) {
+  case 0xD:
+    state.pattern_break = pf->effect_parameter;
+    break;
+  }
+}
+
+void play_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
+{
+  if (pf->note == 97) {
+    wait(); aica_sound.channel[ch].KYONB(0);
+  } else if (pf->note != 0 && pf->instrument != 0) {
+    wait(); aica_sound.channel[ch].SA(xm.sample_data_offset[pf->instrument - 1]);
+    int lsa = xm.sample_header[pf->instrument - 1]->sample_loop_start / 2;
+    int lea = xm.sample_header[pf->instrument - 1]->sample_loop_length / 2;
+    wait(); aica_sound.channel[ch].LSA(lsa);
+    wait(); aica_sound.channel[ch].LEA(lsa + lea);
+    wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note);
+    wait(); aica_sound.channel[ch].KYONB(1);
+  }
+
+  play_note_effect(state, ch, pf);
+}
+
+void play_debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
+{
+  debug_note(state, ch, pf);
+  play_note(state, ch, pf);
+}
+
+void rekey_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
+{
+  if (pf->note == 97) {
+  } else if (pf->note != 0 && pf->instrument != 0) {
+    wait(); aica_sound.channel[ch].KYONB(0);
+  }
+}
+
+int parse_pattern_line(interpreter_state& state, xm_pattern_header_t * pattern_header, int note_offset, void (*func)(interpreter_state&, int, xm_pattern_format_t*))
 {
   uint8_t * pattern = (uint8_t *)(((int)pattern_header) + s32(&pattern_header->pattern_header_length));
 
   for (int i = 0; i < 8; i++) {
-    int p = pattern[pattern_ix];
+    int p = pattern[note_offset];
     if (p & 0x80) {
-      pattern_ix += 1;
+      note_offset += 1;
       xm_pattern_format_t pf = {};
       if (p & (1 << 0))
-        pf.note = pattern[pattern_ix++];
+        pf.note = pattern[note_offset++];
       if (p & (1 << 1))
-        pf.instrument = pattern[pattern_ix++];
+        pf.instrument = pattern[note_offset++];
       if (p & (1 << 2))
-        pf.volume_column_byte = pattern[pattern_ix++];
+        pf.volume_column_byte = pattern[note_offset++];
       if (p & (1 << 3))
-        pf.effect_type = pattern[pattern_ix++];
+        pf.effect_type = pattern[note_offset++];
       if (p & (1 << 4))
-        pf.effect_parameter = pattern[pattern_ix++];
-      pattern_note(i, &pf, rekey);
+        pf.effect_parameter = pattern[note_offset++];
+      func(state, i, &pf);
     } else {
-      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[pattern_ix];
-      pattern_note(i, pf, rekey);
-      pattern_ix += 5;
+      xm_pattern_format_t * pf = (xm_pattern_format_t *)&pattern[note_offset];
+      func(state, i, pf);
+      note_offset += 5;
     }
   }
-  return pattern_ix;
+  return note_offset;
 }
 
+void next_pattern(interpreter_state& state, int pattern_break)
+{
+  state.line_index = 0;
+  state.note_offset = 0;
+  state.next_note_offset = 0;
+  state.pattern_break = -1;
+
+  /*
+  state.pattern_index += 1;
+  if (state.pattern_index >= 0xe)
+    state.pattern_index = 0;
+  */
+}
 
 uint8_t __attribute__((aligned(32))) zero[0x28c0] = {};
 
@@ -477,42 +460,64 @@ void main()
   //wait(); aica_sound.channel[0].KYONB(1);
   //wait(); aica_sound.channel[0].KYONEX(1);
 
-  int tick = 0;
+  // 195 = 1ms
+  // 2500 / bpm milliseconds
 
-  //debug_pattern(xm.pattern_header[12], 0);
+  printf("default_bpm %d\n", xm.header->default_bpm);
+  printf("default_tempo %d\n", xm.header->default_tempo);
 
-  int ix_ix = 0;
-  int pattern_ix = 0;
-  int note_ix = 0;
+  struct interpreter_state state;
 
-  printf("pattern %d\n", ix_ix);
+  state.tick_rate = 195.32 * 2500 / xm.header->default_bpm;
+  state.ticks_per_line = xm.header->default_tempo;
+  state.tick = 0;
+  state.pattern_break = -1;
+  state.pattern_index = 0;
+  state.line_index = 0;
+  state.note_offset = 0;
+  state.next_note_offset = 0;
+
+  printf("tick_rate %d\n", state.tick_rate);
+
+  printf("pattern %d\n", state.pattern_index);
+
+  int start = sh7091.TMU.TCNT0;
 
   while (1) {
-    xm_pattern_header_t * pattern_header = xm.pattern_header[ix_ix];
+    xm_pattern_header_t * pattern_header = xm.pattern_header[state.pattern_index];
     int pattern_data_size = s16(&pattern_header->packed_pattern_data_size);
 
-    int start = sh7091.TMU.TCNT0;
     int end = sh7091.TMU.TCNT0;
-    while ((start - end) < 30000) {
+    while ((start - end) < (state.tick_rate / 2)) {
       end = sh7091.TMU.TCNT0;
     }
+    start = sh7091.TMU.TCNT0;
 
-    debug_pattern1(pattern_header, pattern_ix, 8, note_ix);
-    pattern_channels(pattern_header, pattern_ix, true); // rekey
-    wait(); aica_sound.channel[0].KYONEX(1);
-    pattern_ix = pattern_channels(pattern_header, pattern_ix, false);
-    wait(); aica_sound.channel[0].KYONEX(1);
-
-    if (pattern_ix >= pattern_data_size) {
-      note_ix = 0;
-      pattern_ix = 0;
-      ix_ix += 1;
-      if (ix_ix >= 0xe)
-        ix_ix = 0;
-      printf("pattern %d\n", ix_ix);
+    if ((state.tick + 1) % (state.ticks_per_line * 2) == 0) {
+      // execute keyoffs
+      parse_pattern_line(state, pattern_header, state.next_note_offset, rekey_note);
+      wait(); aica_sound.channel[0].KYONEX(1);
     }
 
-    tick += 1;
+    bool note_tick = state.tick % (state.ticks_per_line * 2) == 0;
+    bool effect_tick = (state.tick & 1) == 0;
+    if (note_tick) {
+      state.note_offset = state.next_note_offset;
+      //state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_debug_note);
+      state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note);
+      state.line_index += 1;
+      wait(); aica_sound.channel[0].KYONEX(1);
+    }
+    if (effect_tick && !note_tick) {
+      // execute effects
+      state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note_effect);
+    }
+
+    if (state.pattern_break >= 0 || state.next_note_offset >= pattern_data_size) {
+      next_pattern(state, -1);
+    }
+
+    state.tick += 1;
   }
 
   while (1);

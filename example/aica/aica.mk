@@ -13,7 +13,8 @@ AICA_XM_OBJ = \
 	printf/printf.o \
 	printf/unparse.o \
 	printf/parse.o \
-	xm/milkypack01.xm.o
+	xm/milkypack01.xm.o \
+	$(LIBGCC)
 
 example/aica/aica_xm.elf: LDSCRIPT = $(LIB)/main.lds
 example/aica/aica_xm.elf: $(START_OBJ) $(AICA_XM_OBJ)
