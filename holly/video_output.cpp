@@ -30,9 +30,11 @@ void set_framebuffer_resolution(const uint32_t x_size, const uint32_t y_size)
   holly.FB_Y_CLIP = fb_y_clip::fb_y_clip_max(y_size - 1)
                   | fb_y_clip::fb_y_clip_min(0);
 
+  const int bytes_per_pixel = 2;
+
   holly.FB_R_SIZE = fb_r_size::fb_modulus(1)
                   | fb_r_size::fb_y_size(y_size - 1)
-                  | fb_r_size::fb_x_size((x_size * 16) / 32 - 1);
+                  | fb_r_size::fb_x_size((x_size * bytes_per_pixel) / 4 - 1);
 }
 
 void set_mode(const struct mode& mode)
