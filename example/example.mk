@@ -1257,3 +1257,21 @@ CARS_OBJ = \
 
 example/cars.elf: LDSCRIPT = $(LIB)/main.lds
 example/cars.elf: $(START_OBJ) $(CARS_OBJ)
+
+CUSTOM_RESOLUTION_OBJ = \
+	example/custom_resolution.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
+	holly/video_output.o \
+	sh7091/serial.o \
+	maple/maple.o \
+	sh7091/c_serial.o \
+	printf/printf.o \
+	printf/unparse.o \
+	printf/parse.o \
+	$(LIBGCC)
+
+example/custom_resolution.elf: LDSCRIPT = $(LIB)/main.lds
+example/custom_resolution.elf: $(START_OBJ) $(CUSTOM_RESOLUTION_OBJ)
