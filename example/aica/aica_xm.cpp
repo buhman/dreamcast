@@ -262,6 +262,14 @@ note_to_oct_fns(const int8_t note)
   return aica::oct_fns::OCT((int)whole) | aica::oct_fns::FNS((int)fns);
 }
 
+int8_t volume_table[] = {
+    0,  3,  5,  6,  7,  8,  8,  9,  9,  9, 10, 10, 10, 10, 11, 11,
+   11, 11, 11, 11, 12, 12, 12, 12, 12, 12, 12, 13, 13, 13, 13, 13,
+   13, 13, 13, 13, 13, 13, 13, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+   14, 14, 14, 14, 14, 14, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+   15
+};
+
 void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 {
   static xm_pattern_format_t column[8];
@@ -320,12 +328,9 @@ void play_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
     int len = s32(&sample_header->sample_loop_length) / 2;
     int loop_type = sample_header->type & 0b11;
     int lpctl = (loop_type == 2) ? 3 : loop_type;
-    int disdl = (sample_header->volume * 0xf) / 64;
-    if (!(disdl <= 0xf))
-      printf("%d\n", sample_header->volume);
-    assert(disdl >= 0);
-    assert(disdl <= 0xf);
 
+    assert(sample_header->volume >= 0 && sample_header->volume <= 64);
+    int disdl = volume_table[sample_header->volume];
     wait(); aica_sound.channel[ch].LPCTL(lpctl);
     wait(); aica_sound.channel[ch].LSA(lsa);
     wait(); aica_sound.channel[ch].LEA(lsa + len);
@@ -386,10 +391,12 @@ void next_pattern(interpreter_state& state, int pattern_break)
   state.next_note_offset = 0;
   state.pattern_break = -1;
 
-  state.pattern_index += 1;
+
+  /*state.pattern_index += 1;
   printf("pattern_index: %d\n", state.pattern_index);
   if (state.pattern_index >= 0xe)
     state.pattern_index = 1;
+  */
 }
 
 uint8_t __attribute__((aligned(32))) zero[0x28c0] = {};
@@ -529,6 +536,10 @@ void main()
 
     bool note_tick = state.tick % (state.ticks_per_line * 2) == 0;
     bool effect_tick = (state.tick & 1) == 0;
+    if (state.pattern_break >= 0 && note_tick) {
+      next_pattern(state, -1);
+    }
+
     if (note_tick) {
       state.note_offset = state.next_note_offset;
       state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_debug_note);
@@ -538,12 +549,11 @@ void main()
     }
     if (effect_tick && !note_tick) {
       // execute effects
-      state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note_effect);
+      parse_pattern_line(state, pattern_header, state.note_offset, play_note_effect);
       wait(); aica_sound.channel[0].KYONEX(1);
     }
 
-    if (state.pattern_break >= 0 || state.next_note_offset >= pattern_data_size) {
-      printf("%d %d\n", state.pattern_break, state.next_note_offset);
+    if (state.next_note_offset >= pattern_data_size) {
       next_pattern(state, -1);
     }
 
