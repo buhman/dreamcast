@@ -13,9 +13,7 @@
 //#include "example/arm/xm.bin.h"
 #include "xm/xm.h"
 #include "xm/milkypack01.xm.h"
-
-extern void * _binary_start __asm("_binary_example_arm_channel_bin_start");
-extern void * _binary_size __asm("_binary_example_arm_channel_bin_size");
+#include "xm/middle_c.xm.h"
 
 constexpr int max_patterns = 64;
 constexpr int max_instruments = 128;
@@ -103,10 +101,26 @@ int unpack_sample(int buf, int offset, xm_sample_header_t * sample_header)
   return size;
 }
 
+void debug_xm_sample_header(int instrument_ix, xm_sample_header_t * sample_header)
+{
+  printf("sample header: instrument_ix: %d:\n", instrument_ix);
+  printf("  volume %d\n", sample_header->volume);
+  printf("  finetune %d\n", sample_header->finetune);
+  printf("  type %x\n", sample_header->type);
+  printf("  panning %d\n", sample_header->panning);
+  printf("  relative_note_number %d\n", sample_header->relative_note_number);
+  printf("  sample_length      % 6d\n", s32(&sample_header->sample_length));
+  printf("  sample_loop_start  % 6d\n", s32(&sample_header->sample_loop_start));
+  printf("  sample_loop_length % 6d\n", s32(&sample_header->sample_loop_length));
+}
+
 int xm_samples_init(int buf, int offset, int instrument_ix, int number_of_samples)
 {
   xm_sample_header_t * sample_header[number_of_samples];
   xm.sample_header[instrument_ix] = (xm_sample_header_t *)(buf + offset);
+  if (instrument_ix <= 12)
+    debug_xm_sample_header(instrument_ix, xm.sample_header[instrument_ix]);
+
   for (int i = 0; i < number_of_samples; i++) {
     sample_header[i] = (xm_sample_header_t *)(buf + offset);
     offset += (sizeof (xm_sample_header_t));
@@ -115,7 +129,7 @@ int xm_samples_init(int buf, int offset, int instrument_ix, int number_of_sample
   for (int i = 0; i < number_of_samples; i++) {
     int sample_length = s32(&sample_header[i]->sample_length);
     if (sample_length > 0) {
-      printf("instrument % 2d sample_length % 6d ix %d\n", instrument_ix, sample_length, sample_data_ix);
+      //printf("  sample_length % 6d\n", sample_length);
       xm.sample_data_offset[instrument_ix] = sample_data_ix;
       sample_data_ix += unpack_sample(buf, offset, sample_header[i]);
       assert(sample_data_ix <= (int)(sizeof (sample_data)));
@@ -213,34 +227,39 @@ void writeback(void const * const buf, uint32_t size)
   }
 }
 
+// quater-semitones
+const static int cent_to_fns[] = {
+    0,  15,  30,  45,  61,  77,  93, 109, 125, 142, 159, 176,
+  194, 211, 229, 248, 266, 285, 304, 323, 343, 363, 383, 403,
+  424, 445, 467, 488, 510, 533, 555, 578, 601, 625, 649, 673,
+  698, 723, 749, 774, 801, 827, 854, 881, 909, 937, 966, 995
+};
+const int cent_to_fns_length = (sizeof (cent_to_fns)) / (sizeof (cent_to_fns[0]));
+
 uint16_t
 note_to_oct_fns(const int8_t note)
 {
-  static const uint16_t _cent_to_fns[] = {
-    0x0,
-    0x3d,
-    0x7d,
-    0xc2,
-    0x10a,
-    0x157,
-    0x1a8,
-    0x1fe,
-    0x25a,
-    0x2ba,
-    0x321,
-    0x38d,
-  };
+  const float base_ratio = -2.3986861877015477;
 
-  const int8_t a440_note = note - 42;
-  const int8_t a440_note_d = (a440_note < 0) ? a440_note - 11 : a440_note;
-  const int8_t div12 = a440_note_d / static_cast<int8_t>(12);
-  const int8_t mod12 = a440_note % static_cast<int8_t>(12);
+  float c4_note = (float)note - 49.0;
+  float ratio = base_ratio + (c4_note / 12.0);
 
-  const uint16_t oct = div12;
-  const uint16_t cent = (a440_note < 0) ? 12 + mod12 : mod12;
-  const uint16_t fns = _cent_to_fns[cent];
+  float whole = (int)ratio;
+  float fraction;
+  if (ratio < 0) {
+    if (whole > ratio)
+      whole -= 1;
+    fraction = -(whole - ratio);
+  } else {
+    fraction = ratio - whole;
+  }
 
-  return aica::oct_fns::OCT(oct - 1) | aica::oct_fns::FNS(fns);
+  assert(fraction >= 0.0);
+  assert(fraction <= 1.0);
+
+  int fns = cent_to_fns[(int)(fraction * cent_to_fns_length)];
+
+  return aica::oct_fns::OCT((int)whole) | aica::oct_fns::FNS((int)fns);
 }
 
 void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
@@ -274,9 +293,16 @@ void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 
 void play_note_effect(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 {
+  int effect_tick = (state.tick / 2) % state.ticks_per_line;
+
   switch (pf->effect_type) {
-  case 0xD:
+  case 0x0d: // D pattern break
     state.pattern_break = pf->effect_parameter;
+    break;
+  case 0x14: // K delayed tick
+    if (effect_tick == pf->effect_parameter) {
+      wait(); aica_sound.channel[ch].KYONB(0);
+    }
     break;
   }
 }
@@ -287,11 +313,24 @@ void play_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
     wait(); aica_sound.channel[ch].KYONB(0);
   } else if (pf->note != 0 && pf->instrument != 0) {
     wait(); aica_sound.channel[ch].SA(xm.sample_data_offset[pf->instrument - 1]);
-    int lsa = xm.sample_header[pf->instrument - 1]->sample_loop_start / 2;
-    int lea = xm.sample_header[pf->instrument - 1]->sample_loop_length / 2;
+
+    xm_sample_header_t * sample_header = xm.sample_header[pf->instrument - 1];
+
+    int lsa = s32(&sample_header->sample_loop_start) / 2;
+    int len = s32(&sample_header->sample_loop_length) / 2;
+    int loop_type = sample_header->type & 0b11;
+    int lpctl = (loop_type == 2) ? 3 : loop_type;
+    int disdl = (sample_header->volume * 0xf) / 64;
+    if (!(disdl <= 0xf))
+      printf("%d\n", sample_header->volume);
+    assert(disdl >= 0);
+    assert(disdl <= 0xf);
+
+    wait(); aica_sound.channel[ch].LPCTL(lpctl);
     wait(); aica_sound.channel[ch].LSA(lsa);
-    wait(); aica_sound.channel[ch].LEA(lsa + lea);
-    wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note);
+    wait(); aica_sound.channel[ch].LEA(lsa + len);
+    wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note + sample_header->relative_note_number);
+    wait(); aica_sound.channel[ch].DISDL(disdl);
     wait(); aica_sound.channel[ch].KYONB(1);
   }
 
@@ -344,15 +383,13 @@ int parse_pattern_line(interpreter_state& state, xm_pattern_header_t * pattern_h
 void next_pattern(interpreter_state& state, int pattern_break)
 {
   state.line_index = 0;
-  state.note_offset = 0;
   state.next_note_offset = 0;
   state.pattern_break = -1;
 
-  /*
   state.pattern_index += 1;
+  printf("pattern_index: %d\n", state.pattern_index);
   if (state.pattern_index >= 0xe)
-    state.pattern_index = 0;
-  */
+    state.pattern_index = 1;
 }
 
 uint8_t __attribute__((aligned(32))) zero[0x28c0] = {};
@@ -362,6 +399,7 @@ void main()
   serial::init(0);
 
   int buf = (int)&_binary_xm_milkypack01_xm_start;
+  //int buf = (int)&_binary_xm_middle_c_xm_start;
   xm_init(buf);
 
   wait(); aica_sound.common.vreg_armrst = aica::vreg_armrst::ARMRST(1);
@@ -425,19 +463,19 @@ void main()
 
   for (int i = 0; i < 8; i++) {
     wait(); aica_sound.channel[i].KYONB(0);
-    wait(); aica_sound.channel[i].LPCTL(1);
+    wait(); aica_sound.channel[i].LPCTL(0);
     wait(); aica_sound.channel[i].PCMS(0);
     wait(); aica_sound.channel[i].LSA(0);
     wait(); aica_sound.channel[i].LEA(0);
-    wait(); aica_sound.channel[i].D2R(0xa);
-    wait(); aica_sound.channel[i].D1R(0xa);
-    wait(); aica_sound.channel[i].RR(0xa);
+    wait(); aica_sound.channel[i].D2R(0x0);
+    wait(); aica_sound.channel[i].D1R(0x0);
+    wait(); aica_sound.channel[i].RR(0xc);
     wait(); aica_sound.channel[i].AR(0x1f);
 
     wait(); aica_sound.channel[i].OCT(0);
     wait(); aica_sound.channel[i].FNS(0);
-    wait(); aica_sound.channel[i].DISDL(0xf);
-    wait(); aica_sound.channel[i].DIPAN(0x0);
+    wait(); aica_sound.channel[i].DISDL(0);
+    wait(); aica_sound.channel[i].DIPAN(0);
 
     wait(); aica_sound.channel[i].Q(0b00100);
     wait(); aica_sound.channel[i].TL(0);
@@ -451,18 +489,8 @@ void main()
     | aica::mono_mem8mb_dac18b_ver_mvol::MVOL(0xf) // 15/15 volume
     ;
 
-  wait(); aica_sound.channel[0].SA(xm.sample_data_offset[0]);
-  int lsa = xm.sample_header[0]->sample_loop_start / 2;
-  int lea = xm.sample_header[0]->sample_loop_length / 2;
-  printf("sa %d lsa %d lea %d\n", xm.sample_data_offset[0], lsa, lsa + lea);
-  wait(); aica_sound.channel[0].LSA(lsa);
-  wait(); aica_sound.channel[0].LEA(lsa + lea);
-  //wait(); aica_sound.channel[0].KYONB(1);
-  //wait(); aica_sound.channel[0].KYONEX(1);
-
   // 195 = 1ms
   // 2500 / bpm milliseconds
-
   printf("default_bpm %d\n", xm.header->default_bpm);
   printf("default_tempo %d\n", xm.header->default_tempo);
 
@@ -472,7 +500,7 @@ void main()
   state.ticks_per_line = xm.header->default_tempo;
   state.tick = 0;
   state.pattern_break = -1;
-  state.pattern_index = 0;
+  state.pattern_index = 0xc;
   state.line_index = 0;
   state.note_offset = 0;
   state.next_note_offset = 0;
@@ -503,17 +531,19 @@ void main()
     bool effect_tick = (state.tick & 1) == 0;
     if (note_tick) {
       state.note_offset = state.next_note_offset;
-      //state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_debug_note);
-      state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note);
+      state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_debug_note);
+      //state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note);
       state.line_index += 1;
       wait(); aica_sound.channel[0].KYONEX(1);
     }
     if (effect_tick && !note_tick) {
       // execute effects
       state.next_note_offset = parse_pattern_line(state, pattern_header, state.note_offset, play_note_effect);
+      wait(); aica_sound.channel[0].KYONEX(1);
     }
 
     if (state.pattern_break >= 0 || state.next_note_offset >= pattern_data_size) {
+      printf("%d %d\n", state.pattern_break, state.next_note_offset);
       next_pattern(state, -1);
     }
 
