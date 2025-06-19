@@ -14,6 +14,7 @@
 #include "xm/xm.h"
 #include "xm/milkypack01.xm.h"
 #include "xm/middle_c.xm.h"
+#include "xm/test.xm.h"
 
 constexpr int max_patterns = 64;
 constexpr int max_instruments = 128;
@@ -74,8 +75,16 @@ int sample_data_ix;
 int unpack_sample(int buf, int offset, xm_sample_header_t * sample_header)
 {
   int size = s32(&sample_header->sample_length);
+  int loop_start = s32(&sample_header->sample_loop_start);
+  int loop_length = s32(&sample_header->sample_loop_length);
+
+  int loop_type = sample_header->type & 0b11;
+
   if (sample_header->type & (1 << 4)) { // 16-bit samples
     int num_samples = size / 2;
+    int lsa = loop_start / 2;
+    int len = loop_length / 2;
+
     int old = 0;
     volatile int16_t * out = (volatile int16_t *)(&sample_data[sample_data_ix]);
     int16_t * in = (int16_t *)(buf + offset);
@@ -83,14 +92,34 @@ int unpack_sample(int buf, int offset, xm_sample_header_t * sample_header)
       old += s16(&in[i]);
       out[i] = old;
     }
+
+    if (loop_type == 2) { // bidirectional
+      for (int i = 0; i < len - 2; i++) {
+        out[num_samples + i] = out[lsa + (len - i - 2)];
+      }
+
+      size += (len - 2) * 2;
+    }
+
   } else { // 8-bit
     int num_samples = size;
+    int lsa = loop_start;
+    int len = loop_length;
+
     int old = 0;
     volatile int8_t * out = (volatile int8_t *)(&sample_data[sample_data_ix]);
     int8_t * in = (int8_t *)(buf + offset);
     for (int i = 0; i < num_samples; i++) {
       old += in[i];
       out[i] = old;
+    }
+
+    if (loop_type == 2) { // bidirectional
+      for (int i = 0; i < len - 2; i++) {
+        out[num_samples + i] = out[lsa + (len - i - 2)];
+      }
+
+      size += (len - 2);
     }
   }
 
@@ -290,13 +319,62 @@ void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
   if (ch == 7) {
     printf("%3d %3d |", state.pattern_index, state.line_index);
     for (int i = 0; i < 8; i++)
-      printf(" n:%2d i:%2d e:%2x,%2x |",
+      printf(" %2d %2d %2x%02x |",
              column[i].note,
              column[i].instrument,
              column[i].effect_type,
              column[i].effect_parameter);
     printf("\n");
   }
+}
+
+void _play_note(int ch, xm_pattern_format_t * pf)
+{
+  xm_sample_header_t * sample_header = xm.sample_header[pf->instrument - 1];
+
+  int sample_type = ((sample_header->type & (1 << 4)) != 0);
+  int bytes_per_sample = 1 + sample_type;
+
+  int start_offset = 0;
+  /*
+  if (pf->effect_type == 0x9) { // 9 sample offset
+    start_offset += (256 * pf->effect_parameter);
+  }
+  */
+
+  int start = xm.sample_data_offset[pf->instrument - 1] + start_offset;
+
+  int loop_type = sample_header->type & 0b11;
+  int lpctl = (loop_type == 0) ? 0 : 1;
+  int lsa = s32(&sample_header->sample_loop_start) / bytes_per_sample;
+  int len = s32(&sample_header->sample_loop_length) / bytes_per_sample;
+  assert(start >= 0);
+  assert(lsa >= 0);
+  assert(len >= 0);
+
+  if (loop_type == 2) // bidirectional
+    len += len - 2;
+
+  assert(sample_header->volume >= 0 && sample_header->volume <= 64);
+  int disdl = volume_table[sample_header->volume];
+  bool pcms = !sample_type;
+
+  /*
+  wait(); aica_sound.channel[ch].LFOF(0x12);
+  wait(); aica_sound.channel[ch].ALFOWS(2);
+  wait(); aica_sound.channel[ch].PLFOWS(2);
+  wait(); aica_sound.channel[ch].ALFOS(0);
+  wait(); aica_sound.channel[ch].PLFOS(5);
+  */
+
+  wait(); aica_sound.channel[ch].PCMS(pcms);
+  wait(); aica_sound.channel[ch].SA(start);
+  wait(); aica_sound.channel[ch].LPCTL(lpctl);
+  wait(); aica_sound.channel[ch].LSA(lsa);
+  wait(); aica_sound.channel[ch].LEA(lsa + len);
+  wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note + sample_header->relative_note_number);
+  wait(); aica_sound.channel[ch].DISDL(disdl);
+  wait(); aica_sound.channel[ch].KYONB(1);
 }
 
 void play_note_effect(interpreter_state& state, int ch, xm_pattern_format_t * pf)
@@ -306,6 +384,15 @@ void play_note_effect(interpreter_state& state, int ch, xm_pattern_format_t * pf
   switch (pf->effect_type) {
   case 0x0d: // D pattern break
     state.pattern_break = pf->effect_parameter;
+    break;
+  case 0x0e: // E
+    switch (pf->effect_parameter & 0xf0) {
+    case 0xd0: // ED note delay
+      if (effect_tick == (pf->effect_parameter & 0x0f)) {
+        _play_note(ch, pf);
+      }
+      break;
+    }
     break;
   case 0x14: // K delayed tick
     if (effect_tick == pf->effect_parameter) {
@@ -320,23 +407,9 @@ void play_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
   if (pf->note == 97) {
     wait(); aica_sound.channel[ch].KYONB(0);
   } else if (pf->note != 0 && pf->instrument != 0) {
-    wait(); aica_sound.channel[ch].SA(xm.sample_data_offset[pf->instrument - 1]);
-
-    xm_sample_header_t * sample_header = xm.sample_header[pf->instrument - 1];
-
-    int lsa = s32(&sample_header->sample_loop_start) / 2;
-    int len = s32(&sample_header->sample_loop_length) / 2;
-    int loop_type = sample_header->type & 0b11;
-    int lpctl = (loop_type == 2) ? 3 : loop_type;
-
-    assert(sample_header->volume >= 0 && sample_header->volume <= 64);
-    int disdl = volume_table[sample_header->volume];
-    wait(); aica_sound.channel[ch].LPCTL(lpctl);
-    wait(); aica_sound.channel[ch].LSA(lsa);
-    wait(); aica_sound.channel[ch].LEA(lsa + len);
-    wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note + sample_header->relative_note_number);
-    wait(); aica_sound.channel[ch].DISDL(disdl);
-    wait(); aica_sound.channel[ch].KYONB(1);
+    bool note_delay = (pf->effect_type == 0xe) && ((pf->effect_parameter & 0xf0) == 0xd0); // ED note delay
+    if (!note_delay)
+      _play_note(ch, pf);
   }
 
   play_note_effect(state, ch, pf);
@@ -391,12 +464,10 @@ void next_pattern(interpreter_state& state, int pattern_break)
   state.next_note_offset = 0;
   state.pattern_break = -1;
 
-
-  /*state.pattern_index += 1;
+  state.pattern_index += 1;
   printf("pattern_index: %d\n", state.pattern_index);
   if (state.pattern_index >= 0xe)
     state.pattern_index = 1;
-  */
 }
 
 uint8_t __attribute__((aligned(32))) zero[0x28c0] = {};
@@ -407,6 +478,7 @@ void main()
 
   int buf = (int)&_binary_xm_milkypack01_xm_start;
   //int buf = (int)&_binary_xm_middle_c_xm_start;
+  //int buf = (int)&_binary_xm_test_xm_start;
   xm_init(buf);
 
   wait(); aica_sound.common.vreg_armrst = aica::vreg_armrst::ARMRST(1);
@@ -468,16 +540,19 @@ void main()
 
   wait(); aica_sound.common.dmea0_mrwinh = aica::dmea0_mrwinh::MRWINH(0b0001);
 
-  for (int i = 0; i < 8; i++) {
+  for (int i = 0; i < 64; i++) {
     wait(); aica_sound.channel[i].KYONB(0);
     wait(); aica_sound.channel[i].LPCTL(0);
     wait(); aica_sound.channel[i].PCMS(0);
     wait(); aica_sound.channel[i].LSA(0);
     wait(); aica_sound.channel[i].LEA(0);
-    wait(); aica_sound.channel[i].D2R(0x0);
-    wait(); aica_sound.channel[i].D1R(0x0);
+    wait(); aica_sound.channel[i].D2R(0x1);
+    wait(); aica_sound.channel[i].D1R(0x1);
     wait(); aica_sound.channel[i].RR(0xc);
-    wait(); aica_sound.channel[i].AR(0x1f);
+    wait(); aica_sound.channel[i].AR(0x1c);
+
+    wait(); aica_sound.channel[i].ALFOS(0);
+    wait(); aica_sound.channel[i].PLFOS(0);
 
     wait(); aica_sound.channel[i].OCT(0);
     wait(); aica_sound.channel[i].FNS(0);
@@ -507,7 +582,7 @@ void main()
   state.ticks_per_line = xm.header->default_tempo;
   state.tick = 0;
   state.pattern_break = -1;
-  state.pattern_index = 0xc;
+  state.pattern_index = 0x1;
   state.line_index = 0;
   state.note_offset = 0;
   state.next_note_offset = 0;
@@ -528,15 +603,18 @@ void main()
     }
     start = sh7091.TMU.TCNT0;
 
-    if ((state.tick + 1) % (state.ticks_per_line * 2) == 0) {
+    bool keyoff_tick = (state.tick + 1) % (state.ticks_per_line * 2) == 0;
+    bool note_tick = state.tick % (state.ticks_per_line * 2) == 0;
+    bool effect_tick = (state.tick & 1) == 0;
+    bool pattern_break_tick = (state.tick % (state.ticks_per_line * 2)) == (state.ticks_per_line * 2 - 1);
+    if (keyoff_tick) {
       // execute keyoffs
       parse_pattern_line(state, pattern_header, state.next_note_offset, rekey_note);
       wait(); aica_sound.channel[0].KYONEX(1);
     }
 
-    bool note_tick = state.tick % (state.ticks_per_line * 2) == 0;
-    bool effect_tick = (state.tick & 1) == 0;
-    if (state.pattern_break >= 0 && note_tick) {
+    if (state.pattern_break >= 0 && pattern_break_tick) {
+      printf("pattern_break\n");
       next_pattern(state, -1);
     }
 
@@ -553,7 +631,8 @@ void main()
       wait(); aica_sound.channel[0].KYONEX(1);
     }
 
-    if (state.next_note_offset >= pattern_data_size) {
+    if (state.next_note_offset >= pattern_data_size && pattern_break_tick) {
+      printf("pattern_data_size\n");
       next_pattern(state, -1);
     }
 
