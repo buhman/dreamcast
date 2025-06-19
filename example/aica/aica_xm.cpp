@@ -359,13 +359,19 @@ void _play_note(int ch, xm_pattern_format_t * pf)
   int disdl = volume_table[sample_header->volume];
   bool pcms = !sample_type;
 
-  /*
-  wait(); aica_sound.channel[ch].LFOF(0x12);
-  wait(); aica_sound.channel[ch].ALFOWS(2);
-  wait(); aica_sound.channel[ch].PLFOWS(2);
-  wait(); aica_sound.channel[ch].ALFOS(0);
-  wait(); aica_sound.channel[ch].PLFOS(5);
-  */
+  if (pf->effect_type == 0x04) { // vibrato
+    wait(); aica_sound.channel[ch].LFOF(0x12);
+    wait(); aica_sound.channel[ch].ALFOWS(2);
+    wait(); aica_sound.channel[ch].PLFOWS(2);
+    wait(); aica_sound.channel[ch].ALFOS(0);
+    wait(); aica_sound.channel[ch].PLFOS(4);
+  } else {
+    //wait(); aica_sound.channel[ch].LFOF(0x11);
+    //wait(); aica_sound.channel[ch].ALFOWS(2);
+    //wait(); aica_sound.channel[ch].PLFOWS(2);
+    wait(); aica_sound.channel[ch].ALFOS(0);
+    wait(); aica_sound.channel[ch].PLFOS(0);
+  }
 
   wait(); aica_sound.channel[ch].PCMS(pcms);
   wait(); aica_sound.channel[ch].SA(start);
@@ -382,6 +388,13 @@ void play_note_effect(interpreter_state& state, int ch, xm_pattern_format_t * pf
   int effect_tick = (state.tick / 2) % state.ticks_per_line;
 
   switch (pf->effect_type) {
+  case 0x04: // 4 vibrato
+    wait(); aica_sound.channel[ch].LFOF(0x12);
+    wait(); aica_sound.channel[ch].ALFOWS(2);
+    wait(); aica_sound.channel[ch].PLFOWS(2);
+    wait(); aica_sound.channel[ch].ALFOS(0);
+    wait(); aica_sound.channel[ch].PLFOS(4);
+    break;
   case 0x0d: // D pattern break
     state.pattern_break = pf->effect_parameter;
     break;
