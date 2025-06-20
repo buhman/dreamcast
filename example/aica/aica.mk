@@ -15,7 +15,13 @@ AICA_XM_OBJ = \
 	printf/parse.o \
 	xm/milkypack01.xm.o \
 	xm/test.xm.o \
+	xm/xmtest.xm.o \
+	xm/catch_this_rebel.xm.o \
 	xm/middle_c.xm.o \
+	holly/core.o \
+	holly/region_array.o \
+	holly/background.o \
+	holly/ta_fifo_polygon_converter.o \
 	$(LIBGCC)
 
 example/aica/aica_xm.elf: LDSCRIPT = $(LIB)/main.lds
