@@ -544,13 +544,6 @@ void main()
     serial::character('\n');
   }
 
-  sh7091.TMU.TSTR = 0; // stop all timers
-  sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
-  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 50MHz = 5.12 μs ; underflows in ~1 hour
-  sh7091.TMU.TCOR0 = 0xffff'ffff;
-  sh7091.TMU.TCNT0 = 0xffff'ffff;
-  sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
-
   wait(); aica_sound.common.dmea0_mrwinh = aica::dmea0_mrwinh::MRWINH(0b0001);
 
   for (int i = 0; i < 64; i++) {
@@ -604,17 +597,20 @@ void main()
 
   printf("pattern %d\n", state.pattern_index);
 
-  int start = sh7091.TMU.TCNT0;
+  sh7091.TMU.TSTR = 0; // stop all timers
+  sh7091.TMU.TCOR0 = state.tick_rate / 2;
+  sh7091.TMU.TOCR = tmu::tocr::tcoe::tclk_is_external_clock_or_input_capture;
+  sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // 256 / 50MHz = 5.12 μs ; underflows in ~1 hour
+  sh7091.TMU.TCNT0 = 0;
+  sh7091.TMU.TSTR = tmu::tstr::str0::counter_start;
 
   while (1) {
     xm_pattern_header_t * pattern_header = xm.pattern_header[state.pattern_index];
     int pattern_data_size = s16(&pattern_header->packed_pattern_data_size);
 
-    int end = sh7091.TMU.TCNT0;
-    while ((start - end) < (state.tick_rate / 2)) {
-      end = sh7091.TMU.TCNT0;
+    while ((sh7091.TMU.TCR0 & tmu::tcr0::UNF) == 0) {
     }
-    start = sh7091.TMU.TCNT0;
+    sh7091.TMU.TCR0 = tmu::tcr0::tpsc::p_phi_256; // clear underflow
 
     bool keyoff_tick = (state.tick + 1) % (state.ticks_per_line * 2) == 0;
     bool note_tick = state.tick % (state.ticks_per_line * 2) == 0;
