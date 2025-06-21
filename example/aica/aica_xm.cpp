@@ -21,6 +21,7 @@
 #include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
 #include "printf/printf.h"
+#include "printf/unparse.h"
 
 #include "math/float_types.hpp"
 
@@ -65,6 +66,51 @@ struct interpreter_state {
 };
 
 struct interpreter_state state;
+
+struct aica_sandbox_state {
+  int channel_ix;
+  union aica_sandbox_channel {
+    struct {
+      int instrument;
+      int loop;
+      int note;
+
+      int krs;
+      int ar;
+      int d1r;
+      int d2r;
+      int rr;
+      int dl;
+
+      int disdl;
+      int dipan;
+    };
+    int field[11];
+  } channel[64];
+};
+
+struct aica_sandbox_state sandbox_state = {};
+
+struct key_offset_value {
+  const char * label;
+  int min;
+  int max;
+};
+
+struct key_offset_value sandbox_labels[] = {
+  {"instrument", 0, max_instruments - 1},
+  {"loop", 0, 1},
+  {"note", 0, 97},
+  {"krs", 0, 0xf},
+  {"ar", 0, 0x1f},
+  {"d1r", 0, 0x1f},
+  {"d2r", 0, 0x1f},
+  {"rr", 0, 0x1f},
+  {"dl", 0, 0x1f},
+  {"disdl", 0, 0xf},
+  {"dipan", 0, 0x1f},
+};
+const int sandbox_labels_length = (sizeof (sandbox_labels)) / (sizeof (sandbox_labels[0]));
 
 void print_u8(int8_t * chars, int length, const char * end)
 {
@@ -1038,16 +1084,52 @@ void transfer_glyph(ta_parameter_writer& writer, char c, int x, int y)
        dp, dt);
 }
 
+int transfer_string(ta_parameter_writer& writer, const char * s, int x, int y)
+{
+  int len = 0;
+  while (*s) {
+    len += 1;
+    transfer_glyph(writer, *s++, x, y);
+    x += glyph_hori_advance;
+  }
+  return len;
+}
+
+int transfer_integer(ta_parameter_writer& writer, int n, int x, int y)
+{
+  char buf[16];
+
+  int len = unparse_base10(buf, n, 0, 0);
+
+  transfer_string(writer, buf, x, y);
+
+  return len;
+}
+
 void transfer_scene(ta_parameter_writer& writer)
 {
   global_polygon_type_0(writer);
 
-  const char * foo = "Although the ROM provides a graphic for all 256 different possible 8-bit codes";
   int x = 32;
   int y = 32;
-  while (*foo) {
-    transfer_glyph(writer, *foo++, x, y);
-    x += 8;
+
+  int xi = x;
+  int len = transfer_string(writer, "channel", xi, y);
+  xi += glyph_hori_advance * len;
+  xi += glyph_hori_advance;
+  transfer_integer(writer, sandbox_state.channel_ix, xi, y);
+  y += glyph_vert_advance * 2;
+
+  for (int i = 0; i < sandbox_labels_length; i++) {
+    int xi = x + glyph_hori_advance * 2;
+
+    int len = transfer_string(writer, sandbox_labels[i].label, xi, y);
+    xi += glyph_hori_advance * len;
+    xi += glyph_hori_advance;
+
+    transfer_integer(writer, sandbox_state.channel[sandbox_state.channel_ix].field[i], xi, y);
+
+    y += glyph_vert_advance;
   }
 
   writer.append<ta_global_parameter::end_of_list>() =
