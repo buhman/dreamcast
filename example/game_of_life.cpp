@@ -46,6 +46,7 @@ const int max_knot_segments = 32;
 const int max_knot_rings = 256;
 int knot_segments = 32;
 int knot_rings = 256;
+//int knot_rings = 32;
 vec3 _knot_center[max_knot_rings];
 vec3 _knot_ring[max_knot_rings][max_knot_segments];
 //vec3 t_knot_center[max_knot_rings];
@@ -114,7 +115,7 @@ struct grid {
   int width;
   int height;
   int generation;
-  uint8_t * data[2];
+  int * data[2];
 };
 
 static inline int grid_get(grid const * const grid, int x, int y)
@@ -124,6 +125,15 @@ static inline int grid_get(grid const * const grid, int x, int y)
   int gen = grid->generation & 1;
 
   return grid->data[gen][y * grid->width + x];
+}
+
+static inline void grid_put_p(grid * const grid, int x, int y, int value)
+{
+  x = x & (grid->width - 1);
+  y = y & (grid->height - 1);
+  int gen = grid->generation & 1;
+
+  grid->data[gen][y * grid->width + x] = value;
 }
 
 static inline void grid_put(grid * const grid, int x, int y, int value)
@@ -138,15 +148,15 @@ static inline void grid_put(grid * const grid, int x, int y, int value)
 static inline int count_neighbors(grid const * const grid, int x, int y)
 {
   int count = 0;
-  count += grid_get(grid, x - 1, y - 1) != 0;
-  count += grid_get(grid, x - 0, y - 1) != 0;
-  count += grid_get(grid, x + 1, y - 1) != 0;
-  count += grid_get(grid, x - 1, y - 0) != 0;
-  //count += grid_get(grid, x - 0, y - 0) != 0;
-  count += grid_get(grid, x + 1, y - 0) != 0;
-  count += grid_get(grid, x - 1, y + 1) != 0;
-  count += grid_get(grid, x - 0, y + 1) != 0;
-  count += grid_get(grid, x + 1, y + 1) != 0;
+  count += grid_get(grid, x - 1, y - 1) > 0;
+  count += grid_get(grid, x - 0, y - 1) > 0;
+  count += grid_get(grid, x + 1, y - 1) > 0;
+  count += grid_get(grid, x - 1, y - 0) > 0;
+  //count += grid_get(grid, x - 0, y - 0) > 0;
+  count += grid_get(grid, x + 1, y - 0) > 0;
+  count += grid_get(grid, x - 1, y + 1) > 0;
+  count += grid_get(grid, x - 0, y + 1) > 0;
+  count += grid_get(grid, x + 1, y + 1) > 0;
   return count;
 }
 
@@ -154,14 +164,16 @@ static inline void apply_rule(grid * grid, int x, int y)
 {
   int live = grid_get(grid, x, y);
   int count = count_neighbors(grid, x, y);
-  if (live > 0) {
+  if (live < 0) {
+    // do nothing
+  } else if (live > 0) {
     if (count < 2)
       live = 0;
     else if (count > 3)
       live = 0;
     else if (live < 4)
       live += 1;
-  } else {
+  } else { // live == 0
     if (count == 3)
       live = 1;
   }
@@ -196,6 +208,87 @@ void seed_grid(grid * grid, int xo, int yo)
       }
     }
   }
+}
+
+// cell points to next cell
+struct cell {
+  int x;
+  int y;
+};
+
+cell snake_unpack_cell(int a)
+{
+  assert(a < 0);
+  int x = ((uint32_t)a >> 0) & 0xff;
+  int y = ((uint32_t)a >> 8) & 0xff;
+  return {x, y};
+}
+
+int snake_pack_cell(cell c)
+{
+  uint32_t v = (1 << 31)
+    | (((uint32_t)c.x & 0xff) << 0)
+    | (((uint32_t)c.y & 0xff) << 8);
+  return v;
+}
+
+enum direction : int {
+  UP,
+  DOWN,
+  LEFT,
+  RIGHT
+};
+
+struct snake {
+  cell head;
+  cell tail;
+  enum direction direction;
+};
+
+static inline cell move(cell p, int d)
+{
+  switch (d) {
+  case UP:    return {p.x, p.y - 1};
+  case DOWN:  return {p.x, p.y + 1};
+  case LEFT:  return {p.x - 1, p.y};
+  case RIGHT: return {p.x + 1, p.y};
+  }
+  assert(false);
+}
+
+void snake_move(grid * grid, snake * snake, bool force_grow)
+{
+  cell head = move(snake->head, snake->direction);
+
+  int live = grid_get(grid, head.x, head.y);
+
+  grid_put_p(grid, head.x, head.y, -1);
+
+  grid_put_p(grid, snake->head.x, snake->head.y,
+             snake_pack_cell(head));
+
+  snake->head.x = head.x;
+  snake->head.y = head.y;
+
+  int grow = live > 0 || force_grow;
+
+  if (!grow) {
+    cell tail = snake_unpack_cell(grid_get(grid, snake->tail.x, snake->tail.y));
+
+    grid_put_p(grid, snake->tail.x, snake->tail.y, 0);
+
+    snake->tail.x = tail.x;
+    snake->tail.y = tail.y;
+  }
+}
+
+void snake_init(grid * grid, snake * snake, int x, int y)
+{
+  snake->head = {x - 1, y};
+  snake->tail = {x - 1, y};
+  snake->direction = RIGHT;
+
+  snake_move(grid, snake, true);
 }
 
 static ft0::data_transfer::data_format data[4];
@@ -499,6 +592,10 @@ static inline void transfer_knot_face(ta_parameter_writer& writer, const grid * 
 {
   // x, y
   int value = grid_get(grid, r0, s0);
+  if (value > 0)
+    value = 0;
+  if (value < 0)
+    value = 1;
 
   if (last_value != value) {
     global_polygon_type_0_packed(writer,
@@ -546,7 +643,7 @@ void transfer_grid(ta_parameter_writer& writer, const grid * grid)
   for (int y = 0; y < grid->height; y++) {
     for (int x = 0; x < grid->width; x++) {
       int value = grid_get(grid, x, y);
-      if (!value)
+      if (value == 0)
         continue;
 
       float fx = x;
@@ -560,7 +657,12 @@ void transfer_grid(ta_parameter_writer& writer, const grid * grid)
       vec3 d = {dim * fx , dim * fy1, 0.001f};
 
       mat4x4 r = translate((vec3){20, 20, 0});
-      vec3 color = {1, 1, 1};
+      vec3 color;
+      if (value > 0)
+        color = {1, 1, 1};
+      else {
+        color = {0, 0, 1};
+      }
       render_quad(writer,
                   r * a,
                   r * b,
@@ -576,9 +678,9 @@ void transfer_grid(ta_parameter_writer& writer, const grid * grid)
 
 void transfer_scene(ta_parameter_writer& writer, grid * grid, mat4x4& trans)
 {
-  //global_polygon_type_0(writer,
-  //para_control::list_type::translucent);
-  //transfer_grid(writer, grid);
+  global_polygon_type_0(writer,
+                        para_control::list_type::translucent);
+  transfer_grid(writer, grid);
 
   last_value = -1;
   transfer_knot(writer, trans, grid);
@@ -665,6 +767,27 @@ static inline mat4x4 update_analog(const mat4x4& screen_trans)
   return screen_trans * s * ry * rz;
 }
 
+static inline void update_digital(snake * snake)
+{
+  int ra = ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0;
+  int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
+  int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
+  int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
+
+  if (ra) {
+    snake->direction = RIGHT;
+  }
+  if (la) {
+    snake->direction = LEFT;
+  }
+  if (ua) {
+    snake->direction = UP;
+  }
+  if (da) {
+    snake->direction = DOWN;
+  }
+}
+
 static inline vec3 lerp(vec3 a, vec3 b, float t)
 {
   return a + (b - a) * t;
@@ -732,20 +855,22 @@ int main()
     holly.FB_W_LINESTRIDE = (framebuffer_width * bytes_per_pixel) / 8;
   }
 
-  const int width = max_knot_rings;
-  const int height = max_knot_segments;
-  static uint8_t grid_a[width * height] = {};
-  static uint8_t grid_b[width * height] = {};
+  const int max_width = max_knot_rings;
+  const int max_height = max_knot_segments;
+  static int grid_a[max_width * max_height] = {};
+  static int grid_b[max_width * max_height] = {};
   grid grid = {
-    .width = width,
-    .height = height,
+    .width = knot_rings,
+    .height = knot_segments,
     .generation = 1,
     .data = {grid_a, grid_b},
   };
   for (int i = 0; i < 8; i++) {
     seed_grid(&grid, 32 * i, 0);
   }
+  snake snake;
   grid.generation = 0;
+  snake_init(&grid, &snake, 5, 5);
 
   int tick = 0;
 
@@ -763,8 +888,16 @@ int main()
     maple::dma_wait_complete();
     do_get_condition();
     //screen_trans = update_analog(screen_trans);
+    update_digital(&snake);
 
-    constexpr int ticks_per_animation_frame = 8;
+    constexpr int ticks_per_animation_frame = 16;
+
+    if ((tick & (ticks_per_animation_frame - 1)) == 0) {
+      grid_generation(&grid);
+      snake_move(&grid, &snake, false);
+    }
+
+    /*
     constexpr float tick_div = 1.0f / (float)ticks_per_animation_frame;
     int anim_tick = -tick;
     int anim_frame = anim_tick / ticks_per_animation_frame;
@@ -777,6 +910,16 @@ int main()
     vec3 eye = lerp(_knot_center[eye0], _knot_center[eye1], t);
     vec3 center = lerp(_knot_center[center0], _knot_center[center1], t);
     vec3 up = lerp(_knot_ring[eye0][0], _knot_ring[eye1][0], t);
+    */
+
+    int ex = (snake.head.x - 10) & (grid.width - 1);
+    int cx = (snake.head.x + 0) & (grid.width - 1);
+    int y = (snake.head.y) & (grid.height - 1);
+
+    vec3 up     = -_knot_ring[cx][snake.head.y];
+    vec3 eye    = _knot_center[ex];
+    vec3 center = -_knot_center[cx];
+
     screen_trans = look_at(eye, center, up);
 
     writer.offset = 0;
@@ -784,7 +927,7 @@ int main()
 
     tick += 1;
     if ((tick & 3) == 0) {
-      grid_generation(&grid);
+      //grid_generation(&grid);
     }
 
     while (ta_in_use);

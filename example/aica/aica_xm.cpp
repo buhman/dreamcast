@@ -688,7 +688,7 @@ void vbr600()
       = tmu::tcr0::UNIE
       | tmu::tcr0::tpsc::p_phi_256; // clear underflow
 
-    tmu0_events();
+    //tmu0_events();
   } else {
     serial::string("vbr600\n");
     interrupt_exception();
@@ -924,7 +924,7 @@ void global_polygon_type_0(ta_parameter_writer& writer)
     | obj_control::texture
     ;
 
-  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
+  const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::always
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
@@ -991,34 +991,64 @@ const vertex quad_vertices[] = {
   { { 0, 1, 0.1f }, {0, 1} },
 };
 
-vec3 transform(const vec3& p)
+const int texture_width = 128;
+const int texture_height = 256;
+const int glyph_width = 9;
+const int glyph_height = 12;
+const int glyphs_per_row = texture_width / glyph_width;
+const int glyph_hori_advance = 8;
+const int glyph_vert_advance = 9;
+
+static inline vec2 transform_glyph_texture(const vec2& t, int char_code)
+{
+  int row = char_code / glyphs_per_row;
+  int col = char_code % glyphs_per_row;
+
+  return {
+    (float)(col * glyph_width  + t.x * glyph_width) / (float)(texture_width),
+    (float)(row * glyph_height + t.y * glyph_height) / (float)(texture_height),
+  };
+}
+
+static inline vec3 transform_glyph_position(const vec3& p, float x, float y)
 {
   return {
-    p.x * 128 + 64,
-    p.y * 256 + 64,
+    p.x * glyph_width + x,
+    p.y * glyph_height + y,
     p.z
   };
 }
 
-void transfer_scene(ta_parameter_writer& writer)
+void transfer_glyph(ta_parameter_writer& writer, char c, int x, int y)
 {
-  global_polygon_type_0(writer);
+  vec3 ap = transform_glyph_position(quad_vertices[0].p, x, y);
+  vec3 bp = transform_glyph_position(quad_vertices[1].p, x, y);
+  vec3 cp = transform_glyph_position(quad_vertices[2].p, x, y);
+  vec3 dp = transform_glyph_position(quad_vertices[3].p, x, y);
 
-  vec3 ap = transform(quad_vertices[0].p);
-  vec3 bp = transform(quad_vertices[1].p);
-  vec3 cp = transform(quad_vertices[2].p);
-  vec3 dp = transform(quad_vertices[3].p);
-
-  vec2 at = quad_vertices[0].t;
-  vec2 bt = quad_vertices[1].t;
-  vec2 ct = quad_vertices[2].t;
-  vec2 dt = quad_vertices[3].t;
+  vec2 at = transform_glyph_texture(quad_vertices[0].t, c);
+  vec2 bt = transform_glyph_texture(quad_vertices[1].t, c);
+  vec2 ct = transform_glyph_texture(quad_vertices[2].t, c);
+  vec2 dt = transform_glyph_texture(quad_vertices[3].t, c);
 
   quad(writer,
        ap, at,
        bp, bt,
        cp, ct,
        dp, dt);
+}
+
+void transfer_scene(ta_parameter_writer& writer)
+{
+  global_polygon_type_0(writer);
+
+  const char * foo = "Although the ROM provides a graphic for all 256 different possible 8-bit codes";
+  int x = 32;
+  int y = 32;
+  while (*foo) {
+    transfer_glyph(writer, *foo++, x, y);
+    x += 8;
+  }
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);

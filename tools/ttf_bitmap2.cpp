@@ -22,6 +22,10 @@ load_bitmap_char(FT_Face face,
     return -1;
   }
 
+  printf("horiBearingX: %d\n", face->glyph->metrics.horiBearingX >> 6);
+  printf("horiBearingY: %d\n", face->glyph->metrics.horiBearingY >> 6);
+  printf("horiAdvance: %d\n", face->glyph->metrics.horiAdvance >> 6);
+
   assert(face->glyph->format == FT_GLYPH_FORMAT_BITMAP);
   assert(face->glyph->bitmap.num_grays == 2);
 
@@ -106,6 +110,9 @@ int main(int argc, const char * argv[])
 
   int width = face->size->metrics.max_advance >> 6;
   int height = face->size->metrics.height >> 6;
+
+  printf("width %d\n", width);
+  printf("height %d\n", height);
 
   int texture_buf_size = texture_width * texture_height;
   uint8_t * texture = (uint8_t *)malloc(texture_buf_size);
