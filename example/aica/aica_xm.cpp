@@ -9,7 +9,7 @@
 #include "holly/ta_global_parameter.hpp"
 #include "holly/ta_parameter.hpp"
 #include "holly/ta_vertex_parameter.hpp"
-#include "holly/texture_memory_alloc5.hpp"
+#include "holly/texture_memory_alloc7.hpp"
 #include "holly/video_output.hpp"
 
 #include "memorymap.hpp"
@@ -33,6 +33,8 @@
 #include "xm/test.xm.h"
 #include "xm/xmtest.xm.h"
 #include "xm/catch_this_rebel.xm.h"
+
+#include "font/tandy1k/tandy1k.data.h"
 
 #include "interrupt.hpp"
 
@@ -839,6 +841,55 @@ void core_param_init()
   holly.FB_W_LINESTRIDE = (framebuffer.px_width * bytes_per_pixel) / 8;
 }
 
+void transfer_ta_fifo_texture_memory_32byte(void * dst, void * src, int length)
+{
+  uint32_t out_addr = (uint32_t)dst;
+  sh7091.CCN.QACR0 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+  sh7091.CCN.QACR1 = ((reinterpret_cast<uint32_t>(out_addr) >> 24) & 0b11100);
+
+  volatile uint32_t * base = &store_queue[(out_addr & 0x03ffffe0) / 4];
+  uint32_t * src32 = reinterpret_cast<uint32_t *>(src);
+
+  length = (length + 31) & ~31; // round up to nearest multiple of 32
+  while (length > 0) {
+    base[0] = src32[0];
+    base[1] = src32[1];
+    base[2] = src32[2];
+    base[3] = src32[3];
+    base[4] = src32[4];
+    base[5] = src32[5];
+    base[6] = src32[6];
+    base[7] = src32[7];
+    asm volatile ("pref @%0"
+                  :                // output
+                  : "r" (&base[0]) // input
+                  : "memory");
+    length -= 32;
+    base += 8;
+    src32 += 8;
+  }
+}
+
+void transfer_textures()
+{
+  system.LMMODE0 = 0; // 64-bit address space
+  system.LMMODE1 = 0; // 64-bit address space
+
+  uint32_t offset = texture_memory_alloc.texture.start + 0;
+  void * dst = reinterpret_cast<void *>(&ta_fifo_texture_memory[offset / 4]);
+  void * src = reinterpret_cast<void *>(&_binary_font_tandy1k_tandy1k_data_start);
+  int size = reinterpret_cast<int>(&_binary_font_tandy1k_tandy1k_data_size);
+  transfer_ta_fifo_texture_memory_32byte(dst, src, size);
+}
+
+void transfer_palettes()
+{
+  holly.PAL_RAM_CTRL = pal_ram_ctrl::pixel_format::argb1555;
+
+  holly.PALETTE_RAM[0] = 0;
+  holly.PALETTE_RAM[1] = 0x7fff;
+}
+
 void graphics_init()
 {
   holly.SOFTRESET = softreset::pipeline_soft_reset
@@ -860,6 +911,9 @@ void graphics_init()
                          ta_cont_count,
                          texture_memory_alloc.region_array.start,
                          texture_memory_alloc.object_list.start);
+
+  transfer_textures();
+  transfer_palettes();
 }
 
 void global_polygon_type_0(ta_parameter_writer& writer)
@@ -867,20 +921,28 @@ void global_polygon_type_0(ta_parameter_writer& writer)
   const uint32_t parameter_control_word = para_control::para_type::polygon_or_modifier_volume
                                         | para_control::list_type::opaque
                                         | obj_control::col_type::packed_color
-                                        | obj_control::gouraud;
+    | obj_control::texture
+    ;
 
   const uint32_t isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                           | isp_tsp_instruction_word::culling_mode::no_culling;
 
   const uint32_t tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                       | tsp_instruction_word::dst_alpha_instr::zero
-                                      | tsp_instruction_word::fog_control::no_fog;
+                                      | tsp_instruction_word::fog_control::no_fog
+                                      | tsp_instruction_word::texture_u_size::from_int(128)
+                                      | tsp_instruction_word::texture_v_size::from_int(256);
+
+  const uint32_t texture_address = texture_memory_alloc.texture.start;
+  const uint32_t texture_control_word = texture_control_word::pixel_format::_4bpp_palette
+                                      | texture_control_word::scan_order::twiddled
+                                      | texture_control_word::texture_address(texture_address / 8);
 
   writer.append<ta_global_parameter::polygon_type_0>() =
     ta_global_parameter::polygon_type_0(parameter_control_word,
                                         isp_tsp_instruction_word,
                                         tsp_instruction_word,
-                                        0,
+                                        texture_control_word,
                                         0, // data_size_for_sort_dma
                                         0  // next_address_for_sort_dma
                                         );
@@ -888,39 +950,75 @@ void global_polygon_type_0(ta_parameter_writer& writer)
 
 struct vertex {
   vec3 p;
-  uint32_t c;
+  vec2 t;
 };
 
-static inline void triangle(ta_parameter_writer& writer,
-                            const vertex& a, const vertex& b, const vertex& c)
+static inline void quad(ta_parameter_writer& writer,
+                        const vec3& ap, const vec2& at,
+                        const vec3& bp, const vec2& bt,
+                        const vec3& cp, const vec2& ct,
+                        const vec3& dp, const vec2& dt)
 {
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
-                                        a.p.x, a.p.y, a.p.z,
-                                        a.c);
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
+                                        ap.x, ap.y, ap.z,
+                                        at.x, at.y,
+                                        0, 0);
 
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(false),
-                                        b.p.x, b.p.y, b.p.z,
-                                        b.c);
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
+                                        bp.x, bp.y, bp.z,
+                                        bt.x, bt.y,
+                                        0, 0);
 
-  writer.append<ta_vertex_parameter::polygon_type_0>() =
-    ta_vertex_parameter::polygon_type_0(polygon_vertex_parameter_control_word(true),
-                                        c.p.x, c.p.y, c.p.z,
-                                        c.c);
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(false),
+                                        dp.x, dp.y, dp.z,
+                                        dt.x, dt.y,
+                                        0, 0);
+
+  writer.append<ta_vertex_parameter::polygon_type_3>() =
+    ta_vertex_parameter::polygon_type_3(polygon_vertex_parameter_control_word(true),
+                                        cp.x, cp.y, cp.z,
+                                        ct.x, ct.y,
+                                        0, 0);
 }
 
-const vertex triangle_vertices[] = {
-  { { 320.000f,   50.f, 0.1f }, 0xffff0000 },
-  { { 539.393f,  430.f, 0.1f }, 0xff00ff00 },
-  { { 100.607f,  430.f, 0.1f }, 0xff0000ff },
+const vertex quad_vertices[] = {
+  { { 0, 0, 0.1f }, {0, 0} },
+  { { 1, 0, 0.1f }, {1, 0} },
+  { { 1, 1, 0.1f }, {1, 1} },
+  { { 0, 1, 0.1f }, {0, 1} },
 };
+
+vec3 transform(const vec3& p)
+{
+  return {
+    p.x * 128 + 64,
+    p.y * 256 + 64,
+    p.z
+  };
+}
 
 void transfer_scene(ta_parameter_writer& writer)
 {
   global_polygon_type_0(writer);
 
-  triangle(writer, triangle_vertices[0], triangle_vertices[1], triangle_vertices[2]);
+  vec3 ap = transform(quad_vertices[0].p);
+  vec3 bp = transform(quad_vertices[1].p);
+  vec3 cp = transform(quad_vertices[2].p);
+  vec3 dp = transform(quad_vertices[3].p);
+
+  vec2 at = quad_vertices[0].t;
+  vec2 bt = quad_vertices[1].t;
+  vec2 ct = quad_vertices[2].t;
+  vec2 dt = quad_vertices[3].t;
+
+  quad(writer,
+       ap, at,
+       bp, bt,
+       cp, ct,
+       dp, dt);
 
   writer.append<ta_global_parameter::end_of_list>() =
     ta_global_parameter::end_of_list(para_control::para_type::end_of_list);

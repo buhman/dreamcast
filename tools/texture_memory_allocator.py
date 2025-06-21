@@ -1,7 +1,7 @@
 import struct
 
 # make ./example/memory_map.bin
-# ./tools/ftdi_transfer ./example/memory_map.bin
+# ./tools/ftdi_transfer.sh ./example/memory_map.bin
 # ./tools/dump_texture_memory.sh
 
 # sha256sum

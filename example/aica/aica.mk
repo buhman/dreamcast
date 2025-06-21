@@ -18,6 +18,7 @@ AICA_XM_OBJ = \
 	xm/xmtest.xm.o \
 	xm/catch_this_rebel.xm.o \
 	xm/middle_c.xm.o \
+	font/tandy1k/tandy1k.data.o \
 	holly/core.o \
 	holly/region_array.o \
 	holly/background.o \
