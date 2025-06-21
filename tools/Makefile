@@ -1,8 +1,7 @@
-CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Wno-error
+CFLAGS = -Og -g -gdwarf-4 -Wall -Wextra -Wno-error -Wfatal-errors
 CFLAGS += -Wno-error=unused-parameter
 CFLAGS += -Wno-error=unused-variable
 CFLAGS += -Wno-error=unused-but-set-variable
-CFLAGS += -Wno-vla-extension
 CXXFLAGS = -std=c++23
 
 PREFIX ?= /usr/local
