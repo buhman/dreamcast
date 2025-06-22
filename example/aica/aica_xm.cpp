@@ -1,3 +1,5 @@
+#include <bit>
+
 #include "holly/background.hpp"
 #include "holly/core.hpp"
 #include "holly/core_bits.hpp"
@@ -22,6 +24,12 @@
 #include "sh7091/serial.hpp"
 #include "printf/printf.h"
 #include "printf/unparse.h"
+
+#include "maple/maple.hpp"
+#include "maple/maple_host_command_writer.hpp"
+#include "maple/maple_bus_bits.hpp"
+#include "maple/maple_bus_commands.hpp"
+#include "maple/maple_bus_ft0.hpp"
 
 #include "math/float_types.hpp"
 
@@ -67,48 +75,65 @@ struct interpreter_state {
 
 struct interpreter_state state;
 
+union aica_sandbox_channel {
+  struct {
+    int instrument;
+    int loop;
+    int note;
+
+    int krs;
+    int ar;
+    int d1r;
+    int d2r;
+    int rr;
+    int dl;
+
+    int lfof;
+    int plfows;
+    int alfows;
+    int plfos;
+    int alfos;
+
+    int disdl;
+    int dipan;
+
+    int kyonb;
+  };
+  int field[16];
+};
+
 struct aica_sandbox_state {
   int channel_ix;
-  union aica_sandbox_channel {
-    struct {
-      int instrument;
-      int loop;
-      int note;
-
-      int krs;
-      int ar;
-      int d1r;
-      int d2r;
-      int rr;
-      int dl;
-
-      int disdl;
-      int dipan;
-    };
-    int field[11];
-  } channel[64];
+  union aica_sandbox_channel channel[64];
+  int pointer_row;
 };
 
 struct aica_sandbox_state sandbox_state = {};
 
 struct key_offset_value {
   const char * label;
+  const char * description;
   int min;
   int max;
 };
 
 struct key_offset_value sandbox_labels[] = {
-  {"instrument", 0, max_instruments - 1},
-  {"loop", 0, 1},
-  {"note", 0, 97},
-  {"krs", 0, 0xf},
-  {"ar", 0, 0x1f},
-  {"d1r", 0, 0x1f},
-  {"d2r", 0, 0x1f},
-  {"rr", 0, 0x1f},
-  {"dl", 0, 0x1f},
-  {"disdl", 0, 0xf},
-  {"dipan", 0, 0x1f},
+  {"instrument", NULL, 1, max_instruments},
+  {"loop", NULL, 0, 1},
+  {"note", NULL, 0, 97},
+  {"krs", "key rate scaling", 0, 0xf},
+  {"ar", "attack rate", 0, 0x1f},
+  {"d1r", "decay 1 rate", 0, 0x1f},
+  {"d2r", "decay 2 rate", 0, 0x1f},
+  {"rr", "release rate", 0, 0x1f},
+  {"dl", "decay level", 0, 0x1f},
+  {"lfof", "LFO frequency", 0, 0x1f},
+  {"plfows", "pitch LFO waveform select", 0, 3},
+  {"alfows", "amplitude LFO waveform select", 0, 3},
+  {"plfos", "pitch LFO sensitivity", 0, 7},
+  {"alfos", "amplitude LFO sensitivity", 7},
+  {"disdl", "direct send level", 0xf},
+  {"dipan", "direct panpot", 0x1f},
 };
 const int sandbox_labels_length = (sizeof (sandbox_labels)) / (sizeof (sandbox_labels[0]));
 
@@ -422,14 +447,7 @@ void _play_note(int ch, xm_pattern_format_t * pf)
   int sample_type = ((sample_header->type & (1 << 4)) != 0);
   int bytes_per_sample = 1 + sample_type;
 
-  int start_offset = 0;
-  /*
-  if (pf->effect_type == 0x9) { // 9 sample offset
-    start_offset += (256 * pf->effect_parameter);
-  }
-  */
-
-  int start = xm.sample_data_offset[pf->instrument - 1] + start_offset;
+  int start = xm.sample_data_offset[pf->instrument - 1];
 
   int loop_type = sample_header->type & 0b11;
   int lpctl = (loop_type == 0) ? 0 : 1;
@@ -1095,15 +1113,24 @@ int transfer_string(ta_parameter_writer& writer, const char * s, int x, int y)
   return len;
 }
 
-int transfer_integer(ta_parameter_writer& writer, int n, int x, int y)
+int transfer_integer(ta_parameter_writer& writer, int n, int x, int y, int offset)
 {
   char buf[16];
 
-  int len = unparse_base10(buf, n, 0, 0);
+  int len = unparse_base10(buf, n, 3, ' ');
+  buf[len] = 0;
+
+  int shift = 0;
+  if (offset >= 0) {
+    shift = 10 - offset;
+    if (shift < 0)
+      shift = 0;
+  }
+  x += glyph_hori_advance * shift;
 
   transfer_string(writer, buf, x, y);
 
-  return len;
+  return len + shift;
 }
 
 void transfer_scene(ta_parameter_writer& writer)
@@ -1117,7 +1144,15 @@ void transfer_scene(ta_parameter_writer& writer)
   int len = transfer_string(writer, "channel", xi, y);
   xi += glyph_hori_advance * len;
   xi += glyph_hori_advance;
-  transfer_integer(writer, sandbox_state.channel_ix, xi, y);
+  len = transfer_integer(writer, sandbox_state.channel_ix, xi, y, -1);
+  xi += glyph_hori_advance * len;
+  xi += glyph_hori_advance * 2;
+
+  if (sandbox_state.channel[sandbox_state.channel_ix].kyonb)
+    transfer_string(writer, "key on", xi, y);
+  else
+    transfer_string(writer, "key off", xi, y);
+
   y += glyph_vert_advance * 2;
 
   for (int i = 0; i < sandbox_labels_length; i++) {
@@ -1127,7 +1162,16 @@ void transfer_scene(ta_parameter_writer& writer)
     xi += glyph_hori_advance * len;
     xi += glyph_hori_advance;
 
-    transfer_integer(writer, sandbox_state.channel[sandbox_state.channel_ix].field[i], xi, y);
+    len = transfer_integer(writer, sandbox_state.channel[sandbox_state.channel_ix].field[i], xi, y, len);
+    xi += glyph_hori_advance * len;
+    xi += glyph_hori_advance * 3;
+
+    if (sandbox_labels[i].description)
+      transfer_string(writer, sandbox_labels[i].description, xi, y);
+
+    if (i == sandbox_state.pointer_row) {
+      transfer_glyph(writer, 16, x, y); // ►
+    }
 
     y += glyph_vert_advance;
   }
@@ -1167,8 +1211,8 @@ void sound_init()
   //int buf = (int)&_binary_xm_milkypack01_xm_start;
   //int buf = (int)&_binary_xm_middle_c_xm_start;
   //int buf = (int)&_binary_xm_test_xm_start;
-  //int buf = (int)&_binary_xm_xmtest_xm_start;
-  int buf = (int)&_binary_xm_catch_this_rebel_xm_start;
+  int buf = (int)&_binary_xm_xmtest_xm_start;
+  //int buf = (int)&_binary_xm_catch_this_rebel_xm_start;
   xm_init(buf);
 
   wait(); aica_sound.common.vreg_armrst = aica::vreg_armrst::ARMRST(1);
@@ -1285,6 +1329,219 @@ void sound_init()
   sh7091.INTC.IPRA = intc::ipra::TMU0(1);
 }
 
+static ft0::data_transfer::data_format data[4];
+
+uint8_t send_buf[1024] __attribute__((aligned(32)));
+uint8_t recv_buf[1024] __attribute__((aligned(32)));
+
+void do_get_condition()
+{
+  auto writer = maple::host_command_writer(send_buf, recv_buf);
+
+  using command_type = maple::get_condition;
+  using response_type = maple::data_transfer<ft0::data_transfer::data_format>;
+
+  auto [host_command, host_response]
+    = writer.append_command_all_ports<command_type, response_type>();
+
+  {
+    using command_type = maple::device_request;
+    using response_type = maple::device_status;
+
+    writer.append_command_all_ports<command_type, response_type>();
+  }
+
+  for (int port = 0; port < 4; port++) {
+    auto& data_fields = host_command[port].bus_data.data_fields;
+    data_fields.function_type = std::byteswap(function_type::controller);
+  }
+  maple::dma_start(send_buf, writer.send_offset,
+                   recv_buf, writer.recv_offset);
+
+  for (uint8_t port = 0; port < 4; port++) {
+    auto& bus_data = host_response[port].bus_data;
+    if (bus_data.command_code != response_type::command_code) {
+      return;
+    }
+    auto& data_fields = bus_data.data_fields;
+    if ((std::byteswap(data_fields.function_type) & function_type::controller) == 0) {
+      return;
+    }
+
+    data[port].digital_button = data_fields.data.digital_button;
+    for (int i = 0; i < 6; i++) {
+      data[port].analog_coordinate_axis[i]
+        = data_fields.data.analog_coordinate_axis[i];
+    }
+  }
+}
+
+void execute_note(int ch, const aica_sandbox_channel& channel)
+{
+  xm_sample_header_t * sample_header = xm.sample_header[channel.instrument - 1];
+  int sample_type = ((sample_header->type & (1 << 4)) != 0);
+  int bytes_per_sample = 1 + sample_type;
+
+  int start = xm.sample_data_offset[channel.instrument - 1];
+
+  int loop_type = sample_header->type & 0b11;
+
+  int lsa = s32(&sample_header->sample_loop_start) / bytes_per_sample;
+  int len = s32(&sample_header->sample_loop_length) / bytes_per_sample;
+
+  if (len == 0) {
+    len = s32(&sample_header->sample_length) / bytes_per_sample;
+  }
+  if (len >= 65535) {
+    len = 65532;
+  }
+  assert(start >= 0);
+  assert(lsa >= 0);
+  assert(len >= 0);
+
+  if (channel.loop && loop_type == 2) // bidirectional
+    len += len - 2;
+
+  assert(sample_header->volume >= 0 && sample_header->volume <= 64);
+  bool pcms = !sample_type;
+
+  wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(channel.note + sample_header->relative_note_number);
+  wait(); aica_sound.channel[ch].PCMS(pcms);
+  wait(); aica_sound.channel[ch].SA(start);
+  wait(); aica_sound.channel[ch].LSA((lsa) & ~(0b11));
+  wait(); aica_sound.channel[ch].LEA((lsa + len) & ~(0b11));
+  wait(); aica_sound.channel[ch].LPCTL(channel.loop);
+
+  wait(); aica_sound.channel[ch].KRS(channel.krs);
+  wait(); aica_sound.channel[ch].AR(channel.ar);
+  wait(); aica_sound.channel[ch].D1R(channel.d1r);;
+  wait(); aica_sound.channel[ch].D2R(channel.d2r);
+  wait(); aica_sound.channel[ch].RR(channel.rr);
+  wait(); aica_sound.channel[ch].DL(channel.dl);
+
+  wait(); aica_sound.channel[ch].LFOF(channel.lfof);
+  wait(); aica_sound.channel[ch].PLFOWS(channel.plfows);
+  wait(); aica_sound.channel[ch].ALFOWS(channel.alfows);
+  wait(); aica_sound.channel[ch].PLFOS(channel.plfos);
+  wait(); aica_sound.channel[ch].ALFOS(channel.alfos);
+
+  wait(); aica_sound.channel[ch].DISDL(channel.disdl);
+  wait(); aica_sound.channel[ch].DIPAN(channel.dipan);
+}
+
+void label_update(int delta)
+{
+  int ix = sandbox_state.pointer_row;
+
+  const key_offset_value& label = sandbox_labels[ix];
+
+  union aica_sandbox_channel& channel = sandbox_state.channel[sandbox_state.channel_ix];
+
+  channel.field[ix] += delta;
+  if (channel.field[ix] > label.max)
+    channel.field[ix] = label.max;
+  if (channel.field[ix] < label.min)
+    channel.field[ix] = label.min;
+
+  execute_note(sandbox_state.channel_ix, channel);
+}
+
+void execute_key(bool on)
+{
+  aica_sandbox_channel& channel = sandbox_state.channel[sandbox_state.channel_ix];
+
+  int ch = sandbox_state.channel_ix;
+
+  execute_note(ch, channel);
+
+  channel.kyonb = on;
+  wait(); aica_sound.channel[ch].KYONB(on);
+  wait(); aica_sound.channel[ch].KYONEX(1);
+}
+
+void input_update()
+{
+  int ra = ft0::data_transfer::digital_button::ra(data[0].digital_button) == 0;
+  int la = ft0::data_transfer::digital_button::la(data[0].digital_button) == 0;
+  int da = ft0::data_transfer::digital_button::da(data[0].digital_button) == 0;
+  int ua = ft0::data_transfer::digital_button::ua(data[0].digital_button) == 0;
+
+  int x = ft0::data_transfer::digital_button::x(data[0].digital_button) == 0;
+  int y = ft0::data_transfer::digital_button::y(data[0].digital_button) == 0;
+  int a = ft0::data_transfer::digital_button::a(data[0].digital_button) == 0;
+  int b = ft0::data_transfer::digital_button::b(data[0].digital_button) == 0;
+
+  static int last_ra = 0;
+  static int last_la = 0;
+  static int last_da = 0;
+  static int last_ua = 0;
+
+  static int last_x = 0;
+  static int last_y = 0;
+  static int last_a = 0;
+  static int last_b = 0;
+
+  if (ra && ra != last_ra) {
+    sandbox_state.channel_ix += 1;
+    if (sandbox_state.channel_ix > 63)
+      sandbox_state.channel_ix = 0;
+  }
+  if (la && la != last_la) {
+    sandbox_state.channel_ix -= 1;
+    if (sandbox_state.channel_ix < 0)
+      sandbox_state.channel_ix = 63;
+  }
+  if (da && da != last_da) {
+    sandbox_state.pointer_row += 1;
+    if (sandbox_state.pointer_row >= sandbox_labels_length)
+      sandbox_state.pointer_row = 0;
+  }
+  if (ua && ua != last_ua) {
+    sandbox_state.pointer_row -= 1;
+    if (sandbox_state.pointer_row < 0)
+      sandbox_state.pointer_row = sandbox_labels_length - 1;
+  }
+
+  if (x && x != last_x) {
+    label_update(-1);
+  }
+  if (y && y != last_y) {
+    execute_key(0);
+  }
+  if (a && a != last_a) {
+    execute_key(1);
+  }
+  if (b && b != last_b) {
+    label_update(1);
+  }
+
+  last_ra = ra;
+  last_la = la;
+  last_ua = ua;
+  last_da = da;
+
+  last_x = x;
+  last_y = y;
+  last_a = a;
+  last_b = b;
+}
+
+void channel_sandbox_defaults()
+{
+  for (int ch = 0; ch < 64; ch++) {
+    aica_sandbox_channel& channel = sandbox_state.channel[ch];
+
+    channel.instrument = 1;
+
+    channel.note = 49;
+
+    channel.ar = 0x1f;
+    channel.rr = 0x1f;
+
+    channel.disdl = 0xf;
+  }
+}
+
 void main()
 {
   serial::init(0);
@@ -1292,6 +1549,7 @@ void main()
   sound_init();
   graphics_init();
   interrupt_init();
+  channel_sandbox_defaults();
 
   system.IML6NRM = istnrm::end_of_render_tsp
                  | istnrm::v_blank_in
@@ -1300,7 +1558,12 @@ void main()
   static uint8_t __attribute__((aligned(32))) ta_parameter_buf[1024 * 1024 * 1];
   ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
+  do_get_condition();
   while (1) {
+    maple::dma_wait_complete();
+    do_get_condition();
+    input_update();
+
     graphics_event(writer);
   }
 }

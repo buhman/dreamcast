@@ -23,6 +23,7 @@ AICA_XM_OBJ = \
 	holly/region_array.o \
 	holly/background.o \
 	holly/ta_fifo_polygon_converter.o \
+	maple/maple.o \
 	$(LIBGCC)
 
 example/aica/aica_xm.elf: LDSCRIPT = $(LIB)/main.lds
