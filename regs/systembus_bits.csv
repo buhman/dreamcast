@@ -60,3 +60,8 @@
 "FFST",,"5","holly_cpu_if_block_internal_write_buffer",,,
 "FFST",,"4","holly_g2_if_block_internal_write_buffer",,,
 "FFST",,"0","aica_internal_write_buffer",,,
+,,,,,,
+"ISTEXT",,3,"external_device",1,,
+"ISTEXT",,2,"modem",1,,
+"ISTEXT",,1,"aica",1,,
+"ISTEXT",,0,"gdrom",1,,
