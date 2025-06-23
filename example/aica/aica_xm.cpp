@@ -376,6 +376,10 @@ void writeback(void const * const buf, uint32_t size)
 }
 
 // quater-semitones
+//
+//   for i in range(48):
+//       round(1024 * (2 ** (i / 48) - 1))
+//
 const static int cent_to_fns[] = {
     0,  15,  30,  45,  61,  77,  93, 109, 125, 142, 159, 176,
   194, 211, 229, 248, 266, 285, 304, 323, 343, 363, 383, 403,
@@ -387,6 +391,7 @@ const int cent_to_fns_length = (sizeof (cent_to_fns)) / (sizeof (cent_to_fns[0])
 uint16_t
 note_to_oct_fns(const int8_t note)
 {
+  // log(8363 / 44100) / log(2)
   const float base_ratio = -2.3986861877015477;
 
   float c4_note = (float)note - 49.0;
@@ -403,7 +408,7 @@ note_to_oct_fns(const int8_t note)
   }
 
   assert(fraction >= 0.0);
-  assert(fraction <= 1.0);
+  assert(fraction < 1.0);
 
   int fns = cent_to_fns[(int)(fraction * cent_to_fns_length)];
 
