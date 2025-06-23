@@ -25,6 +25,7 @@ void print_string(const char * s, int length);
 void print_bytes(const uint8_t * s, int length);
 void print_chars(const uint16_t * s, int length);
 void print_cstring(const char * s);
+void print_integer(const int n);
 
 void _printf(const char * format, ...);
 

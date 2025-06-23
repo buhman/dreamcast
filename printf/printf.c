@@ -103,6 +103,13 @@ void print_cstring(const char * s)
   }
 }
 
+void print_integer(const int n)
+{
+  char s[16];
+  int offset = unparse_base10(s, n, 0, 0);
+  print_string(s, offset);
+}
+
 void _printf(const char * format, ...)
 {
   va_list args;
@@ -121,7 +128,7 @@ void _printf(const char * format, ...)
         case FORMAT_BASE10_UNSIGNED:
           {
             uint32_t num = va_arg(args, uint32_t);
-            char s[10];
+            char s[16];
             int offset = unparse_base10_unsigned(s, num, ft.pad_length, ft.fill_char);
             print_string(s, offset);
           }
@@ -129,7 +136,7 @@ void _printf(const char * format, ...)
         case FORMAT_BASE10:
           {
             int32_t num = va_arg(args, int32_t);
-            char s[10];
+            char s[16];
             int offset = unparse_base10(s, num, ft.pad_length, ft.fill_char);
             print_string(s, offset);
           }
@@ -137,7 +144,7 @@ void _printf(const char * format, ...)
         case FORMAT_BASE10_64:
           {
             int64_t num = va_arg(args, int64_t);
-            char s[20];
+            char s[16];
             int offset = unparse_base10_64(s, num, ft.pad_length, ft.fill_char);
             print_string(s, offset);
           }
@@ -151,7 +158,7 @@ void _printf(const char * format, ...)
         case FORMAT_BASE16:
           {
             uint32_t num = va_arg(args, uint32_t);
-            char s[8];
+            char s[16];
             int offset = unparse_base16(s, num, ft.pad_length, ft.fill_char);
             print_string(s, offset);
           }
@@ -184,7 +191,7 @@ void _printf(const char * format, ...)
             print_string(s, offset);
             print_char('.');
             int32_t fraction = (int32_t)((num - (float)whole) * 1000.0);
-            offset = unparse_base10_unsigned(s, fraction, 0, 0);
+            offset = unparse_base10_unsigned(s, fraction, 3, '0');
             print_string(s, offset);
           }
           break;

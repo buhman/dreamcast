@@ -4,6 +4,10 @@
 #include <assert.h>
 #include <stddef.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 typedef struct __attribute__((packed)) xm_header {
   int8_t id_text[17];
   int8_t module_name[20];
@@ -139,3 +143,7 @@ static_assert((offsetof (struct xm_pattern_format, instrument)) == 1);
 static_assert((offsetof (struct xm_pattern_format, volume_column_byte)) == 2);
 static_assert((offsetof (struct xm_pattern_format, effect_type)) == 3);
 static_assert((offsetof (struct xm_pattern_format, effect_parameter)) == 4);
+
+#ifdef __cplusplus
+}
+#endif
