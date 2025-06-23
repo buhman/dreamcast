@@ -42,6 +42,7 @@
 #include "xm/test.xm.h"
 #include "xm/xmtest.xm.h"
 #include "xm/catch_this_rebel.xm.h"
+#include "xm/harpsichord.xm.h"
 
 #include "font/tandy1k/tandy1k.data.h"
 
@@ -57,7 +58,13 @@ struct xm_state {
   int sample_data_offset[max_instruments];
 };
 
-xm_state xm = {0};
+struct channel_state {
+  int instrument;
+};
+
+struct channel_state channel_state[64] = {};
+
+xm_state xm = {};
 
 struct interpreter_state {
   int tick_rate;
@@ -442,12 +449,16 @@ void debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 
 void _play_note(int ch, xm_pattern_format_t * pf)
 {
-  xm_sample_header_t * sample_header = xm.sample_header[pf->instrument - 1];
+  int instrument = (pf->instrument != 0) ? pf->instrument : channel_state[ch].instrument;
+  if (instrument == 0)
+    instrument = 1;
+  channel_state[ch].instrument = instrument;
+
+  xm_sample_header_t * sample_header = xm.sample_header[instrument - 1];
+  int start = xm.sample_data_offset[instrument - 1];
 
   int sample_type = ((sample_header->type & (1 << 4)) != 0);
   int bytes_per_sample = 1 + sample_type;
-
-  int start = xm.sample_data_offset[pf->instrument - 1];
 
   int loop_type = sample_header->type & 0b11;
   int lpctl = (loop_type == 0) ? 0 : 1;
@@ -469,6 +480,13 @@ void _play_note(int ch, xm_pattern_format_t * pf)
   assert(sample_header->volume >= 0 && sample_header->volume <= 64);
   int disdl = volume_table[sample_header->volume];
   bool pcms = !sample_type;
+  wait(); aica_sound.channel[ch].PCMS(pcms);
+  wait(); aica_sound.channel[ch].SA(start);
+  wait(); aica_sound.channel[ch].LPCTL(lpctl);
+  wait(); aica_sound.channel[ch].LSA((lsa) & ~(0b11));
+  wait(); aica_sound.channel[ch].LEA((lsa + len) & ~(0b11));
+  wait(); aica_sound.channel[ch].DISDL(disdl);
+  wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note + sample_header->relative_note_number);
 
   if (pf->effect_type == 0x04) { // vibrato
     wait(); aica_sound.channel[ch].LFOF(0x12);
@@ -484,13 +502,6 @@ void _play_note(int ch, xm_pattern_format_t * pf)
     wait(); aica_sound.channel[ch].PLFOS(0);
   }
 
-  wait(); aica_sound.channel[ch].PCMS(pcms);
-  wait(); aica_sound.channel[ch].SA(start);
-  wait(); aica_sound.channel[ch].LPCTL(lpctl);
-  wait(); aica_sound.channel[ch].LSA((lsa) & ~(0b11));
-  wait(); aica_sound.channel[ch].LEA((lsa + len) & ~(0b11));
-  wait(); aica_sound.channel[ch].oct_fns = note_to_oct_fns(pf->note + sample_header->relative_note_number);
-  wait(); aica_sound.channel[ch].DISDL(disdl);
   wait(); aica_sound.channel[ch].KYONB(1);
 }
 
@@ -530,7 +541,7 @@ void play_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 {
   if (pf->note == 97) {
     wait(); aica_sound.channel[ch].KYONB(0);
-  } else if (pf->note != 0 && pf->instrument != 0) {
+  } else if (pf->note != 0) {
     bool note_delay = (pf->effect_type == 0xe) && ((pf->effect_parameter & 0xf0) == 0xd0); // ED note delay
     if (!note_delay)
       _play_note(ch, pf);
@@ -548,7 +559,7 @@ void play_debug_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 void rekey_note(interpreter_state& state, int ch, xm_pattern_format_t * pf)
 {
   if (pf->note == 97) {
-  } else if (pf->note != 0 && pf->instrument != 0) {
+  } else if (pf->note != 0) {
     wait(); aica_sound.channel[ch].KYONB(0);
   }
 }
@@ -752,7 +763,7 @@ void vbr600()
       = tmu::tcr0::UNIE
       | tmu::tcr0::tpsc::p_phi_256; // clear underflow
 
-    //tmu0_events();
+    tmu0_events();
   } else {
     serial::string("vbr600\n");
     interrupt_exception();
@@ -1211,8 +1222,9 @@ void sound_init()
   //int buf = (int)&_binary_xm_milkypack01_xm_start;
   //int buf = (int)&_binary_xm_middle_c_xm_start;
   //int buf = (int)&_binary_xm_test_xm_start;
-  int buf = (int)&_binary_xm_xmtest_xm_start;
+  //int buf = (int)&_binary_xm_xmtest_xm_start;
   //int buf = (int)&_binary_xm_catch_this_rebel_xm_start;
+  int buf = (int)&_binary_xm_harpsichord_xm_start;
   xm_init(buf);
 
   wait(); aica_sound.common.vreg_armrst = aica::vreg_armrst::ARMRST(1);
