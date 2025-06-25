@@ -131,3 +131,13 @@ constexpr uint32_t holly_g2_if_block_internal_write_buffer(uint32_t reg) { retur
 constexpr uint32_t aica_internal_write_buffer(uint32_t reg) { return (reg >> 0) & 0x1; }
 }
 
+namespace istext {
+constexpr uint32_t external_device = 1 << 3;
+constexpr uint32_t modem = 1 << 2;
+
+constexpr uint32_t aica = 1 << 1;
+
+constexpr uint32_t gdrom = 1 << 0;
+
+}
+
