@@ -181,6 +181,7 @@ void main()
 
   float theta = 0;
   uint32_t frame_ix = 0;
+  uint32_t anim_ix = 0;
 
   bool hardware_ta = false;
 
@@ -195,7 +196,7 @@ void main()
   auto isp_tsp_parameters = &texture_memory32[texture_memory_alloc::isp_tsp_parameters.start / 4];
 
   while (true) {
-    if ((frame_ix & 255) == 0) {
+    if ((anim_ix & 255) == 0) {
       holly.SOFTRESET = softreset::pipeline_soft_reset;
       holly.SOFTRESET = 0;
       hardware_ta = !hardware_ta;
@@ -234,5 +235,6 @@ void main()
 
     frame_ix = (frame_ix + 1) & 1;
     theta += half_degree;
+    anim_ix += 1;
   }
 }
