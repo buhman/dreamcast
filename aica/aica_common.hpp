@@ -263,11 +263,11 @@ struct aica_common {
 
   uint32_t SGC() const
   {
-    return (static_cast<uint32_t>((reg_2810 >> 14) & 0x1) << 0);
+    return (static_cast<uint32_t>((reg_2810 >> 13) & 0x3) << 0);
   }
   void SGC(const uint32_t v)
   {
-    reg_2810 = (((v >> 0) & 0x1) << 14) | (reg_2810 & 0xbfff);
+    reg_2810 = (((v >> 0) & 0x3) << 13) | (reg_2810 & 0x9fff);
   }
 
   uint32_t EG() const
@@ -714,7 +714,7 @@ namespace aica {
   }
   namespace lp_sgc_eg {
     constexpr uint32_t LP(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 15) & 0x1) << 0); }
-    constexpr uint32_t SGC(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 14) & 0x1) << 0); }
+    constexpr uint32_t SGC(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 13) & 0x3) << 0); }
     constexpr uint32_t EG(const uint32_t reg) { return (static_cast<uint32_t>((reg >> 0) & 0x1fff) << 0); }
   }
   namespace ca {
