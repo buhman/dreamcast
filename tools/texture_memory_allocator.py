@@ -40,10 +40,10 @@ allocations = {
     "object_list"        : (0x09_6000  , 32 ),
 
     "region_array"       : (0x01_0000  , 0  ),
-    "framebuffer0"       : (0x09_6000  , 0  ),
+    "framebuffer0"       : (0x0a_8c00  , 0  ),
 
-    "framebuffer1"       : (0x09_6000  , 0  ),
-    "framebuffer2"       : (0x09_6000  , 0  ),
+    "framebuffer1"       : (0x0a_8c00  , 0  ),
+    "framebuffer2"       : (0x0a_8c00  , 0  ),
 
     "background0"        : (0x00_0040  , 32 ),
     "background1"        : (0x00_0040  , 32 ),

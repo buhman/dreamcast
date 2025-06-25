@@ -275,14 +275,20 @@ void main()
   ta_polygon_converter_transfer(writer.buf, writer.offset);
   ta_wait_opaque_list();
 
-  int framebuffer_size = framebuffer_width * framebuffer_height * bytes_per_pixel;
-  int framebuffer_address = (0x10000000 - (framebuffer_size / 2));
+  //int framebuffer_size = framebuffer_width * framebuffer_height * bytes_per_pixel;
+  //int framebuffer_address = (0x10000000 - (framebuffer_size / 2));
   //int framebuffer_address = texture_memory_alloc.framebuffer[1].start;
+  //holly.FB_W_SOF1 = framebuffer_address & 0x1ffffff;
+  //holly.STARTRENDER = 1;
 
-  holly.FB_W_SOF1 = framebuffer_address & 0x1ffffff;
-  holly.STARTRENDER = 1;
+  int framebuffer_address = texture_memory_alloc.framebuffer[0].start;
+  test_pattern();
+
   holly.FB_R_SOF1 = framebuffer_address & 0x0ffffff;
 
   printf("fb_w_sof1 0x%08x\n", holly.FB_W_SOF1);
   printf("fb_r_sof1 0x%08x\n", holly.FB_R_SOF1);
+
+  while (1) {
+  }
 }
