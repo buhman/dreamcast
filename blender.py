@@ -46,12 +46,14 @@ def render_polygons(f, name, polygons):
     uv_ix = 0
     for i, polygon in enumerate(polygons):
         indices = [*polygon.vertices, polygon.material_index, uv_ix]
+        if len(polygon.vertices) == 3:
+            indices = [*polygon.vertices, -1, polygon.material_index, uv_ix]
         uv_ix += len(polygon.vertices)
         s = ", ".join(map(str, indices))
-        if len(polygon.vertices) == 4:
+        if len(polygon.vertices) in {3, 4}:
             f.write(f"  {{{s}}},\n")
         else:
-            f.write(f"  {{0, 0, 0, 0, -1}}, // {{{s}}}\n")
+            f.write(f"  {{-1, -1, -1, -1, -1, -1}}, // {{{s}}}\n")
     f.write("};\n\n")
 
 def render_polygon_edge_pairs(f, name, polygons):

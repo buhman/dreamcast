@@ -23,6 +23,17 @@ inline constexpr mat<4, 4, T> scale(vec<3, T> s)
 }
 
 template <typename T>
+inline constexpr mat<4, 4, T> scale(T s)
+{
+  return {
+      s,   0,   0, 0,
+      0,   s,   0, 0,
+      0,   0,   s, 0,
+      0,   0,   0, 1
+  };
+}
+
+template <typename T>
 inline constexpr mat<4, 4, T> rotate_x(T t)
 {
   return {
