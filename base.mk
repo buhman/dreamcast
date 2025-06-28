@@ -78,6 +78,12 @@ endef
 %.pcm.h: %.pcm
 	$(BUILD_BINARY_H)
 
+%.adpcm.o: %.adpcm
+	$(BUILD_BINARY_O)
+
+%.adpcm.h: %.adpcm
+	$(BUILD_BINARY_H)
+
 %.data.o: %.data
 	$(BUILD_BINARY_O)
 
