@@ -49,3 +49,13 @@ inline constexpr T min(const T a, const T b) noexcept
 {
   return (a < b) ? a : b;
 }
+
+template <typename T>
+inline constexpr T clamp(const T n, const T l, const T h) noexcept
+{
+  if (n < l)
+    return l;
+  if (n > h)
+    return h;
+  return n;
+}
