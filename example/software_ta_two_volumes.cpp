@@ -48,7 +48,8 @@ void init_texture_memory()
 			 texture_memory_alloc.region_array.start,
 			 texture_memory_alloc.object_list.start);
 
-  background_parameter(0xff222200);
+  background_parameter2(texture_memory_alloc.background[0].start,
+                        0xff000000);
 }
 
 constexpr float half_degree = 0.01745329f / 2.f;

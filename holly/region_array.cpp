@@ -117,8 +117,6 @@ void region_array2(const uint32_t width,  // in tile units (1 tile unit = 32 pix
   }
 }
 
-#include "printf/printf.h"
-
 void region_array_multipass(const uint32_t width,  // in tile units (1 tile unit = 32 pixels)
                             const uint32_t height, // in tile units (1 tile unit = 32 pixels)
                             const struct opb_size * opb_size,
