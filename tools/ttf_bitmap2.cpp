@@ -25,6 +25,8 @@ load_bitmap_char(FT_Face face,
   printf("horiBearingX: %d\n", face->glyph->metrics.horiBearingX >> 6);
   printf("horiBearingY: %d\n", face->glyph->metrics.horiBearingY >> 6);
   printf("horiAdvance: %d\n", face->glyph->metrics.horiAdvance >> 6);
+  printf("width: %d\n", face->glyph->metrics.width >> 6);
+  printf("height: %d\n", face->glyph->metrics.height >> 6);
 
   assert(face->glyph->format == FT_GLYPH_FORMAT_BITMAP);
   assert(face->glyph->bitmap.num_grays == 2);
