@@ -53,6 +53,29 @@ void core_init()
 		       | fpu_param_cfg::pointer_first_burst_size(7); // half of pointer burst size(?)
 }
 
+void core_param_init(uint32_t region_array_start,
+                     uint32_t isp_tsp_parameters_start,
+                     uint32_t background_start,
+                     uint32_t framebuffer_width)
+{
+  holly.REGION_BASE = region_array_start;
+  holly.PARAM_BASE = isp_tsp_parameters_start;
+
+  uint32_t background_offset = background_start - isp_tsp_parameters_start;
+
+  holly.ISP_BACKGND_T
+    = isp_backgnd_t::tag_address(background_offset / 4)
+    | isp_backgnd_t::tag_offset(0)
+    | isp_backgnd_t::skip(1);
+  holly.ISP_BACKGND_D = _i(1.f/100000.f);
+
+  holly.FB_W_CTRL
+    = fb_w_ctrl::fb_packmode::_565_rgb_16bit;
+
+  const int bytes_per_pixel = 2;
+  holly.FB_W_LINESTRIDE = (framebuffer_width * bytes_per_pixel) / 8;
+}
+
 void core_start_render(uint32_t frame_address,
 		       uint32_t frame_width      // in pixels
 		       )

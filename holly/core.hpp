@@ -4,6 +4,11 @@
 
 void core_init();
 
+void core_param_init(uint32_t region_array_start,
+                     uint32_t isp_tsp_parameters_start,
+                     uint32_t background_start,
+                     uint32_t framebuffer_width);
+
 void core_start_render(uint32_t frame_address,
 		       uint32_t frame_width); // in pixels
 
