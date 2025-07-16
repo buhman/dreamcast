@@ -26,6 +26,7 @@ struct vec<3, T>
   inline constexpr vec<3, T>& operator=(vec<3, T> const& v);
   inline constexpr vec<3, T>& operator+=(vec<3, T> const& v);
   inline constexpr vec<3, T>& operator-=(vec<3, T> const& v);
+  inline constexpr vec<3, T>& operator*=(T const& scalar);
 };
 
 template <typename T>
@@ -81,6 +82,13 @@ template <typename T>
 inline constexpr vec<3, T>& vec<3, T>::operator-=(vec<3, T> const& v)
 {
   *this = *this - vec<3, T>(v);
+  return *this;
+}
+
+template <typename T>
+inline constexpr vec<3, T>& vec<3, T>::operator*=(T const& scalar)
+{
+  *this = *this * scalar;
   return *this;
 }
 
