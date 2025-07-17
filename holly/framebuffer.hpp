@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 namespace framebuffer {
 
   constexpr inline int div32(int n)
