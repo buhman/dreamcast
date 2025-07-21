@@ -37,7 +37,7 @@ public:
   inline constexpr typename mat<3, 3, T>::row_type const &
   operator[](int i) const;
 
-  void operator=(const mat<3, 3, T>&) = delete;
+  //void operator=(const mat<3, 3, T>&) = delete;
 
 };
 
