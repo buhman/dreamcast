@@ -184,3 +184,20 @@ inline constexpr float determinant(mat<3, 3, T> const& a)
     a[0][1] * f1 +
     a[0][2] * f2;
 }
+
+template<typename T>
+inline constexpr mat<3, 3, T> inverse(mat<3, 3, T> const& a)
+{
+  mat<3, 3, T> m;
+  float idet = 1.0f / determinant(a);
+  m[0][0] = cofactor(a, 0, 0) * idet;
+  m[1][0] = cofactor(a, 0, 1) * idet;
+  m[2][0] = cofactor(a, 0, 2) * idet;
+  m[0][1] = cofactor(a, 1, 0) * idet;
+  m[1][1] = cofactor(a, 1, 1) * idet;
+  m[2][1] = cofactor(a, 1, 2) * idet;
+  m[0][2] = cofactor(a, 2, 0) * idet;
+  m[1][2] = cofactor(a, 2, 1) * idet;
+  m[2][2] = cofactor(a, 2, 2) * idet;
+  return m;
+}
