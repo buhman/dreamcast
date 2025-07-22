@@ -16,7 +16,7 @@ inline constexpr T magnitude_squared(vec<L, T> const& v)
 }
 
 template <int L, typename T>
-inline constexpr vec<3, T> normalize(vec<L, T> const& v)
+inline constexpr vec<L, T> normalize(vec<L, T> const& v)
 {
   T d = 1.0f / magnitude(v);
   return v * d;

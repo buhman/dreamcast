@@ -153,9 +153,3 @@ inline constexpr vec<2, U> functor1(U (&func) (T const& x), vec<2, T> const& v)
 {
   return vec<2, U>(func(v.x), func(v.y));
 }
-
-template <typename T>
-inline constexpr T magnitude(vec<2, T> const& v)
-{
-  return sqrt(dot(v, v));
-}
