@@ -2,12 +2,10 @@
 
 #include <utility>
 #include "vec2.hpp"
-
-template <int R, int C, typename T>
-struct mat;
+#include "mat.hpp"
 
 //
-// mat4x4
+// mat2x2
 //
 
 template <typename T>

@@ -2,9 +2,7 @@
 
 #include <utility>
 #include "vec3.hpp"
-
-template <int R, int C, typename T>
-struct mat;
+#include "mat.hpp"
 
 //
 // mat3x3

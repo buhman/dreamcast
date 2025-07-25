@@ -1,5 +1,9 @@
 #pragma once
 
+#include "math.hpp"
+#include "vec.hpp"
+#include "mat.hpp"
+
 template<typename T>
 inline constexpr mat<4, 4, T> translate(vec<3, T> t)
 {
