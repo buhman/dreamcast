@@ -1,0 +1,163 @@
+"block","address","size","name","r/w","description"
+"SYSTEMBUS","000","4","C2DSTAT","RW","CH2-DMA destination address"
+"SYSTEMBUS","004","4","C2DLEN","RW","CH2-DMA length"
+"SYSTEMBUS","008","4","C2DST","RW","CH2-DMA start"
+,,,,,
+"SYSTEMBUS","010","4","SDSTAW","RW","Sort-DMA start link table address"
+"SYSTEMBUS","014","4","SDBAAW","RW","Sort-DMA link base address"
+"SYSTEMBUS","018","4","SDWLT","RW","Sort-DMA link address bit width"
+"SYSTEMBUS","01c","4","SDLAS","RW","Sort-DMA link address shift control"
+"SYSTEMBUS","020","4","SDST","RW","Sort-DMA start"
+,,,,,
+"SYSTEMBUS","040","4","DBREQM","RW","DBREQ# signal mask control"
+"SYSTEMBUS","044","4","BAVLWC","RW","BAVL# signal wait count"
+"SYSTEMBUS","048","4","C2DPYRC","RW","DMA (TA/Root Bus) priority count"
+"SYSTEMBUS","04c","4","DMAXL","RW","CH2-DMA maximum burst length"
+,,,,,
+"SYSTEMBUS","080","4","TFREM","R","TA FIFO remaining amount"
+"SYSTEMBUS","084","4","LMMODE0","RW","Via TA texture memory bus select 0"
+"SYSTEMBUS","088","4","LMMODE1","RW","Via TA texture memory bus select 1"
+"SYSTEMBUS","08c","4","FFST","R","FIFO status"
+"SYSTEMBUS","090","4","SFRES","W","System reset"
+,,,,,
+"SYSTEMBUS","09c","4","SBREV","R","System bus revision number"
+"SYSTEMBUS","0a0","4","RBSPLT","RW","SH4 Root Bus split enable"
+,,,,,
+"SYSTEMBUS","100","4","ISTNRM","RW","Normal interrupt status"
+"SYSTEMBUS","104","4","ISTEXT","R","External interrupt status"
+"SYSTEMBUS","108","4","ISTERR","RW","Error interrupt status"
+,,,,,
+"SYSTEMBUS","110","4","IML2NRM","RW","Level 2 normal interrupt mask"
+"SYSTEMBUS","114","4","IML2EXT","RW","Level 2 external interrupt mask"
+"SYSTEMBUS","118","4","IML2ERR","RW","Level 2 error interrupt mask"
+,,,,,
+"SYSTEMBUS","120","4","IML4NRM","RW","Level 4 normal interrupt mask"
+"SYSTEMBUS","124","4","IML4EXT","RW","Level 4 external interrupt mask"
+"SYSTEMBUS","128","4","IML4ERR","RW","Level 4 error interrupt mask"
+,,,,,
+"SYSTEMBUS","130","4","IML6NRM","RW","Level 6 normal interrupt mask"
+"SYSTEMBUS","134","4","IML6EXT","RW","Level 6 external interrupt mask"
+"SYSTEMBUS","138","4","IML6ERR","RW","Level 6 error interrupt mask"
+,,,,,
+"SYSTEMBUS","140","4","PDTNRM","RW","Normal interrupt PVR-DMA startup mask"
+"SYSTEMBUS","144","4","PDTEXT","RW","External interrupt PVR-DMA startup mask"
+,,,,,
+"SYSTEMBUS","150","4","G2DTNRM","RW","Normal interrupt G2-DMA startup mask"
+"SYSTEMBUS","154","4","G2DTEXT","RW","External interrupt G2-DMA startup mask"
+,,,,,
+"MAPLE_IF","04","4","MDSTAR","RW","Maple-DMA command table address"
+,,,,,
+"MAPLE_IF","10","4","MDTSEL","RW","Maple-DMA trigger select"
+"MAPLE_IF","14","4","MDEN","RW","Maple-DMA enable"
+"MAPLE_IF","18","4","MDST","RW","Maple-DMA start"
+,,,,,
+"MAPLE_IF","80","4","MSYS","RW","Maple system control"
+"MAPLE_IF","84","4","MST","R","Maple status"
+"MAPLE_IF","88","4","MSHTCL","W","Maple-DMA hard trigger clear"
+"MAPLE_IF","8c","4","MDAPRO","W","Maple-DMA address range"
+,,,,,
+"MAPLE_IF","e8","4","MMSEL","RW","Maple MSP selection"
+,,,,,
+"MAPLE_IF","f4","4","MTXDAD","R","Maple TXD address counter"
+"MAPLE_IF","f8","4","MRXDAD","R","Maple RXD address counter"
+"MAPLE_IF","fc","4","MRXDBD","R","Maple RXD address base"
+,,,,,
+"G1_IF","04","4","GDSTAR","RW","GD-DMA start address"
+"G1_IF","08","4","GDLEN","RW","GD-DMA length"
+"G1_IF","0c","4","GDDIR","RW","GD-DMA direction"
+,,,,,
+"G1_IF","14","4","GDEN","RW","GD-DMA enable"
+"G1_IF","18","4","GDST","RW","GD-DMA start"
+,,,,,
+"G1_IF","80","4","G1RRC","W","System ROM read access timing"
+"G1_IF","84","4","G1RWC","W","System ROM write access timing"
+"G1_IF","88","4","G1FRC","W","Flash ROM read access timing"
+"G1_IF","8c","4","G1FWC","W","Flash ROM write access timing"
+"G1_IF","90","4","G1CRC","W","GD PIO read access timing"
+"G1_IF","94","4","G1CWC","W","GD PIO write access timing"
+,,,,,
+"G1_IF","a0","4","G1GDRC","W","GD-DMA read access timing"
+"G1_IF","a4","4","G1GDWC","W","GD-DMA write access timing"
+,,,,,
+"G1_IF","b0","4","G1SYSM","R","System mode"
+"G1_IF","b4","4","G1CRDYC","W","G1IORDY signal control"
+"G1_IF","b8","4","GDAPRO","W","GD-DMA address range"
+,,,,,
+"G1_IF","e4","4","GDUNLOCK","W","(undocumented unlock register)"
+"G1_IF","f4","4","GDSTARD","R","GD-DMA address count (on Root Bus)"
+"G1_IF","f8","4","GDLEND","R","GD-DMA transfer counter"
+,,,,,
+"G2_IF","00","4","ADSTAG","RW","ACIA:G2-DMA G2 start address"
+"G2_IF","04","4","ADSTAR","RW","ACIA:G2-DMA system memory start address"
+"G2_IF","08","4","ADLEN","RW","ACIA:G2-DMA length"
+"G2_IF","0c","4","ADDIR","RW","ACIA:G2-DMA direction"
+"G2_IF","10","4","ADTSEL","RW","ACIA:G2-DMA trigger select"
+"G2_IF","14","4","ADEN","RW","ACIA:G2-DMA enable"
+"G2_IF","18","4","ADST","RW","ACIA:G2-DMA start"
+"G2_IF","1c","4","ADSUSP","RW","ACIA:G2-DMA suspend"
+,,,,,
+"G2_IF","20","4","E1STAG","RW","Ext1:G2-DMA start address"
+"G2_IF","24","4","E1STAR","RW","Ext1:G2-DMA system memory start address"
+"G2_IF","28","4","E1LEN","RW","Ext1:G2-DMA length"
+"G2_IF","2c","4","E1DIR","RW","Ext1:G2-DMA direction"
+"G2_IF","30","4","E1TSEL","RW","Ext1:G2-DMA trigger select"
+"G2_IF","34","4","E1EN","RW","Ext1:G2-DMA enable"
+"G2_IF","38","4","E1ST","RW","Ext1:G2-DMA start"
+"G2_IF","3c","4","E1SUSP","RW","Ext1:G2-DMA suspend"
+,,,,,
+"G2_IF","40","4","E2STAG","RW","Ext2:G2-DMA start address"
+"G2_IF","44","4","E2STAR","RW","Ext2:G2-DMA system memory start address"
+"G2_IF","48","4","E2LEN","RW","Ext2:G2-DMA length"
+"G2_IF","4c","4","E2DIR","RW","Ext2:G2-DMA direction"
+"G2_IF","50","4","E2TSEL","RW","Ext2:G2-DMA trigger select"
+"G2_IF","54","4","E2EN","RW","Ext2:G2-DMA enable"
+"G2_IF","58","4","E2ST","RW","Ext2:G2-DMA start"
+"G2_IF","5c","4","E2SUSP","RW","Ext2:G2-DMA suspend"
+,,,,,
+"G2_IF","60","4","DDSTAG","RW","Dev:G2-DMA start address"
+"G2_IF","64","4","DDSTAR","RW","Dev:G2-DMA system memory start address"
+"G2_IF","68","4","DDLEN","RW","Dev:G2-DMA length"
+"G2_IF","6c","4","DDDIR","RW","Dev:G2-DMA direction"
+"G2_IF","70","4","DDTSEL","RW","Dev:G2-DMA trigger select"
+"G2_IF","74","4","DDEN","RW","Dev:G2-DMA enable"
+"G2_IF","78","4","DDST","RW","Dev:G2-DMA start"
+"G2_IF","7c","4","DDSUSP","RW","Dev:G2-DMA suspend"
+,,,,,
+"G2_IF","80","4","G2ID","R","G2 bus version"
+,,,,,
+"G2_IF","90","4","G2DSTO","RW","G2/DS timeout"
+"G2_IF","94","4","G2TRTO","RW","G2/TR timeout"
+"G2_IF","98","4","G2MDMTO","RW","Modem unit wait timeout"
+"G2_IF","9c","4","G2MDMW","RW","Modem unit wait time"
+,,,,,
+"G2_IF","bc","4","G2APRO","W","G2-DMA address range"
+,,,,,
+"G2_IF","c0","4","ADSTAGD","R","AICA-DMA address counter (on AICA)"
+"G2_IF","c4","4","ADSTARD","R","AICA-DMA address counter (on root bus)"
+"G2_IF","c8","4","ADLEND","R","AICA-DMA transfer counter"
+,,,,,
+"G2_IF","d0","4","E1STAGD","R","Ext-DMA1 address counter (on Ext)"
+"G2_IF","d4","4","E1STARD","R","Ext-DMA1 address counter (on root bus)"
+"G2_IF","d8","4","E1LEND","R","Ext-DMA1 transfer counter"
+,,,,,
+"G2_IF","e0","4","E2STAGD","R","Ext-DMA2 address counter (on Ext)"
+"G2_IF","e4","4","E2STARD","R","Ext-DMA2 address counter (on root bus)"
+"G2_IF","e8","4","E2LEND","R","Ext-DMA2 transfer counter"
+,,,,,
+"G2_IF","f0","4","DDSTAGD","R","Dev-DMA address counter (on Dev)"
+"G2_IF","f4","4","DDSTARD","R","Dev-DMA address counter (on root bus)"
+"G2_IF","f8","4","DDLEND","R","Dev-DMA transfer counter"
+,,,,,
+"PVR_IF","00","4","PDSTAP","RW","PVR-DMA start address"
+"PVR_IF","04","4","PDSTAR","RW","PVR-DMA system memory start address"
+"PVR_IF","08","4","PDLEN","RW","PVR-DMA length"
+"PVR_IF","0c","4","PDDIR","RW","PVR-DMA direction"
+"PVR_IF","10","4","PDTSEL","RW","PVR-DMA trigger select"
+"PVR_IF","14","4","PDEN","RW","PVR-DMA enable"
+"PVR_IF","18","4","PDST","RW","PVR-DMA start"
+,,,,,
+"PVR_IF","80","4","PDAPRO","W","PVR-DMA address range"
+,,,,,
+"PVR_IF","f0","4","PDSTAPD","R","PVR-DMA address counter (on Ext)"
+"PVR_IF","f4","4","PDSTARD","R","PVR-DMA address counter (on root bus)"
+"PVR_IF","f8","4","PDLEND","R","PVR-DMA transfer counter"
