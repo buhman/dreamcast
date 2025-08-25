@@ -1,20 +1,40 @@
 import sys
 
+import string
 from generate import renderer
 from csv_input import read_input
 
 def size_p(size):
     return size in {1, 2, 4}
 
-def size_to_type(size):
+def size_to_type(size, type=None):
     if size == 1:
+        assert type is None
         return "reg8 "
     elif size == 2:
+        assert type is None
         return "reg16"
     elif size == 4:
-        return "reg32"
+        if type == "f":
+            return "reg32f"
+        else:
+            assert type is None
+            return "reg32"
     else:
         raise NotImplemented(size)
+
+def split_integer(s):
+    acc = []
+    for i, c in enumerate(s):
+        if c in string.digits:
+            acc.append(c)
+        else:
+            return int("".join(acc), 10), s[i:]
+    return int("".join(acc), 10), None
+
+def parse_size_type(s):
+    size, type = split_integer(s)
+    return size, type
 
 def new_writer():
     first_address = 0
@@ -50,7 +70,7 @@ def new_writer():
         assert _address <= 0xffff
         offset_address = (_offset << 16)
         address = offset_address | (_address << 0)
-        size = int(row["size"], 10)
+        size, size_type = parse_size_type(row["size"])
         name = row["name"]
         description = row["description"]
 
@@ -73,7 +93,7 @@ def new_writer():
         def field():
             if size_p(size):
                 assert address % size == 0
-                type = size_to_type(size)
+                type = size_to_type(size, size_type)
                 return f"{type} {name};"
             else:
                 type = size_to_type(4)

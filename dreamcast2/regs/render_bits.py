@@ -154,29 +154,14 @@ def render_read_only(bit_def):
         " }"
     )
 
-def render_float_mask(mask):
-    if mask == "float_0_8_23":
-        return "_i(__builtin_fabsf(num));"
-    elif mask == "float_1_8_23":
-        return "_i(num)"
-    else:
-        assert mask.startswith("float_")
-        mask = mask.removeprefix("float_")
-        sign, exponent, fraction = map(int, mask.split('_'))
-        assert exponent == 8, exponent
-        assert sign == 1
-        bit_length = (sign + exponent + fraction)
-        mask = (2 ** bit_length - 1) << (32 - bit_length)
-        return f"_i(num) & {hex(mask)}"
-
 def render_mask(bit_def):
     assert bit_def["value"] == ""
     mask = bit_def["mask"]
     bits = parse_bit_range(bit_def["bits"])
     if mask.startswith("float_"):
         yield (
-            f"inline uint32_t {escape(bit_def['bit_name'])}(float num) {{ "
-            f"return {render_float_mask(mask)};"
+            f"inline float {escape(bit_def['bit_name'])}(float num) {{ "
+            f"return num;"
             " }"
         )
     else:

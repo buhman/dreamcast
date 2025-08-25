@@ -140,7 +140,7 @@ namespace holly {
   }
 
   namespace fpu_cull_val {
-    inline uint32_t culling_comparison_value(float num) { return _i(__builtin_fabsf(num));; }
+    inline float culling_comparison_value(float num) { return num; }
   }
 
   namespace fpu_param_cfg {
@@ -181,11 +181,11 @@ namespace holly {
   }
 
   namespace fpu_perp_val {
-    inline uint32_t perpendicular_triangle_compare(float num) { return _i(__builtin_fabsf(num));; }
+    inline float perpendicular_triangle_compare(float num) { return num; }
   }
 
   namespace isp_backgnd_d {
-    inline uint32_t background_plane_depth(float num) { return _i(num) & 0xfffffff0; }
+    inline float background_plane_depth(float num) { return num; }
   }
 
   namespace isp_backgnd_t {

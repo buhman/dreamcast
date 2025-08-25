@@ -8,13 +8,17 @@ namespace sh7091 {
 
     static inline void copy(void * out_addr,
                             const void * src,
+                            int length) __attribute__((always_inline));
+
+    static inline void copy(void * out_addr,
+                            const void * src,
                             int length)
     {
       uint32_t out = reinterpret_cast<uint32_t>(out_addr);
       sh7091.CCN.QACR0 = ((out >> 24) & 0b11100);
       sh7091.CCN.QACR1 = ((out >> 24) & 0b11100);
 
-      volatile uint32_t * base = &store_queue[(out & 0x03ffffe0)];
+      volatile uint32_t * base = (volatile uint32_t *)&store_queue[(out & 0x03ffffe0)];
       const uint32_t * src32 = reinterpret_cast<const uint32_t *>(src);
 
       length = (length + 31) & ~31; // round up to nearest multiple of 32
@@ -40,13 +44,17 @@ namespace sh7091 {
 
     static inline void zeroize(void * out_addr,
                                int length,
+                               const uint32_t value) __attribute__((always_inline));
+
+    static inline void zeroize(void * out_addr,
+                               int length,
                                const uint32_t value)
     {
       uint32_t out = reinterpret_cast<uint32_t>(out_addr);
       sh7091.CCN.QACR0 = ((out >> 24) & 0b11100);
       sh7091.CCN.QACR1 = ((out >> 24) & 0b11100);
 
-      volatile uint32_t * base = &store_queue[(out & 0x03ffffe0)];
+      volatile uint32_t * base = (volatile uint32_t *)&store_queue[(out & 0x03ffffe0)];
 
       length = (length + 31) & ~31; // round up to nearest multiple of 32
       while (length > 0) {

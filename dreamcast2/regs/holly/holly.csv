@@ -25,11 +25,11 @@
 "holly","006c","4","FB_Y_CLIP","RW","Pixel clip Y coordinate"
 ,,,,,
 "holly","0074","4","FPU_SHAD_SCALE","RW","Intensity Volume mode"
-"holly","0078","4","FPU_CULL_VAL","RW","Comparison value for culling"
+"holly","0078","4f","FPU_CULL_VAL","RW","Comparison value for culling"
 "holly","007c","4","FPU_PARAM_CFG","RW","Parameter read control"
 "holly","0080","4","HALF_OFFSET","RW","Pixel sampling control"
-"holly","0084","4","FPU_PERP_VAL","RW","Comparison value for perpendicular polygons"
-"holly","0088","4","ISP_BACKGND_D","RW","Background surface depth"
+"holly","0084","4f","FPU_PERP_VAL","RW","Comparison value for perpendicular polygons"
+"holly","0088","4f","ISP_BACKGND_D","RW","Background surface depth"
 "holly","008c","4","ISP_BACKGND_T","RW","Background surface tag"
 ,,,,,
 "holly","0098","4","ISP_FEED_CFG","RW","Translucent polygon sort mode"
