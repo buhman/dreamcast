@@ -51,9 +51,3 @@ void runtime_init()
     ((init_t *)(*ctors_start++))();
   }
 }
-
-extern "C"
-void foo()
-{
-  runtime_init();
-}

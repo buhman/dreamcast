@@ -10,11 +10,14 @@ holly/holly.hpp: regs/holly/holly.csv regs/render_block_regs.py
 holly/holly_bits.hpp: regs/holly/holly_bits.csv regs/render_bits.py
 	python regs/render_bits.py $< holly > $@
 
-holly/region_array_bits.hpp: regs/holly/region_array_bits.csv regs/render_bits.py
-	python regs/render_bits.py $< holly region_array > $@
+holly/core/region_array_bits.hpp: regs/holly/core/region_array_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< holly::core::region_array > $@
 
-holly/object_list_bits.hpp:regs/holly/object_list_bits.csv regs/render_bits.py
-	python regs/render_bits.py $< holly object_list > $@
+holly/core/object_list_bits.hpp:regs/holly/core/object_list_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< holly::core::object_list > $@
+
+holly/core/parameter_bits.hpp:regs/holly/core/parameter_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< holly::core::parameter > $@
 
 # SH7091
 

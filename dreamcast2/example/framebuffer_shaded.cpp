@@ -4,7 +4,7 @@
 
 void main()
 {
-  volatile uint32_t * framebuffer = (volatile uint32_t * )texture_memory32;
+  volatile uint32_t * framebuffer = (volatile uint32_t * )&texture_memory32[0x200000];
 
   for (int y = 0; y < 480; y++) {
     for (int x = 0; x < 640; x++) {

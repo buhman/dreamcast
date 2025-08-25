@@ -2,15 +2,15 @@ SECTIONS
 {
   . = ORIGIN(p2ram);
 
-  .text.start :
+  .text.start ALIGN(4) :
   {
     KEEP(*(.text.start))
-    *(.text.startup.*)
+    *(.text.start.*)
   } > p2ram AT>p1ram
 
   . = ORIGIN(p1ram) + (. - ORIGIN(p2ram));
 
-  .text :
+  .text ALIGN(4) : SUBALIGN(4)
   {
     *(.text.*)
     *(.text)

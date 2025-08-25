@@ -7,3 +7,9 @@ CFLAGS += -I$(MAKEFILE_PATH)
 LIB ?= $(MAKEFILE_PATH)
 
 include example/example.mk
+
+clean:
+	find -P \
+		-regextype posix-egrep \
+		-regex '.*\.(iso|o|d|bin|elf|cue|gch)$$' \
+		-exec rm {} \;

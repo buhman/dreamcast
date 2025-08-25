@@ -1,6 +1,6 @@
 system_boot_rom = 0xa0000000;
 
-system = 0xa05f6800;
+systembus = 0xa05f6800;
 maple_if = 0xa05f6c00;
 gdrom_if = 0xa05f7000;
 g1_if = 0xa05f7400;

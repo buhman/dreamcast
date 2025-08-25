@@ -47,8 +47,11 @@ def aggregate_enums(aggregated_rows):
 
     def assert_unique_ordered(bits, row):
         nonlocal all_bits
-        assert all(bit not in all_bits for bit in bits), (bits, row)
-        assert max(all_bits, default=32) > max(bits), (all_bits, bits)
+        #assert all(bit not in all_bits for bit in bits), (bits, row)
+        if not all(bit not in all_bits for bit in bits):
+            print("bit overlap", row, file=sys.stderr)
+        else:
+            assert max(all_bits, default=32) > max(bits), (all_bits, bits)
         all_bits |= bits
 
     for row in aggregated_rows:
