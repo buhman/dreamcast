@@ -13,6 +13,9 @@ holly/holly_bits.hpp: regs/holly/holly_bits.csv regs/render_bits.py
 holly/region_array_bits.hpp: regs/holly/region_array_bits.csv regs/render_bits.py
 	python regs/render_bits.py $< holly region_array > $@
 
+holly/object_list_bits.hpp:regs/holly/object_list_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< holly object_list > $@
+
 # SH7091
 
 sh7091/sh7091.hpp: regs/sh7091/sh7091.csv regs/sh7091.py
