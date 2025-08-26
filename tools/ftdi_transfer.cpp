@@ -8,6 +8,7 @@
 #include <string.h>
 #include <math.h>
 #include <errno.h>
+#include <unistd.h>
 
 #include <ftdi.h>
 #include <libusb.h>
@@ -86,6 +87,48 @@ int init_ftdi_context(struct ftdi_context * ftdi, uint32_t scbrr)
     return -1;
   }
   ftdi_list_free(&devlist);
+
+
+  if (0) {
+    for (int i = 0; i < 2; i++) {
+      timespec t = {.tv_sec = 0, .tv_nsec = 33000 * 2 };
+
+      // toggle ACBUS5 low (g reset asserted)
+      uint8_t bitmask1 = (0b0001 << 4) | (0b0001 << 0);
+      res = ftdi_set_bitmode(ftdi, bitmask1, BITMODE_CBUS);
+      if (res < 0) {
+        fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+        return -1;
+      }
+      printf("cbus1\n");
+
+      nanosleep(&t, NULL);
+
+      // toggle ACBUS5 low (g reset deasserted)
+      uint8_t bitmask2 = (0b0000 << 4) | (0b0001 << 0);
+      res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
+      if (res < 0) {
+        fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+        return -1;
+      }
+      printf("cbus2\n");
+
+      nanosleep(&t, NULL);
+    }
+
+    uint8_t bitmask2 = (0b0000 << 4) | (0b0000 << 0);
+    res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
+    if (res < 0) {
+      fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+      return -1;
+    }
+
+    sleep(2);
+    printf("cbus3\n");
+    ftdi_disable_bitbang(ftdi);
+    //while (1);
+    //return 0;
+  }
 
   res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(current_cks, scbrr)));
   if (res < 0) {

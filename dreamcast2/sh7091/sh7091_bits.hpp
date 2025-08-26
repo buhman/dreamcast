@@ -5,12 +5,12 @@
 namespace sh7091 {
   namespace ccn {
     namespace pteh {
-      constexpr uint32_t VPN(uint32_t reg) { return (reg >> 10) & 0x3fffff; }
-      constexpr uint32_t ASID(uint32_t reg) { return (reg >> 0) & 0xff; }
+      constexpr inline uint32_t VPN(uint32_t reg) { return (reg >> 10) & 0x3fffff; }
+      constexpr inline uint32_t ASID(uint32_t reg) { return (reg >> 0) & 0xff; }
     }
 
     namespace ptel {
-      constexpr uint32_t PPN(uint32_t reg) { return (reg >> 10) & 0x7ffff; }
+      constexpr inline uint32_t PPN(uint32_t reg) { return (reg >> 10) & 0x7ffff; }
 
       namespace v {
         constexpr uint32_t invalid = 0 << 8;
@@ -67,9 +67,9 @@ namespace sh7091 {
     }
 
     namespace mmucr {
-      constexpr uint32_t LRUI(uint32_t reg) { return (reg >> 26) & 0x3f; }
-      constexpr uint32_t URB(uint32_t reg) { return (reg >> 18) & 0x3f; }
-      constexpr uint32_t URC(uint32_t reg) { return (reg >> 10) & 0x3f; }
+      constexpr inline uint32_t LRUI(uint32_t reg) { return (reg >> 26) & 0x3f; }
+      constexpr inline uint32_t URB(uint32_t reg) { return (reg >> 18) & 0x3f; }
+      constexpr inline uint32_t URC(uint32_t reg) { return (reg >> 10) & 0x3f; }
 
       namespace sqmd {
         constexpr uint32_t user_privileged_access_possible = 0 << 9;
@@ -100,11 +100,11 @@ namespace sh7091 {
     }
 
     namespace basra {
-      constexpr uint32_t basa(uint32_t num) { return (num & 0xff) << 0; }
+      constexpr inline uint32_t basa(uint32_t num) { return (num & 0xff) << 0; }
     }
 
     namespace basrb {
-      constexpr uint32_t basa(uint32_t num) { return (num & 0xff) << 0; }
+      constexpr inline uint32_t basa(uint32_t num) { return (num & 0xff) << 0; }
     }
 
     namespace ccr {
@@ -171,15 +171,15 @@ namespace sh7091 {
     }
 
     namespace tra {
-      constexpr uint32_t imm(uint32_t reg) { return (reg >> 2) & 0xff; }
+      constexpr inline uint32_t imm(uint32_t reg) { return (reg >> 2) & 0xff; }
     }
 
     namespace expevt {
-      constexpr uint32_t exception_code(uint32_t reg) { return (reg >> 0) & 0xfff; }
+      constexpr inline uint32_t exception_code(uint32_t reg) { return (reg >> 0) & 0xfff; }
     }
 
     namespace intevt {
-      constexpr uint32_t exception_code(uint32_t reg) { return (reg >> 0) & 0xfff; }
+      constexpr inline uint32_t exception_code(uint32_t reg) { return (reg >> 0) & 0xfff; }
     }
 
     namespace ptea {
@@ -205,18 +205,18 @@ namespace sh7091 {
     }
 
     namespace qacr0 {
-      constexpr uint32_t area(uint32_t num) { return (num & 0x7) << 2; }
+      constexpr inline uint32_t area(uint32_t num) { return (num & 0x7) << 2; }
     }
 
     namespace qacr1 {
-      constexpr uint32_t area(uint32_t num) { return (num & 0x7) << 2; }
+      constexpr inline uint32_t area(uint32_t num) { return (num & 0x7) << 2; }
     }
 
   }
 
   namespace dmac {
     namespace dmatcr {
-      constexpr uint32_t transfer_count(uint32_t num) { return (num & 0xffffff) << 0; }
+      constexpr inline uint32_t transfer_count(uint32_t num) { return (num & 0xffffff) << 0; }
     }
 
     namespace chcr {
@@ -305,7 +305,7 @@ namespace sh7091 {
       }
 
       namespace rs {
-        constexpr uint32_t resource_select(uint32_t num) { return (num & 0xf) << 8; }
+        constexpr inline uint32_t resource_select(uint32_t num) { return (num & 0xf) << 8; }
 
         constexpr uint32_t bit_mask = 0xf << 8;
       }
@@ -429,23 +429,23 @@ namespace sh7091 {
     }
 
     namespace ipra {
-      constexpr uint32_t TMU0(uint32_t num) { return (num & 0xf) << 12; }
-      constexpr uint32_t TMU1(uint32_t num) { return (num & 0xf) << 8; }
-      constexpr uint32_t TMU2(uint32_t num) { return (num & 0xf) << 4; }
-      constexpr uint32_t RTC(uint32_t num) { return (num & 0xf) << 0; }
+      constexpr inline uint32_t TMU0(uint32_t num) { return (num & 0xf) << 12; }
+      constexpr inline uint32_t TMU1(uint32_t num) { return (num & 0xf) << 8; }
+      constexpr inline uint32_t TMU2(uint32_t num) { return (num & 0xf) << 4; }
+      constexpr inline uint32_t RTC(uint32_t num) { return (num & 0xf) << 0; }
     }
 
     namespace iprb {
-      constexpr uint32_t WDT(uint32_t num) { return (num & 0xf) << 12; }
-      constexpr uint32_t REF(uint32_t num) { return (num & 0xf) << 8; }
-      constexpr uint32_t SCI1(uint32_t num) { return (num & 0xf) << 4; }
+      constexpr inline uint32_t WDT(uint32_t num) { return (num & 0xf) << 12; }
+      constexpr inline uint32_t REF(uint32_t num) { return (num & 0xf) << 8; }
+      constexpr inline uint32_t SCI1(uint32_t num) { return (num & 0xf) << 4; }
     }
 
     namespace iprc {
-      constexpr uint32_t GPIO(uint32_t num) { return (num & 0xf) << 12; }
-      constexpr uint32_t DMAC(uint32_t num) { return (num & 0xf) << 8; }
-      constexpr uint32_t SCIF(uint32_t num) { return (num & 0xf) << 4; }
-      constexpr uint32_t UDI(uint32_t num) { return (num & 0xf) << 0; }
+      constexpr inline uint32_t GPIO(uint32_t num) { return (num & 0xf) << 12; }
+      constexpr inline uint32_t DMAC(uint32_t num) { return (num & 0xf) << 8; }
+      constexpr inline uint32_t SCIF(uint32_t num) { return (num & 0xf) << 4; }
+      constexpr inline uint32_t UDI(uint32_t num) { return (num & 0xf) << 0; }
     }
 
   }
@@ -653,13 +653,13 @@ namespace sh7091 {
 
     namespace scfsr2 {
       namespace per3_0 {
-        constexpr uint32_t number_of_parity_errors(uint32_t reg) { return (reg >> 12) & 0xf; }
+        constexpr inline uint32_t number_of_parity_errors(uint32_t reg) { return (reg >> 12) & 0xf; }
 
         constexpr uint32_t bit_mask = 0xf << 12;
       }
 
       namespace fer3_0 {
-        constexpr uint32_t number_of_framing_errors(uint32_t reg) { return (reg >> 8) & 0xf; }
+        constexpr inline uint32_t number_of_framing_errors(uint32_t reg) { return (reg >> 8) & 0xf; }
 
         constexpr uint32_t bit_mask = 0xf << 8;
       }
@@ -770,8 +770,8 @@ namespace sh7091 {
     }
 
     namespace scfdr2 {
-      constexpr uint32_t transmit_data_bytes(uint32_t reg) { return (reg >> 8) & 0x1f; }
-      constexpr uint32_t receive_data_bytes(uint32_t reg) { return (reg >> 0) & 0x1f; }
+      constexpr inline uint32_t transmit_data_bytes(uint32_t reg) { return (reg >> 8) & 0x1f; }
+      constexpr inline uint32_t receive_data_bytes(uint32_t reg) { return (reg >> 0) & 0x1f; }
     }
 
     namespace scsptr2 {
@@ -836,7 +836,7 @@ namespace sh7091 {
       constexpr uint32_t fd = 1 << 15;
       constexpr uint32_t m = 1 << 9;
       constexpr uint32_t q = 1 << 8;
-      constexpr uint32_t imask(uint32_t num) { return (num & 0xf) << 4; }
+      constexpr inline uint32_t imask(uint32_t num) { return (num & 0xf) << 4; }
       constexpr uint32_t s = 1 << 1;
       constexpr uint32_t t = 1 << 0;
     }

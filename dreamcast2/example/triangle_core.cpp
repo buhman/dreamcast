@@ -135,8 +135,8 @@ void main()
 
   using polygon = holly::core::parameter::isp_tsp_parameter<3>;
 
-  uint32_t triangle_offset   = (sizeof (polygon)) * 0;
-  uint32_t background_offset = (sizeof (polygon)) * 1;
+  uint32_t background_offset = (sizeof (polygon)) * 0;
+  uint32_t triangle_offset   = (sizeof (polygon)) * 1;
 
   transfer_object_list(object_list_start,
                        triangle_offset);

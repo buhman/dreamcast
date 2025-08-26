@@ -4,12 +4,12 @@
 
 namespace holly {
   namespace id {
-    constexpr uint32_t device_id(uint32_t reg) { return (reg >> 16) & 0xffff; }
-    constexpr uint32_t vendor_id(uint32_t reg) { return (reg >> 0) & 0xffff; }
+    constexpr inline uint32_t device_id(uint32_t reg) { return (reg >> 16) & 0xffff; }
+    constexpr inline uint32_t vendor_id(uint32_t reg) { return (reg >> 0) & 0xffff; }
   }
 
   namespace revision {
-    constexpr uint32_t chip_revision(uint32_t reg) { return (reg >> 0) & 0xffff; }
+    constexpr inline uint32_t chip_revision(uint32_t reg) { return (reg >> 0) & 0xffff; }
   }
 
   namespace softreset {
@@ -23,16 +23,16 @@ namespace holly {
   }
 
   namespace test_select {
-    constexpr uint32_t diagdb_data(uint32_t reg) { return (reg >> 5) & 0x1f; }
-    constexpr uint32_t diagda_data(uint32_t reg) { return (reg >> 0) & 0x1f; }
+    constexpr inline uint32_t diagdb_data(uint32_t reg) { return (reg >> 5) & 0x1f; }
+    constexpr inline uint32_t diagda_data(uint32_t reg) { return (reg >> 0) & 0x1f; }
   }
 
   namespace param_base {
-    constexpr uint32_t base_address(uint32_t num) { return (num & 0xf00000) << 0; }
+    constexpr inline uint32_t base_address(uint32_t num) { return (num & 0xf00000) << 0; }
   }
 
   namespace region_base {
-    constexpr uint32_t base_address(uint32_t num) { return (num & 0xfffffc) << 0; }
+    constexpr inline uint32_t base_address(uint32_t num) { return (num & 0xfffffc) << 0; }
   }
 
   namespace span_sort_cfg {
@@ -42,10 +42,10 @@ namespace holly {
   }
 
   namespace vo_border_col {
-    constexpr uint32_t chroma(uint32_t num) { return (num & 0x1) << 24; }
-    constexpr uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t chroma(uint32_t num) { return (num & 0x1) << 24; }
+    constexpr inline uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fb_r_ctrl {
@@ -57,9 +57,9 @@ namespace holly {
     }
 
     constexpr uint32_t fb_strip_buf_en = 1 << 22;
-    constexpr uint32_t fb_stripsize(uint32_t num) { return (num & 0x3e) << 16; }
-    constexpr uint32_t fb_chroma_threshold(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t fb_concat(uint32_t num) { return (num & 0x3) << 4; }
+    constexpr inline uint32_t fb_stripsize(uint32_t num) { return (num & 0x3e) << 16; }
+    constexpr inline uint32_t fb_chroma_threshold(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t fb_concat(uint32_t num) { return (num & 0x3) << 4; }
 
     namespace fb_depth {
       constexpr uint32_t xrgb0555 = 0 << 2;
@@ -75,8 +75,8 @@ namespace holly {
   }
 
   namespace fb_w_ctrl {
-    constexpr uint32_t fb_alpha_threshold(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t fb_kval(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t fb_alpha_threshold(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t fb_kval(uint32_t num) { return (num & 0xff) << 8; }
     constexpr uint32_t fb_dither = 1 << 3;
 
     namespace fb_packmode {
@@ -93,39 +93,39 @@ namespace holly {
   }
 
   namespace fb_w_linestride {
-    constexpr uint32_t fb_line_stride(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t fb_line_stride(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fb_r_sof1 {
-    constexpr uint32_t frame_buffer_read_address_frame_1(uint32_t num) { return (num & 0xfffffc) << 0; }
+    constexpr inline uint32_t frame_buffer_read_address_frame_1(uint32_t num) { return (num & 0xfffffc) << 0; }
   }
 
   namespace fb_r_sof2 {
-    constexpr uint32_t frame_buffer_read_address_frame_2(uint32_t num) { return (num & 0xfffffc) << 0; }
+    constexpr inline uint32_t frame_buffer_read_address_frame_2(uint32_t num) { return (num & 0xfffffc) << 0; }
   }
 
   namespace fb_r_size {
-    constexpr uint32_t fb_modulus(uint32_t num) { return (num & 0x3ff) << 20; }
-    constexpr uint32_t fb_y_size(uint32_t num) { return (num & 0x3ff) << 10; }
-    constexpr uint32_t fb_x_size(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t fb_modulus(uint32_t num) { return (num & 0x3ff) << 20; }
+    constexpr inline uint32_t fb_y_size(uint32_t num) { return (num & 0x3ff) << 10; }
+    constexpr inline uint32_t fb_x_size(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace fb_w_sof1 {
-    constexpr uint32_t frame_buffer_write_address_frame_1(uint32_t num) { return (num & 0x1fffffc) << 0; }
+    constexpr inline uint32_t frame_buffer_write_address_frame_1(uint32_t num) { return (num & 0x1fffffc) << 0; }
   }
 
   namespace fb_w_sof2 {
-    constexpr uint32_t frame_buffer_write_address_frame_2(uint32_t num) { return (num & 0x1fffffc) << 0; }
+    constexpr inline uint32_t frame_buffer_write_address_frame_2(uint32_t num) { return (num & 0x1fffffc) << 0; }
   }
 
   namespace fb_x_clip {
-    constexpr uint32_t fb_x_clip_max(uint32_t num) { return (num & 0x7ff) << 16; }
-    constexpr uint32_t fb_x_clip_min(uint32_t num) { return (num & 0x7ff) << 0; }
+    constexpr inline uint32_t fb_x_clip_max(uint32_t num) { return (num & 0x7ff) << 16; }
+    constexpr inline uint32_t fb_x_clip_min(uint32_t num) { return (num & 0x7ff) << 0; }
   }
 
   namespace fb_y_clip {
-    constexpr uint32_t fb_y_clip_max(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t fb_y_clip_min(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t fb_y_clip_max(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t fb_y_clip_min(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace fpu_shad_scale {
@@ -136,7 +136,7 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x1 << 8;
     }
 
-    constexpr uint32_t scale_factor_for_shadows(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t scale_factor_for_shadows(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fpu_cull_val {
@@ -151,10 +151,10 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x1 << 21;
     }
 
-    constexpr uint32_t tsp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 14; }
-    constexpr uint32_t isp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 8; }
-    constexpr uint32_t pointer_burst_size(uint32_t num) { return (num & 0xf) << 4; }
-    constexpr uint32_t pointer_first_burst_size(uint32_t num) { return (num & 0xf) << 0; }
+    constexpr inline uint32_t tsp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 14; }
+    constexpr inline uint32_t isp_parameter_burst_threshold(uint32_t num) { return (num & 0x3f) << 8; }
+    constexpr inline uint32_t pointer_burst_size(uint32_t num) { return (num & 0xf) << 4; }
+    constexpr inline uint32_t pointer_first_burst_size(uint32_t num) { return (num & 0xf) << 0; }
   }
 
   namespace half_offset {
@@ -191,20 +191,20 @@ namespace holly {
   namespace isp_backgnd_t {
     constexpr uint32_t cache_bypass = 1 << 28;
     constexpr uint32_t shadow = 1 << 27;
-    constexpr uint32_t skip(uint32_t num) { return (num & 0x7) << 24; }
-    constexpr uint32_t tag_address(uint32_t num) { return (num & 0x1fffff) << 3; }
-    constexpr uint32_t tag_offset(uint32_t num) { return (num & 0x7) << 0; }
+    constexpr inline uint32_t skip(uint32_t num) { return (num & 0x7) << 24; }
+    constexpr inline uint32_t tag_address(uint32_t num) { return (num & 0x1fffff) << 3; }
+    constexpr inline uint32_t tag_offset(uint32_t num) { return (num & 0x7) << 0; }
   }
 
   namespace isp_feed_cfg {
-    constexpr uint32_t cache_size_for_translucency(uint32_t num) { return (num & 0x3ff) << 14; }
-    constexpr uint32_t punch_through_chunk_size(uint32_t num) { return (num & 0x3ff) << 4; }
+    constexpr inline uint32_t cache_size_for_translucency(uint32_t num) { return (num & 0x3ff) << 14; }
+    constexpr inline uint32_t punch_through_chunk_size(uint32_t num) { return (num & 0x3ff) << 4; }
     constexpr uint32_t discard_mode = 1 << 3;
     constexpr uint32_t pre_sort_mode = 1 << 0;
   }
 
   namespace sdram_refresh {
-    constexpr uint32_t refresh_counter_value(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t refresh_counter_value(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace sdram_arb_cfg {
@@ -233,61 +233,61 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x3 << 16;
     }
 
-    constexpr uint32_t arbiter_crt_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t arbiter_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t arbiter_crt_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t arbiter_page_break_latency_count_value(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace sdram_cfg {
-    constexpr uint32_t read_command_to_returned_data_delay(uint32_t num) { return (num & 0x7) << 26; }
-    constexpr uint32_t cas_latency_value(uint32_t num) { return (num & 0x7) << 23; }
-    constexpr uint32_t activate_to_activate_period(uint32_t num) { return (num & 0x3) << 21; }
-    constexpr uint32_t read_to_write_period(uint32_t num) { return (num & 0x7) << 18; }
-    constexpr uint32_t refresh_to_activate_period(uint32_t num) { return (num & 0xf) << 14; }
-    constexpr uint32_t pre_charge_to_activate_period(uint32_t num) { return (num & 0x3) << 10; }
-    constexpr uint32_t activate_to_pre_charge_period(uint32_t num) { return (num & 0xf) << 6; }
-    constexpr uint32_t activate_to_read_write_command_period(uint32_t num) { return (num & 0x3) << 4; }
-    constexpr uint32_t write_to_pre_charge_period(uint32_t num) { return (num & 0x3) << 2; }
-    constexpr uint32_t read_to_pre_charge_period(uint32_t num) { return (num & 0x3) << 0; }
+    constexpr inline uint32_t read_command_to_returned_data_delay(uint32_t num) { return (num & 0x7) << 26; }
+    constexpr inline uint32_t cas_latency_value(uint32_t num) { return (num & 0x7) << 23; }
+    constexpr inline uint32_t activate_to_activate_period(uint32_t num) { return (num & 0x3) << 21; }
+    constexpr inline uint32_t read_to_write_period(uint32_t num) { return (num & 0x7) << 18; }
+    constexpr inline uint32_t refresh_to_activate_period(uint32_t num) { return (num & 0xf) << 14; }
+    constexpr inline uint32_t pre_charge_to_activate_period(uint32_t num) { return (num & 0x3) << 10; }
+    constexpr inline uint32_t activate_to_pre_charge_period(uint32_t num) { return (num & 0xf) << 6; }
+    constexpr inline uint32_t activate_to_read_write_command_period(uint32_t num) { return (num & 0x3) << 4; }
+    constexpr inline uint32_t write_to_pre_charge_period(uint32_t num) { return (num & 0x3) << 2; }
+    constexpr inline uint32_t read_to_pre_charge_period(uint32_t num) { return (num & 0x3) << 0; }
   }
 
   namespace fog_col_ram {
-    constexpr uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fog_col_vert {
-    constexpr uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fog_density {
-    constexpr uint32_t fog_scale_mantissa(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t fog_scale_exponent(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t fog_scale_mantissa(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t fog_scale_exponent(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fog_clamp_max {
-    constexpr uint32_t alpha(uint32_t num) { return (num & 0xff) << 24; }
-    constexpr uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t alpha(uint32_t num) { return (num & 0xff) << 24; }
+    constexpr inline uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fog_clamp_min {
-    constexpr uint32_t alpha(uint32_t num) { return (num & 0xff) << 24; }
-    constexpr uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
-    constexpr uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t alpha(uint32_t num) { return (num & 0xff) << 24; }
+    constexpr inline uint32_t red(uint32_t num) { return (num & 0xff) << 16; }
+    constexpr inline uint32_t green(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t blue(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace spg_trigger_pos {
-    constexpr uint32_t trigger_v_count(uint32_t reg) { return (reg >> 16) & 0x3ff; }
-    constexpr uint32_t trigger_h_count(uint32_t reg) { return (reg >> 0) & 0x3ff; }
+    constexpr inline uint32_t trigger_v_count(uint32_t reg) { return (reg >> 16) & 0x3ff; }
+    constexpr inline uint32_t trigger_h_count(uint32_t reg) { return (reg >> 0) & 0x3ff; }
   }
 
   namespace spg_hblank_int {
-    constexpr uint32_t hblank_in_interrupt(uint32_t reg) { return (reg >> 16) & 0x3ff; }
+    constexpr inline uint32_t hblank_in_interrupt(uint32_t reg) { return (reg >> 16) & 0x3ff; }
 
     namespace hblank_int_mode {
       constexpr uint32_t output_equal_line_comp_val = 0x0 << 12;
@@ -297,12 +297,12 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x3 << 12;
     }
 
-    constexpr uint32_t line_comp_val(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t line_comp_val(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace spg_vblank_int {
-    constexpr uint32_t vblank_out_interrupt_line_number(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t vblank_in_interrupt_line_number(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t vblank_out_interrupt_line_number(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t vblank_in_interrupt_line_number(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace spg_control {
@@ -349,25 +349,25 @@ namespace holly {
   }
 
   namespace spg_hblank {
-    constexpr uint32_t hbend(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t hbstart(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t hbend(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t hbstart(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace spg_load {
-    constexpr uint32_t vcount(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t hcount(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t vcount(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t hcount(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace spg_vblank {
-    constexpr uint32_t vbend(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t vbstart(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t vbend(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t vbstart(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace spg_width {
-    constexpr uint32_t eqwidth(uint32_t num) { return (num & 0x3ff) << 22; }
-    constexpr uint32_t bpwidth(uint32_t num) { return (num & 0x3ff) << 12; }
-    constexpr uint32_t vswidth(uint32_t num) { return (num & 0xf) << 8; }
-    constexpr uint32_t hswidth(uint32_t num) { return (num & 0x7f) << 0; }
+    constexpr inline uint32_t eqwidth(uint32_t num) { return (num & 0x3ff) << 22; }
+    constexpr inline uint32_t bpwidth(uint32_t num) { return (num & 0x3ff) << 12; }
+    constexpr inline uint32_t vswidth(uint32_t num) { return (num & 0xf) << 8; }
+    constexpr inline uint32_t hswidth(uint32_t num) { return (num & 0x7f) << 0; }
   }
 
   namespace text_control {
@@ -385,13 +385,13 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x1 << 16;
     }
 
-    constexpr uint32_t bank_bit(uint32_t num) { return (num & 0x1f) << 8; }
-    constexpr uint32_t stride(uint32_t num) { return (num & 0x1f) << 0; }
+    constexpr inline uint32_t bank_bit(uint32_t num) { return (num & 0x1f) << 8; }
+    constexpr inline uint32_t stride(uint32_t num) { return (num & 0x1f) << 0; }
   }
 
   namespace vo_control {
     constexpr uint32_t pclk_delay_reset = 1 << 21;
-    constexpr uint32_t pclk_delay(uint32_t num) { return (num & 0x1f) << 16; }
+    constexpr inline uint32_t pclk_delay(uint32_t num) { return (num & 0x1f) << 16; }
     constexpr uint32_t pixel_double = 1 << 8;
 
     namespace field_mode {
@@ -433,12 +433,12 @@ namespace holly {
   }
 
   namespace vo_startx {
-    constexpr uint32_t horizontal_start_position(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t horizontal_start_position(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace vo_starty {
-    constexpr uint32_t vertical_start_position_on_field_2(uint32_t num) { return (num & 0x3ff) << 16; }
-    constexpr uint32_t vertical_start_position_on_field_1(uint32_t num) { return (num & 0x3ff) << 0; }
+    constexpr inline uint32_t vertical_start_position_on_field_2(uint32_t num) { return (num & 0x3ff) << 16; }
+    constexpr inline uint32_t vertical_start_position_on_field_1(uint32_t num) { return (num & 0x3ff) << 0; }
   }
 
   namespace scaler_ctl {
@@ -451,7 +451,7 @@ namespace holly {
 
     constexpr uint32_t interlace = 1 << 17;
     constexpr uint32_t horizontal_scaling_enable = 1 << 16;
-    constexpr uint32_t vertical_scale_factor(uint32_t num) { return (num & 0xffff) << 0; }
+    constexpr inline uint32_t vertical_scale_factor(uint32_t num) { return (num & 0xffff) << 0; }
   }
 
   namespace pal_ram_ctrl {
@@ -466,67 +466,67 @@ namespace holly {
   }
 
   namespace spg_status {
-    constexpr uint32_t vsync(uint32_t reg) { return (reg >> 13) & 0x1; }
-    constexpr uint32_t hsync(uint32_t reg) { return (reg >> 12) & 0x1; }
-    constexpr uint32_t blank(uint32_t reg) { return (reg >> 11) & 0x1; }
-    constexpr uint32_t fieldnum(uint32_t reg) { return (reg >> 10) & 0x1; }
-    constexpr uint32_t scanline(uint32_t reg) { return (reg >> 0) & 0x3ff; }
+    constexpr inline uint32_t vsync(uint32_t reg) { return (reg >> 13) & 0x1; }
+    constexpr inline uint32_t hsync(uint32_t reg) { return (reg >> 12) & 0x1; }
+    constexpr inline uint32_t blank(uint32_t reg) { return (reg >> 11) & 0x1; }
+    constexpr inline uint32_t fieldnum(uint32_t reg) { return (reg >> 10) & 0x1; }
+    constexpr inline uint32_t scanline(uint32_t reg) { return (reg >> 0) & 0x3ff; }
   }
 
   namespace fb_burstctrl {
-    constexpr uint32_t wr_burst(uint32_t num) { return (num & 0xf) << 16; }
-    constexpr uint32_t vid_lat(uint32_t num) { return (num & 0x7f) << 8; }
-    constexpr uint32_t vid_burst(uint32_t num) { return (num & 0x3f) << 0; }
+    constexpr inline uint32_t wr_burst(uint32_t num) { return (num & 0xf) << 16; }
+    constexpr inline uint32_t vid_lat(uint32_t num) { return (num & 0x7f) << 8; }
+    constexpr inline uint32_t vid_burst(uint32_t num) { return (num & 0x3f) << 0; }
   }
 
   namespace fb_c_sof {
-    constexpr uint32_t frame_buffer_current_read_address(uint32_t reg) { return (reg >> 0) & 0xffffff; }
+    constexpr inline uint32_t frame_buffer_current_read_address(uint32_t reg) { return (reg >> 0) & 0xffffff; }
   }
 
   namespace y_coeff {
-    constexpr uint32_t coefficient_1(uint32_t num) { return (num & 0xff) << 8; }
-    constexpr uint32_t coefficient_0_2(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t coefficient_1(uint32_t num) { return (num & 0xff) << 8; }
+    constexpr inline uint32_t coefficient_0_2(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace pt_alpha_ref {
-    constexpr uint32_t alpha_reference_for_punch_through(uint32_t num) { return (num & 0xff) << 0; }
+    constexpr inline uint32_t alpha_reference_for_punch_through(uint32_t num) { return (num & 0xff) << 0; }
   }
 
   namespace fog_table {
-    constexpr uint32_t fog_table_data(uint32_t num) { return (num & 0xffff) << 0; }
+    constexpr inline uint32_t fog_table_data(uint32_t num) { return (num & 0xffff) << 0; }
   }
 
   namespace palette_ram {
-    constexpr uint32_t palette_data(uint32_t num) { return (num & 0xffffffff) << 0; }
+    constexpr inline uint32_t palette_data(uint32_t num) { return (num & 0xffffffff) << 0; }
   }
 
   namespace ta_ol_base {
-    constexpr uint32_t base_address(uint32_t num) { return (num & 0xffffe0) << 0; }
+    constexpr inline uint32_t base_address(uint32_t num) { return (num & 0xffffe0) << 0; }
   }
 
   namespace ta_isp_base {
-    constexpr uint32_t base_address(uint32_t num) { return (num & 0xfffffc) << 0; }
+    constexpr inline uint32_t base_address(uint32_t num) { return (num & 0xfffffc) << 0; }
   }
 
   namespace ta_ol_limit {
-    constexpr uint32_t limit_address(uint32_t num) { return (num & 0xffffe0) << 0; }
+    constexpr inline uint32_t limit_address(uint32_t num) { return (num & 0xffffe0) << 0; }
   }
 
   namespace ta_isp_limit {
-    constexpr uint32_t limit_address(uint32_t num) { return (num & 0xfffffc) << 0; }
+    constexpr inline uint32_t limit_address(uint32_t num) { return (num & 0xfffffc) << 0; }
   }
 
   namespace ta_next_opb {
-    constexpr uint32_t address(uint32_t num) { return (num & 0xffffe0) << 0; }
+    constexpr inline uint32_t address(uint32_t num) { return (num & 0xffffe0) << 0; }
   }
 
   namespace ta_itp_current {
-    constexpr uint32_t address(uint32_t reg) { return (reg >> 0) & 0xffffff; }
+    constexpr inline uint32_t address(uint32_t reg) { return (reg >> 0) & 0xffffff; }
   }
 
   namespace ta_glob_tile_clip {
-    constexpr uint32_t tile_y_num(uint32_t num) { return (num & 0xf) << 16; }
-    constexpr uint32_t tile_x_num(uint32_t num) { return (num & 0x1f) << 0; }
+    constexpr inline uint32_t tile_y_num(uint32_t num) { return (num & 0xf) << 16; }
+    constexpr inline uint32_t tile_x_num(uint32_t num) { return (num & 0x1f) << 0; }
   }
 
   namespace ta_alloc_ctrl {
@@ -588,7 +588,7 @@ namespace holly {
   }
 
   namespace ta_yuv_tex_base {
-    constexpr uint32_t base_address(uint32_t num) { return (num & 0xfffff8) << 0; }
+    constexpr inline uint32_t base_address(uint32_t num) { return (num & 0xfffff8) << 0; }
   }
 
   namespace ta_yuv_tex_ctrl {
@@ -606,12 +606,12 @@ namespace holly {
       constexpr uint32_t bit_mask = 0x1 << 16;
     }
 
-    constexpr uint32_t yuv_v_size(uint32_t num) { return (num & 0x3f) << 8; }
-    constexpr uint32_t yuv_u_size(uint32_t num) { return (num & 0x3f) << 0; }
+    constexpr inline uint32_t yuv_v_size(uint32_t num) { return (num & 0x3f) << 8; }
+    constexpr inline uint32_t yuv_u_size(uint32_t num) { return (num & 0x3f) << 0; }
   }
 
   namespace ta_yuv_tex_cnt {
-    constexpr uint32_t yuv_num(uint32_t reg) { return (reg >> 0) & 0x1fff; }
+    constexpr inline uint32_t yuv_num(uint32_t reg) { return (reg >> 0) & 0x1fff; }
   }
 
   namespace ta_list_cont {
@@ -619,17 +619,17 @@ namespace holly {
   }
 
   namespace ta_next_opb_init {
-    constexpr uint32_t address(uint32_t num) { return (num & 0xffffe0) << 0; }
+    constexpr inline uint32_t address(uint32_t num) { return (num & 0xffffe0) << 0; }
   }
 
   namespace ta_ol_pointers {
-    constexpr uint32_t entry(uint32_t reg) { return (reg >> 31) & 0x1; }
-    constexpr uint32_t sprite(uint32_t reg) { return (reg >> 30) & 0x1; }
-    constexpr uint32_t triangle(uint32_t reg) { return (reg >> 29) & 0x1; }
-    constexpr uint32_t number_of_triangles_quads(uint32_t reg) { return (reg >> 25) & 0xf; }
-    constexpr uint32_t shadow(uint32_t reg) { return (reg >> 24) & 0x1; }
-    constexpr uint32_t pointer_address(uint32_t reg) { return (reg >> 2) & 0x3fffff; }
-    constexpr uint32_t skip(uint32_t reg) { return (reg >> 0) & 0x3; }
+    constexpr inline uint32_t entry(uint32_t reg) { return (reg >> 31) & 0x1; }
+    constexpr inline uint32_t sprite(uint32_t reg) { return (reg >> 30) & 0x1; }
+    constexpr inline uint32_t triangle(uint32_t reg) { return (reg >> 29) & 0x1; }
+    constexpr inline uint32_t number_of_triangles_quads(uint32_t reg) { return (reg >> 25) & 0xf; }
+    constexpr inline uint32_t shadow(uint32_t reg) { return (reg >> 24) & 0x1; }
+    constexpr inline uint32_t pointer_address(uint32_t reg) { return (reg >> 2) & 0x3fffff; }
+    constexpr inline uint32_t skip(uint32_t reg) { return (reg >> 0) & 0x3; }
   }
 
 }

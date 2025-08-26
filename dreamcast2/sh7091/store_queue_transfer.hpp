@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sh7091/sh7091.hpp"
+#include "sh7091/pref.hpp"
 #include "memorymap.hpp"
 
 namespace sh7091 {
@@ -31,10 +32,7 @@ namespace sh7091 {
         base[5] = src32[5];
         base[6] = src32[6];
         base[7] = src32[7];
-        asm volatile ("pref @%0"
-                      :                // output
-                      : "r" (&base[0]) // input
-                      : "memory");
+        pref(&base[0])
         length -= 32;
         base += 8;
         src32 += 8;
@@ -66,10 +64,7 @@ namespace sh7091 {
         base[5] = value;
         base[6] = value;
         base[7] = value;
-        asm volatile ("pref @%0"
-                      :                // output
-                      : "r" (&base[0]) // input
-                      : "memory");
+        pref(&base[0]);
         length -= 32;
         base += 8;
       }

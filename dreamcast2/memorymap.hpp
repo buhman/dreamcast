@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstdint>
 
 extern volatile uint8_t system_boot_rom[0x200000] __asm("system_boot_rom") __attribute__((aligned(32)));

@@ -152,7 +152,7 @@ def render_read_only(bit_def):
     bits = parse_bit_range(bit_def["bits"])
     mask_value = mask_from_bits(bits)
     yield (
-        f"constexpr uint32_t {escape(bit_def['bit_name'])}(uint32_t reg) {{ "
+        f"constexpr inline uint32_t {escape(bit_def['bit_name'])}(uint32_t reg) {{ "
         f"return (reg >> {min(bits)}) & {hex(mask_value)};"
         " }"
     )
@@ -173,7 +173,7 @@ def render_mask(bit_def):
         assert mask_value & mask_from_bits(bits) == mask_value, (mask_value, mask_from_bits(bits))
 
         yield (
-            f"constexpr uint32_t {escape(bit_def['bit_name'])}(uint32_t num) {{ "
+            f"constexpr inline uint32_t {escape(bit_def['bit_name'])}(uint32_t num) {{ "
             f"return (num & {hex(mask_value)}) << {min(bits)};"
             " }"
         )

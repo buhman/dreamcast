@@ -4,11 +4,11 @@
 
 namespace systembus {
   namespace c2dstat {
-    constexpr uint32_t texture_memory_start_address(uint32_t num) { return (num & 0x13ffffe0) << 0; }
+    constexpr inline uint32_t texture_memory_start_address(uint32_t num) { return (num & 0x13ffffe0) << 0; }
   }
 
   namespace c2dlen {
-    constexpr uint32_t transfer_length(uint32_t num) { return (num & 0xffffe0) << 0; }
+    constexpr inline uint32_t transfer_length(uint32_t num) { return (num & 0xffffe0) << 0; }
   }
 
   namespace c2dst {
@@ -74,9 +74,9 @@ namespace systembus {
   }
 
   namespace ffst {
-    constexpr uint32_t holly_cpu_if_block_internal_write_buffer(uint32_t reg) { return (reg >> 5) & 0x1; }
-    constexpr uint32_t holly_g2_if_block_internal_write_buffer(uint32_t reg) { return (reg >> 4) & 0x1; }
-    constexpr uint32_t aica_internal_write_buffer(uint32_t reg) { return (reg >> 0) & 0x1; }
+    constexpr inline uint32_t holly_cpu_if_block_internal_write_buffer(uint32_t reg) { return (reg >> 5) & 0x1; }
+    constexpr inline uint32_t holly_g2_if_block_internal_write_buffer(uint32_t reg) { return (reg >> 4) & 0x1; }
+    constexpr inline uint32_t aica_internal_write_buffer(uint32_t reg) { return (reg >> 0) & 0x1; }
   }
 
   namespace istext {

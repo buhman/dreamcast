@@ -125,7 +125,7 @@ namespace holly::core::parameter {
     }
 
     constexpr uint32_t super_sample_texture = 1 << 12;
-    constexpr uint32_t mip_map_d_adjust(uint32_t num) { return (num & 0xf) << 8; }
+    constexpr inline uint32_t mip_map_d_adjust(uint32_t num) { return (num & 0xf) << 8; }
 
     namespace texture_shading_instruction {
       constexpr uint32_t decal = 0 << 6;
@@ -186,10 +186,10 @@ namespace holly::core::parameter {
       constexpr uint32_t bit_mask = 0x1 << 26;
     }
 
-    constexpr uint32_t palette_selector4(uint32_t num) { return (num & 0x3f) << 21; }
-    constexpr uint32_t palette_selector8(uint32_t num) { return (num & 0x3) << 25; }
-    constexpr uint32_t stride_select(uint32_t reg) { return (reg >> 25) & 0x1; }
-    constexpr uint32_t texture_address(uint32_t num) { return (num & 0x1fffff) << 0; }
+    constexpr inline uint32_t palette_selector4(uint32_t num) { return (num & 0x3f) << 21; }
+    constexpr inline uint32_t palette_selector8(uint32_t num) { return (num & 0x3) << 25; }
+    constexpr inline uint32_t stride_select(uint32_t reg) { return (reg >> 25) & 0x1; }
+    constexpr inline uint32_t texture_address(uint32_t num) { return (num & 0x1fffff) << 0; }
   }
 
 }
