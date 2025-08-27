@@ -88,48 +88,6 @@ int init_ftdi_context(struct ftdi_context * ftdi, uint32_t scbrr)
   }
   ftdi_list_free(&devlist);
 
-
-  if (0) {
-    for (int i = 0; i < 2; i++) {
-      timespec t = {.tv_sec = 0, .tv_nsec = 33000 * 2 };
-
-      // toggle ACBUS5 low (g reset asserted)
-      uint8_t bitmask1 = (0b0001 << 4) | (0b0001 << 0);
-      res = ftdi_set_bitmode(ftdi, bitmask1, BITMODE_CBUS);
-      if (res < 0) {
-        fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
-        return -1;
-      }
-      printf("cbus1\n");
-
-      nanosleep(&t, NULL);
-
-      // toggle ACBUS5 low (g reset deasserted)
-      uint8_t bitmask2 = (0b0000 << 4) | (0b0001 << 0);
-      res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
-      if (res < 0) {
-        fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
-        return -1;
-      }
-      printf("cbus2\n");
-
-      nanosleep(&t, NULL);
-    }
-
-    uint8_t bitmask2 = (0b0000 << 4) | (0b0000 << 0);
-    res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
-    if (res < 0) {
-      fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
-      return -1;
-    }
-
-    sleep(2);
-    printf("cbus3\n");
-    ftdi_disable_bitbang(ftdi);
-    //while (1);
-    //return 0;
-  }
-
   res = ftdi_set_baudrate(ftdi, round(dreamcast_rate(current_cks, scbrr)));
   if (res < 0) {
     fprintf(stderr, "ftdi_set_baudrate: %s\n", ftdi_get_error_string(ftdi));
@@ -428,6 +386,49 @@ int do_list_baudrates(struct ftdi_context * ftdi)
             dreamcast_rate(2, i),
             dreamcast_rate(3, i));
   }
+  return 0;
+}
+
+int do_reset(struct ftdi_context * ftdi)
+{
+  int res;
+
+  for (int i = 0; i < 2; i++) {
+    timespec t = {.tv_sec = 0, .tv_nsec = 33000 * 2 };
+
+    // toggle ACBUS5 low (g reset asserted)
+    uint8_t bitmask1 = (0b0001 << 4) | (0b0001 << 0);
+    res = ftdi_set_bitmode(ftdi, bitmask1, BITMODE_CBUS);
+    if (res < 0) {
+      fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+      return -1;
+    }
+    printf("cbus1\n");
+
+    nanosleep(&t, NULL);
+
+    // toggle ACBUS5 low (g reset deasserted)
+    uint8_t bitmask2 = (0b0000 << 4) | (0b0001 << 0);
+    res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
+    if (res < 0) {
+      fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+      return -1;
+    }
+    printf("cbus2\n");
+
+    nanosleep(&t, NULL);
+  }
+
+  uint8_t bitmask2 = (0b0000 << 4) | (0b0000 << 0);
+  res = ftdi_set_bitmode(ftdi, bitmask2, BITMODE_CBUS);
+  if (res < 0) {
+    fprintf(stderr, "ftdi_set_bitmode: %s\n", ftdi_get_error_string(ftdi));
+    return -1;
+  }
+
+  printf("cbus3\n");
+  ftdi_disable_bitbang(ftdi);
+
   return 0;
 }
 
@@ -752,6 +753,7 @@ const struct cli_command commands[] = {
   { "list_baudrates"     , 0, (void *)&do_list_baudrates       , false, NULL},
   { "show_baudrate_error", 0, (void *)&do_show_baudrate_error  , true,  NULL},
   { "help"               , 0, (void *)&do_help                 , false, NULL},
+  { "reset"              , 0, (void *)&do_reset                , true,  NULL},
 };
 constexpr int commands_length = (sizeof (commands)) / (sizeof (commands[0]));
 
