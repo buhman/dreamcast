@@ -259,6 +259,4 @@ void main()
   holly.FB_R_SOF1 = framebuffer_start;
 
   // return from main; this will effectively jump back to the serial loader
-
-  while (1);
 }
