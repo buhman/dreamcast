@@ -26,3 +26,10 @@ TRIANGLE_TA_FULLSCREEN_OBJ = \
 
 example/triangle_ta_fullscreen.elf: LDSCRIPT = $(LIB)/main.lds
 example/triangle_ta_fullscreen.elf: $(START_OBJ) $(TRIANGLE_TA_FULLSCREEN_OBJ)
+
+CUBE_TA_FULLSCREEN_TEXTURED_OBJ = \
+	holly/core/region_array.o \
+	example/cube_ta_fullscreen_textured.o
+
+example/cube_ta_fullscreen_textured.elf: LDSCRIPT = $(LIB)/main.lds
+example/cube_ta_fullscreen_textured.elf: $(START_OBJ) $(CUBE_TA_FULLSCREEN_TEXTURED_OBJ)

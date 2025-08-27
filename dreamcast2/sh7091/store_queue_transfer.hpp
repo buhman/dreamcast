@@ -16,8 +16,8 @@ namespace sh7091 {
                             int length)
     {
       uint32_t out = reinterpret_cast<uint32_t>(out_addr);
-      sh7091.CCN.QACR0 = ((out >> 24) & 0b11100);
-      sh7091.CCN.QACR1 = ((out >> 24) & 0b11100);
+      sh7091.CCN.QACR0 = sh7091::ccn::qacr0::address(out);
+      sh7091.CCN.QACR1 = sh7091::ccn::qacr1::address(out);
 
       volatile uint32_t * base = (volatile uint32_t *)&store_queue[(out & 0x03ffffe0)];
       const uint32_t * src32 = reinterpret_cast<const uint32_t *>(src);
@@ -49,8 +49,8 @@ namespace sh7091 {
                                const uint32_t value)
     {
       uint32_t out = reinterpret_cast<uint32_t>(out_addr);
-      sh7091.CCN.QACR0 = ((out >> 24) & 0b11100);
-      sh7091.CCN.QACR1 = ((out >> 24) & 0b11100);
+      sh7091.CCN.QACR0 = sh7091::ccn::qacr0::address(out);
+      sh7091.CCN.QACR1 = sh7091::ccn::qacr1::address(out);
 
       volatile uint32_t * base = (volatile uint32_t *)&store_queue[(out & 0x03ffffe0)];
 
