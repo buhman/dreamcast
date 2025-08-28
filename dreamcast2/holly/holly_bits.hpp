@@ -526,7 +526,7 @@ namespace holly {
 
   namespace ta_glob_tile_clip {
     constexpr inline uint32_t tile_y_num(uint32_t num) { return (num & 0xf) << 16; }
-    constexpr inline uint32_t tile_x_num(uint32_t num) { return (num & 0x1f) << 0; }
+    constexpr inline uint32_t tile_x_num(uint32_t num) { return (num & 0x3f) << 0; }
   }
 
   namespace ta_alloc_ctrl {

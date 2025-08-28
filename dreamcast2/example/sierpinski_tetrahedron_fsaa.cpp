@@ -222,7 +222,7 @@ static inline vec3 vertex_perspective_divide(vec3 v)
 static inline vec3 vertex_screen_space(vec3 v)
 {
   return (vec3){
-    v.x * 240.f + 320.f,
+    v.x * 480.f + 640.f,
     v.y * 240.f + 240.f,
     v.z,
   };
@@ -345,7 +345,7 @@ void main()
   uint32_t object_list_start       = 0x300000;
 
   const int tile_y_num = 480 / 32;
-  const int tile_x_num = 640 / 32;
+  const int tile_x_num = 1280 / 32;
 
   using namespace holly::core;
 
@@ -410,7 +410,7 @@ void main()
   // >   specified by this register, it must not be used for other data.  For
   // >   example, the address specified here must not be the same as the address
   // >   in the TA_ISP_BASE register.
-  holly.TA_OL_LIMIT = object_list_start + 0x100000 - 32;
+  holly.TA_OL_LIMIT = object_list_start + 0x200000 - 32;
 
   holly.TA_NEXT_OPB_INIT = (object_list_start + 8 * 4 * tile_y_num * tile_x_num);
 
@@ -465,7 +465,8 @@ void main()
 
     holly.FB_W_SOF1 = framebuffer_start[i & 1];
 
-    holly.SCALER_CTL = scaler_ctl::vertical_scale_factor(0x0400);
+    holly.SCALER_CTL = scaler_ctl::horizontal_scaling_enable
+                     | scaler_ctl::vertical_scale_factor(0x0400);
 
     // start the actual render--the rendering process begins by interpreting the
     // region array

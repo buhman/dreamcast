@@ -59,3 +59,10 @@ SIERPINSKI_TETRAHEDRON_OBJ = \
 
 example/sierpinski_tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
 example/sierpinski_tetrahedron.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_OBJ)
+
+SIERPINSKI_TETRAHEDRON_FSAA_OBJ = \
+	holly/core/region_array.o \
+	example/sierpinski_tetrahedron_fsaa.o
+
+example/sierpinski_tetrahedron_fsaa.elf: LDSCRIPT = $(LIB)/main.lds
+example/sierpinski_tetrahedron_fsaa.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_FSAA_OBJ)
