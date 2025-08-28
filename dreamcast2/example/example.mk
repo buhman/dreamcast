@@ -33,3 +33,17 @@ CUBE_TA_FULLSCREEN_TEXTURED_OBJ = \
 
 example/cube_ta_fullscreen_textured.elf: LDSCRIPT = $(LIB)/main.lds
 example/cube_ta_fullscreen_textured.elf: $(START_OBJ) $(CUBE_TA_FULLSCREEN_TEXTURED_OBJ)
+
+TETRAHEDRON_OBJ = \
+	holly/core/region_array.o \
+	example/tetrahedron.o
+
+example/tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
+example/tetrahedron.elf: $(START_OBJ) $(TETRAHEDRON_OBJ)
+
+SIERPINSKI_TETRAHEDRON_OBJ = \
+	holly/core/region_array.o \
+	example/sierpinski_tetrahedron.o
+
+example/sierpinski_tetrahedron.elf: LDSCRIPT = $(LIB)/main.lds
+example/sierpinski_tetrahedron.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_OBJ)
