@@ -21,36 +21,39 @@ namespace holly::core::region_array {
 
     for (int y = 0; y < tile_height; y++) {
       for (int x = 0; x < tile_width; x++) {
-        region_array[ix].tile = tile::y_position(y)
+        int rix = x * tile_height + y;
+        //int rix = y * tile_width + x;
+
+        region_array[rix].tile = tile::y_position(y)
                               | tile::x_position(x);
 
         if (y == (tile_height - 1) && x == (tile_width - 1))
-          region_array[ix].tile |= tile::last_region;
+          region_array[rix].tile |= tile::last_region;
 
-        region_array[ix].list_pointer.opaque                      = (list_block_size.opaque                      == 0) ? list_pointer::empty :
+        region_array[rix].list_pointer.opaque                      = (list_block_size.opaque                      == 0) ? list_pointer::empty :
           (ol_base + (list_block_size.opaque * ix)
            );
 
-        region_array[ix].list_pointer.opaque_modifier_volume      = (list_block_size.opaque_modifier_volume      == 0) ? list_pointer::empty :
+        region_array[rix].list_pointer.opaque_modifier_volume      = (list_block_size.opaque_modifier_volume      == 0) ? list_pointer::empty :
           (ol_base + num_tiles * ( list_block_size.opaque
                                  )
                    + (list_block_size.opaque_modifier_volume * ix)
            );
 
-        region_array[ix].list_pointer.translucent                 = (list_block_size.translucent                 == 0) ? list_pointer::empty :
+        region_array[rix].list_pointer.translucent                 = (list_block_size.translucent                 == 0) ? list_pointer::empty :
           (ol_base + num_tiles * ( list_block_size.opaque
                                  + list_block_size.opaque_modifier_volume
                                  )
                    + (list_block_size.translucent * ix)
            );
-        region_array[ix].list_pointer.translucent_modifier_volume = (list_block_size.translucent_modifier_volume == 0) ? list_pointer::empty :
+        region_array[rix].list_pointer.translucent_modifier_volume = (list_block_size.translucent_modifier_volume == 0) ? list_pointer::empty :
           (ol_base + num_tiles * ( list_block_size.opaque
                                  + list_block_size.opaque_modifier_volume
                                  + list_block_size.translucent
                                  )
                    + (list_block_size.translucent_modifier_volume * ix)
            );
-        region_array[ix].list_pointer.punch_through               = (list_block_size.punch_through               == 0) ? list_pointer::empty :
+        region_array[rix].list_pointer.punch_through               = (list_block_size.punch_through               == 0) ? list_pointer::empty :
           (ol_base + num_tiles * ( list_block_size.opaque
                                  + list_block_size.opaque_modifier_volume
                                  + list_block_size.translucent

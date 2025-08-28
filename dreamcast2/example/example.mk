@@ -39,6 +39,12 @@ TRIANGLE_TA_FULLSCREEN_OBJ = \
 example/triangle_ta_fullscreen.elf: LDSCRIPT = $(LIB)/main.lds
 example/triangle_ta_fullscreen.elf: $(START_OBJ) $(TRIANGLE_TA_FULLSCREEN_OBJ)
 
+TRIANGLE_TA_LIST_CONT_OBJ = \
+	example/triangle_ta_list_cont.o
+
+example/triangle_ta_list_cont.elf: LDSCRIPT = $(LIB)/main.lds
+example/triangle_ta_list_cont.elf: $(START_OBJ) $(TRIANGLE_TA_LIST_CONT_OBJ)
+
 CUBE_TA_FULLSCREEN_TEXTURED_OBJ = \
 	holly/core/region_array.o \
 	example/cube_ta_fullscreen_textured.o
@@ -66,3 +72,10 @@ SIERPINSKI_TETRAHEDRON_FSAA_OBJ = \
 
 example/sierpinski_tetrahedron_fsaa.elf: LDSCRIPT = $(LIB)/main.lds
 example/sierpinski_tetrahedron_fsaa.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_FSAA_OBJ)
+
+SIERPINSKI_TETRAHEDRON_FSAA_YSCALER_OBJ = \
+	holly/core/region_array.o \
+	example/sierpinski_tetrahedron_fsaa_yscaler.o
+
+example/sierpinski_tetrahedron_fsaa_yscaler.elf: LDSCRIPT = $(LIB)/main.lds
+example/sierpinski_tetrahedron_fsaa_yscaler.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_FSAA_YSCALER_OBJ)
