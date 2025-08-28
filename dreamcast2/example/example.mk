@@ -14,6 +14,18 @@ TRIANGLE_CORE_OBJ = \
 example/triangle_core.elf: LDSCRIPT = $(LIB)/main.lds
 example/triangle_core.elf: $(START_OBJ) $(TRIANGLE_CORE_OBJ)
 
+TRIANGLE_CORE_FULLSCREEN_OBJ = \
+	example/triangle_core_fullscreen.o
+
+example/triangle_core_fullscreen.elf: LDSCRIPT = $(LIB)/main.lds
+example/triangle_core_fullscreen.elf: $(START_OBJ) $(TRIANGLE_CORE_FULLSCREEN_OBJ)
+
+TEXTURED_BACKGROUND_FULLSCREEN_OBJ = \
+	example/textured_background_fullscreen.o
+
+example/textured_background_fullscreen.elf: LDSCRIPT = $(LIB)/main.lds
+example/textured_background_fullscreen.elf: $(START_OBJ) $(TEXTURED_BACKGROUND_FULLSCREEN_OBJ)
+
 TRIANGLE_TA_OBJ = \
 	example/triangle_ta.o
 

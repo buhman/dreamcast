@@ -186,9 +186,9 @@ namespace holly::core::parameter {
       constexpr uint32_t bit_mask = 0x1 << 26;
     }
 
+    constexpr uint32_t stride_select = 1 << 25;
     constexpr inline uint32_t palette_selector4(uint32_t num) { return (num & 0x3f) << 21; }
     constexpr inline uint32_t palette_selector8(uint32_t num) { return (num & 0x3) << 25; }
-    constexpr inline uint32_t stride_select(uint32_t reg) { return (reg >> 25) & 0x1; }
     constexpr inline uint32_t texture_address(uint32_t num) { return (num & 0x1fffff) << 0; }
   }
 
