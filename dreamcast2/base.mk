@@ -38,6 +38,8 @@ CXXFLAGS += -fno-exceptions -fno-non-call-exceptions -fno-rtti -fno-threadsafe-s
 
 LDFLAGS += --gc-sections --no-warn-rwx-segment --print-memory-usage --entry=_start --orphan-handling=error
 
+LD_LIBGCC += -L $(dir $(shell $(CC) -print-file-name=libgcc.a)) -lgcc
+
 DEPFLAGS = -MMD -MP
 
 ################################################################################
@@ -65,7 +67,7 @@ OBJDUMP = $(TARGET)objdump
 	$(CXX) $(CARCH) $(CFLAGS) $(CXXSTD) $(CXXFLAGS) $(OPT) $(DEBUG) $(DEPFLAGS) -MF ${<}.d -c $< -o $@
 
 %.elf:
-	$(LD) $(LDFLAGS) -L $(LIB) -T $(LDSCRIPT) $^ -o $@
+	$(LD) $(LDFLAGS) -L $(LIB) -T $(LDSCRIPT) $^ $(LD_LIBGCC) -o $@
 
 %.bin: %.elf
 	$(OBJCOPY) -O binary $< $@

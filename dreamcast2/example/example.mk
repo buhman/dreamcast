@@ -79,3 +79,10 @@ SIERPINSKI_TETRAHEDRON_FSAA_YSCALER_OBJ = \
 
 example/sierpinski_tetrahedron_fsaa_yscaler.elf: LDSCRIPT = $(LIB)/main.lds
 example/sierpinski_tetrahedron_fsaa_yscaler.elf: $(START_OBJ) $(SIERPINSKI_TETRAHEDRON_FSAA_YSCALER_OBJ)
+
+FONT_OBJ = \
+	holly/core/region_array.o \
+	example/font.o
+
+example/font.elf: LDSCRIPT = $(LIB)/main.lds
+example/font.elf: $(START_OBJ) $(FONT_OBJ)

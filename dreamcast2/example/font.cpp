@@ -1,4 +1,3 @@
-
 #include "memorymap.hpp"
 
 #include "holly/core/object_list_bits.hpp"
@@ -49,6 +48,48 @@ void transfer_background_polygon(uint32_t isp_tsp_parameter_start)
   polygon->vertex[2].base_color = 0xff00ff;
 }
 
+struct vec2 {
+  float x;
+  float y;
+};
+
+struct face {
+  float inverse_texture_width;
+  float inverse_texture_height;
+  float glyph_width;
+  float glyph_height;
+  int hori_advance;
+  int row_stride;
+};
+
+static const face ter_u12n = {
+  .inverse_texture_width = 1.0f / 128.0f,
+  .inverse_texture_height = 1.0f / 64.0f,
+  .glyph_width = 6.0f,
+  .glyph_height = 12.0f,
+  .hori_advance = 6,
+  .row_stride = 21,
+};
+
+static inline vec2 glyph_texture(const face& face, const vec2& v, int char_code)
+{
+  int row = char_code / face.row_stride;
+  int col = char_code % face.row_stride;
+
+  return {
+    (((float)col) * face.glyph_width  + v.x * face.glyph_width) * face.inverse_texture_width,
+    (((float)row) * face.glyph_height + v.y * face.glyph_height) * face.inverse_texture_height,
+  };
+}
+
+static inline vec2 glyph_position(const face& face, const vec2& v, const vec2& p)
+{
+  return {
+    v.x * face.glyph_width + p.x,
+    v.y * face.glyph_height + p.y,
+  };
+}
+
 static inline uint32_t transfer_ta_global_end_of_list(uint32_t store_queue_ix)
 {
   using namespace holly::ta;
@@ -74,10 +115,6 @@ static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint3
   using namespace holly::ta;
   using namespace holly::ta::parameter;
 
-  //
-  // TA polygon global transfer
-  //
-
   volatile global_parameter::polygon_type_0 * polygon = (volatile global_parameter::polygon_type_0 *)&store_queue[store_queue_ix];
   store_queue_ix += (sizeof (global_parameter::polygon_type_0));
 
@@ -88,33 +125,30 @@ static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint3
 
   polygon->isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                     | isp_tsp_instruction_word::culling_mode::no_culling;
-  // Note that it is not possible to use
-  // ISP_TSP_INSTRUCTION_WORD::GOURAUD_SHADING in this isp_tsp_instruction_word,
-  // because `gouraud` is one of the bits overwritten by the value in
-  // parameter_control_word. See DCDBSysArc990907E.pdf page 200.
 
   polygon->tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                 | tsp_instruction_word::dst_alpha_instr::zero
                                 | tsp_instruction_word::fog_control::no_fog
                                 | tsp_instruction_word::filter_mode::point_sampled
                                 | tsp_instruction_word::texture_shading_instruction::decal
-                                | tsp_instruction_word::texture_u_size::_256
-                                | tsp_instruction_word::texture_v_size::_256;
+                                | tsp_instruction_word::texture_u_size::_128
+                                | tsp_instruction_word::texture_v_size::_64;
 
-  polygon->texture_control_word = texture_control_word::pixel_format::rgb565
-                                | texture_control_word::scan_order::non_twiddled
+  polygon->texture_control_word = texture_control_word::pixel_format::palette_4bpp
+                                | texture_control_word::scan_order::twiddled
                                 | texture_control_word::texture_address(texture_address / 8);
 
-  // start store queue transfer of `polygon` to the TA
+
   pref(polygon);
 
   return store_queue_ix;
 }
 
-static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
-                                                   float ax, float ay, float az, float au, float av, uint32_t ac,
-                                                   float bx, float by, float bz, float bu, float bv, uint32_t bc,
-                                                   float cx, float cy, float cz, float cu, float cv, uint32_t cc)
+static inline uint32_t transfer_ta_vertex_quad(uint32_t store_queue_ix,
+                                               float ax, float ay, float az, float au, float av, uint32_t ac,
+                                               float bx, float by, float bz, float bu, float bv, uint32_t bc,
+                                               float cx, float cy, float cz, float cu, float cv, uint32_t cc,
+                                               float dx, float dy, float dz, float du, float dv, uint32_t dc)
 {
   using namespace holly::ta;
   using namespace holly::ta::parameter;
@@ -124,9 +158,8 @@ static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
   //
 
   volatile vertex_parameter::polygon_type_3 * vertex = (volatile vertex_parameter::polygon_type_3 *)&store_queue[store_queue_ix];
-  store_queue_ix += (sizeof (vertex_parameter::polygon_type_3)) * 3;
+  store_queue_ix += (sizeof (vertex_parameter::polygon_type_3)) * 4;
 
-  // bottom left
   vertex[0].parameter_control_word = parameter_control_word::para_type::vertex_parameter;
   vertex[0].x = ax;
   vertex[0].y = ay;
@@ -139,7 +172,6 @@ static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
   // start store queue transfer of `vertex[0]` to the TA
   pref(&vertex[0]);
 
-  // top center
   vertex[1].parameter_control_word = parameter_control_word::para_type::vertex_parameter;
   vertex[1].x = bx;
   vertex[1].y = by;
@@ -152,132 +184,72 @@ static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
   // start store queue transfer of `vertex[1]` to the TA
   pref(&vertex[1]);
 
-  // bottom right
-  vertex[2].parameter_control_word = parameter_control_word::para_type::vertex_parameter
-                                   | parameter_control_word::end_of_strip;
-  vertex[2].x = cx;
-  vertex[2].y = cy;
-  vertex[2].z = cz;
-  vertex[2].u = cu;
-  vertex[2].v = cv;
-  vertex[2].base_color = cc;
+  vertex[2].parameter_control_word = parameter_control_word::para_type::vertex_parameter;
+  vertex[2].x = dx;
+  vertex[2].y = dy;
+  vertex[2].z = dz;
+  vertex[2].u = du;
+  vertex[2].v = dv;
+  vertex[2].base_color = dc;
   vertex[2].offset_color = 0;
 
   // start store queue transfer of `params[2]` to the TA
   pref(&vertex[2]);
 
+  vertex[3].parameter_control_word = parameter_control_word::para_type::vertex_parameter
+                                   | parameter_control_word::end_of_strip;
+  vertex[3].x = cx;
+  vertex[3].y = cy;
+  vertex[3].z = cz;
+  vertex[3].u = cu;
+  vertex[3].v = cv;
+  vertex[3].base_color = cc;
+  vertex[3].offset_color = 0;
+
+  // start store queue transfer of `params[3]` to the TA
+  pref(&vertex[3]);
+
   return store_queue_ix;
 }
 
-/*
-  These vertex and face definitions are a trivial transformation of the default
-  Blender cube, as exported by the .obj exporter (with triangulation enabled).
- */
-struct vec3 {
-  float x;
-  float y;
-  float z;
-};
-
-struct vec2 {
-  float u;
-  float v;
-};
-
-static const vec3 cube_vertex_position[] = {
-  {  1.0f,  1.0f, -1.0f },
-  {  1.0f, -1.0f, -1.0f },
-  {  1.0f,  1.0f,  1.0f },
-  {  1.0f, -1.0f,  1.0f },
-  { -1.0f,  1.0f, -1.0f },
-  { -1.0f, -1.0f, -1.0f },
-  { -1.0f,  1.0f,  1.0f },
-  { -1.0f, -1.0f,  1.0f },
-};
-
-static const vec2 cube_vertex_texture[] = {
-  { 1.0f, 0.0f },
-  { 0.0f, 1.0f },
-  { 0.0f, 0.0f },
-  { 1.0f, 1.0f },
-};
-
-struct position_texture {
-  int position;
-  int texture;
-};
-
-struct face {
-  position_texture a;
-  position_texture b;
-  position_texture c;
-};
-
-/*
-  It is also possible to submit each cube face as a 4-vertex triangle strip, or
-  submit the entire cube as a single triangle strip.
-
-  Separate 3-vertex triangles are chosen to make this example more
-  straightforward, but this is not the best approach if high performance is
-  desired.
- */
-static const face cube_faces[] = {
-  {{4, 0}, {2, 1}, {0, 2}},
-  {{2, 0}, {7, 1}, {3, 2}},
-  {{6, 0}, {5, 1}, {7, 2}},
-  {{1, 0}, {7, 1}, {5, 2}},
-  {{0, 0}, {3, 1}, {1, 2}},
-  {{4, 0}, {1, 1}, {5, 2}},
-  {{4, 0}, {6, 3}, {2, 1}},
-  {{2, 0}, {6, 3}, {7, 1}},
-  {{6, 0}, {4, 3}, {5, 1}},
-  {{1, 0}, {3, 3}, {7, 1}},
-  {{0, 0}, {2, 3}, {3, 1}},
-  {{4, 0}, {0, 3}, {1, 1}},
-};
-static const int cube_faces_length = (sizeof (cube_faces)) / (sizeof (cube_faces[0]));
-
-#define cos(n) __builtin_cosf(n)
-#define sin(n) __builtin_sinf(n)
-
-static float theta = 0;
-
-static inline vec3 vertex_rotate(vec3 v)
+uint32_t transfer_glyph(uint32_t store_queue_ix,
+                        const face& face,
+                        const vec2& t,
+                        int char_code)
 {
-  // to make the cube's appearance more interesting, rotate the vertex on two
-  // axes
-
-  float x0 = v.x;
-  float y0 = v.y;
-  float z0 = v.z;
-
-  float x1 = x0 * cos(theta) - z0 * sin(theta);
-  float y1 = y0;
-  float z1 = x0 * sin(theta) + z0 * cos(theta);
-
-  float x2 = x1;
-  float y2 = y1 * cos(theta) - z1 * sin(theta);
-  float z2 = y1 * sin(theta) + z1 * cos(theta);
-
-  return (vec3){x2, y2, z2};
-}
-
-static inline vec3 vertex_perspective_divide(vec3 v)
-{
-  float w = 1.0f / (v.z + 3.0f);
-  return (vec3){v.x * w, v.y * w, w};
-}
-
-static inline vec3 vertex_screen_space(vec3 v)
-{
-  return (vec3){
-    v.x * 240.f + 320.f,
-    v.y * 240.f + 240.f,
-    v.z,
+  static const vec2 vtx[] = {
+    { 0, 0 },
+    { 1, 0 },
+    { 1, 1 },
+    { 0, 1 },
   };
+
+  if (char_code <= 0x20 || char_code >= 0x7f) {
+    return store_queue_ix;
+  }
+
+  char_code -= 0x20;
+
+  vec2 ap = glyph_position(face, vtx[0], t);
+  vec2 bp = glyph_position(face, vtx[1], t);
+  vec2 cp = glyph_position(face, vtx[2], t);
+  vec2 dp = glyph_position(face, vtx[3], t);
+
+  vec2 at = glyph_texture(face, vtx[0], char_code);
+  vec2 bt = glyph_texture(face, vtx[1], char_code);
+  vec2 ct = glyph_texture(face, vtx[2], char_code);
+  vec2 dt = glyph_texture(face, vtx[3], char_code);
+
+  store_queue_ix = transfer_ta_vertex_quad(store_queue_ix,
+                                           ap.x, ap.y, 0.1f, at.x, at.y, 0,
+                                           bp.x, bp.y, 0.1f, bt.x, bt.y, 0,
+                                           cp.x, cp.y, 0.1f, ct.x, ct.y, 0,
+                                           dp.x, dp.y, 0.1f, dt.x, dt.y, 0);
+
+  return store_queue_ix;
 }
 
-void transfer_ta_cube(uint32_t texture_address)
+void transfer_scene(uint32_t texture_address)
 {
   {
     using namespace sh7091;
@@ -292,48 +264,16 @@ void transfer_ta_cube(uint32_t texture_address)
 
   store_queue_ix = transfer_ta_global_polygon(store_queue_ix, texture_address);
 
-  for (int face_ix = 0; face_ix < cube_faces_length; face_ix++) {
-    int ipa = cube_faces[face_ix].a.position;
-    int ipb = cube_faces[face_ix].b.position;
-    int ipc = cube_faces[face_ix].c.position;
-
-    vec3 vpa = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipa])));
-
-    vec3 vpb = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipb])));
-
-    vec3 vpc = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipc])));
-
-
-    int ita = cube_faces[face_ix].a.texture;
-    int itb = cube_faces[face_ix].b.texture;
-    int itc = cube_faces[face_ix].c.texture;
-
-    vec2 vta = cube_vertex_texture[ita];
-    vec2 vtb = cube_vertex_texture[itb];
-    vec2 vtc = cube_vertex_texture[itc];
-
-    // vertex color is irrelevant in "decal" mode
-    uint32_t va_color = 0;
-    uint32_t vb_color = 0;
-    uint32_t vc_color = 0;
-
-    store_queue_ix = transfer_ta_vertex_triangle(store_queue_ix,
-                                                 vpa.x, vpa.y, vpa.z, vta.u, vta.v, va_color,
-                                                 vpb.x, vpb.y, vpb.z, vtb.u, vtb.v, vb_color,
-                                                 vpc.x, vpc.y, vpc.z, vtc.u, vtc.v, vc_color);
-  }
+  store_queue_ix = transfer_glyph(store_queue_ix,
+                                  ter_u12n,
+                                  vec2(10, 10),
+                                  'a');
 
   store_queue_ix = transfer_ta_global_end_of_list(store_queue_ix);
 }
 
 const uint8_t texture[] __attribute__((aligned(4))) = {
-  #embed "texture/pavement_256x256.rgb565"
+  #embed "font/ter_u12n.128x64.palette_4bpp.twiddled"
 };
 
 void transfer_texture(uint32_t texture_start)
@@ -349,6 +289,18 @@ void transfer_texture(uint32_t texture_start)
 
 void main()
 {
+  using namespace holly;
+  using namespace holly::core;
+  using holly::holly;
+
+  /* palette */
+  holly.PAL_RAM_CTRL = holly::pal_ram_ctrl::pixel_format::argb4444;
+
+  holly.PALETTE_RAM[0] = 0x0000;
+  holly.PALETTE_RAM[1] = 0xffff;
+
+  holly.PT_ALPHA_REF = 0xff;
+
   /*
     a very simple memory map:
 
@@ -365,8 +317,6 @@ void main()
 
   const int tile_y_num = 480 / 32;
   const int tile_x_num = 640 / 32;
-
-  using namespace holly::core;
 
   region_array::list_block_size list_block_size = {
     .opaque = 8 * 4,
@@ -389,9 +339,6 @@ void main()
   //////////////////////////////////////////////////////////////////////////////
   // configure the TA
   //////////////////////////////////////////////////////////////////////////////
-
-  using namespace holly;
-  using holly::holly;
 
   // TA_GLOB_TILE_CLIP restricts which "object pointer blocks" are written
   // to.
@@ -465,41 +412,28 @@ void main()
   // framebuffer.
   holly.FB_R_SOF1 = framebuffer_start;
 
-  // draw 500 frames of cube rotation
-  for (int i = 0; i < 500; i++) {
-    //////////////////////////////////////////////////////////////////////////////
-    // transfer cube to texture memory via the TA polygon converter FIFO
-    //////////////////////////////////////////////////////////////////////////////
+  // TA_LIST_INIT needs to be written (every frame) prior to the first FIFO
+  // write.
+  holly.TA_LIST_INIT = ta_list_init::list_init;
 
-    // TA_LIST_INIT needs to be written (every frame) prior to the first FIFO
-    // write.
-    holly.TA_LIST_INIT = ta_list_init::list_init;
+  // dummy TA_LIST_INIT read; DCDBSysArc990907E.pdf in multiple places says this
+  // step is required.
+  (void)holly.TA_LIST_INIT;
 
-    // dummy TA_LIST_INIT read; DCDBSysArc990907E.pdf in multiple places says this
-    // step is required.
-    (void)holly.TA_LIST_INIT;
+  transfer_scene(texture_start);
 
-    transfer_ta_cube(texture_start);
+  //////////////////////////////////////////////////////////////////////////////
+  // wait for vertical synchronization (and the TA)
+  //////////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////////////////////////////////
-    // wait for vertical synchronization (and the TA)
-    //////////////////////////////////////////////////////////////////////////////
+  while (!(spg_status::vsync(holly.SPG_STATUS)));
+  while (spg_status::vsync(holly.SPG_STATUS));
 
-    while (!(spg_status::vsync(holly.SPG_STATUS)));
-    while (spg_status::vsync(holly.SPG_STATUS));
+  //////////////////////////////////////////////////////////////////////////////
+  // start the actual rasterization
+  //////////////////////////////////////////////////////////////////////////////
 
-    //////////////////////////////////////////////////////////////////////////////
-    // start the actual rasterization
-    //////////////////////////////////////////////////////////////////////////////
-
-    // start the actual render--the rendering process begins by interpreting the
-    // region array
-    holly.STARTRENDER = 1;
-
-    // increment theta for the cube rotation animation
-    // (used by the `vertex_rotate` function)
-    theta += 0.01f;
-  }
-
-  // return from main; this will effectively jump back to the serial loader
+  // start the actual render--the rendering process begins by interpreting the
+  // region array
+  holly.STARTRENDER = 1;
 }
