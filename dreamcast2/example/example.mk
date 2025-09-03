@@ -86,3 +86,10 @@ FONT_OBJ = \
 
 example/font.elf: LDSCRIPT = $(LIB)/main.lds
 example/font.elf: $(START_OBJ) $(FONT_OBJ)
+
+FONT_SERIAL_OBJ = \
+	holly/core/region_array.o \
+	example/font_serial.o
+
+example/font_serial.elf: LDSCRIPT = $(LIB)/main.lds
+example/font_serial.elf: $(START_OBJ) $(FONT_SERIAL_OBJ)
