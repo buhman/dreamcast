@@ -43,3 +43,23 @@ systembus/systembus.hpp: regs/systembus/systembus.csv regs/render_block_regs.py
 
 systembus/systembus_bits.hpp: regs/systembus/systembus_bits.csv regs/render_bits.py
 	python regs/render_bits.py $< systembus > $@
+
+# MAPLE
+
+maple/maple_bits.hpp: regs/maple/maple_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< maple > $@
+
+maple/maple_bus_bits.hpp: regs/maple/maple_bus_bits.csv regs/render_bits.py
+	python regs/render_bits.py $< maple > $@
+
+maple/maple_bus_commands.hpp: regs/maple/maple_bus_commands.csv regs/render_maple_bus_commands.py
+	python regs/render_maple_bus_commands.py $< > $@
+
+maple/maple_bus_ft0.hpp: regs/maple/maple_bus_ft0.csv regs/render_maple_data_format.py
+	python regs/render_maple_data_format.py $< > $@
+
+maple/maple_bus_ft6.hpp: regs/maple/maple_bus_ft6.csv regs/render_maple_data_format.py
+	python regs/render_maple_data_format.py $< > $@
+
+maple/maple_bus_ft6_scan_code.hpp: regs/maple/maple_bus_ft6_scan_code.csv regs/render_maple_scan_code.py
+	python regs/render_maple_scan_code.py $< > $@
