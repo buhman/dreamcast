@@ -99,3 +99,9 @@ MAPLE_DEVICE_REQUEST_OBJ = \
 
 example/maple_device_request.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_device_request.elf: $(START_OBJ) $(MAPLE_DEVICE_REQUEST_OBJ)
+
+MAPLE_GET_CONDITION_OBJ = \
+	example/maple_get_condition.o
+
+example/maple_get_condition.elf: LDSCRIPT = $(LIB)/main.lds
+example/maple_get_condition.elf: $(START_OBJ) $(MAPLE_GET_CONDITION_OBJ)
