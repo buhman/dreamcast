@@ -93,3 +93,9 @@ FONT_SERIAL_OBJ = \
 
 example/font_serial.elf: LDSCRIPT = $(LIB)/main.lds
 example/font_serial.elf: $(START_OBJ) $(FONT_SERIAL_OBJ)
+
+MAPLE_DEVICE_REQUEST_OBJ = \
+	example/maple_device_request.o
+
+example/maple_device_request.elf: LDSCRIPT = $(LIB)/main.lds
+example/maple_device_request.elf: $(START_OBJ) $(MAPLE_DEVICE_REQUEST_OBJ)

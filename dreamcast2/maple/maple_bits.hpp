@@ -20,7 +20,6 @@ namespace maple {
     namespace dma_enable {
       constexpr uint32_t abort = 0 << 0;
       constexpr uint32_t enable = 1 << 0;
-      constexpr inline uint32_t status(uint32_t reg) { return (reg >> 0) & 0x1; }
 
       constexpr uint32_t bit_mask = 0x1 << 0;
     }

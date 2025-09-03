@@ -28,8 +28,8 @@ namespace maple {
     constexpr inline uint32_t transfer_length(uint32_t num) { return (num & 0xff) << 0; }
   }
 
-  namespace receive_data_storage_address {
-    constexpr inline uint32_t address(uint32_t num) { return (num & 0x1fffffff) << 0; }
+  namespace receive_data_address {
+    constexpr uint32_t mask = 0x1fffffff << 0;
   }
 
   namespace ap {
