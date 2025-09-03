@@ -9,6 +9,8 @@
 #include <math.h>
 #include <errno.h>
 #include <unistd.h>
+#include <fcntl.h>
+#include <termios.h>
 
 #include <ftdi.h>
 #include <libusb.h>
@@ -612,7 +614,27 @@ void do_console(struct ftdi_context * ftdi)
 
   uint8_t read_buf[ftdi->readbuffer_chunksize];
 
+  int status = fcntl(STDIN_FILENO, F_GETFL);
+  assert(status >= 0);
+
+  fcntl(STDIN_FILENO, F_SETFL, status | O_NONBLOCK);
+
+  struct termios tio;
+
+  tcgetattr(STDIN_FILENO, &tio);
+  tio.c_lflag &= (~ICANON) & (~ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &tio);
+
+  uint8_t buf[64];
+
   while (1) {
+
+    int read_length = read(STDIN_FILENO, buf, (sizeof (buf)));
+    if (read_length > 0) {
+      res = ftdi_write_data(ftdi, buf, read_length);
+      assert(res == read_length);
+    }
+
     res = ftdi_read_data(ftdi, read_buf, ftdi->readbuffer_chunksize);
     if (res < 0) {
       fprintf(stderr, "ftdi_read_data: %s\n", ftdi_get_error_string(ftdi));
