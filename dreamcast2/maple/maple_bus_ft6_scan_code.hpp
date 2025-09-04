@@ -133,7 +133,7 @@ namespace maple::ft6::scan_code {
     [scan_code::esc] = { 0, 0 },
     [scan_code::backspace] = { 0, 0 },
     [scan_code::tab] = { 0, 0 },
-    [scan_code::spacebar] = { 0, 0 },
+    [scan_code::spacebar] = { ' ', ' ' },
     [scan_code::minus_underscore] = { '-', '_' },
     [scan_code::equal_plus] = { '=', '+' },
     [scan_code::bracketleft_braceleft] = { '[', '{' },
@@ -148,4 +148,3 @@ namespace maple::ft6::scan_code {
     [scan_code::slash_question] = { '/', '?' },
   };
 }
-

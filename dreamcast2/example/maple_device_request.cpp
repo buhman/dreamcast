@@ -24,6 +24,14 @@
  */
 void maple_dma_start(void * command_buf)
 {
+  // write back operand cache blocks for command buffer prior to starting DMA
+  for (uint32_t i = 0; i < align_32byte(send_size) / 32; i++) {
+    asm volatile ("ocbwb @%0"
+                  :
+                  : "r" (reinterpret_cast<uint32_t>(((uint32_t)command_buf) + 32 * i))
+                  );
+  }
+
   using systembus::maple_if;
   using systembus::systembus;
   using namespace maple;
@@ -76,6 +84,14 @@ void maple_dma_start(void * command_buf)
 
   // start Maple DMA (completes asynchronously)
   maple_if.MDST = mdst::start_status::start;
+
+  // write back operand cache blocks for command buffer prior to starting DMA
+  for (uint32_t i = 0; i < align_32byte(recv_size) / 32; i++) {
+    asm volatile ("ocbi @%0"
+                  :
+                  : "r" (reinterpret_cast<uint32_t>(((uint32_t)response_buf) + 32 * i))
+                  );
+  }
 }
 
 void maple_dma_wait_complete()

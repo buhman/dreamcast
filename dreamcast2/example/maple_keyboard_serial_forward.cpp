@@ -5,10 +5,14 @@
 #include "maple/maple_host.hpp"
 #include "maple/maple_bus_commands.hpp"
 #include "maple/maple_bus_bits.hpp"
-#include "maple/maple_bus_ft0.hpp"
+#include "maple/maple_bus_ft6.hpp"
+#include "maple/maple_bus_ft6_scan_code.hpp"
 
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
+
+#include "holly/holly.hpp"
+#include "holly/holly_bits.hpp"
 
 static inline void character(const char c)
 {
@@ -213,7 +217,7 @@ void main()
   };
   static_assert((sizeof (requests)) == (sizeof (maple::host_command<maple::device_request::data_fields>)) + (sizeof (maple::host_command<maple::get_condition::data_fields>)));
 
-  using maple__data_transfer = maple::data_transfer<maple::ft0::data_transfer::data_format>;
+  using maple__data_transfer = maple::data_transfer<maple::ft6::data_transfer::data_format>;
 
   struct responses {
     maple::host_response<maple::device_status::data_fields> device_status;
@@ -228,7 +232,7 @@ void main()
   maple_device_request<maple::device_request, maple::device_status>(&requests->device_request, &responses->device_status);
   maple_device_request<maple::get_condition, maple__data_transfer>(&requests->get_condition, &responses->data_transfer, true);
 
-  requests->get_condition.data.function_type = bswap32(maple::function_type::controller);
+  requests->get_condition.data.function_type = bswap32(maple::function_type::keyboard);
 
   systembus::systembus.ISTERR = 0xffffffff;
 
@@ -321,20 +325,113 @@ void main()
   string("    function_type: ");
   print_base16(bswap32(data_transfer.function_type), 8); character('\n');
   string("    data:\n");
-  string("      digital_button: ");
-  print_base16(bswap16(data_transfer.data.digital_button), 4); character('\n');
-  string("      analog_coordinate_axis[0]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[0], 2); character('\n');
-  string("      analog_coordinate_axis[1]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[1], 2); character('\n');
-  string("      analog_coordinate_axis[2]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[2], 2); character('\n');
-  string("      analog_coordinate_axis[3]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[3], 2); character('\n');
-  string("      analog_coordinate_axis[4]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[4], 2); character('\n');
-  string("      analog_coordinate_axis[5]: ");
-  print_base16(data_transfer.data.analog_coordinate_axis[5], 2); character('\n');
+  string("      modifier_key: ");
+  print_base16(data_transfer.data.modifier_key, 2); character('\n');
+  string("      led_state: ");
+  print_base16(data_transfer.data.led_state, 2); character('\n');
+  string("      scan_code_array[0]: ");
+  print_base16(data_transfer.data.scan_code_array[0], 2); character('\n');
+  string("      scan_code_array[1]: ");
+  print_base16(data_transfer.data.scan_code_array[1], 2); character('\n');
+  string("      scan_code_array[2]: ");
+  print_base16(data_transfer.data.scan_code_array[2], 2); character('\n');
+  string("      scan_code_array[3]: ");
+  print_base16(data_transfer.data.scan_code_array[3], 2); character('\n');
+  string("      scan_code_array[4]: ");
+  print_base16(data_transfer.data.scan_code_array[4], 2); character('\n');
+  string("      scan_code_array[5]: ");
+  print_base16(data_transfer.data.scan_code_array[5], 2); character('\n');
+
+  uint8_t scan_code_array[6];
+
+  for (int i = 0; i < 6; i++) {
+    scan_code_array[i] = data_transfer.data.scan_code_array[i];
+  }
+
+  {
+    using namespace systembus;
+    using namespace maple;
+
+    maple_if.MDEN = mden::dma_enable::abort;
+    while ((maple_if.MDST & mdst::start_status::bit_mask) != 0);
+
+    // clear Maple DMA end status
+    systembus::systembus.ISTNRM = istnrm::end_of_dma_maple_dma;
+
+    maple_if.MDTSEL = mdtsel::trigger_select::v_blank_initiation;
+
+    maple_if.MDAPRO = mdapro::security_code
+                    | mdapro::top_address(0x40)
+                    | mdapro::bottom_address(0x7f);
+
+    maple_if.MDSTAR = mdstar::table_address((uint32_t)(&requests->get_condition));
+
+    maple_if.MDEN = mden::dma_enable::enable;
+  }
+
+  while (1) {
+    for (uint32_t i = 0; i < align_32byte((sizeof (struct responses))) / 32; i++) {
+      asm volatile ("ocbi @%0"
+                    :
+                    : "r" (reinterpret_cast<uint32_t>(((uint32_t)recv_buf) + 32 * i))
+                    );
+    }
+
+    while ((systembus::systembus.ISTNRM & systembus::istnrm::v_blank_in) == 0);
+    systembus::systembus.ISTNRM = systembus::istnrm::v_blank_in;
+
+    asm volatile ("" ::: "memory");
+
+    /*
+    if (responses->device_status.header.command_code != maple::device_status::command_code) {
+      //string("device_status: invalid response or disconnected\n");
+      //print_base16(responses->data_transfer.header.command_code, 2);
+      //character('\n');
+      //string("   ");
+      continue;
+    }
+    */
+
+    if (responses->data_transfer.header.command_code != maple__data_transfer::command_code) {
+      //string("data_transfer: invalid response or disconnected\n");
+      //print_base16(responses->data_transfer.header.command_code, 2);
+      //character('\n');
+      //string("   ");
+      continue;
+    }
+
+    bool rollover = data_transfer.data.scan_code_array[5] == maple::ft6::scan_code::rollover_error;
+    if (rollover)
+      string("rollover error\n");
+    for (int i = 5; i >= 0; i--) {
+      if (data_transfer.data.scan_code_array[i] == maple::ft6::scan_code::no_operation)
+        continue;
+
+      bool make = true;
+      for (int j = 0; j < 6; j++) {
+        if (scan_code_array[j] == data_transfer.data.scan_code_array[i]) {
+          make = false;
+          break;
+        }
+      }
+      if (!make)
+        continue;
+
+      //print_base16(data_transfer.data.scan_code_array[i], 2); character('\n');
+      //for (int j = 0; j < 6; j++) {
+      //print_base16(data_transfer.data.scan_code_array[j], 2); character(' ');
+      //}
+      //character('\n');
+      bool lshift = (maple::ft6::data_transfer::modifier_key::left_shift() & data_transfer.data.modifier_key) != 0;
+      bool rshift = (maple::ft6::data_transfer::modifier_key::right_shift() & data_transfer.data.modifier_key) != 0;
+      bool shift = lshift || rshift;
+      character(maple::ft6::scan_code::code_point[data_transfer.data.scan_code_array[i]][shift]);
+    }
+
+    for (int i = 0; i < 6; i++) {
+      scan_code_array[i] = data_transfer.data.scan_code_array[i];
+    }
+  }
 
   string("   ");
 }

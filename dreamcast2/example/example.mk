@@ -105,3 +105,9 @@ MAPLE_GET_CONDITION_OBJ = \
 
 example/maple_get_condition.elf: LDSCRIPT = $(LIB)/main.lds
 example/maple_get_condition.elf: $(START_OBJ) $(MAPLE_GET_CONDITION_OBJ)
+
+MAPLE_KEYBOARD_SERIAL_FORWARD_OBJ = \
+	example/maple_keyboard_serial_forward.o
+
+example/maple_keyboard_serial_forward.elf: LDSCRIPT = $(LIB)/main.lds
+example/maple_keyboard_serial_forward.elf: $(START_OBJ) $(MAPLE_KEYBOARD_SERIAL_FORWARD_OBJ)
