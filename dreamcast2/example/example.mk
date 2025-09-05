@@ -59,6 +59,13 @@ SUZANNE_TRIANGLE_STRIPS_OBJ = \
 example/suzanne_triangle_strips.elf: LDSCRIPT = $(LIB)/main.lds
 example/suzanne_triangle_strips.elf: $(START_OBJ) $(SUZANNE_TRIANGLE_STRIPS_OBJ)
 
+DEFERRED_SHADING_OBJ = \
+	holly/core/region_array.o \
+	example/deferred_shading.o
+
+example/deferred_shading.elf: LDSCRIPT = $(LIB)/main.lds
+example/deferred_shading.elf: $(START_OBJ) $(DEFERRED_SHADING_OBJ)
+
 TETRAHEDRON_OBJ = \
 	holly/core/region_array.o \
 	example/tetrahedron.o
