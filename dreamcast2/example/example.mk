@@ -52,6 +52,13 @@ CUBE_TA_FULLSCREEN_TEXTURED_OBJ = \
 example/cube_ta_fullscreen_textured.elf: LDSCRIPT = $(LIB)/main.lds
 example/cube_ta_fullscreen_textured.elf: $(START_OBJ) $(CUBE_TA_FULLSCREEN_TEXTURED_OBJ)
 
+SUZANNE_TRIANGLE_STRIPS_OBJ = \
+	holly/core/region_array.o \
+	example/suzanne_triangle_strips.o
+
+example/suzanne_triangle_strips.elf: LDSCRIPT = $(LIB)/main.lds
+example/suzanne_triangle_strips.elf: $(START_OBJ) $(SUZANNE_TRIANGLE_STRIPS_OBJ)
+
 TETRAHEDRON_OBJ = \
 	holly/core/region_array.o \
 	example/tetrahedron.o

@@ -12,8 +12,68 @@
 #include "holly/holly_bits.hpp"
 
 #include "sh7091/sh7091.hpp"
+#include "sh7091/sh7091_bits.hpp"
 #include "sh7091/pref.hpp"
 #include "sh7091/store_queue_transfer.hpp"
+
+#include "systembus/systembus.hpp"
+#include "systembus/systembus_bits.hpp"
+
+static inline void character(const char c)
+{
+  using sh7091::sh7091;
+  using namespace sh7091;
+
+  // set the transmit trigger to `1 byte`--this changes the behavior of TDFE
+  sh7091.SCIF.SCFCR2 = scif::scfcr2::ttrg::trigger_on_1_bytes;
+
+  // wait for transmit fifo to become partially empty
+  while ((sh7091.SCIF.SCFSR2 & scif::scfsr2::tdfe::bit_mask) == 0);
+
+  // unset tdfe bit
+  sh7091.SCIF.SCFSR2 = (uint16_t)(~scif::scfsr2::tdfe::bit_mask);
+
+  sh7091.SCIF.SCFTDR2 = c;
+}
+
+static void string(const char * s)
+{
+  while (*s != 0) {
+    character(*s++);
+  }
+}
+
+static void print_base16(uint32_t n, int len)
+{
+  char buf[len];
+  char * bufi = &buf[len - 1];
+
+  while (bufi >= buf) {
+    uint32_t nib = n & 0xf;
+    n = n >> 4;
+    if (nib > 9) {
+      nib += (97 - 10);
+    } else {
+      nib += (48 - 0);
+    }
+
+    *bufi = nib;
+    bufi -= 1;
+  }
+
+  for (int i = 0; i < len; i++) {
+    character(buf[i]);
+  }
+}
+
+struct vec3 {
+  float x;
+  float y;
+  float z;
+};
+
+#include "model/suzanne.h"
+//#include "model/icosphere.h"
 
 void transfer_background_polygon(uint32_t isp_tsp_parameter_start)
 {
@@ -35,17 +95,17 @@ void transfer_background_polygon(uint32_t isp_tsp_parameter_start)
   polygon->vertex[0].x =  0.0f;
   polygon->vertex[0].y =  0.0f;
   polygon->vertex[0].z =  0.00001f;
-  polygon->vertex[0].base_color = 0xff00ff;
+  polygon->vertex[0].base_color = 0x000000;
 
   polygon->vertex[1].x = 32.0f;
   polygon->vertex[1].y =  0.0f;
   polygon->vertex[1].z =  0.00001f;
-  polygon->vertex[1].base_color = 0xff00ff;
+  polygon->vertex[1].base_color = 0x000000;
 
   polygon->vertex[2].x = 32.0f;
   polygon->vertex[2].y = 32.0f;
   polygon->vertex[2].z =  0.00001f;
-  polygon->vertex[2].base_color = 0xff00ff;
+  polygon->vertex[2].base_color = 0x000000;
 }
 
 static inline uint32_t transfer_ta_global_end_of_list(uint32_t store_queue_ix)
@@ -67,7 +127,7 @@ static inline uint32_t transfer_ta_global_end_of_list(uint32_t store_queue_ix)
   return store_queue_ix;
 }
 
-static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint32_t texture_address)
+static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix)
 {
   using namespace holly::core::parameter;
   using namespace holly::ta;
@@ -82,8 +142,7 @@ static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint3
 
   polygon->parameter_control_word = parameter_control_word::para_type::polygon_or_modifier_volume
                                   | parameter_control_word::list_type::opaque
-                                  | parameter_control_word::col_type::packed_color
-                                  | parameter_control_word::texture;
+                                  | parameter_control_word::col_type::floating_color;
 
   polygon->isp_tsp_instruction_word = isp_tsp_instruction_word::depth_compare_mode::greater
                                     | isp_tsp_instruction_word::culling_mode::no_culling;
@@ -94,15 +153,9 @@ static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint3
 
   polygon->tsp_instruction_word = tsp_instruction_word::src_alpha_instr::one
                                 | tsp_instruction_word::dst_alpha_instr::zero
-                                | tsp_instruction_word::fog_control::no_fog
-                                | tsp_instruction_word::filter_mode::point_sampled
-                                | tsp_instruction_word::texture_shading_instruction::decal
-                                | tsp_instruction_word::texture_u_size::_256
-                                | tsp_instruction_word::texture_v_size::_256;
+                                | tsp_instruction_word::fog_control::no_fog;
 
-  polygon->texture_control_word = texture_control_word::pixel_format::rgb565
-                                | texture_control_word::scan_order::non_twiddled
-                                | texture_control_word::texture_address(texture_address / 8);
+  polygon->texture_control_word = 0;
 
   // start store queue transfer of `polygon` to the TA
   pref(polygon);
@@ -110,132 +163,7 @@ static inline uint32_t transfer_ta_global_polygon(uint32_t store_queue_ix, uint3
   return store_queue_ix;
 }
 
-static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
-                                                   float ax, float ay, float az, float au, float av, uint32_t ac,
-                                                   float bx, float by, float bz, float bu, float bv, uint32_t bc,
-                                                   float cx, float cy, float cz, float cu, float cv, uint32_t cc)
-{
-  using namespace holly::ta;
-  using namespace holly::ta::parameter;
-
-  //
-  // TA polygon vertex transfer
-  //
-
-  volatile vertex_parameter::polygon_type_3 * vertex = (volatile vertex_parameter::polygon_type_3 *)&store_queue[store_queue_ix];
-  store_queue_ix += (sizeof (vertex_parameter::polygon_type_3)) * 3;
-
-  // bottom left
-  vertex[0].parameter_control_word = parameter_control_word::para_type::vertex_parameter;
-  vertex[0].x = ax;
-  vertex[0].y = ay;
-  vertex[0].z = az;
-  vertex[0].u = au;
-  vertex[0].v = av;
-  vertex[0].base_color = ac;
-  vertex[0].offset_color = 0;
-
-  // start store queue transfer of `vertex[0]` to the TA
-  pref(&vertex[0]);
-
-  // top center
-  vertex[1].parameter_control_word = parameter_control_word::para_type::vertex_parameter;
-  vertex[1].x = bx;
-  vertex[1].y = by;
-  vertex[1].z = bz;
-  vertex[1].u = bu;
-  vertex[1].v = bv;
-  vertex[1].base_color = bc;
-  vertex[1].offset_color = 0;
-
-  // start store queue transfer of `vertex[1]` to the TA
-  pref(&vertex[1]);
-
-  // bottom right
-  vertex[2].parameter_control_word = parameter_control_word::para_type::vertex_parameter
-                                   | parameter_control_word::end_of_strip;
-  vertex[2].x = cx;
-  vertex[2].y = cy;
-  vertex[2].z = cz;
-  vertex[2].u = cu;
-  vertex[2].v = cv;
-  vertex[2].base_color = cc;
-  vertex[2].offset_color = 0;
-
-  // start store queue transfer of `params[2]` to the TA
-  pref(&vertex[2]);
-
-  return store_queue_ix;
-}
-
-/*
-  These vertex and face definitions are a trivial transformation of the default
-  Blender cube, as exported by the .obj exporter (with triangulation enabled).
- */
-struct vec3 {
-  float x;
-  float y;
-  float z;
-};
-
-struct vec2 {
-  float u;
-  float v;
-};
-
-static const vec3 cube_vertex_position[] = {
-  {  1.0f,  1.0f, -1.0f },
-  {  1.0f, -1.0f, -1.0f },
-  {  1.0f,  1.0f,  1.0f },
-  {  1.0f, -1.0f,  1.0f },
-  { -1.0f,  1.0f, -1.0f },
-  { -1.0f, -1.0f, -1.0f },
-  { -1.0f,  1.0f,  1.0f },
-  { -1.0f, -1.0f,  1.0f },
-};
-
-static const vec2 cube_vertex_texture[] = {
-  { 1.0f, 0.0f },
-  { 0.0f, 1.0f },
-  { 0.0f, 0.0f },
-  { 1.0f, 1.0f },
-};
-
-struct position_texture {
-  int position;
-  int texture;
-};
-
-struct face {
-  position_texture a;
-  position_texture b;
-  position_texture c;
-};
-
-/*
-  It is also possible to submit each cube face as a 4-vertex triangle strip, or
-  submit the entire cube as a single triangle strip.
-
-  Separate 3-vertex triangles are chosen to make this example more
-  straightforward, but this is not the best approach if high performance is
-  desired.
- */
-static const face cube_faces[] = {
-  {{4, 0}, {2, 1}, {0, 2}},
-  {{2, 0}, {7, 1}, {3, 2}},
-  {{6, 0}, {5, 1}, {7, 2}},
-  {{1, 0}, {7, 1}, {5, 2}},
-  {{0, 0}, {3, 1}, {1, 2}},
-  {{4, 0}, {1, 1}, {5, 2}},
-  {{4, 0}, {6, 3}, {2, 1}},
-  {{2, 0}, {6, 3}, {7, 1}},
-  {{6, 0}, {4, 3}, {5, 1}},
-  {{1, 0}, {3, 3}, {7, 1}},
-  {{0, 0}, {2, 3}, {3, 1}},
-  {{4, 0}, {0, 3}, {1, 1}},
-};
-static const int cube_faces_length = (sizeof (cube_faces)) / (sizeof (cube_faces[0]));
-
+#define abs(n) __builtin_abs(n)
 #define cos(n) __builtin_cosf(n)
 #define sin(n) __builtin_sinf(n)
 
@@ -243,7 +171,7 @@ static float theta = 0;
 
 static inline vec3 vertex_rotate(vec3 v)
 {
-  // to make the cube's appearance more interesting, rotate the vertex on two
+  // to make the models's appearance more interesting, rotate the vertex on two
   // axes
 
   float x0 = v.x;
@@ -263,7 +191,7 @@ static inline vec3 vertex_rotate(vec3 v)
 
 static inline vec3 vertex_perspective_divide(vec3 v)
 {
-  float w = 1.0f / (v.z + 3.0f);
+  float w = 1.0f / (v.z + 2.0f);
   return (vec3){v.x * w, v.y * w, w};
 }
 
@@ -276,7 +204,105 @@ static inline vec3 vertex_screen_space(vec3 v)
   };
 }
 
-void transfer_ta_cube(uint32_t texture_address)
+static inline uint32_t transfer_ta_vertex_triangle(uint32_t store_queue_ix,
+                                                   float x, float y, float z,
+                                                   float r, float g, float b,
+                                                   bool end_of_strip)
+{
+  using namespace holly::ta;
+  using namespace holly::ta::parameter;
+
+  //
+  // TA polygon vertex transfer
+  //
+
+  volatile vertex_parameter::polygon_type_1 * vertex = (volatile vertex_parameter::polygon_type_1 *)&store_queue[store_queue_ix];
+  store_queue_ix += (sizeof (vertex_parameter::polygon_type_1)) * 1;
+
+  vertex[0].parameter_control_word = parameter_control_word::para_type::vertex_parameter
+                                   | (end_of_strip ? parameter_control_word::end_of_strip : 0);
+  vertex[0].x = x;
+  vertex[0].y = y;
+  vertex[0].z = z;
+  vertex[0].base_color_alpha = 1.0;
+  vertex[0].base_color_r = r;
+  vertex[0].base_color_g = g;
+  vertex[0].base_color_b = b;
+
+  pref(vertex);
+
+  return store_queue_ix;
+}
+
+static const vec3 colors[] = {
+  { 1.0, 0.0, 0.0 },
+  { 1.0, 0.5454545454545454, 0.0 },
+  { 0.9090909090909092, 1.0, 0.0 },
+  { 0.36363636363636376, 1.0, 0.0 },
+  { 0.0, 1.0, 0.18181818181818166 },
+  { 0.0, 1.0, 0.7272727272727271 },
+  { 0.0, 0.7272727272727275, 1.0 },
+  { 0.0, 0.18181818181818166, 1.0 },
+  { 0.3636363636363633, 0.0, 1.0 },
+  { 0.9090909090909092, 0.0, 1.0 },
+  { 1.0, 0.0, 0.5454545454545459 },
+  { 1.0, 0.0, 0.0 },
+  { 0.8500000000000001, 0.0, 0.0 },
+  { 0.8500000000000001, 0.4636363636363636, 0.0 },
+  { 0.7727272727272729, 0.8500000000000001, 0.0 },
+  { 0.30909090909090925, 0.8500000000000001, 0.0 },
+  { 0.0, 0.8500000000000001, 0.15454545454545443 },
+  { 0.0, 0.8500000000000001, 0.618181818181818 },
+  { 0.0, 0.6181818181818185, 0.8500000000000001 },
+  { 0.0, 0.15454545454545443, 0.8500000000000001 },
+  { 0.30909090909090886, 0.0, 0.8500000000000001 },
+  { 0.7727272727272729, 0.0, 0.8500000000000001 },
+  { 0.8500000000000001, 0.0, 0.463636363636364 },
+  { 0.8500000000000001, 0.0, 0.0 },
+  { 0.7, 0.0, 0.0 },
+  { 0.7, 0.3818181818181818, 0.0 },
+  { 0.6363636363636364, 0.7, 0.0 },
+  { 0.25454545454545463, 0.7, 0.0 },
+  { 0.0, 0.7, 0.12727272727272715 },
+  { 0.0, 0.7, 0.5090909090909089 },
+  { 0.0, 0.5090909090909093, 0.7 },
+  { 0.0, 0.12727272727272715, 0.7 },
+  { 0.2545454545454543, 0.0, 0.7 },
+  { 0.6363636363636364, 0.0, 0.7 },
+  { 0.7, 0.0, 0.38181818181818206 },
+  { 0.7, 0.0, 0.0 },
+  { 0.55, 0.0, 0.0 },
+  { 0.55, 0.3, 0.0 },
+  { 0.5000000000000001, 0.55, 0.0 },
+  { 0.2000000000000001, 0.55, 0.0 },
+  { 0.0, 0.55, 0.09999999999999992 },
+  { 0.0, 0.55, 0.3999999999999999 },
+  { 0.0, 0.4000000000000002, 0.55 },
+  { 0.0, 0.09999999999999992, 0.55 },
+  { 0.19999999999999984, 0.0, 0.55 },
+  { 0.5000000000000001, 0.0, 0.55 },
+  { 0.55, 0.0, 0.30000000000000027 },
+  { 0.55, 0.0, 0.0 },
+  { 0.39999999999999997, 0.0, 0.0 },
+  { 0.39999999999999997, 0.21818181818181814, 0.0 },
+  { 0.36363636363636365, 0.39999999999999997, 0.0 },
+  { 0.1454545454545455, 0.39999999999999997, 0.0 },
+  { 0.0, 0.39999999999999997, 0.07272727272727265 },
+  { 0.0, 0.39999999999999997, 0.2909090909090908 },
+  { 0.0, 0.290909090909091, 0.39999999999999997 },
+  { 0.0, 0.07272727272727265, 0.39999999999999997 },
+  { 0.1454545454545453, 0.0, 0.39999999999999997 },
+  { 0.36363636363636365, 0.0, 0.39999999999999997 },
+  { 0.39999999999999997, 0.0, 0.21818181818181834 },
+  { 0.39999999999999997, 0.0, 0.0 },
+  { 0.25, 0.0, 0.0 },
+  { 0.25, 0.13636363636363635, 0.0 },
+  { 0.2272727272727273, 0.25, 0.0 },
+  { 0.09090909090909094, 0.25, 0.0 },
+};
+static const int strips_length = (sizeof (strips)) / (sizeof (strips[0]));
+
+void transfer_ta_strips()
 {
   {
     using namespace sh7091;
@@ -289,60 +315,32 @@ void transfer_ta_cube(uint32_t texture_address)
 
   uint32_t store_queue_ix = 0;
 
-  store_queue_ix = transfer_ta_global_polygon(store_queue_ix, texture_address);
+  store_queue_ix = transfer_ta_global_polygon(store_queue_ix);
 
-  for (int face_ix = 0; face_ix < cube_faces_length; face_ix++) {
-    int ipa = cube_faces[face_ix].a.position;
-    int ipb = cube_faces[face_ix].b.position;
-    int ipc = cube_faces[face_ix].c.position;
+  int color_ix = 0;
 
-    vec3 vpa = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipa])));
+  for (int strip_ix = 0; strip_ix < strips_length; strip_ix++) {
+    int vertex_ix = strips[strip_ix];
 
-    vec3 vpb = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipb])));
+    vec3 vp = vertex_screen_space(
+                vertex_perspective_divide(
+                  vertex_rotate(vertices[abs(vertex_ix)])));
 
-    vec3 vpc = vertex_screen_space(
-                 vertex_perspective_divide(
-                   vertex_rotate(cube_vertex_position[ipc])));
+    const vec3& c = colors[color_ix];
 
-    int ita = cube_faces[face_ix].a.texture;
-    int itb = cube_faces[face_ix].b.texture;
-    int itc = cube_faces[face_ix].c.texture;
-
-    vec2 vta = cube_vertex_texture[ita];
-    vec2 vtb = cube_vertex_texture[itb];
-    vec2 vtc = cube_vertex_texture[itc];
-
-    // vertex color is irrelevant in "decal" mode
-    uint32_t va_color = 0;
-    uint32_t vb_color = 0;
-    uint32_t vc_color = 0;
+    bool end_of_strip = vertex_ix < 0;
 
     store_queue_ix = transfer_ta_vertex_triangle(store_queue_ix,
-                                                 vpa.x, vpa.y, vpa.z, vta.u, vta.v, va_color,
-                                                 vpb.x, vpb.y, vpb.z, vtb.u, vtb.v, vb_color,
-                                                 vpc.x, vpc.y, vpc.z, vtc.u, vtc.v, vc_color);
+                                                 vp.x, vp.y, vp.z,
+                                                 c.x, c.y, c.z,
+                                                 end_of_strip);
+
+    if (end_of_strip) {
+      color_ix = (color_ix + 1) % 64;
+    }
   }
 
   store_queue_ix = transfer_ta_global_end_of_list(store_queue_ix);
-}
-
-const uint8_t texture[] __attribute__((aligned(4))) = {
-  #embed "texture/pavement_256x256.rgb565"
-};
-
-void transfer_texture(uint32_t texture_start)
-{
-  // use 4-byte transfers to texture memory, for slightly increased transfer
-  // speed
-  //
-  // It would be even faster to use the SH4 store queue for this operation, or
-  // SH4 DMA.
-
-  sh7091::store_queue_transfer::copy((void *)&texture_memory64[texture_start], texture, (sizeof (texture)));
 }
 
 void main()
@@ -358,16 +356,13 @@ void main()
   uint32_t region_array_start      = 0x500000;
   uint32_t object_list_start       = 0x100000;
 
-  // these addresses are in "64-bit" texture memory address space:
-  uint32_t texture_start           = 0x700000;
-
   const int tile_y_num = 480 / 32;
   const int tile_x_num = 640 / 32;
 
   using namespace holly::core;
 
   region_array::list_block_size list_block_size = {
-    .opaque = 8 * 4,
+    .opaque = 32 * 4,
   };
 
   region_array::transfer(tile_x_num,
@@ -377,12 +372,6 @@ void main()
                          object_list_start);
 
   transfer_background_polygon(isp_tsp_parameter_start);
-
-  //////////////////////////////////////////////////////////////////////////////
-  // transfer the texture image to texture ram
-  //////////////////////////////////////////////////////////////////////////////
-
-  transfer_texture(texture_start);
 
   //////////////////////////////////////////////////////////////////////////////
   // configure the TA
@@ -408,7 +397,7 @@ void main()
   // can still have infinite length via "object pointer block links". This
   // mechanism is illustrated in DCDBSysArc990907E.pdf page 188.
   holly.TA_ALLOC_CTRL = ta_alloc_ctrl::opb_mode::increasing_addresses
-                      | ta_alloc_ctrl::o_opb::_8x4byte;
+                      | ta_alloc_ctrl::o_opb::_32x4byte;
 
   // While building object lists, the TA contains an internal index (exposed as
   // the read-only TA_ITP_CURRENT) for the next address that new ISP/TSP will be
@@ -434,6 +423,8 @@ void main()
   // >   example, the address specified here must not be the same as the address
   // >   in the TA_ISP_BASE register.
   holly.TA_OL_LIMIT = object_list_start + 0x100000 - 32;
+
+  holly.TA_NEXT_OPB_INIT = (object_list_start + 32 * 4 * tile_y_num * tile_x_num);
 
   //////////////////////////////////////////////////////////////////////////////
   // configure CORE
@@ -464,7 +455,7 @@ void main()
   holly.FB_R_SOF1 = framebuffer_start;
 
   // draw 500 frames of cube rotation
-  for (int i = 0; i < 500; i++) {
+  for (int i = 0; i < 5000; i++) {
     //////////////////////////////////////////////////////////////////////////////
     // transfer cube to texture memory via the TA polygon converter FIFO
     //////////////////////////////////////////////////////////////////////////////
@@ -477,7 +468,7 @@ void main()
     // step is required.
     (void)holly.TA_LIST_INIT;
 
-    transfer_ta_cube(texture_start);
+    transfer_ta_strips();
 
     //////////////////////////////////////////////////////////////////////////////
     // wait for vertical synchronization (and the TA)
@@ -492,12 +483,29 @@ void main()
 
     // start the actual render--the rendering process begins by interpreting the
     // region array
+    using systembus::systembus;
+    using namespace systembus;
+    systembus.ISTERR = 0xffffffff;
+
     holly.STARTRENDER = 1;
+
+    while ((systembus.ISTNRM & istnrm::end_of_render_tsp) == 0) {
+      if (systembus.ISTERR) {
+        string("ISTERR: ");
+        print_base16(systembus.ISTERR, 8);
+        string("\n    ");
+        return;
+      }
+    }
+    systembus.ISTNRM = istnrm::end_of_render_tsp
+                     | istnrm::end_of_render_isp
+                     | istnrm::end_of_render_video;
 
     // increment theta for the cube rotation animation
     // (used by the `vertex_rotate` function)
     theta += 0.01f;
   }
 
+  string("return\n    ");
   // return from main; this will effectively jump back to the serial loader
 }
