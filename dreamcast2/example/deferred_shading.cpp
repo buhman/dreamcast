@@ -67,9 +67,9 @@ static void print_base16(uint32_t n, int len)
 }
 
 #include "../../math/float_types.hpp"
-//#include "model/suzanne.h"
+#include "model/suzanne2.h"
 //#include "model/icosphere.h"
-#include "model/cube.h"
+//#include "model/cube.h"
 
 void transfer_background_polygon(uint32_t isp_tsp_parameter_start)
 {
@@ -188,7 +188,7 @@ static inline vec3 vertex_rotate(vec3 v)
 
 static inline vec3 vertex_perspective_divide(vec3 v)
 {
-  float w = 1.0f / (v.z + 2.5f);
+  float w = 1.0f / (v.z + 2.0f);
   return (vec3){v.x * w, v.y * w, w};
 }
 
@@ -250,38 +250,34 @@ static inline vec3 remap_normal(vec3 n)
   };
 }
 
-float pow(float f)
+static inline float pow(float f)
 {
   return __builtin_powf(f, 32);
 }
 
-vec3 lighting(vec3& FragPos, vec3& Normal)
+static inline float lighting(vec3& position, vec3& normal) __attribute__((always_inline));
+static inline float lighting(vec3& position, vec3& normal)
 {
-  vec3 lightColor = {1, 1, 1};
+  vec3 light_pos = {0, 0, -2};
 
-  vec3 lightPos = {0, 0, -2};
-
-  vec3 viewPos = {0, 0, -5};
+  vec3 view_pos = {0, 0, -5};
 
   // ambient
-  float ambientStrength = 0.1f;
-  vec3 ambient = ambientStrength * lightColor;
+  float ambient_strength = 0.1f;
 
   // diffuse
-  vec3 norm = normalize(Normal);
-  vec3 lightDir = normalize(lightPos - FragPos);
-  //vec3 lightDir = normalize(vec3(0, 0, 1));
-  float diff = max(dot(norm, lightDir), 0.0f);
-  vec3 diffuse = (diff * 0.8f) * lightColor;
+  float diffuse_strength = 0.8f;
+  vec3 norm = normalize(normal);
+  vec3 light_dir = normalize(light_pos - position);
+  float diffuse = max(dot(norm, light_dir), 0.0f);
 
   // specular
-  float specularStrength = 0.5f;
-  vec3 viewDir = normalize(viewPos - FragPos);
-  vec3 reflectDir = reflect(-lightDir, norm);
-  float spec = pow(max(dot(viewDir, reflectDir), 0.0f));
-  vec3 specular = specularStrength * spec * lightColor;
+  float specular_strength = 0.5f;
+  vec3 view_dir = normalize(view_pos - position);
+  vec3 reflect_dir = reflect(-light_dir, norm);
+  float specular = pow(max(dot(view_dir, reflect_dir), 0.0f));
 
-  vec3 intensity = ambient + diffuse + specular;
+  float intensity = ambient_strength + diffuse * diffuse_strength + specular * specular_strength;
 
   return intensity;
 }
@@ -318,7 +314,7 @@ void transfer_ta_strips()
 
     bool end_of_strip = vertex_ix < 0;
 
-    vec3 c = lighting(p, n);
+    float intensity = lighting(p, n);
 
     if constexpr (render_mode == 0) {
       store_queue_ix = transfer_ta_vertex_triangle(store_queue_ix,
@@ -340,7 +336,7 @@ void transfer_ta_strips()
       store_queue_ix = transfer_ta_vertex_triangle(store_queue_ix,
                                                    vp.x, vp.y, vp.z,
                                                    //remap(p.x), remap(p.y), remap(p.z),
-                                                   c.x, c.y, c.z,
+                                                   intensity, intensity, intensity,
                                                    //remap(n.x), remap(n.y), remap(n.z),
                                                    end_of_strip);
     }
@@ -360,7 +356,7 @@ static inline void assert(bool t)
   }
 }
 
-void ch1_dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
+static void ch1_dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
 {
   using namespace sh7091::dmac;
   using sh7091::sh7091;
@@ -377,6 +373,32 @@ void ch1_dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
   sh7091.DMAC.DMATCR1 = dmatcr::transfer_count(transfers);
 
   sh7091.DMAC.CHCR1 = chcr::dm::destination_address_incremented
+                    | chcr::sm::source_address_incremented
+                    | chcr::rs::resource_select(0b0100) /* auto request; external address space → external address space */
+                    | chcr::tm::cycle_burst_mode /* transmit mode */
+                  //| chcr::tm::cycle_steal_mode /* transmit mode */
+                    | chcr::ts::_32_byte           /* transfer size */
+                  //| chcr::ie::interrupt_request_generated
+                    | chcr::de::channel_operation_enabled;
+}
+
+static void ch3_dma_transfer(uint32_t source, uint32_t destination, uint32_t transfers)
+{
+  using namespace sh7091::dmac;
+  using sh7091::sh7091;
+
+  volatile uint32_t _dummy = sh7091.DMAC.CHCR3;
+  (void)_dummy;
+
+  sh7091.DMAC.CHCR3 = 0;
+
+  assert((((uint32_t)source) & 0b11111) == 0);
+  assert((((uint32_t)destination) & 0b11111) == 0);
+  sh7091.DMAC.SAR3 = source;
+  sh7091.DMAC.DAR3 = destination;
+  sh7091.DMAC.DMATCR3 = dmatcr::transfer_count(transfers);
+
+  sh7091.DMAC.CHCR3 = chcr::dm::destination_address_incremented
                     | chcr::sm::source_address_incremented
                     | chcr::rs::resource_select(0b0100) /* auto request; external address space → external address space */
                     | chcr::tm::cycle_burst_mode /* transmit mode */
@@ -425,7 +447,14 @@ static inline void wait_ta()
   using namespace systembus;
   using systembus::systembus;
 
-  while ((systembus.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0);
+  while ((systembus.ISTNRM & istnrm::end_of_transferring_opaque_list) == 0) {
+    if (systembus.ISTERR) {
+      string("wait ta ISTERR: ");
+      print_base16(systembus.ISTERR, 8);
+      string("\n    ");
+      return;
+    }
+  };
   systembus.ISTNRM = istnrm::end_of_transferring_opaque_list;
 }
 
@@ -436,13 +465,10 @@ static inline void wait_render()
 
   while ((systembus.ISTNRM & istnrm::end_of_render_tsp) == 0) {
     if (systembus.ISTERR) {
-      string("ISTERR: ");
+      string("wait render ISTERR: ");
       print_base16(systembus.ISTERR, 8);
       string("\n    ");
       return;
-    }
-    for (int i = 0; i < 10000; i++) {
-      asm volatile ("nop" ::: "memory");
     }
   }
   systembus.ISTNRM = istnrm::end_of_render_tsp
@@ -452,6 +478,143 @@ static inline void wait_render()
 
 static uint8_t tmp_buf0[640 * 480 * 4] __attribute__((aligned(32)));
 static uint8_t tmp_buf1[640 * 480 * 4] __attribute__((aligned(32)));
+
+static const uint32_t framebuffer_start[3]    = {0x000000, 0x12c000, 0x258000};
+static const uint32_t region_array_start      = 0x384000;
+static const uint32_t isp_tsp_parameter_start = 0x500000;
+static const uint32_t object_list_start       = 0x400000;
+
+static inline void deferred_shading_render(int frame_ix)
+{
+  using holly::holly;
+  using namespace holly;
+  using systembus::systembus;
+  using namespace systembus;
+
+  { // start transfer 0
+    if (frame_ix != 0)
+      while ((sh7091::sh7091.DMAC.CHCR1 & sh7091::dmac::chcr::te::transfers_completed) == 0);
+
+    uint32_t source = (uint32_t)&texture_memory32[framebuffer_start[0]];
+    ch1_dma_transfer(source, (uint32_t)tmp_buf0, (640 * 480 * 4) / 32);
+  }
+
+  { // start transfer 1
+    if (frame_ix != 0)
+      while ((sh7091::sh7091.DMAC.CHCR3 & sh7091::dmac::chcr::te::transfers_completed) == 0);
+
+    uint32_t source = (uint32_t)&texture_memory32[framebuffer_start[1]];
+    ch3_dma_transfer(source, (uint32_t)tmp_buf1, (640 * 480 * 4) / 32);
+  }
+
+  { // position
+    if (frame_ix != 0) {
+      wait_render();
+    }
+
+    holly.TA_LIST_INIT = ta_list_init::list_init;
+    (void)holly.TA_LIST_INIT;
+
+    transfer_ta_strips<0>();
+    wait_ta();
+    holly.FB_W_SOF1 = framebuffer_start[0];
+    systembus.ISTERR = 0xffffffff;
+    holly.STARTRENDER = 1;
+  }
+
+  { // invalidate buffers
+    for (int i = 0; i < 640 * 480 * 4 / 32; i++) {
+      ocbi(&tmp_buf0[i * 32]);
+      ocbi(&tmp_buf1[i * 32]);
+    }
+  }
+
+  { // normals
+    wait_render();
+
+    holly.TA_LIST_INIT = ta_list_init::list_init;
+    (void)holly.TA_LIST_INIT;
+
+    transfer_ta_strips<1>();
+    wait_ta();
+    holly.FB_W_SOF1 = framebuffer_start[1];
+    systembus.ISTERR = 0xffffffff;
+    holly.STARTRENDER = 1;
+  }
+
+  if constexpr (1) {
+    for (int i = 0; i < 640 * 480; i++) {
+      if (i % 8 == 0) {
+        pref(&tmp_buf0[(i + 1) * 4 / 32]);
+        pref(&tmp_buf1[(i + 1) * 4 / 32]);
+      }
+
+      uint8_t p_b = tmp_buf0[i * 4 + 0];
+      uint8_t p_g = tmp_buf0[i * 4 + 1];
+      uint8_t p_r = tmp_buf0[i * 4 + 2];
+      if (p_b == 0 && p_g == 0 && p_r == 0)
+        continue;
+      vec3 p = {unremap(p_r), unremap(p_g), unremap(p_b)};
+
+      uint8_t n_b = tmp_buf1[i * 4 + 0];
+      uint8_t n_g = tmp_buf1[i * 4 + 1];
+      uint8_t n_r = tmp_buf1[i * 4 + 2];
+      vec3 n = {unremap(n_r), unremap(n_g), unremap(n_b)};
+
+      float intensity = lighting(p, n);
+      int color = intensity * 255.0f;
+      if (color > 255) color = 255;
+      if (color < 0) color = 0;
+
+      tmp_buf0[i * 4 + 0] = color;
+      tmp_buf0[i * 4 + 1] = color;
+      tmp_buf0[i * 4 + 2] = color;
+
+      //if (i % 8 == 7) {
+      //ocbp(&tmp_buf0[(i & (~7)) * 4 / 32]);
+      //}
+    }
+  }
+
+  //systembus.ISTNRM = istnrm::v_blank_in;
+  //while ((systembus.ISTNRM & istnrm::v_blank_in) == 0);
+
+  if (frame_ix != 0) {
+    while ((systembus.ISTNRM & istnrm::end_of_dma_ch2_dma) == 0);
+    systembus.ISTNRM = istnrm::end_of_dma_ch2_dma;
+  }
+
+  systembus.LMMODE0 = 1;
+  systembus.LMMODE1 = 1;
+  uint32_t destination = 0x11000000 + framebuffer_start[2];
+  ch2_dma_transfer((uint32_t)tmp_buf0, destination, (640 * 480 * 4) / 32);
+
+  holly.FB_R_SOF1 = framebuffer_start[2];
+}
+
+static inline void forward_shading_render(int frame_ix)
+{
+  using holly::holly;
+  using namespace holly;
+  using systembus::systembus;
+  using namespace systembus;
+
+  holly.TA_LIST_INIT = ta_list_init::list_init;
+  (void)holly.TA_LIST_INIT;
+
+  transfer_ta_strips<2>();
+  wait_ta();
+
+  holly.FB_W_SOF1 = framebuffer_start[frame_ix % 3];
+  systembus.ISTERR = 0xffffffff;
+  holly.STARTRENDER = 1;
+  wait_render();
+
+  systembus.ISTNRM = istnrm::v_blank_in;
+  while ((systembus.ISTNRM & istnrm::v_blank_in) == 0);
+
+  holly.FB_R_SOF1 = framebuffer_start[frame_ix % 3];
+}
 
 void main()
 {
@@ -474,11 +637,6 @@ void main()
     the ordering within texture memory is not significant, and could be
     anything
   */
-
-  uint32_t framebuffer_start[3]    = {0x000000, 0x12c000, 0x258000};
-  uint32_t region_array_start      = 0x384000;
-  uint32_t isp_tsp_parameter_start = 0x500000;
-  uint32_t object_list_start       = 0x400000;
 
   const int tile_y_num = 480 / 32;
   const int tile_x_num = 640 / 32;
@@ -588,121 +746,11 @@ void main()
     // transfer cube to texture memory via the TA polygon converter FIFO
     //////////////////////////////////////////////////////////////////////////////
 
-    // TA_LIST_INIT needs to be written (every frame) prior to the first FIFO
-    // write.
-    holly.TA_LIST_INIT = ta_list_init::list_init;
-
-    // dummy TA_LIST_INIT read; DCDBSysArc990907E.pdf in multiple places says this
-    // step is required.
-    (void)holly.TA_LIST_INIT;
-
-    /*
-    asm volatile ("" ::: "memory");
-
-    { // position
-      transfer_ta_strips<0>();
-      wait_ta();
-      holly.FB_W_SOF1 = framebuffer_start[0];
-      systembus.ISTERR = 0xffffffff;
-      holly.STARTRENDER = 1;
-      wait_render();
+    if constexpr (false) {
+      forward_shading_render(frame_ix);
+    } else {
+      deferred_shading_render(frame_ix);
     }
-
-    asm volatile ("" ::: "memory");
-
-    {
-      uint32_t source = (uint32_t)&texture_memory32[framebuffer_start[0]];
-      ch1_dma_transfer(source, (uint32_t)tmp_buf0, (640 * 480 * 4) / 32);
-      for (int i = 0; i < 640 * 480 * 4 / 32; i++) {
-        ocbi(&tmp_buf0[i * 32]);
-      }
-    }
-
-    asm volatile ("" ::: "memory");
-
-    { // normals
-      transfer_ta_strips<1>();
-      wait_ta();
-      holly.FB_W_SOF1 = framebuffer_start[1];
-      systembus.ISTERR = 0xffffffff;
-      holly.STARTRENDER = 1;
-      wait_render();
-    }
-
-    asm volatile ("" ::: "memory");
-
-    while ((sh7091::sh7091.DMAC.CHCR1 & sh7091::dmac::chcr::te::transfers_completed) == 0) {}
-
-    {
-      uint32_t source = (uint32_t)&texture_memory32[framebuffer_start[1]];
-      ch1_dma_transfer(source, (uint32_t)tmp_buf1, (640 * 480 * 4) / 32);
-      for (int i = 0; i < 640 * 480 * 4 / 32; i++) {
-        ocbi(&tmp_buf1[i * 32]);
-      }
-    }
-
-    while ((sh7091::sh7091.DMAC.CHCR1 & sh7091::dmac::chcr::te::transfers_completed) == 0) {}
-
-    for (int i = 0; i < 640 * 480; i++) {
-      if (i % 8 == 0) {
-        pref(&tmp_buf0[(i + 1) * 4 / 32]);
-        pref(&tmp_buf1[(i + 1) * 4 / 32]);
-      }
-
-      uint8_t p_b = tmp_buf0[i * 4 + 0];
-      uint8_t p_g = tmp_buf0[i * 4 + 1];
-      uint8_t p_r = tmp_buf0[i * 4 + 2];
-      if (p_b == 0 && p_g == 0 && p_r == 0)
-        continue;
-      vec3 p = {unremap(p_r), unremap(p_g), unremap(p_b)};
-
-      uint8_t n_b = tmp_buf1[i * 4 + 0];
-      uint8_t n_g = tmp_buf1[i * 4 + 1];
-      uint8_t n_r = tmp_buf1[i * 4 + 2];
-      if (n_b == 0 && n_g == 0 && n_r == 0)
-        continue;
-      vec3 n = {unremap(n_r), unremap(n_g), unremap(n_b)};
-
-      vec3 c = lighting(p, n);
-      int color = c.z * 255.0f;
-      if (color > 255) color = 255;
-      if (color < 0) color = 0;
-
-      tmp_buf0[i * 4 + 0] = color;
-      tmp_buf0[i * 4 + 1] = color;
-      tmp_buf0[i * 4 + 2] = color;
-
-      if (i % 8 == 7) {
-        ocbp(&tmp_buf0[(i & (~7)) * 4 / 32]);
-      }
-    }
-
-    systembus.ISTNRM = istnrm::v_blank_in;
-    while ((systembus.ISTNRM & istnrm::v_blank_in) == 0);
-
-    systembus.LMMODE0 = 1;
-    systembus.LMMODE1 = 1;
-    uint32_t destination = 0x11000000 + framebuffer_start[2];
-    ch2_dma_transfer((uint32_t)tmp_buf0, destination, (640 * 480 * 4) / 32);
-    while ((systembus.ISTNRM & istnrm::end_of_dma_ch2_dma) == 0);
-    systembus.ISTNRM = istnrm::end_of_dma_ch2_dma;
-
-    holly.FB_R_SOF1 = framebuffer_start[2];
-    */
-
-    { // color
-      transfer_ta_strips<2>();
-      wait_ta();
-      holly.FB_W_SOF1 = framebuffer_start[frame_ix % 3];
-      systembus.ISTERR = 0xffffffff;
-      holly.STARTRENDER = 1;
-      wait_render();
-    }
-
-    systembus.ISTNRM = istnrm::v_blank_in;
-    while ((systembus.ISTNRM & istnrm::v_blank_in) == 0);
-
-    holly.FB_R_SOF1 = framebuffer_start[frame_ix % 3];
 
     // increment theta for the cube rotation animation
     // (used by the `vertex_rotate` function)
