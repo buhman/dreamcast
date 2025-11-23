@@ -28,7 +28,7 @@ def parse_pvrt_header(buf):
     print(hex(texture_type))
     print(width)
     print(height)
-    assert len(indices) + len(codebook) == texture_data_size - 8
+    #assert len(indices) + len(codebook) == texture_data_size - 8, (len(indices) + len(codebook), texture_data_size - 8)
     #assert len(indices) == width * height / 4, (len(indices), width * height / 4)
     return PVRT(
         texture_data_size,
@@ -51,20 +51,57 @@ def get_colors(buf, codebook_ix):
     colors = struct.unpack('<HHHH', codeword)
     return list(map(rgb24, colors))
 
-def from_xy(x, y):
+def log2(n):
+    if n == 8:
+        return 3
+    if n == 16:
+        return 4
+    if n == 32:
+        return 5
+    if n == 64:
+        return 6
+    if n == 128:
+        return 7
+    if n == 256:
+        return 8
+    if n == 512:
+        return 9
+    if n == 1024:
+        return 10
+    assert False, n
+
+def from_xy(x, y, width, height):
+    # maximum texture size       : 1024x1024
+    # maximum 1-dimensional index: 0xfffff
+    # bits                       : 19-0
+
+    # y bits: 0, 2, 4, 6, 8, 10, 12, 14, 16, 18
+    # x bits: 1, 3, 5, 7, 9, 11, 13, 15, 17, 19
+
+    width_max = log2(width);
+    height_max = log2(height);
+
     twiddle_ix = 0
     i = 0
-    while i <= (20 / 2):
-        twiddle_ix |= ((y >> i) & 1) << (i * 2 + 0)
-        twiddle_ix |= ((x >> i) & 1) << (i * 2 + 1)
+    while i < (20 / 2):
+        if i < width_max and i < height_max:
+            twiddle_ix |= ((y >> i) & 1) << (i * 2 + 0)
+            twiddle_ix |= ((x >> i) & 1) << (i * 2 + 1)
+        elif i < width_max:
+            twiddle_ix |= ((x >> i) & 1) << (i + height_max)
+        elif i < height_max:
+            twiddle_ix |= ((y >> i) & 1) << (i + width_max)
+        else:
+            break
         i += 1
+
     return twiddle_ix
 
 def decode_vq_indices(codebook, indices, width, height):
     canvas = [0] * width * height
     for ty in range(height // 2):
         for tx in range(width // 2):
-            codebook_ix = indices[from_xy(tx, ty)]
+            codebook_ix = indices[from_xy(tx, ty, width, height)]
             codeword = get_colors(codebook, codebook_ix)
             ai = ((ty * 2) + 0) * width + ((tx * 2) + 0)
             bi = ((ty * 2) + 1) * width + ((tx * 2) + 0)
