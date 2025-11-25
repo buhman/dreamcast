@@ -11,23 +11,21 @@ class PVRT:
     texture_type: int
     width: int
     height: int
-    codebook: list[int]
-    indices: list[int]
+    data: list[int]
 
 def parse_pvrt_header(buf):
     header = buf[0:16]
-    codebook = buf[16:codebook_size + 16]
-    indices = buf[codebook_size + 16:]
+    #codebook = buf[16:codebook_size + 16]
+    #indices = buf[codebook_size + 16:]
+    data = buf[16:]
     assert len(header) == 16
-    assert len(codebook) == codebook_size
-
     assert header[0:4] == b"PVRT"
     unpacked = struct.unpack('<LLHH', header[4:])
     texture_data_size, texture_type, width, height = unpacked
-    print(texture_data_size)
-    print(hex(texture_type))
-    print(width)
-    print(height)
+    #print(texture_data_size)
+    #print("texture type", hex(texture_type))
+    #print(width)
+    #print(height)
     #assert len(indices) + len(codebook) == texture_data_size - 8, (len(indices) + len(codebook), texture_data_size - 8)
     #assert len(indices) == width * height / 4, (len(indices), width * height / 4)
     return PVRT(
@@ -35,8 +33,7 @@ def parse_pvrt_header(buf):
         texture_type,
         width,
         height,
-        codebook,
-        indices,
+        data,
     )
 
 def rgb24(color):
@@ -97,7 +94,9 @@ def from_xy(x, y, width, height):
 
     return twiddle_ix
 
-def decode_vq_indices(codebook, indices, width, height):
+def decode_vq_indices(data, width, height):
+    codebook = data[:codebook_size]
+    indices = data[codebook_size:]
     canvas = [0] * width * height
     for ty in range(height // 2):
         for tx in range(width // 2):
@@ -114,16 +113,29 @@ def decode_vq_indices(codebook, indices, width, height):
             canvas[di] = codeword[3]
     return canvas
 
+def decode_twiddled(data, width, height):
+    canvas = [0] * width * height
+    for y in range(height):
+        for x in range(width):
+            ix = from_xy(x, y, width, height) * 2
+            color, = struct.unpack("<H", data[ix:ix+2])
+            canvas[y * width + x] = rgb24(color)
+    return canvas
+
 in_filename = sys.argv[1]
 out_filename = sys.argv[2]
 
 with open(in_filename, 'rb') as f:
     buf = f.read()
 pvrt = parse_pvrt_header(buf)
-canvas = decode_vq_indices(pvrt.codebook, pvrt.indices, pvrt.width, pvrt.height)
-#canvas = decode_vq_indices(buf[:256 * 4 * 2], buf[256*4*2:], 256, 256)
-print(pvrt.texture_data_size, pvrt.texture_type, pvrt.width, pvrt.height)
+print(pvrt.texture_data_size, hex(pvrt.texture_type), pvrt.width, pvrt.height)
+if (pvrt.texture_type & 0xff00) == 0x300: # vq
+    canvas = decode_vq_indices(pvrt.data, pvrt.width, pvrt.height)
+elif (pvrt.texture_type & 0xff00) == 0x100: # twiddled
+    canvas = decode_twiddled(pvrt.data, pvrt.width, pvrt.height)
+else:
+    assert False, ("unsupported texture type:", hex(pvrt.texture_type))
+
 palimage = Image.new('RGB', (pvrt.width, pvrt.height))
-#palimage = Image.new('RGB', (256, 256))
 palimage.putdata(canvas)
 palimage.save(out_filename)
