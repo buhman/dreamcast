@@ -36,19 +36,39 @@ def parse_pvrt_header(buf):
         data,
     )
 
-def rgb24(color):
+def argb1555(color):
+    a = (color >> 15) & 1
+    r = (color >> 10) & 31
+    g = (color >> 5) & 31
+    b = (color >> 0) & 31
+    return r << 4, g << 4, b << 4, a * 255
+
+def rgb565(color):
     r = (color >> 11) & 31
     g = (color >> 5) & 63
     b = (color >> 0) & 31
     return r << 3, g << 2, b << 3
 
-def get_colors(buf, codebook_ix):
+def argb4444(color):
+    a = (color >> 12) & 15
+    r = (color >> 8) & 15
+    g = (color >> 4) & 15
+    b = (color >> 0) & 15
+    return r << 4, g << 4, b << 4, (a << 4) | 0b1111
+
+def get_colors(buf, codebook_ix, decode_pixel):
     codeword = buf[codebook_ix * 2 * 4:][:2 * 4]
     assert len(codeword) == 2 * 4
     colors = struct.unpack('<HHHH', codeword)
-    return list(map(rgb24, colors))
+    return list(map(decode_pixel, colors))
 
 def log2(n):
+    if n == 1:
+        return 0
+    if n == 2:
+        return 1
+    if n == 4:
+        return 2
     if n == 8:
         return 3
     if n == 16:
@@ -94,14 +114,18 @@ def from_xy(x, y, width, height):
 
     return twiddle_ix
 
-def decode_vq_indices(data, width, height):
-    codebook = data[:codebook_size]
-    indices = data[codebook_size:]
+def decode_vq_indices(data, offset, width, height, decode_pixel, detwiddle=True):
+    codebook = pvrt.data[:codebook_size]
+    indices = pvrt.data[codebook_size + offset:]
     canvas = [0] * width * height
     for ty in range(height // 2):
         for tx in range(width // 2):
-            codebook_ix = indices[from_xy(tx, ty, width, height)]
-            codeword = get_colors(codebook, codebook_ix)
+            if detwiddle:
+                index_ix = from_xy(tx, ty, width, height)
+            else:
+                index_ix = ty * (width // 2) + tx
+            codebook_ix = indices[index_ix]
+            codeword = get_colors(codebook, codebook_ix, decode_pixel)
             ai = ((ty * 2) + 0) * width + ((tx * 2) + 0)
             bi = ((ty * 2) + 1) * width + ((tx * 2) + 0)
             ci = ((ty * 2) + 0) * width + ((tx * 2) + 1)
@@ -113,29 +137,110 @@ def decode_vq_indices(data, width, height):
             canvas[di] = codeword[3]
     return canvas
 
-def decode_twiddled(data, width, height):
+def decode_twiddled(data, offset, width, height, decode_pixel):
     canvas = [0] * width * height
     for y in range(height):
         for x in range(width):
-            ix = from_xy(x, y, width, height) * 2
+            ix = offset + from_xy(x, y, width, height) * 2
             color, = struct.unpack("<H", data[ix:ix+2])
-            canvas[y * width + x] = rgb24(color)
+            canvas[y * width + x] = decode_pixel(color)
+    return canvas
+
+def decode_rectangular(data, offset, width, height, decode_pixel):
+    canvas = [0] * width * height
+    for y in range(height):
+        for x in range(width):
+            ix = offset + (y * width + x) * 2
+            try:
+                color, = struct.unpack("<H", data[ix:ix+2])
+            except Exception as e:
+                print(e)
+            canvas[y * width + x] = decode_pixel(color)
     return canvas
 
 in_filename = sys.argv[1]
 out_filename = sys.argv[2]
 
+def vq_mip_size(dim):
+    n = int(dim // 2)
+    if n < 1:
+        n = 1
+    return n * n
+
 with open(in_filename, 'rb') as f:
     buf = f.read()
 pvrt = parse_pvrt_header(buf)
 print(pvrt.texture_data_size, hex(pvrt.texture_type), pvrt.width, pvrt.height)
-if (pvrt.texture_type & 0xff00) == 0x300: # vq
-    canvas = decode_vq_indices(pvrt.data, pvrt.width, pvrt.height)
+print('texture_type', hex(pvrt.texture_type))
+
+pixel_format = pvrt.texture_type & 0xf
+decoders = {
+    0: argb1555,
+    1: rgb565,
+    2: argb4444,
+}
+if pixel_format not in decoders:
+    assert False, ("unsupported pixel format:", pixel_format)
+decode_pixel = decoders[pixel_format]
+
+def mm_vq(pvrt, func):
+    assert pvrt.width == pvrt.height
+    offsets = {
+        1: 0x00000,
+        2: 0x00001,
+        4: 0x00002,
+        8: 0x00006,
+        16: 0x00016,
+        32: 0x00056,
+        64: 0x00156,
+        128: 0x00556,
+        256: 0x01556,
+        512: 0x05556,
+        1024: 0x15556,
+    }
+    offset = offsets[pvrt.width]
+    print("offset", pvrt.width, hex(offset))
+    canvas = func(pvrt.data, offset, pvrt.width, pvrt.width, decode_pixel)
+    return canvas
+
+def mm(pvrt, func):
+    assert pvrt.width == pvrt.height
+    offsets = {
+        1: 0x00006,
+        2: 0x00008,
+        4: 0x00010,
+        8: 0x00030,
+        16: 0x000B0,
+        32: 0x002B0,
+        64: 0x00AB0,
+        128: 0x02AB0,
+        256: 0x0AAB0,
+        512: 0x2AAB0,
+        1024: 0xAAAB0,
+    }
+    offset = offsets[pvrt.width]
+    print("offset", pvrt.width, hex(offset))
+    canvas = func(pvrt.data, offset, pvrt.width, pvrt.width, decode_pixel)
+    return canvas
+
+if (pvrt.texture_type & 0xff00) == 0xa00: # rectangular mm
+    canvas = mm(pvrt, decode_rectangular)
+elif (pvrt.texture_type & 0xff00) == 0x900: # rectangular
+    canvas = decode_rectangular(pvrt.data, 0, pvrt.width, pvrt.height, decode_pixel)
+elif (pvrt.texture_type & 0xff00) == 0x400: # vq mm
+    canvas = mm_vq(pvrt, decode_vq_indices)
+elif (pvrt.texture_type & 0xff00) == 0x300: # vq
+    canvas = decode_vq_indices(pvrt.data, 0, pvrt.width, pvrt.height, decode_pixel)
+elif (pvrt.texture_type & 0xff00) == 0x200: # twiddled mm
+    canvas = mm(pvrt, decode_twiddled)
 elif (pvrt.texture_type & 0xff00) == 0x100: # twiddled
-    canvas = decode_twiddled(pvrt.data, pvrt.width, pvrt.height)
+    canvas = decode_twiddled(pvrt.data, 0, pvrt.width, pvrt.height, decode_pixel)
 else:
     assert False, ("unsupported texture type:", hex(pvrt.texture_type))
 
-palimage = Image.new('RGB', (pvrt.width, pvrt.height))
+if pixel_format in {0, 2}: # argb1555, argb4444
+    palimage = Image.new('RGBA', (pvrt.width, pvrt.height))
+else:
+    palimage = Image.new('RGB', (pvrt.width, pvrt.height))
 palimage.putdata(canvas)
 palimage.save(out_filename)
