@@ -396,7 +396,7 @@ int do_reset(struct ftdi_context * ftdi)
   int res;
 
   for (int i = 0; i < 2; i++) {
-    timespec t = {.tv_sec = 0, .tv_nsec = 33000 * 2 };
+    timespec t = {.tv_sec = 0, .tv_nsec = (int)(33000.0 * 2) };
 
     // toggle ACBUS5 low (g reset asserted)
     uint8_t bitmask1 = (0b0001 << 4) | (0b0001 << 0);
@@ -655,12 +655,15 @@ int do_maple_raw(struct ftdi_context * ftdi,
 {
   int res;
 
+  assert(send_size <= 1024);
+  assert(recv_size <= 1024);
+
   union serial_load::command_reply command = serial_load::command::maple_raw(send_size, recv_size);
   //dump_command_reply(command);
   res = ftdi_write_data(ftdi, command.u8, (sizeof (command)));
   assert(res == (sizeof (command)));
   union serial_load::command_reply reply;
-  fprintf(stderr, "maple_raw: wait maple_raw reply\n");
+  //fprintf(stderr, "maple_raw: wait maple_raw reply\n");
   res = read_reply(ftdi, serial_load::reply::_maple_raw, reply);
   if (res != 0) {
     return -2;
@@ -688,13 +691,14 @@ int do_maple_raw(struct ftdi_context * ftdi,
   */
 
   union serial_load::command_reply send_crc_reply;
-  fprintf(stderr, "maple_raw: send: wait crc reply\n");
+  //fprintf(stderr, "maple_raw: send: wait crc reply\n");
   res = read_reply(ftdi, serial_load::reply::_crc, send_crc_reply);
   if (res != 0) {
     return -1;
   }
-  fprintf(stderr, "maple_raw: send: remote crc: %08x; local crc %08x\n", send_crc_reply.arg[0], send_buf_crc);
+
   if (send_crc_reply.arg[0] != send_buf_crc) {
+    fprintf(stderr, "maple_raw: send: remote crc: %08x; local crc %08x\n", send_crc_reply.arg[0], send_buf_crc);
     dump_command_reply(send_crc_reply);
     return -1;
   }
@@ -711,14 +715,14 @@ int do_maple_raw(struct ftdi_context * ftdi,
   uint32_t recv_buf_crc = crc32(recv_buf, recv_size);
 
   union serial_load::command_reply recv_crc_reply;
-  fprintf(stderr, "maple_raw: recv: wait crc reply\n");
+  //fprintf(stderr, "maple_raw: recv: wait crc reply\n");
   res = read_reply(ftdi, serial_load::reply::_crc, recv_crc_reply);
   if (res != 0) {
     return -1;
   }
 
-  fprintf(stderr, "maple_raw: recv: remote crc: %08x; local crc %08x\n", recv_crc_reply.arg[0], recv_buf_crc);
   if (recv_crc_reply.arg[0] != recv_buf_crc) {
+    fprintf(stderr, "maple_raw: recv: remote crc: %08x; local crc %08x\n", recv_crc_reply.arg[0], recv_buf_crc);
     return -1;
   }
 
@@ -772,6 +776,7 @@ const struct cli_command commands[] = {
   { "speed"              , 1, (void *)&do_speed                , true,  &speed_help},
   { "console"            , 0, (void *)&do_console              , true,  NULL},
   { "maple_storage_dump" , 0, (void *)&do_maple_storage_dump   , true,  NULL},
+  { "maple_storage_load" , 0, (void *)&do_maple_storage_load   , true,  NULL},
   { "list_baudrates"     , 0, (void *)&do_list_baudrates       , false, NULL},
   { "show_baudrate_error", 0, (void *)&do_show_baudrate_error  , true,  NULL},
   { "help"               , 0, (void *)&do_help                 , false, NULL},
