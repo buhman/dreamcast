@@ -73,6 +73,3 @@ INCLUDE "symbols.lds"
 INCLUDE "addresses.lds"
 
 __stack_end = 0x8c00f000;
-
-__send_buf = 0xac000020;
-__recv_buf = 0xac004000;
