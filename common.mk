@@ -60,7 +60,6 @@ zero.bin:
 
 %.iso: %.bin gdrom_jvm_boot.bin zero.bin
 	mkisofs \
-		-C 0,11702 \
 		-sysid     "SEGA SEGAKATANA" \
 		-volid     "SAMPLE_GAME_TITLE" \
 		-volset    "SAMPLE_GAME_TITLE" \
@@ -69,7 +68,7 @@ zero.bin:
 		-copyright "COPYRIGH.TXT" \
 		-abstract  "ABSTRACT.TXT" \
 		-biblio    "BIBLIOGR.TXT" \
-		-G gdrom_jvm_boot.bin \
+		-G serial_load_ip.bin \
 		-o $@ \
 		-graft-points \
 		/0JVM.BIN=./$< \
