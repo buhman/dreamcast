@@ -678,7 +678,7 @@ void main()
   int ta = 0;
   int core = 0;
 
-  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf);
+  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   transfer_textures();
   transfer_palette();

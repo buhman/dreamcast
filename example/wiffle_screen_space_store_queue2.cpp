@@ -30,7 +30,8 @@
 constexpr float half_degree = 0.01745329f / 2;
 
 #define MODEL wiffle
-
+#pragma GCC push_options
+#pragma GCC optimize ("O0")
 vec3 rotate(const vec3& vertex, float theta)
 {
   float x = vertex.x;
@@ -50,6 +51,7 @@ vec3 rotate(const vec3& vertex, float theta)
 
   return vec3(x, y, z);
 }
+#pragma GCC pop_options
 
 void transform(const uint32_t face_ix,
                const float theta)
