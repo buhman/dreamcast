@@ -153,6 +153,23 @@ inline constexpr vec<3, T> operator*
 }
 
 template<typename T>
+inline constexpr vec<4, T> operator*
+(
+  mat<4, 4, T> const& m,
+  vec<4, T> const& v
+)
+{
+#define c(i) (                                  \
+    m[i][0] * v[0]                              \
+  + m[i][1] * v[1]                              \
+  + m[i][2] * v[2]                              \
+  + m[i][3] * v[3])
+
+  return vec<4, T>(c(0), c(1), c(2), c(3));
+#undef c
+}
+
+template<typename T>
 inline constexpr mat<4, 4, T> transpose(mat<4, 4, T> const& m)
 {
   return mat<4, 4, T>(
