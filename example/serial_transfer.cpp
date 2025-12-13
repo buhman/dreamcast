@@ -4,6 +4,7 @@
 #include "sh7091/sh7091.hpp"
 #include "sh7091/sh7091_bits.hpp"
 #include "sh7091/serial.hpp"
+#include "sh7091/vbr.hpp"
 
 #include "maple/maple.hpp"
 #include "maple/maple_bus_commands.hpp"
@@ -82,8 +83,6 @@ void recv_extension_device_status(struct serial_load::maple_poll_state &state)
   using response_type = maple::host_response<maple::device_status::data_fields>;
   auto host_response = reinterpret_cast<response_type *>(recv_buf);
 
-  uint32_t last_send_offset = 0;
-
   int response_index = 0;
   for (int port = 0; port < 4; port++) {
     uint32_t bit = ap::lm_bus::_0;
@@ -108,7 +107,6 @@ void recv_extension_device_status(struct serial_load::maple_poll_state &state)
         state.port[port].lm[i].device_id.fd[2] = std::byteswap(data_fields.device_id.fd[2]);
 
         if (state.port[port].lm[i].device_id.ft & function_type::bw_lcd) {
-          last_send_offset = writer.send_offset;
           send_vmu_framebuffer(writer, port, bit);
         }
       }
@@ -116,11 +114,7 @@ void recv_extension_device_status(struct serial_load::maple_poll_state &state)
     }
   }
 
-  // rewrite the end flag of the last request
-  using command_type = maple::host_command<uint8_t[0]>;
-  auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
-  host_command->host_instruction |= host_instruction::end_flag;
-
+  writer.set_end_flag();
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
 }
@@ -139,12 +133,11 @@ void send_extension_device_request(maple::host_command_writer<>& writer, uint8_t
 }
 
 typedef void (* func_t)(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm);
-void do_lm_requests(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm, uint32_t& last_send_offset, func_t func)
+void do_lm_requests(maple::host_command_writer<>& writer, uint8_t port, uint8_t lm, func_t func)
 {
   uint32_t bit = ap::lm_bus::_0;
   for (int i = 0; i < 5; i++) {
     if (lm & bit) {
-      last_send_offset = writer.send_offset;
       func(writer, port, bit);
     }
     bit <<= 1;
@@ -157,7 +150,6 @@ void recv_device_status(struct serial_load::maple_poll_state &state)
 
   using response_type = maple::host_response<maple::device_status::data_fields>;
   auto host_response = reinterpret_cast<response_type *>(recv_buf);
-  uint32_t last_send_offset = 0;
 
   for (int port = 0; port < 4; port++) {
     auto& bus_data = host_response[port].bus_data;
@@ -172,15 +164,11 @@ void recv_device_status(struct serial_load::maple_poll_state &state)
       state.port[port].device_id.fd[0] = std::byteswap(data_fields.device_id.fd[0]);
       state.port[port].device_id.fd[1] = std::byteswap(data_fields.device_id.fd[1]);
       state.port[port].device_id.fd[2] = std::byteswap(data_fields.device_id.fd[2]);
-      do_lm_requests(writer, port, lm, last_send_offset, &send_extension_device_request);
+      do_lm_requests(writer, port, lm, &send_extension_device_request);
     }
   }
 
-  // rewrite the end flag of the last request
-  using command_type = maple::host_command<uint8_t[0]>;
-  auto host_command = reinterpret_cast<command_type *>(&send_buf[last_send_offset / 4]);
-  host_command->host_instruction |= host_instruction::end_flag;
-
+  writer.set_end_flag();
   maple::dma_start(send_buf, writer.send_offset,
                    recv_buf, writer.recv_offset);
 }
@@ -200,8 +188,8 @@ void send_device_request()
 
 void send_raw(struct serial_load::maple_poll_state& state)
 {
-  maple::dma_start(reinterpret_cast<uint8_t *>(&__send_buf), state.send_length,
-                   reinterpret_cast<uint8_t *>(&__recv_buf), state.recv_length);
+  maple::dma_start(maple_send_buf, state.send_length,
+                   maple_recv_buf, state.recv_length);
 }
 
 void handle_maple(struct serial_load::maple_poll_state& state)
@@ -394,6 +382,81 @@ void render(maple::display::font_renderer& renderer0,
   render_glyphs(renderer1, textbuffer[1]);
 }
 
+void vbr100()
+{
+  serial::string("vbr100\n");
+  serial::string("expevt ");
+  serial::integer<uint16_t>(sh7091.CCN.EXPEVT);
+  serial::string("intevt ");
+  serial::integer<uint16_t>(sh7091.CCN.INTEVT);
+  serial::string("tra ");
+  serial::integer<uint16_t>(sh7091.CCN.TRA);
+  uint32_t spc;
+  uint32_t ssr;
+  asm volatile ("stc spc,%0"
+		: "=r" (spc)
+		);
+  asm volatile ("stc ssr,%0"
+		: "=r" (ssr)
+		);
+
+  serial::string("spc ");
+  serial::integer(spc);
+  serial::string("ssr ");
+  serial::integer(ssr);
+  while (1);
+}
+
+void vbr400()
+{
+  serial::string("vbr400");
+  while (1);
+}
+
+void vbr600()
+{
+  serial::string("vbr600");
+  while (1);
+}
+
+void interrupt_setup()
+{
+  uint32_t vbr = reinterpret_cast<uint32_t>(&__vbr_link_start) - 0x100;
+  uint32_t zero = 0;
+  asm volatile ("ldc %0,spc"
+		:
+		: "r" (zero));
+
+  asm volatile ("ldc %0,ssr"
+		:
+		: "r" (zero));
+
+  asm volatile ("ldc %0,vbr"
+		:
+		: "r" (vbr));
+
+  // sr
+
+  uint32_t sr;
+  asm volatile ("stc sr,%0"
+		: "=r" (sr));
+
+  serial::string("sr ");
+  serial::integer<uint32_t>(sr);
+
+  sr &= ~sh::sr::bl; // BL
+  sr |= sh::sr::imask(15); // imask
+
+  serial::string("sr ");
+  serial::integer<uint32_t>(sr);
+
+  asm volatile ("ldc %0,sr"
+		:
+		: "r" (sr));
+
+  serial::string("interrupt_setup\n");
+}
+
 void main() __attribute__((section(".text.main")));
 
 void main()
@@ -405,13 +468,11 @@ void main()
   constexpr uint32_t serial_speed = 0;
   serial_load::init(serial_speed);
 
-  /*
   const uint8_t * font = reinterpret_cast<const uint8_t *>(&_binary_font_portfolio_6x8);
   auto renderer0 = maple::display::font_renderer(font);
   framebuffer[0] = renderer0.fb;
   auto renderer1 = maple::display::font_renderer(font);
   framebuffer[1] = renderer1.fb;
-  */
 
   // reset serial status
   sh7091.SCIF.SCFSR2 = 0;
@@ -431,6 +492,7 @@ void main()
     serial_load::recv(state, m[i]);
   }
   */
+  interrupt_setup();
 
   while (1) {
     using namespace scif;
@@ -470,6 +532,6 @@ void main()
     //render(renderer0, renderer1);
 
     //poll_state.want_start = 1;
-    //handle_maple(poll_state);
+    handle_maple(poll_state);
   }
 }

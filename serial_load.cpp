@@ -11,6 +11,9 @@
 #include "align.hpp"
 #include "memory.hpp"
 
+uint8_t maple_send_buf[1024];
+uint8_t maple_recv_buf[1024];
+
 namespace serial_load {
 
 struct state state;
@@ -38,7 +41,7 @@ void jump_to_func(const uint32_t addr)
                 :
                 : "r"(addr) /* input */
 	        /* clobbered register */
-                : "r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","r13","macl","mach","gbr","pr"
+                : "r0","r1","r2","r3","r4","r5","r6","r7","r8","r9","r10","r11","r12","macl","mach","gbr","pr"
                 );
   // restore our stack
 }
@@ -63,7 +66,7 @@ static void poststart_read()
 
 static void prestart_maple_raw__command()
 {
-  uint32_t dest = reinterpret_cast<uint32_t>(&__send_buf);
+  uint32_t dest = reinterpret_cast<uint32_t>(&maple_send_buf[0]);
   uint32_t size = state.buf.arg[0];
   serial::recv_dma(dest - 1, size + 1);
   state.reply_crc.value = 0xffffffff;
@@ -72,7 +75,7 @@ static void prestart_maple_raw__command()
 
 static void prestart_maple_raw__response()
 {
-  uint32_t src = reinterpret_cast<uint32_t>(&__recv_buf);
+  uint32_t src = reinterpret_cast<uint32_t>(&maple_recv_buf[0]);
   uint32_t size = state.buf.arg[1];
   serial::send_dma(src, size);
   state.reply_crc.value = 0xffffffff;

@@ -79,5 +79,5 @@ struct maple_poll_state {
 
 }
 
-extern "C" uint32_t __send_buf __asm("__send_buf");
-extern "C" uint32_t __recv_buf __asm("__recv_buf");
+extern uint8_t maple_send_buf[1024] __attribute__((aligned(32)));
+extern uint8_t maple_recv_buf[1024] __attribute__((aligned(32)));
