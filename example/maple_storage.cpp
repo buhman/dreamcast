@@ -15,6 +15,8 @@
 
 #include "systembus.hpp"
 
+const uint32_t maple_image_address = 0xac100000;
+
 struct storage_state {
   uint8_t * send_buf;
   uint8_t * recv_buf;
@@ -172,21 +174,36 @@ bool do_block_read(storage_state& state, uint16_t block_number, uint8_t * dest)
 
 struct get_last_error_response {
   union responses {
-    struct maple::device_reply device_reply;
-    struct maple::file_error file_error;
+    struct maple::device_reply::data_fields device_reply;
+    struct maple::file_error::data_fields file_error;
   };
 
   using data_fields = union responses;
 };
 
-bool do_block_write(storage_state& state, uint16_t block_number, uint8_t * src)
+extern "C"
+void *memcpy(void *dest, const void * src, size_t n)
+{
+  unsigned char *d = (unsigned char *)dest;
+  const unsigned char *s = (const unsigned char *)src;
+
+  for (; n; n--) *d++ = *s++;
+  return dest;
+}
+
+bool do_block_write(storage_state& state, uint16_t block_number, uint8_t * src, int retry)
 {
   auto writer = maple::host_command_writer(state.send_buf, state.recv_buf);
+  uint8_t * src_orig = src;
+
+  using command_type = maple::block_write<uint8_t[0]>;
+  using response_type = maple::device_reply;
+  using host_response_type = maple::host_response<response_type::data_fields>;
+  host_response_type responses[4];
 
   uint32_t phase;
   for (phase = 0; phase < state.device_status.write_accesses; phase++) {
-    using command_type = maple::block_write<uint8_t[0]>;
-    using response_type = maple::device_reply;
+    writer.reset();
 
     auto [host_command, host_response]
       = writer.append_command<command_type, response_type>(state.host_port_select,
@@ -204,34 +221,80 @@ bool do_block_write(storage_state& state, uint16_t block_number, uint8_t * src)
 
     copy<uint8_t>(data_fields.written_data, src, state.bytes_per_write_access());
     src += state.bytes_per_write_access();
-    //serial::string("write phase: ");
-    //serial::integer<uint8_t>(phase);
-    //serial::integer(writer.send_offset);
+
+    /*
+    serial::string("block write:\n");
+    serial::integer<uint32_t>(writer.send_offset);
+    serial::string("  command code: ");
+    serial::integer<uint8_t>(host_command->bus_data.command_code);
+    serial::string("  destination ap: ");
+    serial::integer<uint8_t>(host_command->bus_data.destination_ap);
+    serial::string("  source ap: ");
+    serial::integer<uint8_t>(host_command->bus_data.source_ap);
+    serial::string("  data size: ");
+    serial::integer<uint8_t>(host_command->bus_data.data_size);
+    serial::string("  function type: ");
+    serial::integer<uint32_t>(std::byteswap<uint32_t>(host_command->bus_data.data_fields.function_type));
+    serial::string("  pt: ");
+    serial::integer<uint8_t>(host_command->bus_data.data_fields.pt);
+    serial::string("  phase: ");
+    serial::integer<uint8_t>(host_command->bus_data.data_fields.phase);
+    serial::string("  block number: ");
+    serial::integer<uint16_t>(std::byteswap<uint16_t>(host_command->bus_data.data_fields.block_number));
+    */
+
+    maple::dma_start(state.send_buf, writer.send_offset,
+                     state.recv_buf, writer.recv_offset);
+    maple::dma_wait_complete();
+
+    responses[phase] = *host_response;
+
+    for (int i = 0; i < 1; i++) {
+      while (!spg_status::vsync(holly.SPG_STATUS));
+      while (spg_status::vsync(holly.SPG_STATUS));
+    }
+
+    asm volatile ("" ::: "memory");
+
+    writer.reset();
   }
 
-  using command_type = maple::get_last_error;
-  using response_type = get_last_error_response;
+  {
+    using command_type = maple::get_last_error;
+    using response_type = get_last_error_response;
 
-  auto [host_command, host_response]
-    = writer.append_command<command_type, response_type>(state.host_port_select,
-							 state.destination_ap,
-							 true); // end_flag
+    auto [host_command, host_response]
+      = writer.append_command<command_type, response_type>(state.host_port_select,
+                                                           state.destination_ap,
+                                                           true); // end_flag
 
-  auto& data_fields = host_command->bus_data.data_fields;
-  data_fields.function_type = std::byteswap(function_type::storage);
-  data_fields.pt = 0;
-  data_fields.phase = phase;
-  data_fields.block_number = std::byteswap<uint16_t>(block_number);
-  //serial::string("write phase: ");
-  //serial::integer<uint8_t>(phase);
-  //serial::integer(writer.send_offset);
+    auto& data_fields = host_command->bus_data.data_fields;
+    data_fields.function_type = std::byteswap(function_type::storage);
+    data_fields.pt = 0;
+    data_fields.phase = phase;
+    data_fields.block_number = std::byteswap<uint16_t>(block_number);
+    serial::string("get last error: phase: ");
+    serial::integer<uint8_t>(phase);
+    serial::integer(writer.send_offset);
 
-  maple::dma_start(state.send_buf, writer.send_offset,
-		   state.recv_buf, writer.recv_offset);
-  maple::dma_wait_complete();
+    maple::dma_start(state.send_buf, writer.send_offset,
+                     state.recv_buf, writer.recv_offset);
+    maple::dma_wait_complete();
 
-  serial::string("block write status: ");
-  serial::integer(host_response->bus_data.command_code);
+    for (int i = 0; i < 4; i++) {
+      serial::string("phase reponse command code: ");
+      serial::integer(responses[i].bus_data.command_code);
+    }
+
+    serial::string("do_block_write get_last_error command_code: ");
+    serial::integer(host_response->bus_data.command_code);
+    if (host_response->bus_data.command_code >= 0xf0) {
+      serial::integer(std::byteswap(host_response->bus_data.data_fields.file_error.function_error_code));
+      serial::string("retry\n");
+      if (retry < 3)
+        do_block_write(state, block_number, src_orig, retry + 1);
+    }
+  }
 
   return true;
 }
@@ -477,57 +540,14 @@ void do_lm_request(uint8_t port, uint8_t lm)
   }
 
   {
-    uint16_t block_size = 3;
-    uint16_t start_fat = allocate_fat_chain(state, block_size);
-    char const * file_name = "HELLOANA.SUP";
-    allocate_file_information_data(state, start_fat,
-				   reinterpret_cast<uint8_t const *>(file_name),
-				   block_size);
+    int block_count = 128 * 1024 / 512;
+    for (int block_ix = 0; block_ix < block_count; block_ix++) {
+      uint8_t * buf = (uint8_t * )((maple_image_address) + block_ix * 512);
 
-    {
-      uint16_t chain = state.media_info.fat_area.block_number;
-      uint8_t * buf = reinterpret_cast<uint8_t *>(state.fat_area);
-      do {
-	do_block_write(state, chain, buf);
-	buf += state.device_status.bytes_per_block;
-	chain = state.fat_area->fat_number[chain];
-      } while (chain != storage::fat_area::data::data_end);
+      do_block_write(state, block_ix, buf, 0);
+      serial::string("block: ");
+      serial::integer<uint32_t>(block_ix);
     }
-
-    {
-      uint16_t chain = state.media_info.file_information.block_number;
-      uint8_t * buf = reinterpret_cast<uint8_t *>(state.file_information);
-      do {
-	do_block_write(state, chain, buf);
-	buf += state.device_status.bytes_per_block;
-	chain = state.fat_area->fat_number[chain];
-      } while (chain != storage::fat_area::data::data_end);
-    }
-  }
-
-  {
-    uint8_t * bufi = fat_area_data;
-    uint16_t chain = state.media_info.fat_area.block_number;
-    state.fat_area = reinterpret_cast<storage::fat_area *>(fat_area_data);
-    do {
-      do_block_read(state, chain, bufi);
-      bufi += state.device_status.bytes_per_block;
-      chain = state.fat_area->fat_number[chain];
-    } while (chain != storage::fat_area::data::data_end);
-    serial::string("      read fat_area bytes: ");
-    serial::integer((uint32_t)(bufi - fat_area_data));
-
-    uint32_t count = 0;
-    for (uint32_t i = 0; i < (bufi - fat_area_data) / (sizeof (uint16_t)); i++) {
-      if (state.fat_area->fat_number[i] == 0xfffc) {
-	count += 1;
-      }
-      serial::integer<uint16_t>(i, ' ');
-      serial::integer(state.fat_area->fat_number[i]);
-    }
-    serial::string("        free blocks: ");
-    serial::integer(count);
-    allocate_fat_chain(state, 98);
   }
 }
 
@@ -591,9 +611,8 @@ void do_device_request()
 
 void main()
 {
-  serial::init(4);
+  //serial::init(4);
 
   do_device_request();
 
-  while (1);
 }
