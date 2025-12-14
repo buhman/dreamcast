@@ -260,7 +260,7 @@ void main()
 
   ft6::data_transfer::data_format keyboards[2] = { 0 };
 
-  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf);
+  ta_parameter_writer writer = ta_parameter_writer(ta_parameter_buf, (sizeof (ta_parameter_buf)));
 
   interrupt_init();
   system.IML6NRM = istnrm::end_of_render_tsp;
