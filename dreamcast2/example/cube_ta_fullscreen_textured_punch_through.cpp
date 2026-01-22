@@ -367,7 +367,7 @@ void main()
   using namespace holly::core;
 
   region_array::list_block_size list_block_size = {
-    .translucent = 8 * 4,
+    .punch_through = 8 * 4,
   };
 
   region_array::transfer(tile_x_num,
