@@ -41,7 +41,7 @@ void runtime_init()
   // clear BSS
   uint32_t * bss_start = &__bss_link_start;
   uint32_t * bss_end = &__bss_link_end;
-  int bss_length = bss_end - bss_start;
+  int bss_length = (uint8_t *)bss_end - (uint8_t *)bss_start;
   sh7091::store_queue_transfer::zeroize(bss_start, bss_length, 0);
 
   // call ctors
