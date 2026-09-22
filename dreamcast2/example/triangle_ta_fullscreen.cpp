@@ -162,8 +162,8 @@ void main()
   // region array and background polygon
   //////////////////////////////////////////////////////////////////////
 
-  const int tile_y_num = framebuffer.tile_width();
-  const int tile_x_num = framebuffer.tile_height();
+  const int tile_x_num = framebuffer.tile_width();
+  const int tile_y_num = framebuffer.tile_height();
 
   region_array::list_block_size list_block_size = {
     .opaque = 8 * 4,
@@ -277,4 +277,5 @@ void main()
   holly.FB_R_SOF1 = framebuffer_start;
 
   // return from main; this will effectively jump back to the serial loader
+  while (1);
 }

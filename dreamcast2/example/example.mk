@@ -62,6 +62,7 @@ example/cube_ta_fullscreen_textured_punch_through.elf: $(START_OBJ) $(CUBE_TA_FU
 
 SUZANNE_TRIANGLE_STRIPS_OBJ = \
 	holly/core/region_array.o \
+	holly/core/video_output.o \
 	example/suzanne_triangle_strips.o
 
 example/suzanne_triangle_strips.elf: LDSCRIPT = $(LIB)/main.lds

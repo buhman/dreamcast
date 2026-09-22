@@ -5,6 +5,7 @@
 #include "holly/core/region_array_bits.hpp"
 #include "holly/core/parameter_bits.hpp"
 #include "holly/core/parameter.hpp"
+#include "holly/core/video_output.hpp"
 #include "holly/ta/global_parameter.hpp"
 #include "holly/ta/vertex_parameter.hpp"
 #include "holly/ta/parameter_bits.hpp"
@@ -23,6 +24,9 @@ static inline void character(const char c)
 {
   using sh7091::sh7091;
   using namespace sh7091;
+
+  sh7091.SCIF.SCSCR2 = scif::scscr2::te::transmission_enabled
+                     | scif::scscr2::re::reception_enabled;
 
   // set the transmit trigger to `1 byte`--this changes the behavior of TDFE
   sh7091.SCIF.SCFCR2 = scif::scfcr2::ttrg::trigger_on_1_bytes;
@@ -356,10 +360,23 @@ void main()
   uint32_t region_array_start      = 0x500000;
   uint32_t object_list_start       = 0x100000;
 
-  const int tile_y_num = 480 / 32;
-  const int tile_x_num = 640 / 32;
-
   using namespace holly::core;
+
+  //////////////////////////////////////////////////////////////////////
+  // video output initialization
+  //////////////////////////////////////////////////////////////////////
+
+  const video_output::framebuffer& framebuffer{640, 480, 2};
+  video_output::framebuffer_init(framebuffer);
+  video_output::scaler_init();
+  video_output::spg_set_mode_640x480();
+
+  //////////////////////////////////////////////////////////////////////
+  // region array and background polygon
+  //////////////////////////////////////////////////////////////////////
+
+  const int tile_x_num = framebuffer.tile_width();
+  const int tile_y_num = framebuffer.tile_height();
 
   region_array::list_block_size list_block_size = {
     .opaque = 32 * 4,
@@ -430,6 +447,10 @@ void main()
   // configure CORE
   //////////////////////////////////////////////////////////////////////////////
 
+  // FPU_PARAM_CFG is set to "type 2", which matches the 6-word-per-entry format
+  // used by region_array::transfer
+  holly.FPU_PARAM_CFG = fpu_param_cfg::region_header_type::type_2;
+
   // REGION_BASE is the (texture memory-relative) address of the region array.
   holly.REGION_BASE = region_array_start;
 
@@ -454,8 +475,7 @@ void main()
   // framebuffer.
   holly.FB_R_SOF1 = framebuffer_start;
 
-  // draw 500 frames of cube rotation
-  for (int i = 0; i < 5000; i++) {
+  while (true) {
     //////////////////////////////////////////////////////////////////////////////
     // transfer cube to texture memory via the TA polygon converter FIFO
     //////////////////////////////////////////////////////////////////////////////
@@ -487,13 +507,13 @@ void main()
     using namespace systembus;
     systembus.ISTERR = 0xffffffff;
 
+    systembus.ISTNRM = istnrm::end_of_render_tsp;
     holly.STARTRENDER = 1;
 
     while ((systembus.ISTNRM & istnrm::end_of_render_tsp) == 0) {
       if (systembus.ISTERR) {
         string("ISTERR: ");
         print_base16(systembus.ISTERR, 8);
-        string("\n    ");
         return;
       }
     }
