@@ -10,6 +10,7 @@
 #include "holly/ta/parameter_bits.hpp"
 #include "holly/holly.hpp"
 #include "holly/holly_bits.hpp"
+#include "holly/core/video_output.hpp"
 
 #include "sh7091/sh7091.hpp"
 #include "sh7091/pref.hpp"
@@ -146,10 +147,23 @@ void main()
   uint32_t region_array_start      = 0x500000;
   uint32_t object_list_start       = 0x100000;
 
-  const int tile_y_num = 480 / 32;
-  const int tile_x_num = 640 / 32;
-
   using namespace holly::core;
+
+  //////////////////////////////////////////////////////////////////////
+  // video output initialization
+  //////////////////////////////////////////////////////////////////////
+
+  const video_output::framebuffer& framebuffer{640, 480, 2};
+  video_output::framebuffer_init(framebuffer);
+  video_output::scaler_init();
+  video_output::spg_set_mode_640x480();
+
+  //////////////////////////////////////////////////////////////////////
+  // region array and background polygon
+  //////////////////////////////////////////////////////////////////////
+
+  const int tile_y_num = framebuffer.tile_width();
+  const int tile_x_num = framebuffer.tile_height();
 
   region_array::list_block_size list_block_size = {
     .opaque = 8 * 4,
@@ -229,6 +243,10 @@ void main()
   //////////////////////////////////////////////////////////////////////////////
   // configure CORE
   //////////////////////////////////////////////////////////////////////////////
+
+  // FPU_PARAM_CFG is set to "type 2", which matches the 6-word-per-entry format
+  // used by region_array::transfer
+  holly.FPU_PARAM_CFG = fpu_param_cfg::region_header_type::type_2;
 
   // REGION_BASE is the (texture memory-relative) address of the region array.
   holly.REGION_BASE = region_array_start;

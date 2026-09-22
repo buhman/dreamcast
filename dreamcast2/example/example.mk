@@ -34,6 +34,7 @@ example/triangle_ta.elf: $(START_OBJ) $(TRIANGLE_TA_OBJ)
 
 TRIANGLE_TA_FULLSCREEN_OBJ = \
 	holly/core/region_array.o \
+	holly/core/video_output.o \
 	example/triangle_ta_fullscreen.o
 
 example/triangle_ta_fullscreen.elf: LDSCRIPT = $(LIB)/main.lds
